@@ -42,6 +42,16 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    constructor(attributes) {
       super(attributes);
 
+      // Live display passes data collections on load
+      let newDatacollections = [];
+      (attributes.json.datacollections || []).forEach((datacollection) => {
+         // prevent processing of null values.
+         if (datacollection) {
+            newDatacollections.push(this.datacollectionNew(datacollection));
+         }
+      });
+      this._datacollections = newDatacollections;
+
       // instance keeps a link to our Model for .save() and .destroy();
       this.Model = OP.Model.get("opstools.BuildApp.ABApplication");
 
@@ -74,6 +84,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     */
    static allApplications() {
       debugger;
+
       return new Promise((resolve, reject) => {
          var ModelApplication = OP.Model.get("opstools.BuildApp.ABApplication");
          ModelApplication.Models(ABApplication); // set the Models  setting.
@@ -177,6 +188,8 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    static create(values) {
+      //// TODO: redo this as an ABDefinition!
+
       return new Promise(function(resolve, reject) {
          var newApp = {};
          OP.Multilingual.unTranslate(
@@ -312,6 +325,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    save() {
+      //// TODO: redo this as an ABDefinition
       var values = this.toObj();
 
       // we already have an .id, so this must be an UPDATE
@@ -340,6 +354,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {json}
     */
    toObj() {
+      //// TODO:
       OP.Multilingual.unTranslate(
          this,
          this.json,
@@ -616,6 +631,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
                let refreshTasks = [];
 
                // add connect field to exist objects
+
                // (newObj.fields || []).forEach((f) => {
                (newObj.fieldIDs || []).forEach((id) => {
                   var f = ABDefinition.definition(id);

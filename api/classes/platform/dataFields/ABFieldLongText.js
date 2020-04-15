@@ -4,270 +4,251 @@
  * An ABFieldLongText defines a huge string field type.
  *
  */
-const path = require('path');
-const _ = require('lodash');
-const async = require('async');
+const path = require("path");
+const _ = require("lodash");
+const async = require("async");
 
-const ABFieldLongTextCore = require(path.join(__dirname, "..", "..", "core", "dataFields", "ABFieldLongTextCore.js"));
+const ABFieldLongTextCore = require(path.join(
+   __dirname,
+   "..",
+   "..",
+   "core",
+   "dataFields",
+   "ABFieldLongTextCore.js"
+));
 
 module.exports = class ABFieldLongText extends ABFieldLongTextCore {
+   constructor(values, object) {
+      super(values, object);
+   }
 
-    constructor(values, object) {
-    	super(values, object);
-  	}
+   ///
+   /// Instance Methods
+   ///
 
-	///
-	/// Instance Methods
-	///
+   isValid() {
+      var errors = super.isValid();
 
+      // errors = OP.Form.validationError({
+      // 	name:'columnName',
+      // 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
+      // }, errors);
 
-	isValid() {
+      return errors;
+   }
 
-		var errors = super.isValid();
+   ///
+   /// DB Migrations
+   ///
 
-		// errors = OP.Form.validationError({
-		// 	name:'columnName',
-		// 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
-		// }, errors);
+   /**
+    * @function migrateCreate
+    * perform the necessary sql actions to ADD this column to the DB table.
+    * @param {knex} knex
+    *		the Knex connection.
+    * @return {Promise}
+    */
+   migrateCreate(knex) {
+      return new Promise((resolve, reject) => {
+         var tableName = this.object.dbTableName();
 
-		return errors;
-	}
+         async.series(
+            [
+               // if this is a multilingual field, then manage a json
+               // translation store:
+               (next) => {
+                  if (!this.settings.supportMultilingual) return next();
 
-	///
-	/// DB Migrations
-	///
+                  // make sure there is a 'translations' json field
+                  // included:
+                  knex.schema
+                     .hasColumn(tableName, "translations")
+                     .then((exists) => {
+                        // create one if it doesn't exist:
+                        if (!exists) {
+                           knex.schema
+                              .table(tableName, (t) => {
+                                 t.json("translations");
+                              })
+                              .then(() => {
+                                 next();
+                              })
+                              .catch((err) => {
+                                 if (err.code == "ER_DUP_FIELDNAME") {
+                                    next();
+                                 } else {
+                                    next(err);
+                                 }
+                              });
+                        } else next();
+                     })
+                     .catch(next);
+               },
 
+               // create/alter the actual column
+               (next) => {
+                  // [fix]: don't create a column for a multilingual field
+                  if (this.settings.supportMultilingual) return next();
 
-	/**
-	 * @function migrateCreate
-	 * perform the necessary sql actions to ADD this column to the DB table.
-	 * @param {knex} knex 
-	 *		the Knex connection.
-	 * @return {Promise}
-	 */
-	migrateCreate (knex) {
-		return new Promise((resolve, reject) => {
+                  knex.schema
+                     .hasColumn(tableName, this.columnName)
+                     .then((exists) => {
+                        knex.schema
+                           .table(tableName, (t) => {
+                              var currCol = t
+                                 .text(this.columnName, "longtext")
+                                 .defaultTo(this.settings.default);
 
-			var tableName = this.object.dbTableName();
-			
-			async.series([
-			
-				// if this is a multilingual field, then manage a json 
-				// translation store:
-				(next) => {
-					if (!this.settings.supportMultilingual)
-						return next();
+                              // alter default value of column
+                              if (exists) currCol.alter();
+                           })
+                           .then(() => {
+                              next();
+                           })
+                           .catch(next);
+                     })
+                     .catch(next);
+               }
+            ],
+            (err) => {
+               if (err) reject(err);
+               else resolve();
+            }
+         );
+      });
+   }
 
-					// make sure there is a 'translations' json field 
-					// included:
-					knex.schema.hasColumn(tableName, 'translations')
-					.then((exists) => {
-						// create one if it doesn't exist:
-						if (!exists) {
-							knex.schema.table(tableName, (t) => {
-								t.json('translations');
-							})
-							.then(() => {
-								next();
-							})
-							.catch(err => {
+   /**
+    * @function migrateUpdate
+    * perform the necessary sql actions to MODIFY this column to the DB table.
+    * @param {knex} knex the Knex connection.
+    */
+   migrateUpdate(knex) {
+      return this.migrateCreate(knex);
+   }
 
-								if (err.code == "ER_DUP_FIELDNAME") {
-									next();
-								}
-								else {
-									next(err);
-								}
-							});
-						} 
-						else next();
-					})
-					.catch(next);
-				},
-				
-				// create/alter the actual column
-				(next) => {
+   /**
+    * @function migrateDrop
+    * perform the necessary sql actions to drop this column from the DB table.
+    * @param {knex} knex the Knex connection.
+    */
+   // NOTE: ABField.migrateDrop() is pretty good for most cases.
+   // migrateDrop (knex) {
+   // 	return new Promise(
+   // 		(resolve, reject) => {
+   // 			// do your special drop operations here.
+   // 		}
+   // 	)
+   // }
 
-					// [fix]: don't create a column for a multilingual field
-					if (this.settings.supportMultilingual)
-						return next();
+   ///
+   /// DB Model Services
+   ///
 
-					knex.schema.hasColumn(tableName, this.columnName)
-					.then((exists) => {
-						knex.schema.table(tableName, (t) => {
-							var currCol = t.text(this.columnName, 'longtext')
-							.defaultTo(this.settings.default);
+   /**
+    * @method jsonSchemaProperties
+    * register your current field's properties here:
+    */
+   jsonSchemaProperties(obj) {
+      // take a look here:  http://json-schema.org/example1.html
 
-							// alter default value of column
-							if (exists) currCol.alter();
-						})
-						.then(() => {
-							next();
-						})
-						.catch(next);
-					})
-					.catch(next);
-				}
-				
-			], (err) => {
-				if (err) reject(err);
-				else resolve();
-			});
+      if (this.settings.supportMultilingual) {
+         // make sure our translations  column is setup:
 
-		});
-	}
+         // if not already setup:
+         if (!obj["translations"]) {
+            obj.translations = {
+               type: "array",
+               items: {
+                  type: "object",
+                  properties: {
+                     language_code: {
+                        type: "string"
+                     }
+                  }
+               }
+            };
+         }
 
+         // make sure our column is described in the
+         if (!obj.translations.items.properties[this.columnName]) {
+            obj.translations.items.properties[this.columnName] = {
+               type: "string",
+               maxLength: 5000
+            };
+         }
+      } else {
+         // we're not multilingual, so just tack this one on:
+         if (!obj[this.columnName]) {
+            obj[this.columnName] = { type: "string", maxLength: 5000 };
+         }
+      }
+   }
 
-	/**
-	 * @function migrateUpdate
-	 * perform the necessary sql actions to MODIFY this column to the DB table.
-	 * @param {knex} knex the Knex connection.
-	 */
-	migrateUpdate (knex) {
+   /**
+    * @method requestParam
+    * return the entry in the given input that relates to this field.
+    * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+    * @return {obj} or undefined
+    */
+   requestParam(allParameters) {
+      var myParameter;
 
-		return this.migrateCreate(knex);
+      // if we are a multilingual field, make sure the .translations data is
+      // returned:
+      if (this.settings.supportMultilingual) {
+         if (allParameters.translations) {
+            myParameter = {};
+            myParameter.translations = allParameters.translations;
+         }
+      } else {
+         myParameter = super.requestParam(allParameters);
+      }
 
-	}
+      return myParameter;
+   }
 
+   /**
+    * @method isValidParams
+    * Parse through the given parameters and return an error if this field's
+    * data seems invalid.
+    * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+    * @return {array}
+    */
+   isValidData(allParameters) {
+      var errors = [];
 
-	/**
-	 * @function migrateDrop
-	 * perform the necessary sql actions to drop this column from the DB table.
-	 * @param {knex} knex the Knex connection.
-	 */
-	// NOTE: ABField.migrateDrop() is pretty good for most cases.
-	// migrateDrop (knex) {
-	// 	return new Promise(
-	// 		(resolve, reject) => {
-	// 			// do your special drop operations here.
-	// 		}
-	// 	)
-	// }
+      return errors;
+   }
 
+   /**
+    * @method postGet
+    * Perform any final conditioning of data returned from our DB table before
+    * it is returned to the client.
+    * @param {obj} data  a json object representing the current table row
+    */
+   postGet(data) {
+      return new Promise((resolve, reject) => {
+         // if we are a multilingual field, make sure the .translations data is
+         // an object and not a string.
+         //// NOTE: a properly formatted json data in the .translations
+         //// field should already be parsed as it is returned from
+         //// objection.js query().
+         if (this.settings.supportMultilingual) {
+            sails.log.verbose(
+               "ABFieldLongText.postGet(): ---> _.isString(" +
+                  data.translations +
+                  "):"
+            );
+            if (_.isString(data.translations)) {
+               sails.log.verbose(
+                  "ABFieldLongText.postGet(): ---> JSON.parse()"
+               );
+               data.translations = JSON.parse(data.translations);
+            }
+         }
 
-
-	///
-	/// DB Model Services
-	///
-
-	/**
-	 * @method jsonSchemaProperties
-	 * register your current field's properties here:
-	 */
-	jsonSchemaProperties(obj) {
-		// take a look here:  http://json-schema.org/example1.html
-
-		if (this.settings.supportMultilingual) {
-
-			// make sure our translations  column is setup:
-
-			// if not already setup:
-			if (!obj['translations']) {
-
-				obj.translations = {
-					type:'array',
-					items:{
-						type:'object',
-						properties:{
-							language_code:{
-								type:'string'
-							}
-						}
-					}
-				}
-
-			}
-
-			// make sure our column is described in the 
-			if (!obj.translations.items.properties[this.columnName]) {
-				obj.translations.items.properties[this.columnName] = { type:'string', maxLength: 5000 }
-			}
-
-		} else {
-
-			// we're not multilingual, so just tack this one on:
-			if (!obj[this.columnName]) {
-				obj[this.columnName] = { type:'string', maxLength: 5000 }
-			}
-
-		}
-		
-	}
-
-
-
-
-
-	/**
-	 * @method requestParam
-	 * return the entry in the given input that relates to this field.
-	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
-	 * @return {obj} or undefined
-	 */
-	requestParam(allParameters) {
-		var myParameter;
-
-		// if we are a multilingual field, make sure the .translations data is
-		// returned:
-		if (this.settings.supportMultilingual) {
-
-			if (allParameters.translations) {
-				myParameter = {};
-				myParameter.translations = allParameters.translations
-			}
-			
-		} else {
-
-			myParameter = super.requestParam(allParameters);
-		}
-
-		return myParameter;
-	}
-
-
-
-	/**
-	 * @method isValidParams
-	 * Parse through the given parameters and return an error if this field's
-	 * data seems invalid.
-	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
-	 * @return {array} 
-	 */
-	isValidData(allParameters) {
-		var errors = [];
-
-		return errors;
-	}
-
-
-	/**
-	 * @method postGet
-	 * Perform any final conditioning of data returned from our DB table before
-	 * it is returned to the client.
-	 * @param {obj} data  a json object representing the current table row
-	 */
-	postGet( data ) {
-		return new Promise(
-			(resolve, reject) => {
-
-				// if we are a multilingual field, make sure the .translations data is
-				// an object and not a string.
-				//// NOTE: a properly formatted json data in the .translations 
-				//// field should already be parsed as it is returned from 
-				//// objection.js query().
-				if (this.settings.supportMultilingual) {
-					
-					sails.log.verbose('ABFieldLongText.postGet(): ---> _.isString('+ data.translations +'):');	
-					if (_.isString(data.translations)) {
-
-						sails.log.verbose('ABFieldLongText.postGet(): ---> JSON.parse()');
-						data.translations = JSON.parse(data.translations);
-					}
-				}
-
-				resolve();
-			}
-		)
-	}
-
+         resolve();
+      });
+   }
 };

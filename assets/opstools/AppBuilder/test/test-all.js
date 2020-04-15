@@ -11,7 +11,7 @@ window.document = dom.window.document;
 require("../../../../node_modules/mocha/mocha.js");
 window.assert = require("../../../../node_modules/chai/chai.js").assert;
 window.sinon = require("../../../../node_modules/sinon/pkg/sinon.js");
-window.Promise =require("../../../../node_modules/es6-promise/dist/es6-promise.auto.min.js");
+window.Promise = require("../../../../node_modules/es6-promise/dist/es6-promise.auto.min.js");
 window.moment = require("../../../../../../assets/js/moment.min.js");
 require("../../../../../../assets/js/selectivity/selectivity.min.js");
 window.webix = require("../../../../../../assets/js/webix/webix.js");

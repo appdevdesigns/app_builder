@@ -12,7 +12,7 @@
  *
  */
 module.exports = {
-/*
+   /*
 
      // list any directories that need to be created in the base sails path
      directories:[
@@ -91,5 +91,4 @@ module.exports = {
     }
 
  */
-
 };

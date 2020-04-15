@@ -70,9 +70,6 @@ module.exports = class ABObject extends ABObjectCore {
       super.fromValues(attributes);
 
       if (this.workspaceViews) this.workspaceViews.fromObj(attributes);
-
-      // multilingual fields: label, description
-      // OP.Multilingual.translate(this, this, ["label"]);
    }
 
    //// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
@@ -559,8 +556,9 @@ module.exports = class ABObject extends ABObjectCore {
       if (rowData == null) return "";
 
       // translate multilingual
+      //// TODO: isn't this a MLObject??  use this.translate()
       var mlFields = this.multilingualFields();
-      OP.Multilingual.translate(rowData, rowData, mlFields);
+      this.application.translate(rowData, rowData, mlFields);
 
       var labelData = this.labelFormat || "";
 

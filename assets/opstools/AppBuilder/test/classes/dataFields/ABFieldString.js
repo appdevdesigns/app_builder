@@ -1,195 +1,192 @@
-import AB from '../../../components/ab'
-import ABFieldString from "../../../classes/dataFields/ABFieldString"
+import AB from "../../../components/ab";
+import ABFieldString from "../../../classes/dataFields/ABFieldString";
 
 describe("ABFieldString unit tests", () => {
+   function L(key, altText) {
+      return AD.lang.label.getLabel(key) || altText;
+   }
 
-	function L(key, altText) {
-		return AD.lang.label.getLabel(key) || altText;
-	}
+   var sandbox;
 
-	var sandbox;
+   var ab;
+   var mockApp;
+   var mockObject;
 
-	var ab;
-	var mockApp;
-	var mockObject;
+   var target;
+   var targetComponent;
 
-	var target;
-	var targetComponent;
+   var webixCom;
+
+   var columnName = "TEST_STRING_COLUMN";
 
-	var webixCom;
+   before(() => {
+      ab = new AB();
 
-	var columnName = 'TEST_STRING_COLUMN';
+      mockApp = ab._app;
+      mockObject = {};
 
-	before(() => {
-		ab = new AB();
+      target = new ABFieldString(
+         {
+            columnName: columnName,
+            settings: {}
+         },
+         mockObject
+      );
 
-		mockApp = ab._app;
-		mockObject = {};
+      targetComponent = ABFieldString.propertiesComponent(mockApp);
 
-		target = new ABFieldString({
-			columnName: columnName,
-			settings: {}
-		}, mockObject);
+      // render edit component
+      targetComponent.ui.container = "ab_test_div";
+      webixCom = new webix.ui(targetComponent.ui);
+   });
 
-		targetComponent = ABFieldString.propertiesComponent(mockApp);
+   beforeEach(() => {
+      sandbox = sinon.sandbox.create();
+   });
 
-		// render edit component
-		targetComponent.ui.container = "ab_test_div";
-		webixCom = new webix.ui(targetComponent.ui);
-	});
+   afterEach(() => {
+      target.settings = {};
+      sandbox.restore();
+   });
 
-	beforeEach(() => {
-		sandbox = sinon.sandbox.create();
-	});
+   after(() => {
+      if (webixCom && webixCom.destructor) webixCom.destructor();
+   });
 
-	afterEach(() => {
-		target.settings = {};
-		sandbox.restore();
-	});
+   /* String field test cases */
+   describe("String field test cases", () => {
+      it("should exist string field", () => {
+         assert.isDefined(target);
+      });
 
-	after(() => {
-		if (webixCom && webixCom.destructor)
-			webixCom.destructor();
-	});
+      it("should have valid default value", () => {
+         let defaultValues = ABFieldString.defaults();
 
-	/* String field test cases */
-	describe('String field test cases', () => {
+         let menuName = L("ab.dataField.string.menuName", "*Single line text");
+         let description = L(
+            "ab.dataField.string.description",
+            "*short string value"
+         );
 
-		it('should exist string field', () => {
-			assert.isDefined(target);
-		});
+         assert.equal("string", defaultValues.key);
+         assert.equal("font", defaultValues.icon);
+         assert.equal(menuName, defaultValues.menuName);
+         assert.equal(description, defaultValues.description);
+         assert.isUndefined(defaultValues.isSortable);
+         assert.isUndefined(defaultValues.isFilterable);
+         assert.isUndefined(defaultValues.useAsLabel);
+         assert.isTrue(defaultValues.supportRequire);
+      });
 
-		it('should have valid default value', () => {
-			let defaultValues = ABFieldString.defaults();
+      it(".columnHeader: should return valid column config", () => {
+         var columnConfig = target.columnHeader();
 
-			let menuName = L('ab.dataField.string.menuName', '*Single line text');
-			let description = L('ab.dataField.string.description', '*short string value');
+         assert.equal(
+            "text",
+            columnConfig.editor,
+            'should be "template" editor'
+         );
+         assert.equal("textCell", columnConfig.css);
+      });
 
-			assert.equal('string', defaultValues.key);
-			assert.equal('font', defaultValues.icon);
-			assert.equal(menuName, defaultValues.menuName);
-			assert.equal(description, defaultValues.description);
-			assert.isUndefined(defaultValues.isSortable);
-			assert.isUndefined(defaultValues.isFilterable);
-			assert.isUndefined(defaultValues.useAsLabel);
-			assert.isTrue(defaultValues.supportRequire);
-		});
+      it(".defaultValue: should add new uuid", () => {
+         var rowData = {};
 
-		it('.columnHeader: should return valid column config', () => {
-			var columnConfig = target.columnHeader();
+         target.settings.default = "{uuid}";
 
-			assert.equal('text', columnConfig.editor, 'should be "template" editor');
-			assert.equal('textCell', columnConfig.css);
+         target.defaultValue(rowData);
 
-		});
+         assert.isDefined(rowData[columnName]);
+         assert.notEqual(rowData[columnName], target.settings.default);
+      });
 
-		it('.defaultValue: should add new uuid', () => {
-			var rowData = {};
+      it(".defaultValue: should add valid default value", () => {
+         var rowData = {};
 
-			target.settings.default = "{uuid}";
+         target.settings.default = "EXPECT THIS";
 
-			target.defaultValue(rowData);
+         target.defaultValue(rowData);
 
-			assert.isDefined(rowData[columnName]);
-			assert.notEqual(rowData[columnName], target.settings.default);
-		});
+         assert.isDefined(rowData[columnName]);
+         assert.equal(rowData[columnName], target.settings.default);
+      });
 
-		it('.defaultValue: should add valid default value', () => {
-			var rowData = {};
+      it(".isValidData: should not allow value more than 255 characters", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-			target.settings.default = "EXPECT THIS";
+         let rowData = {};
+         rowData[columnName] =
+            "WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE";
 
-			target.defaultValue(rowData);
+         target.isValidData(rowData, validator);
 
-			assert.isDefined(rowData[columnName]);
-			assert.equal(rowData[columnName], target.settings.default);
-		});
+         sandbox.assert.calledOnce(stubAddError);
+      });
 
-		it('.isValidData: should not allow value more than 255 characters', () => {
+      it(".isValidData: should not call any errors", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         let rowData = {};
+         rowData[columnName] = "CORRECT VALUE";
 
-			let rowData = {};
-			rowData[columnName] = "WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE WRONG VALUE";
+         target.isValidData(rowData, validator);
 
-			target.isValidData(rowData, validator);
+         sandbox.assert.notCalled(stubAddError);
+      });
 
-			sandbox.assert.calledOnce(stubAddError);
+      it(".isMultilingual: should return true", () => {
+         target.settings.supportMultilingual = 1;
 
-		});
+         let result = target.isMultilingual;
 
-		it('.isValidData: should not call any errors', () => {
+         assert.isTrue(result);
+      });
 
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+      it(".isMultilingual: should return false", () => {
+         target.settings.supportMultilingual = 0;
 
-			let rowData = {};
-			rowData[columnName] = "CORRECT VALUE";
+         let result = target.isMultilingual;
 
-			target.isValidData(rowData, validator);
+         assert.isFalse(result);
+      });
 
-			sandbox.assert.notCalled(stubAddError);
+      it(".formComponent: should return form component { common, newInstance }", () => {
+         assert.isDefined(target.formComponent);
+         assert.isFunction(target.formComponent);
 
-		});
+         let result = target.formComponent();
 
-		it('.isMultilingual: should return true', () => {
+         // common property
+         assert.isDefined(result.common);
+         assert.isFunction(result.common);
+         assert.equal("textbox", result.common().key);
+         assert.equal("single", result.common().settings.type);
 
-			target.settings.supportMultilingual = 1;
+         // newInstance property
+         assert.isDefined(result.newInstance);
+         assert.isFunction(result.newInstance);
+      });
 
-			let result = target.isMultilingual;
+      it(".detailComponent: should return detail component { common, newInstance }", () => {
+         assert.isDefined(target.detailComponent);
+         assert.isFunction(target.detailComponent);
 
-			assert.isTrue(result);
+         let result = target.detailComponent();
 
-		});
+         // common property
+         assert.isDefined(result.common);
+         assert.isFunction(result.common);
+         assert.equal("detailtext", result.common().key);
 
-		it('.isMultilingual: should return false', () => {
-
-			target.settings.supportMultilingual = 0;
-
-			let result = target.isMultilingual;
-
-			assert.isFalse(result);
-
-		});
-
-		it('.formComponent: should return form component { common, newInstance }', () => {
-
-			assert.isDefined(target.formComponent);
-			assert.isFunction(target.formComponent);
-
-			let result = target.formComponent();
-
-			// common property
-			assert.isDefined(result.common);
-			assert.isFunction(result.common);
-			assert.equal('textbox', result.common().key);
-			assert.equal('single', result.common().settings.type);
-
-			// newInstance property
-			assert.isDefined(result.newInstance);
-			assert.isFunction(result.newInstance);
-
-		});
-
-		it('.detailComponent: should return detail component { common, newInstance }', () => {
-
-			assert.isDefined(target.detailComponent);
-			assert.isFunction(target.detailComponent);
-
-			let result = target.detailComponent();
-
-			// common property
-			assert.isDefined(result.common);
-			assert.isFunction(result.common);
-			assert.equal('detailtext', result.common().key);
-
-			// newInstance property
-			assert.isDefined(result.newInstance);
-			assert.isFunction(result.newInstance);
-
-		});
-
-	});
-
+         // newInstance property
+         assert.isDefined(result.newInstance);
+         assert.isFunction(result.newInstance);
+      });
+   });
 });

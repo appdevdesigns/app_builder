@@ -1,481 +1,519 @@
-import AB from '../../../components/ab'
-import ABFieldDate from "../../../classes/dataFields/ABFieldDate"
+import AB from "../../../components/ab";
+import ABFieldDate from "../../../classes/dataFields/ABFieldDate";
 
-import sampleApp from "../../fixtures/ABApplication"
+import sampleApp from "../../fixtures/ABApplication";
 
 let validFormat = (date) => {
-	return moment(date).format('YYYY-MM-DD HH:mm:ss');
-}
+   return moment(date).format("YYYY-MM-DD HH:mm:ss");
+};
 
 let dateFormat = (date) => {
-	return moment(date).format('YYYY-MM-DD');
-}
+   return moment(date).format("YYYY-MM-DD");
+};
 
 describe("ABFieldDate unit tests", () => {
+   function L(key, altText) {
+      return AD.lang.label.getLabel(key) || altText;
+   }
+
+   var sandbox;
+
+   var ab;
+   var mockApp;
+   var mockObject;
+
+   var target;
+   var targetComponent;
+
+   var webixCom;
+
+   var columnName = "TEST_DATE_COLUMN";
+
+   before(() => {
+      ab = new AB();
+
+      mockApp = ab._app;
+      mockObject = sampleApp.objects()[0];
+
+      target = new ABFieldDate(
+         {
+            columnName: columnName,
+            settings: {}
+         },
+         mockObject
+      );
+
+      targetComponent = ABFieldDate.propertiesComponent(mockApp);
+
+      // render edit component
+      targetComponent.ui.container = "ab_test_div";
+      webixCom = new webix.ui(targetComponent.ui);
+   });
+
+   beforeEach(() => {
+      sandbox = sinon.sandbox.create();
+   });
+
+   afterEach(() => {
+      sandbox.restore();
+   });
+
+   after(() => {
+      if (webixCom && webixCom.destructor) webixCom.destructor();
+   });
+
+   /* Date field test cases */
+   describe("Date field test cases", () => {
+      it("should exist date field", () => {
+         assert.isDefined(target);
+      });
+
+      it("should have valid date default value", () => {
+         let defaultValues = ABFieldDate.defaults();
+
+         let menuName = L("ab.dataField.date.menuName", "*Date");
+         let description = L(
+            "ab.dataField.date.description",
+            "*Pick one from a calendar."
+         );
+
+         assert.equal("date", defaultValues.key);
+         assert.equal("calendar", defaultValues.icon);
+         assert.equal(menuName, defaultValues.menuName);
+         assert.equal(description, defaultValues.description);
+         assert.isTrue(defaultValues.supportRequire);
+      });
+
+      it(".columnHeader: should return date column config", () => {
+         var columnConfig = target.columnHeader();
+
+         assert.equal(
+            "datetime",
+            columnConfig.editor,
+            'should be "datetime" editor'
+         );
+         assert.isUndefined(
+            columnConfig.sort,
+            "should not define sort in webix datatable"
+         );
+         assert.isDefined(columnConfig.format);
+         assert.isDefined(columnConfig.editFormat);
+      });
+
+      it(".defaultValue: should set current date to data", () => {
+         var rowData = {};
+
+         // set setting to current date as default
+         target.settings.defaultDate = 2; // Current Date
+
+         // Set default value
+         target.defaultValue(rowData);
+
+         assert.isDefined(rowData[columnName]);
+         assert.isNotNaN(
+            Date.parse(rowData[columnName]),
+            "should parse valid date object"
+         );
+      });
+
+      it(".defaultValue: should set valid time to data", () => {
+         var rowData = {};
+
+         // set specific date as default
+         target.settings.defaultTime = 3;
+         target.settings.defaultTimeValue = new Date(1986, 2, 28, 2, 40);
+
+         // Set default value
+         target.defaultValue(rowData);
+
+         assert.isDefined(rowData[columnName]);
+
+         let dateResult = new Date(rowData[columnName]);
+
+         assert.equal(
+            target.settings.defaultTimeValue.getHours(),
+            dateResult.getHours()
+         );
+         assert.equal(
+            target.settings.defaultTimeValue.getMinutes(),
+            dateResult.getMinutes()
+         );
+         assert.equal(
+            target.settings.defaultTimeValue.getSeconds(),
+            dateResult.getSeconds()
+         );
+         assert.equal(
+            target.settings.defaultTimeValue.getMilliseconds(),
+            dateResult.getMilliseconds()
+         );
+      });
+
+      it(".defaultValue: should set current time to data", () => {
+         var rowData = {};
+
+         // set setting to current time as default
+         target.settings.defaultTime = 2; // Current Time
+
+         // Set default value
+         target.defaultValue(rowData);
 
-	function L(key, altText) {
-		return AD.lang.label.getLabel(key) || altText;
-	}
+         assert.isDefined(rowData[columnName]);
+         assert.isNotNaN(
+            Date.parse(rowData[columnName]),
+            "should parse valid date object"
+         );
+      });
+
+      it(".defaultValue: should set valid date to data", () => {
+         var rowData = {};
+
+         // set specific date as default
+         target.settings.defaultDate = 3;
+         target.settings.defaultDateValue = new Date("1986-02-28");
 
-	var sandbox;
+         // Set default value
+         target.defaultValue(rowData);
 
-	var ab;
-	var mockApp;
-	var mockObject;
+         assert.isDefined(rowData[columnName]);
 
-	var target;
-	var targetComponent;
+         let expect = dateFormat(target.settings.defaultDateValue),
+            result = dateFormat(rowData[columnName]);
+
+         assert.equal(expect, result);
+      });
+
+      it(".isValidData - dateRange: should pass when enter date is in range", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-	var webixCom;
+         let rowData = {};
+         // Current date
+         let currentDate = new Date();
+         rowData[columnName] = currentDate;
 
-	var columnName = 'TEST_DATE_COLUMN';
+         target.settings.validateCondition = "dateRange";
+         target.settings.validateRangeBefore = "5";
+         target.settings.validateRangeAfter = "5";
+         target.settings.validateRangeUnit = "days";
 
-	before(() => {
-		ab = new AB();
+         target.isValidData(rowData, validator);
 
-		mockApp = ab._app;
-		mockObject = sampleApp.objects()[0];
+         sandbox.assert.notCalled(stubAddError);
 
-		target = new ABFieldDate({
-			columnName: columnName,
-			settings: {}
-		}, mockObject);
+         // // .isValidDate should convert Date to ISO when valid
+         // assert.equal(currentDate.toISOString(), rowData[columnName]);
 
-		targetComponent = ABFieldDate.propertiesComponent(mockApp);
+         assert.equal(dateFormat(currentDate), dateFormat(rowData[columnName]));
+      });
 
-		// render edit component
-		targetComponent.ui.container = "ab_test_div";
-		webixCom = new webix.ui(targetComponent.ui);
-	});
+      it(".isValidData - dateRange: should not pass when enter date is not in range", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-	beforeEach(() => {
-		sandbox = sinon.sandbox.create();
-	});
+         let rowData = {};
+         // Next 6 days from current
+         rowData[columnName] = moment()
+            .add(6, "days")
+            .toDate();
 
-	afterEach(() => {
-		sandbox.restore();
-	});
+         target.settings.validateCondition = "dateRange";
+         target.settings.validateRangeBefore = "5";
+         target.settings.validateRangeAfter = "5";
+         target.settings.validateRangeUnit = "days";
 
-	after(() => {
-		if (webixCom && webixCom.destructor)
-			webixCom.destructor();
-	});
+         target.isValidData(rowData, validator);
 
-	/* Date field test cases */
-	describe('Date field test cases', () => {
+         sandbox.assert.calledOnce(stubAddError);
+      });
 
-		it('should exist date field', () => {
-			assert.isDefined(target);
-		});
+      it(".isValidData - between: should pass when enter date is in range", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-		it('should have valid date default value', () => {
-			let defaultValues = ABFieldDate.defaults();
+         let rowData = {};
+         let enterDate = new Date("1986-02-15");
+         rowData[columnName] = enterDate;
 
-			let menuName = L('ab.dataField.date.menuName', '*Date');
-			let description = L('ab.dataField.date.description', '*Pick one from a calendar.');
+         target.settings.validateCondition = "between";
+         target.settings.validateStartDate = "1986-02-01";
+         target.settings.validateEndDate = "1986-02-28";
 
-			assert.equal('date', defaultValues.key);
-			assert.equal('calendar', defaultValues.icon);
-			assert.equal(menuName, defaultValues.menuName);
-			assert.equal(description, defaultValues.description);
-			assert.isTrue(defaultValues.supportRequire);
+         target.isValidData(rowData, validator);
 
-		});
+         sandbox.assert.notCalled(stubAddError);
 
-		it('.columnHeader: should return date column config', () => {
-			var columnConfig = target.columnHeader();
+         // // .isValidDate should convert Date to ISO when valid
+         // assert.equal(enterDate.toISOString(), rowData[columnName]);
 
-			assert.equal('datetime', columnConfig.editor, 'should be "datetime" editor');
-			assert.isUndefined(columnConfig.sort, 'should not define sort in webix datatable');
-			assert.isDefined(columnConfig.format);
-			assert.isDefined(columnConfig.editFormat);
-		});
+         assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
+      });
 
-		it('.defaultValue: should set current date to data', () => {
-			var rowData = {};
+      it(".isValidData - notBetween: should not pass when enter date is not in range", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-			// set setting to current date as default
-			target.settings.defaultDate = 2; // Current Date
+         let rowData = {};
+         let enterDate = new Date("1986-03-01");
+         rowData[columnName] = enterDate;
 
-			// Set default value
-			target.defaultValue(rowData);
+         target.settings.validateCondition = "between";
+         target.settings.validateStartDate = "1986-02-01";
+         target.settings.validateEndDate = "1986-02-28";
 
-			assert.isDefined(rowData[columnName]);
-			assert.isNotNaN(Date.parse(rowData[columnName]), 'should parse valid date object');
-		});
+         target.isValidData(rowData, validator);
 
-		it('.defaultValue: should set valid time to data', () => {
-			var rowData = {};
+         sandbox.assert.calledOnce(stubAddError);
+      });
 
-			// set specific date as default
-			target.settings.defaultTime = 3
-			target.settings.defaultTimeValue = new Date(1986, 2, 28, 2, 40);
+      it(".isValidData - equal: should pass when enter date equals validate date", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-			// Set default value
-			target.defaultValue(rowData);
+         let rowData = {};
+         let enterDate = new Date("1986-02-28");
+         rowData[columnName] = enterDate;
 
-			assert.isDefined(rowData[columnName]);
+         target.settings.validateCondition = "=";
+         target.settings.validateStartDate = "1986-02-28";
 
-			let dateResult = new Date(rowData[columnName]);
+         target.isValidData(rowData, validator);
 
-			assert.equal(target.settings.defaultTimeValue.getHours(), dateResult.getHours());
-			assert.equal(target.settings.defaultTimeValue.getMinutes(), dateResult.getMinutes());
-			assert.equal(target.settings.defaultTimeValue.getSeconds(), dateResult.getSeconds());
-			assert.equal(target.settings.defaultTimeValue.getMilliseconds(), dateResult.getMilliseconds());
-		});
+         sandbox.assert.notCalled(stubAddError);
 
+         // // .isValidDate should convert Date to ISO when valid
+         // assert.equal(enterDate.toISOString(), rowData[columnName]);
 
-		it('.defaultValue: should set current time to data', () => {
-			var rowData = {};
+         assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
+      });
 
-			// set setting to current time as default
-			target.settings.defaultTime = 2; // Current Time
+      it(".isValidData - equal: should not pass when enter date does not equal validate date", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-			// Set default value
-			target.defaultValue(rowData);
+         let rowData = {};
+         let enterDate = new Date("1986-03-01");
+         rowData[columnName] = enterDate;
 
-			assert.isDefined(rowData[columnName]);
-			assert.isNotNaN(Date.parse(rowData[columnName]), 'should parse valid date object');
-		});
+         target.settings.validateCondition = "=";
+         target.settings.validateStartDate = "1986-02-28";
 
-		it('.defaultValue: should set valid date to data', () => {
-			var rowData = {};
+         target.isValidData(rowData, validator);
 
-			// set specific date as default
-			target.settings.defaultDate = 3
-			target.settings.defaultDateValue = new Date('1986-02-28');
+         sandbox.assert.calledOnce(stubAddError);
+      });
 
-			// Set default value
-			target.defaultValue(rowData);
+      it(".isValidData - not equal: should pass when enter date does not equal validate date", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-			assert.isDefined(rowData[columnName]);
+         let rowData = {};
+         let enterDate = new Date("1986-02-27");
+         rowData[columnName] = enterDate;
 
-			let expect = dateFormat(target.settings.defaultDateValue),
-				result = dateFormat(rowData[columnName]);
+         target.settings.validateCondition = "<>";
+         target.settings.validateStartDate = "1986-02-28";
 
-			assert.equal(expect, result);
-		});
+         target.isValidData(rowData, validator);
 
+         sandbox.assert.notCalled(stubAddError);
 
-		it('.isValidData - dateRange: should pass when enter date is in range', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         // .isValidDate should convert Date to ISO when valid
+         assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
+      });
 
-			let rowData = {};
-			// Current date
-			let currentDate = new Date();
-			rowData[columnName] = currentDate;
+      it(".isValidData - not equal: should not pass when enter date equals validate date", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-			target.settings.validateCondition = 'dateRange';
-			target.settings.validateRangeBefore = '5';
-			target.settings.validateRangeAfter = '5';
-			target.settings.validateRangeUnit = 'days';
+         let rowData = {};
+         let enterDate = new Date("1986-02-28");
+         rowData[columnName] = enterDate;
 
-			target.isValidData(rowData, validator);
+         target.settings.validateCondition = "<>";
+         target.settings.validateStartDate = "1986-02-28";
 
-			sandbox.assert.notCalled(stubAddError);
+         target.isValidData(rowData, validator);
 
-			// // .isValidDate should convert Date to ISO when valid
-			// assert.equal(currentDate.toISOString(), rowData[columnName]);
+         sandbox.assert.calledOnce(stubAddError);
+      });
 
-			assert.equal(dateFormat(currentDate), dateFormat(rowData[columnName]));
+      it(".isValidData - greater than: should pass when enter date is greater than validate date", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-		});
+         let rowData = {};
+         let enterDate = new Date("1986-03-01");
+         rowData[columnName] = enterDate;
 
-		it('.isValidData - dateRange: should not pass when enter date is not in range', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         target.settings.validateCondition = ">";
+         target.settings.validateStartDate = "1986-02-28";
 
-			let rowData = {};
-			// Next 6 days from current
-			rowData[columnName] = moment().add(6, 'days').toDate();
+         target.isValidData(rowData, validator);
 
-			target.settings.validateCondition = 'dateRange';
-			target.settings.validateRangeBefore = '5';
-			target.settings.validateRangeAfter = '5';
-			target.settings.validateRangeUnit = 'days';
+         sandbox.assert.notCalled(stubAddError);
 
-			target.isValidData(rowData, validator);
+         // .isValidDate should convert Date to ISO when valid
+         assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
+      });
 
-			sandbox.assert.calledOnce(stubAddError);
-		});
+      it(".isValidData - greater than: should not pass when enter date does not greater than validate date", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-		it('.isValidData - between: should pass when enter date is in range', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         let rowData = {};
+         let enterDate = new Date("1986-02-28");
+         rowData[columnName] = enterDate;
 
-			let rowData = {};
-			let enterDate = new Date('1986-02-15');
-			rowData[columnName] = enterDate;
+         target.settings.validateCondition = ">";
+         target.settings.validateStartDate = "1986-02-28";
 
-			target.settings.validateCondition = 'between';
-			target.settings.validateStartDate = '1986-02-01';
-			target.settings.validateEndDate = '1986-02-28';
+         target.isValidData(rowData, validator);
 
-			target.isValidData(rowData, validator);
+         sandbox.assert.calledOnce(stubAddError);
+      });
 
-			sandbox.assert.notCalled(stubAddError);
+      it(".isValidData - lower than: should pass when enter date is lower than validate date", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-			// // .isValidDate should convert Date to ISO when valid
-			// assert.equal(enterDate.toISOString(), rowData[columnName]);
+         let rowData = {};
+         let enterDate = new Date("1986-02-27");
+         rowData[columnName] = enterDate;
 
-			assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
+         target.settings.validateCondition = "<";
+         target.settings.validateStartDate = "1986-02-28";
 
-		});
+         target.isValidData(rowData, validator);
 
-		it('.isValidData - notBetween: should not pass when enter date is not in range', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         sandbox.assert.notCalled(stubAddError);
 
-			let rowData = {};
-			let enterDate = new Date('1986-03-01');
-			rowData[columnName] = enterDate;
+         // .isValidDate should convert Date to ISO when valid
+         assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
+      });
 
-			target.settings.validateCondition = 'between';
-			target.settings.validateStartDate = '1986-02-01';
-			target.settings.validateEndDate = '1986-02-28';
+      it(".isValidData - lower than: should not pass when enter date does not lower than validate date", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-			target.isValidData(rowData, validator);
+         let rowData = {};
+         let enterDate = new Date("1986-02-28");
+         rowData[columnName] = enterDate;
 
-			sandbox.assert.calledOnce(stubAddError);
-		});
+         target.settings.validateCondition = "<";
+         target.settings.validateStartDate = "1986-02-28";
 
-		it('.isValidData - equal: should pass when enter date equals validate date', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         target.isValidData(rowData, validator);
 
-			let rowData = {};
-			let enterDate = new Date('1986-02-28');
-			rowData[columnName] = enterDate;
+         sandbox.assert.calledOnce(stubAddError);
+      });
+   });
 
-			target.settings.validateCondition = '=';
-			target.settings.validateStartDate = '1986-02-28';
+   /* Date field component test cases */
+   describe("Date field component test cases", () => {
+      it("should exist date component", () => {
+         assert.isDefined(targetComponent);
+      });
 
-			target.isValidData(rowData, validator);
+      it("should exist .dateDisplay", () => {
+         assert.isDefined(targetComponent._logic.dateDisplay);
+      });
 
-			sandbox.assert.notCalled(stubAddError);
+      it("should valid default date format", () => {
+         var date = new Date("Feb 28 1986 02:12:00"),
+            // clone default settings
+            formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			// // .isValidDate should convert Date to ISO when valid
-			// assert.equal(enterDate.toISOString(), rowData[columnName]);
+         formatSettings.timeFormat = 3; // %H:%i
 
-			assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
-		});
+         var expectedDate = "28/02/1986 02:12";
 
-		it('.isValidData - equal: should not pass when enter date does not equal validate date', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         var result = targetComponent._logic.dateDisplay(date, formatSettings);
 
-			let rowData = {};
-			let enterDate = new Date('1986-03-01');
-			rowData[columnName] = enterDate;
+         assert.equal(expectedDate, result);
+      });
 
-			target.settings.validateCondition = '=';
-			target.settings.validateStartDate = '1986-02-28';
+      it("should valid date format with comma delimiter", () => {
+         var date = new Date("Feb 28 1986 02:12:00"),
+            // clone default settings
+            formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			target.isValidData(rowData, validator);
+         var expectedDate = "Feb 28, 1986 02:12";
 
-			sandbox.assert.calledOnce(stubAddError);
-		});
+         formatSettings.timeFormat = 3;
+         formatSettings.dateFormat = 4;
 
-		it('.isValidData - not equal: should pass when enter date does not equal validate date', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         var result = targetComponent._logic.dateDisplay(date, formatSettings);
 
-			let rowData = {};
-			let enterDate = new Date('1986-02-27');
-			rowData[columnName] = enterDate;
+         assert.equal(expectedDate, result);
+      });
 
-			target.settings.validateCondition = '<>';
-			target.settings.validateStartDate = '1986-02-28';
+      it("should valid date format with space delimiter no time", () => {
+         var date = new Date("Feb 28 1986 02:12:00"),
+            // clone default settings
+            formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			target.isValidData(rowData, validator);
+         var expectedDate = "02/28/1986";
 
-			sandbox.assert.notCalled(stubAddError);
+         formatSettings.timeFormat = 1;
+         formatSettings.dateFormat = 3;
 
-			// .isValidDate should convert Date to ISO when valid
-			assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
-		});
+         var result = targetComponent._logic.dateDisplay(date, formatSettings);
 
-		it('.isValidData - not equal: should not pass when enter date equals validate date', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         assert.equal(expectedDate, result);
+      });
 
-			let rowData = {};
-			let enterDate = new Date('1986-02-28');
-			rowData[columnName] = enterDate;
+      it("should valid time format - slash delimiter", () => {
+         var date = new Date("Feb 28 1986 02:08:00"),
+            // clone default settings
+            formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			target.settings.validateCondition = '<>';
-			target.settings.validateStartDate = '1986-02-28';
+         var expectedDate = "28/02/1986 02:08 AM";
 
-			target.isValidData(rowData, validator);
+         formatSettings.timeFormat = 2;
+         formatSettings.dateFormat = 2;
 
-			sandbox.assert.calledOnce(stubAddError);
-		});
+         var result = targetComponent._logic.dateDisplay(date, formatSettings);
 
-		it('.isValidData - greater than: should pass when enter date is greater than validate date', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         assert.equal(expectedDate, result);
+      });
 
-			let rowData = {};
-			let enterDate = new Date('1986-03-01');
-			rowData[columnName] = enterDate;
+      it("should valid time format - dash delimiter", () => {
+         var date = new Date("Feb 28 1986 22:08:00"),
+            // clone default settings
+            formatSettings = JSON.parse(JSON.stringify(target.settings));
 
-			target.settings.validateCondition = '>';
-			target.settings.validateStartDate = '1986-02-28';
+         var expectedDate = "02/28/1986 22:08";
 
-			target.isValidData(rowData, validator);
+         formatSettings.timeFormat = 3;
+         formatSettings.dateFormat = 3;
 
-			sandbox.assert.notCalled(stubAddError);
+         var result = targetComponent._logic.dateDisplay(date, formatSettings);
 
-			// .isValidDate should convert Date to ISO when valid
-			assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
-		});
-
-		it('.isValidData - greater than: should not pass when enter date does not greater than validate date', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
-
-			let rowData = {};
-			let enterDate = new Date('1986-02-28');
-			rowData[columnName] = enterDate;
-
-			target.settings.validateCondition = '>';
-			target.settings.validateStartDate = '1986-02-28';
-
-			target.isValidData(rowData, validator);
-
-			sandbox.assert.calledOnce(stubAddError);
-		});
-
-		it('.isValidData - lower than: should pass when enter date is lower than validate date', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
-
-			let rowData = {};
-			let enterDate = new Date('1986-02-27');
-			rowData[columnName] = enterDate;
-
-			target.settings.validateCondition = '<';
-			target.settings.validateStartDate = '1986-02-28';
-
-			target.isValidData(rowData, validator);
-
-			sandbox.assert.notCalled(stubAddError);
-
-			// .isValidDate should convert Date to ISO when valid
-			assert.equal(dateFormat(enterDate), dateFormat(rowData[columnName]));
-		});
-
-		it('.isValidData - lower than: should not pass when enter date does not lower than validate date', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
-
-			let rowData = {};
-			let enterDate = new Date('1986-02-28');
-			rowData[columnName] = enterDate;
-
-			target.settings.validateCondition = '<';
-			target.settings.validateStartDate = '1986-02-28';
-
-			target.isValidData(rowData, validator);
-
-			sandbox.assert.calledOnce(stubAddError);
-		});
-
-	});
-
-
-	/* Date field component test cases */
-	describe('Date field component test cases', () => {
-
-		it('should exist date component', () => {
-			assert.isDefined(targetComponent);
-		});
-
-		it('should exist .dateDisplay', () => {
-			assert.isDefined(targetComponent._logic.dateDisplay);
-		});
-
-		it('should valid default date format', () => {
-
-			var date = new Date('Feb 28 1986 02:12:00'),
-				// clone default settings
-				formatSettings = JSON.parse(JSON.stringify(target.settings));
-
-			formatSettings.timeFormat = 3; // %H:%i
-
-			var expectedDate = '28/02/1986 02:12';
-
-			var result = targetComponent._logic.dateDisplay(date, formatSettings);
-
-			assert.equal(expectedDate, result);
-		});
-
-		it('should valid date format with comma delimiter', () => {
-
-			var date = new Date('Feb 28 1986 02:12:00'),
-				// clone default settings
-				formatSettings = JSON.parse(JSON.stringify(target.settings));
-
-			var expectedDate = 'Feb 28, 1986 02:12';
-
-			formatSettings.timeFormat = 3;
-			formatSettings.dateFormat = 4;
-
-			var result = targetComponent._logic.dateDisplay(date, formatSettings);
-
-			assert.equal(expectedDate, result);
-		});
-
-		it('should valid date format with space delimiter no time', () => {
-
-			var date = new Date('Feb 28 1986 02:12:00'),
-				// clone default settings
-				formatSettings = JSON.parse(JSON.stringify(target.settings));
-
-			var expectedDate = '02/28/1986';
-
-			formatSettings.timeFormat = 1;
-			formatSettings.dateFormat = 3;
-
-			var result = targetComponent._logic.dateDisplay(date, formatSettings);
-
-			assert.equal(expectedDate, result);
-		});
-
-		it('should valid time format - slash delimiter', () => {
-
-			var date = new Date('Feb 28 1986 02:08:00'),
-				// clone default settings
-				formatSettings = JSON.parse(JSON.stringify(target.settings));
-
-			var expectedDate = '28/02/1986 02:08 AM';
-
-			formatSettings.timeFormat = 2;
-			formatSettings.dateFormat = 2;
-
-			var result = targetComponent._logic.dateDisplay(date, formatSettings);
-
-			assert.equal(expectedDate, result);
-		});
-
-		it('should valid time format - dash delimiter', () => {
-
-			var date = new Date('Feb 28 1986 22:08:00'),
-				// clone default settings
-				formatSettings = JSON.parse(JSON.stringify(target.settings));
-
-			var expectedDate = '02/28/1986 22:08';
-
-			formatSettings.timeFormat = 3;
-			formatSettings.dateFormat = 3;
-
-			var result = targetComponent._logic.dateDisplay(date, formatSettings);
-
-			assert.equal(expectedDate, result);
-		});
-
-
-	});
-
+         assert.equal(expectedDate, result);
+      });
+   });
 });

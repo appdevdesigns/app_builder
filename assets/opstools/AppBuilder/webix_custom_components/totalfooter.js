@@ -1,4 +1,3 @@
-
 /*
  * totalfooter
  *
@@ -6,59 +5,53 @@
  *
  */
 
-
 module.exports = class ABTotalFooter {
+   get key() {
+      return "totalfooter";
+   }
 
-	get key() { return 'totalfooter'; }
+   constructor(App, key) {
+      // App 	{obj}	our application instance object.
+      // key {string}	the destination key in App.custom[componentKey] for the instance of this component:
 
-	constructor(App, key) {
+      // super(App, key);
 
-		// App 	{obj}	our application instance object.
-		// key {string}	the destination key in App.custom[componentKey] for the instance of this component:
+      var L = App.Label;
 
-		// super(App, key);
+      var labels = {};
 
-		var L = App.Label;
+      // internal list of Webix IDs to reference our UI components.
+      var ids = {};
 
+      // Our webix UI definition:
+      var _ui = {};
+      this.view = this.key;
 
-		var labels = {};
+      // our internal business logic
+      var _logic = {};
+      this._logic = _logic;
 
+      // Tell Webix :
+      webix.ui.datafilter.totalColumn = webix.extend(
+         {
+            refresh: function(datatable, node, info) {
+               var result = 0;
 
-		// internal list of Webix IDs to reference our UI components.
-		var ids = {};
+               datatable.eachRow(function(row) {
+                  var record = datatable.getItem(row);
 
-		// Our webix UI definition:
-		var _ui = {};
-		this.view = this.key;
+                  var data = info.field.format(record);
 
-		// our internal business logic 
-		var _logic = {};
-		this._logic = _logic;
+                  // array
+                  if (data) {
+                     result += parseInt(data);
+                  }
+               });
 
-
-
-		// Tell Webix :
-		webix.ui.datafilter.totalColumn = webix.extend({
-			refresh: function (datatable, node, info) {
-				var result = 0;
-
-				datatable.eachRow(function(row){ 
-
-					var record = datatable.getItem(row);
-
-					var data = info.field.format(record);
-
-					// array
-					if (data) {
-						result += parseInt(data);
-					}
-
-				});
-
-				node.firstChild.innerHTML = result;
-			}
-		}, webix.ui.datafilter.summColumn);
-
-	}
-
-}
+               node.firstChild.innerHTML = result;
+            }
+         },
+         webix.ui.datafilter.summColumn
+      );
+   }
+};

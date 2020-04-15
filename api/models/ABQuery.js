@@ -5,81 +5,62 @@
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 
-var uuid = require('uuid/v4');
+var uuid = require("uuid/v4");
 
 module.exports = {
+   tableName: "appbuilder_query",
 
-	tableName: 'appbuilder_query',
+   attributes: {
+      id: { type: "string", primaryKey: true },
 
-	attributes: {
+      json: "json",
 
-		id: { type: 'string', primaryKey: true },
+      applications: {
+         collection: "ABApplication",
+         via: "queries"
+      },
 
-		json: 'json',
+      objects: {
+         collection: "ABObject",
+         via: "queries"
+      },
 
-		applications: {
-			collection: 'ABApplication',
-			via: 'queries',
-		},
+      _Klass: function() {
+         return ABQuery;
+      },
 
-		objects: {
-			collection: 'ABObject',
-			via: 'queries',
-		},
+      toABClass: function() {
+         // return new ABClassObject(this);
+      }
+   },
 
-		_Klass: function () {
-			return ABQuery;
-		},
+   beforeValidate: function(values, cb) {
+      cb();
+   },
 
-		toABClass: function () {
+   beforeCreate: function(values, cb) {
+      if (!values.id) values.id = uuid();
 
-			// return new ABClassObject(this);
+      cb();
+   },
 
-		}
+   beforeUpdate: function(values, cb) {
+      cb();
+   },
 
-	},
+   afterCreate: function(newRecord, cb) {
+      cb();
+   },
 
+   afterUpdate: function(updatedRecord, cb) {
+      cb();
+   },
 
-	beforeValidate: function (values, cb) {
+   beforeDestroy: function(criteria, cb) {
+      cb();
+   },
 
-		cb();
-	},
-
-
-	beforeCreate: function (values, cb) {
-
-		if (!values.id)
-			values.id = uuid();
-
-		cb();
-	},
-
-
-	beforeUpdate: function (values, cb) {
-
-		cb();
-	},
-
-
-	afterCreate: function (newRecord, cb) {
-
-		cb();
-	},
-
-	afterUpdate: function (updatedRecord, cb) {
-
-		cb();
-	},
-
-	beforeDestroy: function (criteria, cb) {
-
-		cb();
-
-	},
-
-	afterDestroy: function (record, cb) {
-
-		cb();
-	},
-
+   afterDestroy: function(record, cb) {
+      cb();
+   }
 };

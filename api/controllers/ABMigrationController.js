@@ -138,6 +138,7 @@ module.exports = {
 function verifyAndReturnField(req, res) {
    return new Promise((resolve, reject) => {
       let objID = req.param("objID", -1);
+
       let object = ABObjectCache.get(objID);
 
       // AppBuilder.routes.verifyAndReturnObject(req, res)
@@ -267,6 +268,7 @@ function simpleFieldOperation(req, res, operation) {
 
    // NOTE: verifyAnd...() handles any errors and responses internally.
    // only need to respond to a field being passed back on .resolve()
+
    verifyAndReturnField(req, res)
       .then(function(field) {
          sails.log.info("  -> found field:", field);

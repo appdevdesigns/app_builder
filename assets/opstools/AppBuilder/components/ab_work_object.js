@@ -72,6 +72,7 @@ module.exports = class AB_Work_Object extends ABComponent {
           */
          show: function() {
             $$(ids.component).show();
+
             /*
 				if (CurrentApplication &&
 					(!CurrentApplication.loadedObjects ||
