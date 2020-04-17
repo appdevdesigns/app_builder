@@ -1271,11 +1271,11 @@ module.exports = class RowFilter extends RowFilterCore {
       if (options.isRecordRule) {
          this.recordRuleOptions = [
             {
-               value: labels.component.sameAsField,
+               value: this.labels.component.sameAsField,
                id: "same_as_field"
             },
             {
-               value: labels.component.notSameAsField,
+               value: this.labels.component.notSameAsField,
                id: "not_same_as_field"
             }
          ];
