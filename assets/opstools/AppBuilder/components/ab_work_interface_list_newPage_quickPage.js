@@ -14,6 +14,7 @@ const ABViewGrid = require("../classes/platform/views/ABViewGrid");
 const ABViewLabel = require("../classes/platform/views/ABViewLabel");
 const ABViewMenu = require("../classes/platform/views/ABViewMenu");
 const ABViewPage = require("../classes/platform/views/ABViewPage");
+const ABViewTab = require("../classes/platform/views/ABViewTab");
 
 module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABComponent {
    constructor(App) {
@@ -278,27 +279,34 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
          },
 
          getFormView: (datacollection, options = {}) => {
-            // create a new form instance
-            let newForm = new ABViewForm(
-               {
-                  label: datacollection.label + " Form",
-                  settings: {
-                     dataviewID: datacollection.id,
-                     showLabel: true,
-                     labelPosition: "left",
-                     labelWidth: 120,
-                     submitRules: [
-                        {
-                           selectedAction:
-                              "ABViewRuleActionFormSubmitRuleParentPage",
-                           queryRules: [""]
+            let formSettings = {
+               label: datacollection.label + " Form",
+               settings: {
+                  dataviewID: datacollection.id,
+                  showLabel: true,
+                  labelPosition: "left",
+                  labelWidth: 120,
+                  clearOnLoad: options.clearOnLoad || false
+               }
+            };
+
+            // set redirect page
+            if (options && options.redirectPageId) {
+               formSettings.settings.submitRules = [
+                  {
+                     selectedAction: "ABViewRuleActionFormSubmitRuleExistPage",
+                     queryRules: [""],
+                     actionSettings: {
+                        valueRules: {
+                           pageId: options.redirectPageId
                         }
-                     ],
-                     clearOnLoad: options.clearOnLoad || false
+                     }
                   }
-               },
-               CurrentApplication
-            );
+               ];
+            }
+
+            // create a new form instance
+            let newForm = new ABViewForm(formSettings, CurrentApplication);
 
             // populate fields to a form
             let object = datacollection.datasource;
@@ -409,7 +417,53 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                      icon: ABViewMenu.common().icon,
                      label: "Menu",
                      settings: {
-                        pages: [addPageId]
+                        columnSpan: "1",
+                        rowSpan: "1",
+                        orientation: "x",
+                        buttonStyle: "ab-menu-default",
+                        menuAlignment: "ab-menu-right",
+                        menuInToolbar: "1",
+                        menuPadding: "10",
+                        menuTheme: "webix_dark",
+                        menuPosition: "right",
+                        menuTextLeft: "Team",
+                        menuTextCenter: "",
+                        menuTextRight: "",
+                        pages: [
+                           {
+                              pageId: addPageId,
+                              tabId: "",
+                              type: "page",
+                              aliasname: "Add " + CurrentDC.label,
+                              isChecked: true,
+                              translations: [
+                                 {
+                                    language_code: "en",
+                                    label: "Add " + CurrentDC.label,
+                                    aliasname: "Add " + CurrentDC.label
+                                 }
+                              ]
+                           }
+                        ],
+                        order: [
+                           {
+                              pageId: addPageId,
+                              tabId: "",
+                              type: "page",
+                              aliasname: "Add " + CurrentDC.label,
+                              isChecked: true,
+                              translations: [
+                                 {
+                                    language_code: "en",
+                                    label: "Add " + CurrentDC.label,
+                                    aliasname: "Add " + CurrentDC.label
+                                 }
+                              ],
+                              parent: "0",
+                              position: "0",
+                              icon: "plus"
+                           }
+                        ]
                      }
                   });
                }
@@ -456,14 +510,57 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                newDetail.position.y = 1;
 
                let viewsOfDetail = [
-                  // Title
+                  // Menu & Title
                   {
-                     key: ABViewLabel.common().key,
-                     icon: ABViewLabel.common().icon,
-                     label: "Title",
-                     text: "Details of " + CurrentDC.label,
+                     key: ABViewMenu.common().key,
+                     icon: ABViewMenu.common().icon,
+                     label: "Menu & Title",
                      settings: {
-                        format: 1
+                        columnSpan: 1,
+                        rowSpan: 1,
+                        orientation: "x",
+                        buttonStyle: "ab-menu-default",
+                        menuAlignment: "ab-menu-right",
+                        menuInToolbar: 1,
+                        menuPadding: 10,
+                        menuTheme: "bg_gray",
+                        menuPosition: "right",
+                        menuTextLeft: "Details " + CurrentDC.label,
+                        pages: [
+                           {
+                              pageId: editPageId,
+                              tabId: "",
+                              type: "page",
+                              aliasname: "Edit " + CurrentDC.label,
+                              isChecked: true,
+                              translations: [
+                                 {
+                                    language_code: "en",
+                                    label: "Edit " + CurrentDC.label,
+                                    aliasname: "Edit " + CurrentDC.label
+                                 }
+                              ]
+                           }
+                        ],
+                        order: [
+                           {
+                              pageId: editPageId,
+                              tabId: "",
+                              type: "page",
+                              aliasname: "Edit Team",
+                              isChecked: true,
+                              translations: [
+                                 {
+                                    language_code: "en",
+                                    label: "Edit Team",
+                                    aliasname: "Edit Team"
+                                 }
+                              ],
+                              parent: 0,
+                              position: 0,
+                              icon: "edit"
+                           }
+                        ]
                      },
                      position: {
                         y: 0
@@ -473,9 +570,32 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                   newDetail.toObj()
                ];
 
+               let tabSubChildren = {
+                  key: ABViewTab.common().key,
+                  icon: ABViewTab.common().icon,
+                  label: "Tab",
+                  name: "Tab",
+                  settings: {
+                     height: 0,
+                     minWidth: 0,
+                     stackTabs: 0,
+                     darkTheme: 1,
+                     sidebarWidth: 200,
+                     sidebarPos: "left",
+                     iconOnTop: 0,
+                     columnSpan: 1,
+                     rowSpan: 1
+                  },
+                  views: [],
+                  position: {
+                     y: 2
+                  }
+               };
+
                // define sub-pages to menu
-               let menuSubPages = [];
-               if (editPageId) menuSubPages.push(editPageId);
+               let subAddPages = {}; // { dataCollectionId: "uuid", pageId: "uuid" }
+               // let menuSubPages = [];
+               // if (editPageId) menuSubPages.push(editPageId);
 
                Object.keys(subValues).forEach((key, i) => {
                   if (subValues[key]) {
@@ -488,20 +608,99 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                         (dc) => dc.id == datacollectionId
                      )[0];
 
+                     if (subAddPages[datacollectionId] == null)
+                        subAddPages[datacollectionId] = OP.Util.uuid();
+
                      // Add grids of sub-dcs
                      if (flag == "list") {
-                        viewsOfDetail.push(
-                           // Title
+                        let tabView = {
+                           id: OP.Util.uuid(),
+                           key: "viewcontainer",
+                           icon: "braille",
+                           tabicon: "",
+                           name: childDC.label,
+                           settings: {
+                              columns: "1",
+                              removable: true,
+                              movable: true
+                           },
+                           translations: [
+                              {
+                                 language_code: "en",
+                                 label: childDC.label
+                              }
+                           ],
+                           views: [],
+                           position: {
+                              dx: 1,
+                              dy: 1
+                           },
+                           pages: []
+                        };
+
+                        tabView.views.push(
+                           // Menu & Title
                            {
-                              key: ABViewLabel.common().key,
-                              icon: ABViewLabel.common().icon,
-                              label: "Title",
-                              text: childDC.label,
+                              key: ABViewMenu.common().key,
+                              icon: ABViewMenu.common().icon,
+                              tabicon: "",
+                              name: childDC.label + ".menu",
                               settings: {
-                                 format: 1
+                                 columnSpan: 1,
+                                 rowSpan: 1,
+                                 orientation: "x",
+                                 buttonStyle: "ab-menu-default",
+                                 menuAlignment: "ab-menu-right",
+                                 menuInToolbar: 1,
+                                 menuPadding: 10,
+                                 menuTheme: "webix_dark",
+                                 menuPosition: "right",
+                                 menuTextLeft: childDC.label,
+                                 pages: [
+                                    {
+                                       pageId: subAddPages[datacollectionId],
+                                       tabId: "",
+                                       type: "page",
+                                       aliasname: "Add " + childDC.label,
+                                       isChecked: true,
+                                       translations: [
+                                          {
+                                             language_code: "en",
+                                             label: "Add " + childDC.label,
+                                             aliasname: "Add " + childDC.label
+                                          }
+                                       ]
+                                    }
+                                 ],
+                                 order: [
+                                    {
+                                       pageId: subAddPages[datacollectionId],
+                                       tabId: "",
+                                       type: "page",
+                                       aliasname: "Add " + childDC.label,
+                                       isChecked: "true",
+                                       translations: [
+                                          {
+                                             language_code: "en",
+                                             label: "Add " + childDC.label,
+                                             aliasname: "Add " + childDC.label
+                                          }
+                                       ],
+                                       parent: "0",
+                                       position: "0",
+                                       icon: "plus"
+                                    }
+                                 ]
                               },
+                              translations: [
+                                 {
+                                    language_code: "en",
+                                    label: childDC.label + ".menu"
+                                 }
+                              ],
                               position: {
-                                 y: viewsOfDetail.length + 1
+                                 dx: 1,
+                                 dy: 1
                               }
                            },
                            // Grid
@@ -514,24 +713,25 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                                  height: 300
                               },
                               position: {
-                                 y: viewsOfDetail.length + 2
+                                 y: 1
                               }
                            }
                         );
+
+                        tabSubChildren.views.push(tabView);
                      }
                      // Create a new page with form
                      else if (flag == "form") {
-                        let subPageId = OP.Util.uuid();
-
                         // add to menu
-                        menuSubPages.push(subPageId);
+                        // menuSubPages.push(subAddPageId);
 
                         let newForm = _logic.getFormView(childDC, {
-                           clearOnLoad: true
+                           clearOnLoad: true,
+                           redirectPageId: viewPageId
                         });
 
                         pages.push({
-                           id: subPageId,
+                           id: subAddPages[datacollectionId],
                            key: ABViewPage.common().key,
                            icon: ABViewPage.common().icon,
                            name: "Add " + childDC.label,
@@ -558,17 +758,21 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                });
 
                // Menu
-               viewsOfDetail.splice(1, 0, {
-                  key: ABViewMenu.common().key,
-                  icon: ABViewMenu.common().icon,
-                  label: "Menu",
-                  settings: {
-                     pages: menuSubPages
-                  },
-                  position: {
-                     y: 2
-                  }
-               });
+               // viewsOfDetail.splice(1, 0, {
+               //    key: ABViewMenu.common().key,
+               //    icon: ABViewMenu.common().icon,
+               //    label: "Menu",
+               //    settings: {
+               //       pages: menuSubPages
+               //    },
+               //    position: {
+               //       y: 2
+               //    }
+               // });
+
+               // Tab
+               if (tabSubChildren.views && tabSubChildren.views.length)
+                  viewsOfDetail.push(tabSubChildren);
 
                pages.push({
                   id: viewPageId,
@@ -671,6 +875,13 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                         labelWidth: 170
                      },
                      { height: 10 },
+                     {
+                        view: "checkbox",
+                        id: ids.addToTab,
+                        name: "addToTab",
+                        labelRight: 'Display <b>""</b> into a Tab',
+                        labelWidth: 2
+                     },
                      {
                         view: "checkbox",
                         id: ids.displayGrid,
