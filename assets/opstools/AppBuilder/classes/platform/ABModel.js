@@ -173,8 +173,8 @@ module.exports = class ABModel extends ABModelCore {
       // }
 
       return new Promise((resolve, reject) => {
-         // OP.Comm.Socket.get({
-         OP.Comm.Service.get({
+         // OP.Comm.Service.get({
+         OP.Comm.Socket.get({
             url: this.object.urlRest(),
             params: cond
             // params: newCond
