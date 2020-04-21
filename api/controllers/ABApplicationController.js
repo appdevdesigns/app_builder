@@ -663,6 +663,7 @@ module.exports = {
                      v.settings && v.settings.dataviewID
                         ? v.settings.dataviewID
                         : "";
+
                   if (dvIDS) {
                      // multi dv ids
                      if (dvIDS.indexOf(",") > -1) {
@@ -678,6 +679,37 @@ module.exports = {
                            datacollectionIds.push(dvIDS);
                         }
                      }
+                  }
+
+                  // pull data collections from record rules of the form widget
+                  if (
+                     v.key == "form" &&
+                     v.settings &&
+                     v.settings.recordRules &&
+                     v.settings.recordRules.length
+                  ) {
+                     v.settings.recordRules.forEach((rule) => {
+                        if (
+                           rule &&
+                           rule.actionSettings &&
+                           rule.actionSettings.valueRules &&
+                           rule.actionSettings.valueRules.fieldOperations &&
+                           rule.actionSettings.valueRules.fieldOperations.length
+                        ) {
+                           rule.actionSettings.valueRules.fieldOperations.forEach(
+                              (op) => {
+                                 if (op.value) {
+                                    if (
+                                       datacollectionIds.indexOf(op.value) < 0
+                                    ) {
+                                       datacollectionIds.push(op.value);
+                                    }
+                                 }
+                              }
+                           );
+                        }
+                     });
+
                   }
 
                   addDataviewIdToList(v.pages || []);
