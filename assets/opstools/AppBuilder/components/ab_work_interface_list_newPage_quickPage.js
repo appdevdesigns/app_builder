@@ -7,6 +7,7 @@
 
 const ABComponent = require("../classes/platform/ABComponent");
 const ABDataCollection = require("../classes/platform/ABDataCollection");
+const ABViewContainer = require("../classes/platform/views/ABViewContainer");
 const ABViewDetail = require("../classes/platform/views/ABViewDetail");
 const ABViewForm = require("../classes/platform/views/ABViewForm");
 const ABViewFormButton = require("../classes/platform/views/ABViewFormButton");
@@ -85,7 +86,9 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
           * Select the parent page
           */
          selectPage: function(newPageUrl, oldPageUrl) {
-            CurrentPage = CurrentApplication.urlResolve(newPageUrl.trim());
+            CurrentPage = CurrentApplication.pages(
+               (p) => p.id == newPageUrl.trim()
+            )[0];
          },
 
          /**
@@ -822,15 +825,87 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                views.push(editForm.toObj());
             }
 
-            return {
-               parent: CurrentPage, // should be either null or an {}
-               name: $$(ids.name)
-                  .getValue()
-                  .trim(),
-               key: ABViewPage.common().key,
-               views: views,
-               pages: pages
-            };
+            // add a new tab into selected page
+            if (CurrentPage && formValues.addToTab) {
+               (pages || []).forEach((p) => {
+                  CurrentPage._pages.push(CurrentPage.pageNew(p));
+               });
+
+               if (!CurrentPage._views) {
+                  CurrentPage._views = [];
+               }
+
+               let tabSettings = {
+                  label: "Tab",
+                  name: "Tab",
+                  settings: {
+                     height: 0,
+                     minWidth: 0,
+                     stackTabs: 0,
+                     darkTheme: 1,
+                     sidebarWidth: 200,
+                     sidebarPos: "left",
+                     iconOnTop: 0,
+                     columnSpan: 1,
+                     rowSpan: 1
+                  },
+                  views: []
+               };
+
+               let newTab = new ABViewTab(
+                  tabSettings,
+                  CurrentApplication,
+                  CurrentPage
+               );
+
+               let newTabViewSetting = {
+                  name: CurrentDC.label,
+                  label: CurrentDC.label,
+                  settings: {
+                     columns: "1",
+                     removable: true,
+                     movable: true
+                  },
+                  translations: [
+                     {
+                        language_code: "en",
+                        label: CurrentDC.label
+                     }
+                  ],
+                  views: views,
+                  position: {
+                     dx: 1,
+                     dy: 1
+                  },
+                  pages: []
+               };
+
+               newTab._views.push(
+                  new ABViewContainer(
+                     newTabViewSetting,
+                     CurrentApplication,
+                     newTab
+                  )
+               );
+
+               CurrentPage._views.push(newTab);
+
+               return {
+                  useParent: true,
+                  parent: CurrentPage,
+                  label: CurrentPage.label
+               };
+            } else {
+               return {
+                  parent: CurrentPage, // should be either null or an {}
+                  name: $$(ids.name)
+                     .getValue()
+                     .trim(),
+                  key: ABViewPage.common().key,
+                  views: views,
+                  pages: pages
+               };
+            }
          }
       });
 
