@@ -862,6 +862,8 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                      CurrentApplication,
                      CurrentPage
                   );
+
+                  CurrentPage._views.push(updateTab);
                }
 
                let newTabViewSetting = {
@@ -894,8 +896,6 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                      updateTab
                   )
                );
-
-               CurrentPage._views.push(updateTab);
 
                return {
                   useParent: true,
