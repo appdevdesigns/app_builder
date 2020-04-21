@@ -579,7 +579,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                   label: "Tab",
                   name: "Tab",
                   settings: {
-                     height: 0,
+                     height: 400,
                      minWidth: 0,
                      stackTabs: 0,
                      darkTheme: 1,
@@ -835,28 +835,34 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                   CurrentPage._views = [];
                }
 
-               let tabSettings = {
-                  label: "Tab",
-                  name: "Tab",
-                  settings: {
-                     height: 0,
-                     minWidth: 0,
-                     stackTabs: 0,
-                     darkTheme: 1,
-                     sidebarWidth: 200,
-                     sidebarPos: "left",
-                     iconOnTop: 0,
-                     columnSpan: 1,
-                     rowSpan: 1
-                  },
-                  views: []
-               };
+               let updateTab = CurrentPage.views(
+                  (v) => v.key == ABViewTab.common().key
+               )[0];
 
-               let newTab = new ABViewTab(
-                  tabSettings,
-                  CurrentApplication,
-                  CurrentPage
-               );
+               if (updateTab == null) {
+                  let tabSettings = {
+                     label: "Tab",
+                     name: "Tab",
+                     settings: {
+                        height: 400,
+                        minWidth: 0,
+                        stackTabs: 0,
+                        darkTheme: 1,
+                        sidebarWidth: 200,
+                        sidebarPos: "left",
+                        iconOnTop: 0,
+                        columnSpan: 1,
+                        rowSpan: 1
+                     },
+                     views: []
+                  };
+
+                  updateTab = new ABViewTab(
+                     tabSettings,
+                     CurrentApplication,
+                     CurrentPage
+                  );
+               }
 
                let newTabViewSetting = {
                   name: CurrentDC.label,
@@ -864,7 +870,8 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                   settings: {
                      columns: "1",
                      removable: true,
-                     movable: true
+                     movable: true,
+                     height: 400
                   },
                   translations: [
                      {
@@ -880,15 +887,15 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                   pages: []
                };
 
-               newTab._views.push(
+               updateTab._views.push(
                   new ABViewContainer(
                      newTabViewSetting,
                      CurrentApplication,
-                     newTab
+                     updateTab
                   )
                );
 
-               CurrentPage._views.push(newTab);
+               CurrentPage._views.push(updateTab);
 
                return {
                   useParent: true,
