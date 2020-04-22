@@ -227,7 +227,16 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                                              hidden: true,
                                              label: labels.component.delete,
                                              on: {
-                                                onItemClick: (/*id, e, node*/) => {}
+                                                onItemClick: (/*id, e, node*/) => {
+                                                   var selectedInstance = $$(
+                                                      ids.taskList
+                                                   ).getSelectedItem();
+                                                   if (selectedInstance) {
+                                                      _logic.deleteInstance(
+                                                         selectedInstance
+                                                      );
+                                                   }
+                                                }
                                              }
                                           },
                                           {}
@@ -305,6 +314,47 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
             // NOTE: to clear a visual glitch when multiple views are updating
             // at one time ... stop the animation on this one:
             $$(ids.noSelection).show(false, false);
+         },
+
+         /**
+          * @function deleteInstance()
+          *
+          * delete the selected instance.
+          *
+          * @param {ProcessInstance} instance
+          *        the selected process instance in the list.
+          * @return {Promise}
+          */
+         deleteInstance: function(instance) {
+            if (CurrentProcess && instance) {
+               let allDeletes = [];
+               instance.ids.forEach((id) => {
+                  allDeletes.push(
+                     OP.Comm.Service.delete({
+                        url: `/app_builder/abprocessinstance/${id}`
+                     })
+                  );
+               });
+               return Promise.all(allDeletes)
+                  .then((response) => {
+                     // reload the current monitor view for the current process
+                     _logic.populateWorkspace(CurrentProcess);
+                  })
+                  .catch((err) => {
+                     var message = "";
+                     if (err.message) {
+                        message = `(${err.message})`;
+                     }
+                     webix.alert({
+                        title: "Comm Error",
+                        text: `Error communicating with server.
+${message}`,
+                        ok: labels.common.ok || "oKay!"
+                     });
+                  });
+            } else {
+               return Promise.resolve();
+            }
          },
 
          groupBy(list, keyGetter) {
@@ -452,10 +502,11 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
                      if (err.message) {
                         message = `(${err.message})`;
                      }
-                     OP.Dialog.Alert({
+                     webix.alert({
                         title: "Comm Error",
                         text: `Error communicating with server.
-${message}`
+${message}`,
+                        ok: labels.common.ok || "oKay!"
                      });
                   });
             } else {

@@ -8,10 +8,10 @@
 var path = require("path");
 
 module.exports = {
-    _config: {
-        model: "abdefinitionmodel", // all lowercase model name
-        actions: false,
-        shortcuts: false,
-        rest: true
-    }
+   _config: {
+      model: "abdefinitionmodel", // all lowercase model name
+      actions: false,
+      shortcuts: false,
+      rest: true
+   }
 };

@@ -234,7 +234,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
 
       // If we don't have any sub lanes, then offer the select user options:
       if (this.laneIDs && this.laneIDs.length == 0) {
-         var userUI = ABProcessParticipant.selectUsersUi(id, this.users || {});
+         var userUI = ABProcessParticipant.selectUsersUi(id, this);
          ui.rows[1].elements.push(userUI);
       }
 
@@ -243,6 +243,12 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
       $$(id).show();
    }
 
+   /**
+    * selectUsersUi()
+    * A resuable fn to return the webix ui for a reusable Select User picker.
+    * @param {string} id
+    *        the webix $$(id) of the properties panel area.
+    */
    static selectUsersUi(id, obj) {
       var ids = ABProcessParticipant.propertyIDs(id);
 
@@ -273,7 +279,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                         view: "select",
                         value: obj.role ? obj.role : "",
                         disabled: obj.useRole ? false : true,
-                        options: __Roles || ["??"],
+                        options: __Roles || [{ id: 0, value: "??" }],
                         labelAlign: "left"
                      }
                   ]
@@ -300,9 +306,10 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                         view: "multicombo",
                         value: obj.account ? obj.account : 0,
                         disabled: obj.useAccount ? false : true,
-                        suggest: __Users || ["??"],
+                        suggest: __Users || [{ id: 0, value: "??" }],
                         labelAlign: "left",
-                        placeholder: "Click or type to add user..."
+                        placeholder: "Click or type to add user...",
+                        stringResult: false /* returns data as an array of [id] */
                      }
                   ]
                }
@@ -311,6 +318,12 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
       };
    }
 
+   /**
+    * stashUsersUi()
+    * A resuable fn to return the values from our static selectUsersUI().
+    * @param {string} id
+    *        the webix $$(id) of the properties panel area.
+    */
    static stashUsersUi(id) {
       var obj = {};
       var ids = ABProcessParticipant.propertyIDs(id);
@@ -328,7 +341,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
       }
 
       if ($$(ids.account)) {
-         obj.account = $$(ids.account).getValue();
+         obj.account = $$(ids.account).getValue(/*{ options: true }*/);
       }
 
       return obj;
@@ -344,9 +357,11 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
       var ids = ABProcessParticipant.propertyIDs(id);
       this.name = $$(ids.name).getValue();
       if (this.laneIDs.length == 0) {
-         this.users = ABProcessParticipant.stashUsersUi(id);
-      } else {
-         this.where = null;
+         var userDef = ABProcessParticipant.stashUsersUi(id);
+         Object.keys(userDef).forEach((k) => {
+            this[k] = userDef[k];
+         });
       }
+      this.stashed = true;
    }
 };

@@ -20,17 +20,18 @@ module.exports = class ABProcessLane extends ABProcessLaneCore {
       if (myParticipant) {
          // if I haven't already set my where clause, and my Participant
          // has one, then take it:
-         if (!this.where && myParticipant.where) {
+         if (!this.stashed && myParticipant.stashed) {
             var copyParams = [
-               "where",
+               "stashed",
                "useRole",
                "role",
                "useAccount",
                "account"
             ];
             copyParams.forEach((p) => {
+               var swap = this[p];
                this[p] = myParticipant[p];
-               myParticipant[p] = null; // ?? do this ??
+               myParticipant[p] = swap; // ?? do this ??
             });
          }
       }

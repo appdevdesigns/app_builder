@@ -10,12 +10,12 @@
 const ABQLCore = require("../../core/ql/ABQLCore.js");
 
 class ABQL extends ABQLCore {
-    // constructor(attributes, parameterDefinitions, prevOP, task, application) {
-    //     super(attributes, parameterDefinitions, prevOP, task, application);
-    // }
-    ///
-    /// Instance Methods
-    ///
+   // constructor(attributes, parameterDefinitions, prevOP, task, application) {
+   //     super(attributes, parameterDefinitions, prevOP, task, application);
+   // }
+   ///
+   /// Instance Methods
+   ///
 }
 
 module.exports = ABQL;
