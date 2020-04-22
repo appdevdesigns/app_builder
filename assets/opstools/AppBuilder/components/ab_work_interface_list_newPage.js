@@ -178,7 +178,9 @@ module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
 
             // this interface only creates Root Pages, or pages related to
             var page = null;
-            if (values.parent) {
+            if (values.useParent && values.parent) {
+               page = values.parent;
+            } else if (values.parent) {
                page = values.parent.pageNew(values);
             } else {
                page = CurrentApplication.pageNew(values);
