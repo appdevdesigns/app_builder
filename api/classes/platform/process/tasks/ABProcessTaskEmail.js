@@ -99,6 +99,13 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
                      return t.laneDiagramID != this.laneDiagramID;
                   });
 
+                  // HOWEVER, if NONE of my next tasks are in another lane,
+                  // then go back to my original set of tasks, and use my SAME
+                  // Lane ...
+                  if (tasks.length == 0) {
+                     tasks = this.nextTasks(instance);
+                  }
+
                   // get the lanes associated with these tasks
                   tasks.forEach((t) => {
                      myLanes.push(
@@ -226,7 +233,6 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
                   "notification_email.email",
                   jobData,
                   (err, results) => {
-                     debugger;
                      if (err) {
                         // err objects are returned as simple {} not instances of {Error}
                         var error = new Error(

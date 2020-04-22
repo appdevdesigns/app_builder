@@ -17,6 +17,11 @@ const ABProcessParticipantCore = require(path.join(
 
 const _ = require("lodash");
 
+function getRoleObject() {
+   const ROLE_OBJECT_ID = ABSystemObject.getObjectRoleId();
+   return ABObjectCache.get(ROLE_OBJECT_ID);
+}
+
 module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
    constructor(attributes, process, application) {
       super(attributes, process, application);
@@ -34,7 +39,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
          Promise.all(allLookups)
             .then((results) => {
                var users = results[0].concat(results[1]);
-               users = _.uniqBy(users, "id");
+               users = _.uniqBy(users, "uuid");
                resolve(users);
             })
             .catch(reject);
@@ -51,7 +56,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
             this.account = [this.account];
          }
 
-         SiteUser.find({ id: this.account })
+         SiteUser.find({ uuid: this.account })
             .then((listUsers) => {
                resolve(listUsers);
             })
@@ -70,25 +75,54 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
             this.role = [this.role];
          }
 
-         //// TODO: replace with current ABRole:
-         Permission.find({ role: this.role })
-            .then((list) => {
-               var userIDs = {};
-               if (list) {
-                  list.forEach((l) => {
-                     userIDs[l.user] = l;
+         // lookup the current list of Roles we are defined to use.
+         let RoleModel = getRoleObject();
+         RoleModel.queryFind(
+            {
+               where: {
+                  glue: "and",
+                  rules: [
+                     {
+                        key: RoleModel.PK(),
+                        rule: "in",
+                        value: this.role
+                     }
+                  ]
+               },
+               populate: true
+            },
+            {} // <-- user data isn't used in our condition
+         )
+            .catch((err) => {
+               reject(err);
+            })
+            .then((result = []) => {
+               // for each role, compile a list of Users->usernames
+               var allUsers = [];
+               (result || []).forEach((role) => {
+                  var usernames = (role.users || []).map((u) => {
+                     // the data entry is a ABFieldUser instance,
+                     // so it is in the format:
+                     // {
+                     //    id: "username",
+                     //    image:"",
+                     //    text: "username"
+                     // }
+                     return u.id || u;
                   });
-               }
-               // convert to array of ids
-               userIDs = Object.keys(userIDs);
+                  allUsers = allUsers.concat(usernames);
+               });
 
-               SiteUser.find({ id: userIDs })
+               // make sure we remove any duplicates
+               allUsers = _.uniq(allUsers);
+
+               // now return our SiteUsers based upon these usernames
+               SiteUser.find({ username: allUsers })
                   .then((listUsers) => {
                      resolve(listUsers);
                   })
                   .catch(reject);
-            })
-            .catch(reject);
+            });
       });
    }
 };
