@@ -190,11 +190,12 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
          callbackNewPage: function(page) {
             var parentPage = page.pageParent();
             var parentPageId = parentPage.id != page.id ? parentPage.id : null;
-            viewList.add(page, null, parentPageId);
+            if (!viewList.exists(page.id))
+               viewList.add(page, null, parentPageId);
 
             // add sub-pages to tree-view
             page.pages().forEach((p, index) => {
-               viewList.add(p, index, page.id);
+               if (!viewList.exists(p.id)) viewList.add(p, index, page.id);
             });
 
             $$(ids.list).refresh();
