@@ -129,7 +129,7 @@ module.exports = class ABField extends ABFieldCore {
                });
             })
 
-            // if this column exists, then drop the column
+            // check column exists
             .then((isTableExists) => {
                if (!isTableExists) return Promise.resolve();
 
@@ -140,15 +140,28 @@ module.exports = class ABField extends ABFieldCore {
                         knex.schema
                            .hasColumn(tableName, this.columnName)
                            .then((exists) => {
-                              if (!exists) return next();
-
-                              t.dropColumn(this.columnName);
+                              next(exists);
                            });
                      })
                      .then(next)
                      .catch(err);
                });
             })
+
+            // drop the column
+            .then(
+               (isColumnExists) =>
+                  new Promise((next, err) => {
+                     if (!isColumnExists) return next();
+
+                     knex.schema
+                        .table(tableName, (t) => {
+                           t.dropColumn(this.columnName);
+                        })
+                        .then(next)
+                        .catch(err);
+                  })
+            )
 
             // Update queries who include the removed column
             .then(() => {
