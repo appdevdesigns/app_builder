@@ -169,27 +169,30 @@ module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
             SaveButton.disable();
             CurrentEditor.formBusy();
 
-            var values = CurrentEditor.values();
-            if (!values) {
-               SaveButton.enable();
-               CurrentEditor.formReady();
-               return;
-            }
+            setTimeout(() => {
+               var values = CurrentEditor.values();
+               if (!values) {
+                  SaveButton.enable();
+                  CurrentEditor.formReady();
+                  return;
+               }
 
-            // this interface only creates Root Pages, or pages related to
-            var page = null;
-            if (values.useParent && values.parent) {
-               page = values.parent;
-            } else if (values.parent) {
-               page = values.parent.pageNew(values);
-            } else {
-               page = CurrentApplication.pageNew(values);
-            }
+               // this interface only creates Root Pages, or pages related to
+               var page = null;
+               if (values.useParent && values.parent) {
+                  page = values.parent;
+               } else if (values.parent) {
+                  page = values.parent.pageNew(values);
+               } else {
+                  page = CurrentApplication.pageNew(values);
+               }
 
-            var validator = page.isValid(values);
-            if (validator.fail()) {
-               CurrentEditor.errors(validator);
-            } else {
+               var validator = page.isValid(values);
+               if (validator.fail()) {
+                  CurrentEditor.errors(validator);
+                  return;
+               }
+
                let includeSubview = true;
 
                page
@@ -198,7 +201,7 @@ module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
                      // save sub-pages sequentially
                      var subTasks = Promise.resolve();
                      page.pages().forEach((subPage) => {
-                        subTasks = subTasks.then((x) =>
+                        subTasks = subTasks.then(() =>
                            subPage.save(includeSubview)
                         );
                      });
@@ -224,7 +227,7 @@ module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
                      SaveButton.enable();
                      CurrentEditor.formReady();
                   });
-            }
+            }, 50);
          },
 
          callbacks: {

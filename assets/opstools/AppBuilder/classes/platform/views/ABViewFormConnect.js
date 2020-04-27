@@ -53,7 +53,8 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
       this.__filterComponent = new RowFilter();
       this.__filterComponent.applicationLoad(application);
       this.__filterComponent.fieldsLoad(
-         this.datasource ? this.datasource.fields() : []
+         this.datasource ? this.datasource.fields() : [],
+         this.datasource ? this.datasource : null
       );
 
       this.__filterComponent.setValue(
@@ -389,7 +390,8 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
       let field = view.field();
       if (field) {
          let linkedObj = field.datasourceLink;
-         if (linkedObj) FilterComponent.fieldsLoad(linkedObj.fields());
+         if (linkedObj)
+            FilterComponent.fieldsLoad(linkedObj.fields(), linkedObj);
       }
 
       FilterComponent.applicationLoad(view.application);

@@ -344,7 +344,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
             // create a new detail instance
             var newDetail = new ABViewDetail(
                {
-                  label: "Details of " + CurrentDC.label,
+                  label: `Details of ${CurrentDC.label}`,
                   settings: {
                      dataviewID: CurrentDC.id,
                      showLabel: true,
@@ -367,7 +367,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
          },
 
          values: function() {
-            if (!CurrentDC) return null;
+            if (!CurrentDC || !CurrentDC.datasource) return null;
 
             // TODO : validate unique page's name
 
@@ -379,6 +379,8 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
             let addPageId = null,
                editPageId = null,
                viewPageId = null;
+
+            let currLabel = CurrentDC.datasource.label;
 
             // Add a 'add' page
             if (formValues.addable) {
@@ -393,7 +395,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                   id: addPageId,
                   key: ABViewPage.common().key,
                   icon: ABViewPage.common().icon,
-                  name: "Add " + CurrentDC.label,
+                  name: `Add ${currLabel}`,
                   settings: {
                      type: "popup"
                   },
@@ -403,7 +405,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                         key: ABViewLabel.common().key,
                         icon: ABViewLabel.common().icon,
                         label: "Title",
-                        text: "Add " + CurrentDC.label,
+                        text: `Add ${currLabel}`,
                         settings: {
                            format: 1
                         }
@@ -420,16 +422,16 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                      icon: ABViewMenu.common().icon,
                      label: "Menu",
                      settings: {
-                        columnSpan: "1",
-                        rowSpan: "1",
+                        columnSpan: 1,
+                        rowSpan: 1,
                         orientation: "x",
                         buttonStyle: "ab-menu-default",
                         menuAlignment: "ab-menu-right",
-                        menuInToolbar: "1",
-                        menuPadding: "10",
+                        menuInToolbar: 1,
+                        menuPadding: 10,
                         menuTheme: "webix_dark",
                         menuPosition: "right",
-                        menuTextLeft: "Team",
+                        menuTextLeft: currLabel,
                         menuTextCenter: "",
                         menuTextRight: "",
                         pages: [
@@ -437,13 +439,13 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                               pageId: addPageId,
                               tabId: "",
                               type: "page",
-                              aliasname: "Add " + CurrentDC.label,
+                              aliasname: `Add ${currLabel}`,
                               isChecked: true,
                               translations: [
                                  {
                                     language_code: "en",
-                                    label: "Add " + CurrentDC.label,
-                                    aliasname: "Add " + CurrentDC.label
+                                    label: `Add ${currLabel}`,
+                                    aliasname: `Add ${currLabel}`
                                  }
                               ]
                            }
@@ -453,17 +455,17 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                               pageId: addPageId,
                               tabId: "",
                               type: "page",
-                              aliasname: "Add " + CurrentDC.label,
+                              aliasname: `Add ${currLabel}`,
                               isChecked: true,
                               translations: [
                                  {
                                     language_code: "en",
-                                    label: "Add " + CurrentDC.label,
-                                    aliasname: "Add " + CurrentDC.label
+                                    label: `Add ${currLabel}`,
+                                    aliasname: `Add ${currLabel}`
                                  }
                               ],
-                              parent: "0",
-                              position: "0",
+                              parent: 0,
+                              position: 0,
                               icon: "plus"
                            }
                         ]
@@ -483,7 +485,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                   id: editPageId,
                   key: ABViewPage.common().key,
                   icon: ABViewPage.common().icon,
-                  name: "Edit " + CurrentDC.label,
+                  name: `Edit ${currLabel}`,
                   settings: {
                      type: "popup"
                   },
@@ -492,8 +494,8 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                      {
                         key: ABViewLabel.common().key,
                         icon: ABViewLabel.common().icon,
-                        label: "Title",
-                        text: "Edit " + CurrentDC.label,
+                        label: `Edit ${currLabel}`,
+                        text: `Edit ${currLabel}`,
                         settings: {
                            format: 1
                         }
@@ -528,19 +530,19 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                         menuPadding: 10,
                         menuTheme: "bg_gray",
                         menuPosition: "right",
-                        menuTextLeft: "Details " + CurrentDC.label,
+                        menuTextLeft: `Details ${currLabel}`,
                         pages: [
                            {
                               pageId: editPageId,
                               tabId: "",
                               type: "page",
-                              aliasname: "Edit " + CurrentDC.label,
+                              aliasname: `Edit ${currLabel}`,
                               isChecked: true,
                               translations: [
                                  {
                                     language_code: "en",
-                                    label: "Edit " + CurrentDC.label,
-                                    aliasname: "Edit " + CurrentDC.label
+                                    label: `Edit ${currLabel}`,
+                                    aliasname: `Edit ${currLabel}`
                                  }
                               ]
                            }
@@ -550,13 +552,13 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                               pageId: editPageId,
                               tabId: "",
                               type: "page",
-                              aliasname: "Edit Team",
+                              aliasname: `Edit ${currLabel}`,
                               isChecked: true,
                               translations: [
                                  {
                                     language_code: "en",
-                                    label: "Edit Team",
-                                    aliasname: "Edit Team"
+                                    label: `Edit ${currLabel}`,
+                                    aliasname: `Edit ${currLabel}`
                                  }
                               ],
                               parent: 0,
@@ -623,7 +625,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                            tabicon: "",
                            name: childDC.label,
                            settings: {
-                              columns: "1",
+                              columns: 1,
                               removable: true,
                               movable: true
                            },
@@ -647,7 +649,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                               key: ABViewMenu.common().key,
                               icon: ABViewMenu.common().icon,
                               tabicon: "",
-                              name: childDC.label + ".menu",
+                              name: `${childDC.label}.menu`,
                               settings: {
                                  columnSpan: 1,
                                  rowSpan: 1,
@@ -664,13 +666,13 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                                        pageId: subAddPages[datacollectionId],
                                        tabId: "",
                                        type: "page",
-                                       aliasname: "Add " + childDC.label,
+                                       aliasname: `Add ${childDC.label}`,
                                        isChecked: true,
                                        translations: [
                                           {
                                              language_code: "en",
-                                             label: "Add " + childDC.label,
-                                             aliasname: "Add " + childDC.label
+                                             label: `Add ${childDC.label}`,
+                                             aliasname: `Add ${childDC.label}`
                                           }
                                        ]
                                     }
@@ -680,17 +682,17 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                                        pageId: subAddPages[datacollectionId],
                                        tabId: "",
                                        type: "page",
-                                       aliasname: "Add " + childDC.label,
-                                       isChecked: "true",
+                                       aliasname: `Add ${childDC.label}`,
+                                       isChecked: true,
                                        translations: [
                                           {
                                              language_code: "en",
-                                             label: "Add " + childDC.label,
-                                             aliasname: "Add " + childDC.label
+                                             label: `Add ${childDC.label}`,
+                                             aliasname: `Add ${childDC.label}`
                                           }
                                        ],
-                                       parent: "0",
-                                       position: "0",
+                                       parent: 0,
+                                       position: 0,
                                        icon: "plus"
                                     }
                                  ]
@@ -698,7 +700,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                               translations: [
                                  {
                                     language_code: "en",
-                                    label: childDC.label + ".menu"
+                                    label: `${childDC.label}.menu`
                                  }
                               ],
                               position: {
@@ -710,7 +712,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                            {
                               key: ABViewGrid.common().key,
                               icon: ABViewGrid.common().icon,
-                              label: childDC.label + "'s grid",
+                              label: `${childDC.label}'s grid`,
                               settings: {
                                  dataviewID: childDC.id,
                                  height: 300
@@ -737,7 +739,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                            id: subAddPages[datacollectionId],
                            key: ABViewPage.common().key,
                            icon: ABViewPage.common().icon,
-                           name: "Add " + childDC.label,
+                           name: `Add ${childDC.label}`,
                            settings: {
                               type: "popup"
                            },
@@ -747,7 +749,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                                  key: ABViewLabel.common().key,
                                  icon: ABViewLabel.common().icon,
                                  label: "Title",
-                                 text: "Add " + childDC.label,
+                                 text: `Add ${childDC.label}`,
                                  settings: {
                                     format: 1
                                  }
@@ -781,7 +783,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                   id: viewPageId,
                   key: ABViewPage.common().key,
                   icon: ABViewPage.common().icon,
-                  name: "Details of " + CurrentDC.label,
+                  name: `Details of ${currLabel}`,
                   settings: {
                      type: "popup"
                   },
@@ -794,7 +796,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                views.push({
                   key: ABViewGrid.common().key,
                   icon: ABViewGrid.common().icon,
-                  label: CurrentDC.label,
+                  label: currLabel,
                   settings: {
                      dataviewID: CurrentDC.id,
                      height: 300,
@@ -811,7 +813,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                   key: ABViewLabel.common().key,
                   icon: ABViewLabel.common().icon,
                   label: "Title",
-                  text: "Add " + CurrentDC.label,
+                  text: `Add ${currLabel}`,
                   settings: {
                      format: 1
                   }
@@ -867,8 +869,8 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                }
 
                let newTabViewSetting = {
-                  name: CurrentDC.label,
-                  label: CurrentDC.label,
+                  name: currLabel,
+                  label: currLabel,
                   settings: {
                      columns: "1",
                      removable: true,
@@ -878,7 +880,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
                   translations: [
                      {
                         language_code: "en",
-                        label: CurrentDC.label
+                        label: currLabel
                      }
                   ],
                   views: views,
