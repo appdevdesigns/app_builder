@@ -1,4 +1,6 @@
 const path = require("path");
+// debugger;
+var uuidv4 = require("uuid");
 
 const ABApplicationCore = require(path.join(
    __dirname,
@@ -6,6 +8,8 @@ const ABApplicationCore = require(path.join(
    "core",
    "ABApplicationCore.js"
 ));
+
+const ABDefinition = require(path.join(__dirname, "ABDefinition"));
 
 const ABClassObject = require(path.join(__dirname, "ABObject"));
 const ABClassQuery = require(path.join(__dirname, "ABObjectQuery"));
@@ -94,7 +98,7 @@ module.exports = class ABClassApplication extends ABApplicationCore {
    }
 
    processNew(id) {
-      var processDef = ABDefinitionModel.definitionForID(id);
+      var processDef = ABDefinition.definition(id);
       if (processDef) {
          return new ABProcess(processDef, this);
       }
@@ -112,7 +116,7 @@ module.exports = class ABClassApplication extends ABApplicationCore {
     * @return {ABProcessTask}
     */
    processElementNew(id, process) {
-      var taskDef = ABDefinitionModel.definitionForID(id);
+      var taskDef = ABDefinition.definition(id);
       // var taskDef = ABDefinition.definition(id);
       if (taskDef) {
          switch (taskDef.type) {
@@ -155,5 +159,9 @@ module.exports = class ABClassApplication extends ABApplicationCore {
     */
    mobileAppNew(values) {
       return new ABMobileApp(values, this);
+   }
+
+   uuid() {
+      return uuidv4();
    }
 };

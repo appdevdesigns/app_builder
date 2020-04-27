@@ -1,11 +1,40 @@
-const ABGraphObject = require("../graphModels/ABObject");
+// const ABGraphObject = require("../graphModels/ABObject");
+const path = require("path");
+const ABDefinition = require(path.join(
+   __dirname,
+   "..",
+   "classes",
+   "platform",
+   "ABDefinition"
+));
+const ABApplication = require(path.join(
+   __dirname,
+   "..",
+   "classes",
+   "platform",
+   "ABApplication"
+));
+const ABObject = require(path.join(
+   __dirname,
+   "..",
+   "classes",
+   "platform",
+   "ABObject"
+));
 
-const ABRole = require("../systemObjects/role");
-const ABScope = require("../systemObjects/scope");
+// const ABRole = require("../systemObjects/role");
+// const ABScope = require("../systemObjects/scope");
+
+const ROLE_OBJECT_ID = "c33692f3-26b7-4af3-a02e-139fb519296d";
+const SCOPE_OBJECT_ID = "af10e37c-9b3a-4dc6-a52a-85d52320b659";
 
 module.exports = {
    initial: () => {
-      let systemObjList = [new ABRole(), new ABScope()];
+      /*
+      let systemObjList = [
+         ABSystemObject.getObjectRole(),
+         ABSystemObject.getObjectScope()
+      ];
 
       let tasks = [];
 
@@ -20,7 +49,7 @@ module.exports = {
                   next();
                })
          );
-         tasks.push(() => ABGraphObject.upsert(obj.id, obj.toObj())); // Save JSON
+         // tasks.push(() => ABGraphObject.upsert(obj.id, obj.toObj())); // Save JSON
       });
 
       // Create Fields
@@ -36,41 +65,36 @@ module.exports = {
       return tasks.reduce((promiseChain, currTask) => {
          return promiseChain.then(currTask);
       }, Promise.resolve([]));
+*/
+      return Promise.resolve();
    },
 
    getObjectRoleId: () => {
-      const ROLE_OBJECT_ID = "c33692f3-26b7-4af3-a02e-139fb519296d";
       return ROLE_OBJECT_ID;
    },
 
-   getObjectRole: () => {
-      const ROLE_OBJECT_ID = ABSystemObject.getObjectRoleId();
-
-      let obj = ABObjectCache.get(ROLE_OBJECT_ID);
+   getObject: (id) => {
+      let obj = ABObjectCache.get(id);
       if (obj) {
-         let result = new ABScope(obj.toObj());
-         result.initFields();
-         return result;
+         return obj;
       } else {
+         var def = ABDefinition.definition(id);
+         if (def) {
+            return new ABObject(def, new ABApplication({}));
+         }
          return null;
       }
    },
 
+   getObjectRole: () => {
+      return ABSystemObject.getObject(ROLE_OBJECT_ID);
+   },
+
    getObjectScopeId: () => {
-      const SCOPE_OBJECT_ID = "af10e37c-9b3a-4dc6-a52a-85d52320b659";
       return SCOPE_OBJECT_ID;
    },
 
    getObjectScope: () => {
-      const SCOPE_OBJECT_ID = ABSystemObject.getObjectScopeId();
-
-      let obj = ABObjectCache.get(SCOPE_OBJECT_ID);
-      if (obj) {
-         let result = new ABScope(obj.toObj());
-         result.initFields();
-         return result;
-      } else {
-         return null;
-      }
+      return ABSystemObject.getObject(SCOPE_OBJECT_ID);
    }
 };

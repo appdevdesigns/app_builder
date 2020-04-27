@@ -142,11 +142,49 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          var linkObject = this.datasourceLink;
          var linkKnex = ABMigration.connection(linkObject.connName);
 
+         /*
+         // Transition Code to create ABDefinition out of Roles and Scopes
+         if (!this.fieldLink) {
+            console.error("!!!! this.fieldLink is undefined");
+            console.log(JSON.stringify(this.object.toObj()));
+            var allSaves = [];
+            this.object.fields().forEach((f) => {
+               allSaves.push(
+                  f
+                     .save()
+                     .then(() => {
+                        return this.object.fieldSave(f);
+                     })
+                     .catch((err) => {
+                        console.log("--------");
+                        console.log(err);
+                        console.log(f.toObj());
+                        console.log("--------");
+                     })
+               );
+            });
+            Promise.all(allSaves)
+               .then(() => {
+                  // debugger;
+                  console.log(
+                     JSON.stringify(this.object.toDefinition().toObj(), null, 4)
+                  );
+                  return this.object.save();
+               })
+               .then(() => {
+                  console.log("ALL Object definitions have been updated");
+               });
+         }
+         */
          var linkTableName = linkObject.dbTableName(true),
-            linkPK = linkObject.PK(),
+            linkPK = linkObject.PK();
+
+         // NOTE: it is possible for this.fieldLink to be undefined:
+         var linkColumnName;
+         if (this.fieldLink) {
             // TODO : should check duplicate column
             linkColumnName = this.fieldLink.columnName;
-         // linkColumnName = this.object.name;
+         }
 
          // 1:M - create a column in the table and references to id of the link table
          if (
@@ -287,6 +325,17 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                [
                   // check column already exist
                   (next) => {
+                     // linkColumnName might be undefined.
+                     // if so, then skip this process.
+                     if (!linkColumnName) {
+                        console.error(
+                           "ABFieldConnect:migrateCreate(): could not resolve linkColumnName. This is unexpected.",
+                           this.toObj()
+                        );
+                        next(null, true);
+                        return;
+                     }
+
                      linkKnex.schema
                         .hasColumn(linkTableName, linkColumnName)
                         .then((exists) => {
@@ -669,9 +718,27 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          } else {
             sourceObjectName = linkObject.name;
             targetObjectName = this.object.name;
-            columnName = this.fieldLink.columnName;
+            // NOTE: it is possible for this.fieldLink to return undefined
+            if (this.fieldLink) {
+               columnName = this.fieldLink.columnName;
+            }
          }
 
+         // if columnName is not set, we can't proceed:
+         if (!columnName) {
+            var tryThisField = linkObject.fields(
+               (f) => f.id == this.settings.linkColumn
+            )[0];
+            if (tryThisField) {
+               columnName = tryThisField.columnName;
+            } else {
+               // yeah, well this shouldn't be happening, and is only
+               // happening due to the current Role & Scope transition,
+               // so we will take this all out once we have those
+               // merged into ABDefinitions
+               columnName = "roles"; // linkObject.name;
+            }
+         }
          // return join table name
          tableName = AppBuilder.rules.toJunctionTableNameFormat(
             // this.object.application.name, // application name

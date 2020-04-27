@@ -15,6 +15,25 @@ var async = require("async");
 var ABGraphObject = require(path.join("..", "api", "graphModels", "ABObject"));
 var ABGraphQuery = require(path.join("..", "api", "graphModels", "ABQuery"));
 
+const ABApplication = require(path.join(
+   __dirname,
+   "..",
+   "api",
+   "classes",
+   "platform",
+   "ABApplication"
+));
+const ABObject = require(path.join(
+   __dirname,
+   "..",
+   "api",
+   "classes",
+   "platform",
+   "ABObject"
+));
+
+var allDefinitions = [];
+
 module.exports = function(cb) {
    AD.module.bootstrap(__dirname, (err) => {
       if (err) {
@@ -35,7 +54,10 @@ module.exports = function(cb) {
             verifyWellKnownConfigs,
             verifyDataDir,
 
-            initialGraphDB,
+            // load all our ABDefinitions
+            loadDefinitions,
+
+            // initialGraphDB,
             initialSystemObjects,
             cacheABClassObjects,
 
@@ -45,8 +67,7 @@ module.exports = function(cb) {
             addSDCAppInfo,
             defaultEmailNotificationInvite,
             addSDCAppDataDirectory,
-            addSDCObjectLifecycleBeforeCreate,
-            loadDefinitions
+            addSDCObjectLifecycleBeforeCreate
          ],
          (err, data) => {
             cb(err);
@@ -128,7 +149,7 @@ function verifyWellKnownConfigs(next) {
 
 function cacheABClassObjects(next) {
    let tasks = [];
-
+   /*
    tasks.push(
       new Promise((resolve, reject) => {
          ABGraphObject.find()
@@ -160,10 +181,14 @@ function cacheABClassObjects(next) {
             });
       })
    );
+*/
+   var genApp = new ABApplication({});
+   var objDefs = (allDefinitions || []).filter((d) => d.type == "object");
+   objDefs.forEach((o) => {
+      new ABObject(o.json, genApp);
+   });
 
-   Promise.all(tasks)
-      .catch(next)
-      .then(() => next());
+   next();
 }
 
 function setupPollingMCC(next) {
@@ -638,17 +663,18 @@ AppDev Team
    next();
 }
 
-function initialGraphDB(next) {
-   ABGraphDB.initial()
-      .catch(next)
-      .then(() => {
-         next();
-      });
-}
+// function initialGraphDB(next) {
+//    ABGraphDB.initial()
+//       .catch(next)
+//       .then(() => {
+//          next();
+//       });
+// }
 
 function loadDefinitions(next) {
    ABDefinitionModel.refresh()
-      .then(() => {
+      .then((allDefs) => {
+         allDefinitions = allDefs;
          next();
       })
       .catch(next);

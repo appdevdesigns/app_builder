@@ -6,6 +6,7 @@
  */
 
 const async = require("async");
+const _ = require("lodash");
 
 const ApplicationGraph = require("../graphModels/ABApplication");
 // const RoleGraph = require("../graphModels/ABRole");
@@ -13,25 +14,17 @@ const ApplicationGraph = require("../graphModels/ABApplication");
 
 const ABModelController = require("./ABModelController");
 
-function getRoleObject() {
-   const ROLE_OBJECT_ID = ABSystemObject.getObjectRoleId();
-   return ABObjectCache.get(ROLE_OBJECT_ID);
-}
-
-function getScopeObject() {
-   const SCOPE_OBJECT_ID = ABSystemObject.getObjectScopeId();
-   return ABObjectCache.get(SCOPE_OBJECT_ID);
-}
-
 let ABRoleController = {
    // GET /app_builder/role
    find: function(req, res) {
       let cond = req.body || {};
-      let RoleModel = getRoleObject();
+      let RoleModel = ABSystemObject.getObjectRole();
 
-      if (cond.populate == null) cond.populate = true;
+      if (cond.populate == null || _.isUndefined(cond.populate))
+         cond.populate = true;
 
-      RoleModel.queryFind(cond, req.user.data)
+      RoleModel.modelAPI()
+         .findAll(cond, req.user.data)
          .catch(res.AD.error)
          .then((roles) => {
             res.AD.success(roles || []);
@@ -41,26 +34,27 @@ let ABRoleController = {
    // GET /app_builder/role/:id
    findOne: function(req, res) {
       let id = req.param("id");
-      let RoleModel = getRoleObject();
+      let RoleModel = ABSystemObject.getObjectRole();
 
       return new Promise((resolve, reject) => {
-         RoleModel.queryFind(
-            {
-               where: {
-                  glue: "and",
-                  rules: [
-                     {
-                        key: RoleModel.PK(),
-                        rule: "equals",
-                        value: id
-                     }
-                  ]
+         RoleModel.modelAPI()
+            .findAll(
+               {
+                  where: {
+                     glue: "and",
+                     rules: [
+                        {
+                           key: RoleModel.PK(),
+                           rule: "equals",
+                           value: id
+                        }
+                     ]
+                  },
+                  limit: 1,
+                  populate: true
                },
-               limit: 1,
-               populate: true
-            },
-            req.user.data
-         )
+               req.user.data
+            )
             .catch((err) => {
                if (res) res.AD.error(err);
 
@@ -93,7 +87,7 @@ let ABRoleController = {
    roleScope: function(req, res) {
       let id = req.param("id");
 
-      let ScopeModel = getScopeObject();
+      let ScopeModel = ABSystemObject.getObjectScope();
 
       let connectedField = ScopeModel.fields(
          (f) =>
@@ -115,7 +109,7 @@ let ABRoleController = {
          ]
       };
 
-      return ScopeModel.queryFind(
+      return ScopeModel.modelAPI().findAll(
          {
             where: where
          },
@@ -250,6 +244,7 @@ let ABRoleController = {
 
       async.waterfall([
          function(next) {
+            debugger;
             // Find application
             ApplicationGraph.findOne(appId)
                .catch((err) => {
@@ -310,6 +305,7 @@ let ABRoleController = {
 
       async.waterfall([
          function(next) {
+            debugger;
             // Find application
             ApplicationGraph.findOne(appId)
                .catch((err) => {
@@ -371,6 +367,7 @@ let ABRoleController = {
          [
             function(next) {
                // Find application
+               debugger;
                ApplicationGraph.findOne(appId)
                   .catch((err) => {
                      res.AD.error(err);
@@ -427,6 +424,7 @@ let ABRoleController = {
       async.waterfall([
          function(next) {
             // Get application
+            debugger;
             ApplicationGraph.findOne(appId)
                .catch((err) => {
                   res.AD.error(err);

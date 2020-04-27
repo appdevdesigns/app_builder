@@ -6,6 +6,10 @@ const _ = require("lodash");
 var __ModelPool = {}; // reuse any previously created Model connections
 // to minimize .knex bindings (and connection pools!)
 
+var conditionFields = ["sort", "offset", "limit", "populate"];
+// the list of fields on a provided .findAll(cond) param that we should
+// consider when parsing the object.
+
 module.exports = class ABModel extends ABModelCore {
    /**
     * @method findAll
@@ -37,13 +41,22 @@ module.exports = class ABModel extends ABModelCore {
       //		 returned?
       cond = cond || {};
       if (!cond.where) {
-         cond = {
+         // if we don't seem to have an EXPANDED format, see if we can
+         // figure it out:
+         var newCond = {
             where: cond,
             sort: [], // No Sorts
             offset: 0, // no offset
             limit: 0, // no limit
             populate: false // don't populate the data
          };
+         conditionFields.forEach((f) => {
+            if (!_.isUndefined(cond[f])) {
+               newCond[f] = cond[f];
+            }
+         });
+
+         cond = newCond;
       }
 
       // conditionDefaults is optional.  Some system tasks wont provide this.
@@ -80,7 +93,13 @@ module.exports = class ABModel extends ABModelCore {
          this.queryPopulate(query, cond.populate);
 
          // perform the operation
-         query.then(resolve).catch(reject);
+         query
+            .then((data) => {
+               // normalize our Data before returning
+               this.normalizeData(data);
+               resolve(data);
+            })
+            .catch(reject);
       });
    }
 

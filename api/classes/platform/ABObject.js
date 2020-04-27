@@ -686,8 +686,8 @@ module.exports = class ABClassObject extends ABObjectCore {
                         objectIds = [this.id];
                      }
 
-                     let ABObjectScope = ABSystemObject.getObjectScope();
-                     ABObjectScope.pullScopes({
+                     // let ABObjectScope = ABSystemObject.getObjectScope();
+                     this.pullScopes({
                         username: userData.username,
                         objectIds: objectIds,
                         ignoreQueryId: this.viewName ? this.id : null
@@ -1431,6 +1431,89 @@ module.exports = class ABClassObject extends ABObjectCore {
                   })
             )
       );
+   }
+
+   /**
+    * @method pullScopes
+    *
+    * @param {Object} options - {
+    *                   username: {string},
+    *                   objectIds: {array},
+    *                   ignoreQueryId: {uuid}
+    *                }
+    */
+   pullScopes(options = {}) {
+      return new Promise((resolve, reject) => {
+         let ABObjectRole = ABObjectCache.get(ABSystemObject.getObjectRoleId());
+         // let ABObjectScope = ABObjectCache.get(SCOPE_OBJECT_ID);
+
+         // ABObjectRole.queryFind({
+         ABObjectRole.modelAPI()
+            .findAll({
+               where: {
+                  glue: "and",
+                  rules: [
+                     {
+                        key: "users",
+                        rule: "contains",
+                        value: options.username
+                     }
+                  ]
+               },
+               populate: true
+            })
+            .catch(reject)
+            .then((roles) => {
+               let scopes = [];
+
+               (roles || []).forEach((r) => {
+                  // Check user in role
+                  if (
+                     !(r.users || []).filter(
+                        (u) => (u.id || u) == options.username
+                     )[0]
+                  )
+                     return;
+
+                  (r.scopes__relation || []).forEach((sData) => {
+                     if (
+                        !scopes.filter(
+                           (s) => (s.id || s.uuid) == (sData.id || sData.uuid)
+                        )[0]
+                     )
+                        scopes.push(sData);
+                  });
+               });
+
+               // remove rules who has filter to query id
+               if (options.ignoreQueryId) {
+                  (scopes || []).forEach((s) => {
+                     if (
+                        !s ||
+                        !s.filter ||
+                        !s.filter.rules ||
+                        s.filter.rules.length < 1
+                     )
+                        return;
+
+                     s.filter.rules.forEach((r, rIndex) => {
+                        if (
+                           r.rule &&
+                           (r.rule == "in_query" ||
+                              r.rule == "not_in_query" ||
+                              r.rule == "in_query_field" ||
+                              r.rule == "not_in_query_field") &&
+                           (r.value || "").indexOf(options.ignoreQueryId) > -1
+                        ) {
+                           s.filter.rules.splice(rIndex, 1);
+                        }
+                     });
+                  });
+               }
+
+               resolve(scopes);
+            });
+      });
    }
 
    ///

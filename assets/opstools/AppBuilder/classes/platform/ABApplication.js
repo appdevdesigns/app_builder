@@ -119,7 +119,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
          ABDefinition.loadAll()
             .then((allDefinitions) => {
                let apps = [];
-               debugger;
+               // debugger;
                allDefinitions.forEach((def) => {
                   if (def.type == "application") {
                      apps.push(new ABApplication(def.json));

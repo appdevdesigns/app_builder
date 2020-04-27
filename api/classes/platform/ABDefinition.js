@@ -58,6 +58,18 @@ module.exports = class ABDefinition extends ABDefinitionCore {
       return ABDefinitionModel.update({ id: id }, data);
    }
 
+   /**
+    * @method definition()
+    *
+    * return the current Definition data for the requested object id.
+    *
+    * Note: this returns the actual ABDefinition.json data that our System
+    * objects can use to create a new instance of itself.  Not the ABDefinition
+    * itself.
+    *
+    * @param {string} id  the id of the definition to update
+    * @return {obj}   the updated value of the ABDefinition entry from the server.
+    */
    static definition(id) {
       return ABDefinitionModel.definitionForID(id);
    }
