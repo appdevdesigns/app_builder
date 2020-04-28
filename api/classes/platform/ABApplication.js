@@ -1,6 +1,7 @@
+const _ = require("lodash");
 const path = require("path");
 // debugger;
-var uuidv4 = require("uuid");
+const uuidv4 = require("uuid");
 
 const ABApplicationCore = require(path.join(
    __dirname,
@@ -35,6 +36,40 @@ const ABProcessTaskManager = require(path.join(
 module.exports = class ABClassApplication extends ABApplicationCore {
    constructor(attributes) {
       super(attributes);
+   }
+
+   static applications(fn = () => true) {
+      var allDefs = ABDefinition.definitions((f) => {
+         return f.type == "application";
+      });
+      var allApps = [];
+      (allDefs || []).forEach((def) => {
+         var app = ABClassApplication.applicationForID(def.id);
+         if (app) {
+            allApps.push(app);
+         }
+      });
+
+      return allApps;
+   }
+   static applicationForID(id) {
+      var myDef = ABDefinition.definition(id);
+      if (myDef) {
+         return new ABClassApplication(myDef);
+      }
+      return null;
+   }
+
+   areaKey() {
+      return _.kebabCase(`ab-${this.name}`);
+   }
+
+   actionKeyName() {
+      return `opstools.${this.validAppName()}.view`;
+   }
+
+   validAppName() {
+      return AppBuilder.rules.toApplicationNameFormat(this.name);
    }
 
    cloneDeep(value) {

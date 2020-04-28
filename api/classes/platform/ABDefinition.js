@@ -74,6 +74,22 @@ module.exports = class ABDefinition extends ABDefinitionCore {
       return ABDefinitionModel.definitionForID(id);
    }
 
+   /**
+    * @method definitions()
+    *
+    * return the definitions that match the provided filter fn.
+    *
+    * Note: this returns the actual ABDefinition.json data that our System
+    * objects can use to create a new instance of itself.  Not the ABDefinition
+    * itself.
+    *
+    * @param {string} id  the id of the definition to update
+    * @return {obj}   the updated value of the ABDefinition entry from the server.
+    */
+   static definitions(fn = () => true) {
+      return ABDefinitionModel.definitions(fn);
+   }
+
    //
    // Instance Methods
    //

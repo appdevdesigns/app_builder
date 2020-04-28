@@ -8,7 +8,7 @@
 const async = require("async");
 const _ = require("lodash");
 
-const ApplicationGraph = require("../graphModels/ABApplication");
+const ABApplication = require("../classes/platform/ABApplication");
 // const RoleGraph = require("../graphModels/ABRole");
 // const ScopeGraph = require("../graphModels/ABScope");
 
@@ -246,14 +246,14 @@ let ABRoleController = {
          function(next) {
             debugger;
             // Find application
-            ApplicationGraph.findOne(appId)
-               .catch((err) => {
-                  res.AD.error(err);
-                  next(err);
-               })
-               .then((app) => {
-                  next(null, app);
-               });
+            var app = ABApplication.applicationForID(appId);
+            if (app) {
+               next(null, app);
+               return;
+            }
+            var err = new Error(`Unknown application id [${appId}]`);
+            res.AD.error(err);
+            next(err);
          },
          function(app, next) {
             // Get roles from action key
@@ -307,14 +307,14 @@ let ABRoleController = {
          function(next) {
             debugger;
             // Find application
-            ApplicationGraph.findOne(appId)
-               .catch((err) => {
-                  res.AD.error(err);
-                  next(err);
-               })
-               .then((record) => {
-                  next(null, record);
-               });
+            var app = ABApplication.applicationForID(appId);
+            if (app) {
+               next(null, app);
+               return;
+            }
+            var err = new Error(`Unknown application id [${appId}]`);
+            res.AD.error(err);
+            next(err);
          },
          function(app, next) {
             if (app.role) {
@@ -368,14 +368,15 @@ let ABRoleController = {
             function(next) {
                // Find application
                debugger;
-               ApplicationGraph.findOne(appId)
-                  .catch((err) => {
-                     res.AD.error(err);
-                     next(err);
-                  })
-                  .then((app) => {
-                     next(null, app);
-                  });
+               // Find application
+               var app = ABApplication.applicationForID(appId);
+               if (app) {
+                  next(null, app);
+                  return;
+               }
+               var err = new Error(`Unknown application id [${appId}]`);
+               res.AD.error(err);
+               next(err);
             },
             function(app, next) {
                if (app.role && app.role.id) {
@@ -425,14 +426,15 @@ let ABRoleController = {
          function(next) {
             // Get application
             debugger;
-            ApplicationGraph.findOne(appId)
-               .catch((err) => {
-                  res.AD.error(err);
-                  next(err);
-               })
-               .then((app) => {
-                  next(null, app);
-               });
+            // Find application
+            var app = ABApplication.applicationForID(appId);
+            if (app) {
+               next(null, app);
+               return;
+            }
+            var err = new Error(`Unknown application id [${appId}]`);
+            res.AD.error(err);
+            next(err);
          },
          function(app, next) {
             // Register the permission action

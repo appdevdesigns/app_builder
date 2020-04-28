@@ -19,11 +19,12 @@ let ABScopeController = {
    // GET /app_builder/scope
    find: function(req, res) {
       let cond = req.body || {};
-      let ScopeModel = getScopeObject();
+      let ScopeModel = ABSystemObject.getObjectScope();
 
       if (cond.populate == null) cond.populate = true;
 
-      ScopeModel.queryFind(cond, req.user.data)
+      ScopeModel.modelAPI()
+         .findAll(cond, req.user.data)
          .catch(res.AD.error)
          .then((scopes) => {
             res.AD.success(scopes || []);
@@ -33,7 +34,7 @@ let ABScopeController = {
    // GET /app_builder/scope/:id
    findOne: function(req, res) {
       let id = req.param("id");
-      let ScopeModel = getScopeObject();
+      let ScopeModel = ABSystemObject.getObjectScope();
 
       return new Promise((resolve, reject) => {
          ScopeModel.queryFind(
@@ -70,7 +71,7 @@ let ABScopeController = {
    scopeRole: function(req, res) {
       let scopeId = req.param("id");
 
-      let RoleModel = ABObjectCache.get(ROLE_OBJECT_ID);
+      let RoleModel = ABSystemObject.getObjectRole();
 
       let connectedField = RoleModel.fields(
          (f) =>
@@ -92,7 +93,7 @@ let ABScopeController = {
          ]
       };
 
-      return RoleModel.queryFind(
+      return RoleModel.modelAPI().findAll(
          {
             where: where
          },
