@@ -9,6 +9,12 @@ const _ = require("lodash");
 const moment = require("moment");
 const uuid = require("node-uuid");
 
+const ABApplication = require(path.join(
+   "..",
+   "classes",
+   "platform",
+   "ABApplication"
+));
 const ABGraphApplication = require(path.join(
    "..",
    "graphModels",
@@ -568,248 +574,248 @@ module.exports = {
     *
     * @return Deferred
     */
-   reload: function(appID) {
-      var dfd = AD.sal.Deferred();
+   // reload: function(appID) {
+   //    var dfd = AD.sal.Deferred();
 
-      var timeout = setTimeout(function() {
-         dfd.reject(new Error("reload timed out"));
-      }, reloadTimeLimit);
+   //    var timeout = setTimeout(function() {
+   //       dfd.reject(new Error("reload timed out"));
+   //    }, reloadTimeLimit);
 
-      var env1 = sails.config.environment,
-         env2 = process.env.NODE_ENV;
+   //    var env1 = sails.config.environment,
+   //       env2 = process.env.NODE_ENV;
 
-      var appFolders = [];
+   //    var appFolders = [];
 
-      // Notify all clients that the server is reloading
-      notifyToClients(true);
+   //    // Notify all clients that the server is reloading
+   //    notifyToClients(true);
 
-      async.auto(
-         {
-            // lift sails in our new build directory:
-            alterModels: [
-               "setup",
-               function(next) {
-                  var cwd = process.cwd();
-                  process.chdir(AppBuilder.paths.sailsBuildDir());
+   //    async.auto(
+   //       {
+   //          // lift sails in our new build directory:
+   //          alterModels: [
+   //             "setup",
+   //             function(next) {
+   //                var cwd = process.cwd();
+   //                process.chdir(AppBuilder.paths.sailsBuildDir());
 
-                  // collect any errors that might be posted in the process:
-                  var errors = [];
+   //                // collect any errors that might be posted in the process:
+   //                var errors = [];
 
-                  AD.spawn
-                     .command({
-                        command: "sails",
-                        options: ["lift"],
-                        shouldEcho: false,
-                        onStdErr: function(data) {
-                           if (data.indexOf("Error:") != -1) {
-                              var lines = data.split("\n");
-                              lines.forEach(function(line) {
-                                 if (line.indexOf("Error:") != -1) {
-                                    errors.push(line);
-                                 }
-                              });
-                           }
-                        }
-                        // exitTrigger:'Server lifted'
-                     })
-                     .fail(function(err) {
-                        AD.log.error(
-                           "<red> sails lift exited with an error</red>"
-                        );
-                        AD.log(err);
-                        process.chdir(cwd);
-                        next(err);
-                     })
-                     .then(function(code) {
-                        // console.log('... exited with code:', code);
-                        var error = undefined;
+   //                AD.spawn
+   //                   .command({
+   //                      command: "sails",
+   //                      options: ["lift"],
+   //                      shouldEcho: false,
+   //                      onStdErr: function(data) {
+   //                         if (data.indexOf("Error:") != -1) {
+   //                            var lines = data.split("\n");
+   //                            lines.forEach(function(line) {
+   //                               if (line.indexOf("Error:") != -1) {
+   //                                  errors.push(line);
+   //                               }
+   //                            });
+   //                         }
+   //                      }
+   //                      // exitTrigger:'Server lifted'
+   //                   })
+   //                   .fail(function(err) {
+   //                      AD.log.error(
+   //                         "<red> sails lift exited with an error</red>"
+   //                      );
+   //                      AD.log(err);
+   //                      process.chdir(cwd);
+   //                      next(err);
+   //                   })
+   //                   .then(function(code) {
+   //                      // console.log('... exited with code:', code);
+   //                      var error = undefined;
 
-                        if (code > 0) {
-                           error = new Error(errors.join(""));
-                        }
-                        process.chdir(cwd);
-                        next(error);
-                     });
-               }
-            ],
+   //                      if (code > 0) {
+   //                         error = new Error(errors.join(""));
+   //                      }
+   //                      process.chdir(cwd);
+   //                      next(error);
+   //                   });
+   //             }
+   //          ],
 
-            find: function(next) {
-               notifyToClients(true, "findApplication", "start");
+   //          find: function(next) {
+   //             notifyToClients(true, "findApplication", "start");
 
-               ABApplication.find({ id: appID })
-                  .then(function(list) {
-                     if (!list || !list[0]) {
-                        throw new Error("no apps found");
-                     }
-                     for (var i = 0; i < list.length; i++) {
-                        appFolders.push(
-                           "ab_" +
-                              AppBuilder.rules
-                                 .nameFilter(list[i].name)
-                                 .toLowerCase()
-                        );
-                     }
-                     next();
+   //             ABApplication.find({ id: appID })
+   //                .then(function(list) {
+   //                   if (!list || !list[0]) {
+   //                      throw new Error("no apps found");
+   //                   }
+   //                   for (var i = 0; i < list.length; i++) {
+   //                      appFolders.push(
+   //                         "ab_" +
+   //                            AppBuilder.rules
+   //                               .nameFilter(list[i].name)
+   //                               .toLowerCase()
+   //                      );
+   //                   }
+   //                   next();
 
-                     notifyToClients(true, "findApplication", "done");
+   //                   notifyToClients(true, "findApplication", "done");
 
-                     return null;
-                  })
-                  .catch(next);
-            },
+   //                   return null;
+   //                })
+   //                .catch(next);
+   //          },
 
-            // Run setup.js for every AB application
-            setup: [
-               "find",
-               function(next) {
-                  notifyToClients(true, "prepareFolder", "start");
+   //          // Run setup.js for every AB application
+   //          setup: [
+   //             "find",
+   //             function(next) {
+   //                notifyToClients(true, "prepareFolder", "start");
 
-                  var cwd = process.cwd();
-                  async.eachSeries(
-                     appFolders,
-                     function(folder, ok) {
-                        try {
-                           process.chdir(
-                              path.join(cwd, "node_modules", folder)
-                           );
-                        } catch (err) {
-                           console.log("Folder not found: " + folder);
-                           return ok();
-                        }
+   //                var cwd = process.cwd();
+   //                async.eachSeries(
+   //                   appFolders,
+   //                   function(folder, ok) {
+   //                      try {
+   //                         process.chdir(
+   //                            path.join(cwd, "node_modules", folder)
+   //                         );
+   //                      } catch (err) {
+   //                         console.log("Folder not found: " + folder);
+   //                         return ok();
+   //                      }
 
-                        // Can't just require() it, because it's not guaranteed to
-                        // execute after the first time, due to caching.
-                        AD.spawn
-                           .command({
-                              command: "node",
-                              options: [path.join("setup", "setup.js")]
-                           })
-                           .fail(ok)
-                           .done(function() {
-                              ok();
-                           });
-                     },
-                     function(err) {
-                        process.chdir(cwd);
+   //                      // Can't just require() it, because it's not guaranteed to
+   //                      // execute after the first time, due to caching.
+   //                      AD.spawn
+   //                         .command({
+   //                            command: "node",
+   //                            options: [path.join("setup", "setup.js")]
+   //                         })
+   //                         .fail(ok)
+   //                         .done(function() {
+   //                            ok();
+   //                         });
+   //                   },
+   //                   function(err) {
+   //                      process.chdir(cwd);
 
-                        if (err) next(err);
-                        else {
-                           notifyToClients(true, "prepareFolder", "done");
-                           next();
-                        }
-                     }
-                  );
-               }
-            ],
+   //                      if (err) next(err);
+   //                      else {
+   //                         notifyToClients(true, "prepareFolder", "done");
+   //                         next();
+   //                      }
+   //                   }
+   //                );
+   //             }
+   //          ],
 
-            controllers: [
-               "setup",
-               function(next) {
-                  sails.log("Reloading controllers");
+   //          controllers: [
+   //             "setup",
+   //             function(next) {
+   //                sails.log("Reloading controllers");
 
-                  notifyToClients(true, "reloadControllers", "start");
+   //                notifyToClients(true, "reloadControllers", "start");
 
-                  sails.hooks.controllers.loadAndRegisterControllers(
-                     function() {
-                        notifyToClients(true, "reloadControllers", "done");
+   //                sails.hooks.controllers.loadAndRegisterControllers(
+   //                   function() {
+   //                      notifyToClients(true, "reloadControllers", "done");
 
-                        next();
-                     }
-                  );
-               }
-            ],
+   //                      next();
+   //                   }
+   //                );
+   //             }
+   //          ],
 
-            /*
-            i18n: ['controllers', function(next) {
-                sails.log('Reloading i18n');
-                sails.hooks.i18n.initialize(function() {
-                    next();
-                });
-            }],
+   //          /*
+   //          i18n: ['controllers', function(next) {
+   //              sails.log('Reloading i18n');
+   //              sails.hooks.i18n.initialize(function() {
+   //                  next();
+   //              });
+   //          }],
 
-            services: ['controllers', function(next) {
-                sails.log('Reloading services');
-                sails.hooks.services.loadModules(function() {
-                    next();
-                });
-            }],
-            */
+   //          services: ['controllers', function(next) {
+   //              sails.log('Reloading services');
+   //              sails.hooks.services.loadModules(function() {
+   //                  next();
+   //              });
+   //          }],
+   //          */
 
-            orm: [
-               "setup",
-               "alterModels",
-               function(next) {
-                  sails.log("Reloading ORM");
+   //          orm: [
+   //             "setup",
+   //             "alterModels",
+   //             function(next) {
+   //                sails.log("Reloading ORM");
 
-                  notifyToClients(true, "reloadORM", "start");
+   //                notifyToClients(true, "reloadORM", "start");
 
-                  // Temporarily set environment to development so Waterline will
-                  // respect the migrate:alter setting
+   //                // Temporarily set environment to development so Waterline will
+   //                // respect the migrate:alter setting
 
-                  // NOTE: now we manuall lift sails in another process to do this:
-                  // sails.config.environment = 'development';
-                  // process.env.NODE_ENV = 'developement';
+   //                // NOTE: now we manuall lift sails in another process to do this:
+   //                // sails.config.environment = 'development';
+   //                // process.env.NODE_ENV = 'developement';
 
-                  sails.hooks.orm.reload();
-                  sails.once("hook:orm:reloaded", function() {
-                     // Restore original environment
-                     // sails.config.environment = env1;
-                     // process.env.NODE_ENV = env2;
+   //                sails.hooks.orm.reload();
+   //                sails.once("hook:orm:reloaded", function() {
+   //                   // Restore original environment
+   //                   // sails.config.environment = env1;
+   //                   // process.env.NODE_ENV = env2;
 
-                     notifyToClients(true, "reloadORM", "done");
+   //                   notifyToClients(true, "reloadORM", "done");
 
-                     next();
-                  });
-               }
-            ],
+   //                   next();
+   //                });
+   //             }
+   //          ],
 
-            blueprints: [
-               "controllers",
-               "orm",
-               function(next) {
-                  sails.log("Reloading blueprints");
-                  notifyToClients(true, "reloadBlueprints", "start");
+   //          blueprints: [
+   //             "controllers",
+   //             "orm",
+   //             function(next) {
+   //                sails.log("Reloading blueprints");
+   //                notifyToClients(true, "reloadBlueprints", "start");
 
-                  clearTimeout(timeout);
-                  sails.hooks.blueprints.extendControllerMiddleware();
-                  sails.router.flush();
-                  sails.hooks.blueprints.bindShadowRoutes();
+   //                clearTimeout(timeout);
+   //                sails.hooks.blueprints.extendControllerMiddleware();
+   //                sails.router.flush();
+   //                sails.hooks.blueprints.bindShadowRoutes();
 
-                  notifyToClients(true, "reloadBlueprints", "done");
-                  next();
-               }
-            ]
-         },
-         function(err) {
-            sails.log("End reload");
+   //                notifyToClients(true, "reloadBlueprints", "done");
+   //                next();
+   //             }
+   //          ]
+   //       },
+   //       function(err) {
+   //          sails.log("End reload");
 
-            if (err) {
-               notifyToClients(true, "", "fail", {
-                  error: err.message
-                     .replace("Error:", "")
-                     .replace("error:", ""),
-                  requestData: { appID: appID }
-               });
+   //          if (err) {
+   //             notifyToClients(true, "", "fail", {
+   //                error: err.message
+   //                   .replace("Error:", "")
+   //                   .replace("error:", ""),
+   //                requestData: { appID: appID }
+   //             });
 
-               dfd.reject(err);
-            } else {
-               //// FIX: somewhere in the process of reloading controllers or blueprints,
-               //// our client's socket looses connection with the server.  It is possible
-               //// that this notification is sent during that disconnected state and the
-               //// Client remains unaware of the updated status.
-               //// Here we set a timeout to give the client a chance to reconnect before
-               //// we send the message.
-               setTimeout(function() {
-                  notifyToClients(false, "", "finish");
-               }, 3000);
+   //             dfd.reject(err);
+   //          } else {
+   //             //// FIX: somewhere in the process of reloading controllers or blueprints,
+   //             //// our client's socket looses connection with the server.  It is possible
+   //             //// that this notification is sent during that disconnected state and the
+   //             //// Client remains unaware of the updated status.
+   //             //// Here we set a timeout to give the client a chance to reconnect before
+   //             //// we send the message.
+   //             setTimeout(function() {
+   //                notifyToClients(false, "", "finish");
+   //             }, 3000);
 
-               dfd.resolve();
-            }
-         }
-      );
+   //             dfd.resolve();
+   //          }
+   //       }
+   //    );
 
-      return dfd;
-   },
+   //    return dfd;
+   // },
 
    /**
     * Generate the application directory structure
@@ -2736,108 +2742,108 @@ module.exports = {
     * @return Promise
     *     Resolves with the data of the new imported object
     */
-   importObject: function(
-      sourceAppID,
-      targetAppID,
-      objectID,
-      columns,
-      currLangCode
-   ) {
-      var sourceApp, targetApp, object;
+   // importObject: function(
+   //    sourceAppID,
+   //    targetAppID,
+   //    objectID,
+   //    columns,
+   //    currLangCode
+   // ) {
+   //    var sourceApp, targetApp, object;
 
-      return Promise.resolve()
-         .then(() => {
-            return new Promise((resolve, reject) => {
-               ABApplication.find({ id: [sourceAppID, targetAppID] }).exec(
-                  function(err, list) {
-                     if (err) {
-                        reject(err);
-                     } else if (!list || !list[0]) {
-                        reject(
-                           new Error("application not found: " + sourceAppID)
-                        );
-                     } else {
-                        sourceApp = list.filter(function(a) {
-                           return a.id == sourceAppID;
-                        })[0];
-                        targetApp = list.filter(function(a) {
-                           return a.id == targetAppID;
-                        })[0];
+   //    return Promise.resolve()
+   //       .then(() => {
+   //          return new Promise((resolve, reject) => {
+   //             ABApplication.find({ id: [sourceAppID, targetAppID] }).exec(
+   //                function(err, list) {
+   //                   if (err) {
+   //                      reject(err);
+   //                   } else if (!list || !list[0]) {
+   //                      reject(
+   //                         new Error("application not found: " + sourceAppID)
+   //                      );
+   //                   } else {
+   //                      sourceApp = list.filter(function(a) {
+   //                         return a.id == sourceAppID;
+   //                      })[0];
+   //                      targetApp = list.filter(function(a) {
+   //                         return a.id == targetAppID;
+   //                      })[0];
 
-                        if (sourceApp == null)
-                           reject(
-                              new Error("application not found: " + sourceAppID)
-                           );
-                        else if (targetApp == null)
-                           reject(
-                              new Error("application not found: " + targetAppID)
-                           );
-                        else resolve();
-                     }
-                  }
-               );
-            });
-         })
-         .then(() => {
-            return new Promise((resolve, reject) => {
-               // pull an object
-               var sourceAppClass = sourceApp.toABClass();
-               object = sourceAppClass.objectByID(objectID);
-               if (object == null)
-                  reject(new Error("object not found: " + objectID));
+   //                      if (sourceApp == null)
+   //                         reject(
+   //                            new Error("application not found: " + sourceAppID)
+   //                         );
+   //                      else if (targetApp == null)
+   //                         reject(
+   //                            new Error("application not found: " + targetAppID)
+   //                         );
+   //                      else resolve();
+   //                   }
+   //                }
+   //             );
+   //          });
+   //       })
+   //       .then(() => {
+   //          return new Promise((resolve, reject) => {
+   //             // pull an object
+   //             var sourceAppClass = sourceApp.toABClass();
+   //             object = sourceAppClass.objectByID(objectID);
+   //             if (object == null)
+   //                reject(new Error("object not found: " + objectID));
 
-               // copy fields of the source object
-               var fields = [];
-               object.fields().forEach((f) => {
-                  // TODO: if application has link object, then it should have this column too
-                  if (f.key == "connectObject") return;
+   //             // copy fields of the source object
+   //             var fields = [];
+   //             object.fields().forEach((f) => {
+   //                // TODO: if application has link object, then it should have this column too
+   //                if (f.key == "connectObject") return;
 
-                  var fieldImport = f.toObj();
-                  fieldImport.isImported = 1;
+   //                var fieldImport = f.toObj();
+   //                fieldImport.isImported = 1;
 
-                  fields.push(fieldImport);
-               });
+   //                fields.push(fieldImport);
+   //             });
 
-               // pull hidden fields
-               var hiddenFields = [];
-               var hiddenFieldIds = columns
-                  .filter((col) => col.isHidden)
-                  .map((col) => col.id);
+   //             // pull hidden fields
+   //             var hiddenFields = [];
+   //             var hiddenFieldIds = columns
+   //                .filter((col) => col.isHidden)
+   //                .map((col) => col.id);
 
-               hiddenFieldIds.forEach((fId) => {
-                  var field = fields.filter((col) => col.id == fId)[0];
-                  if (field) hiddenFields.push(field.columnName);
-               });
+   //             hiddenFieldIds.forEach((fId) => {
+   //                var field = fields.filter((col) => col.id == fId)[0];
+   //                if (field) hiddenFields.push(field.columnName);
+   //             });
 
-               // create a new clone object
-               var newObjId = uuid.v4();
-               var newObject = {
-                  id: newObjId,
-                  name: object.name,
-                  labelFormat: object.labelFormat,
-                  urlPath: object.urlPath,
-                  isImported: 1,
-                  importFromObject: object.urlPointer(true),
-                  // NOTE: store table name of import object to ignore async
-                  tableName: object.dbTableName(),
-                  translations: object.translations, // copy label of object
-                  fields: fields,
-                  objectWorkspace: {
-                     hiddenFields: hiddenFields
-                  }
-               };
+   //             // create a new clone object
+   //             var newObjId = uuid.v4();
+   //             var newObject = {
+   //                id: newObjId,
+   //                name: object.name,
+   //                labelFormat: object.labelFormat,
+   //                urlPath: object.urlPath,
+   //                isImported: 1,
+   //                importFromObject: object.urlPointer(true),
+   //                // NOTE: store table name of import object to ignore async
+   //                tableName: object.dbTableName(),
+   //                translations: object.translations, // copy label of object
+   //                fields: fields,
+   //                objectWorkspace: {
+   //                   hiddenFields: hiddenFields
+   //                }
+   //             };
 
-               // add to object list and save
-               targetApp.json.objects.push(newObject);
-               targetApp
-                  .save()
-                  .fail(reject)
-                  .done(function() {
-                     resolve(newObjId);
-                  });
-            });
-         });
-   },
+   //             // add to object list and save
+   //             targetApp.json.objects.push(newObject);
+   //             targetApp
+   //                .save()
+   //                .fail(reject)
+   //                .done(function() {
+   //                   resolve(newObjId);
+   //                });
+   //          });
+   //       });
+   // },
 
    /**
     * Imports an existing Sails model for use in an AB application.
@@ -2853,351 +2859,351 @@ module.exports = {
     * @return Deferred
     *     Resolves with the data of the new imported object
     */
-   modelToObject: function(appID, modelObjectId, modelName, columnList) {
-      var dfd = AD.sal.Deferred();
-      var model = sails.models[modelName.toLowerCase()];
+   // modelToObject: function(appID, modelObjectId, modelName, columnList) {
+   //    var dfd = AD.sal.Deferred();
+   //    var model = sails.models[modelName.toLowerCase()];
 
-      if (!model || !model.definition) {
-         dfd.reject(new Error("unrecognized model: " + modelName));
-      } else {
-         var application;
-         var objectData = {};
-         var languages = [];
-         var columns = [];
-         var associations = [];
-         var modelURL = "";
+   //    if (!model || !model.definition) {
+   //       dfd.reject(new Error("unrecognized model: " + modelName));
+   //    } else {
+   //       var application;
+   //       var objectData = {};
+   //       var languages = [];
+   //       var columns = [];
+   //       var associations = [];
+   //       var modelURL = "";
 
-         async.series(
-            [
-               // Make sure model has an 'id' primary key field
-               (next) => {
-                  if (!model.attributes.id) {
-                     next(
-                        new Error(
-                           "Model " +
-                              modelName +
-                              ' does not have an "id" column'
-                        )
-                     );
-                  } else next();
-               },
+   //       async.series(
+   //          [
+   //             // Make sure model has an 'id' primary key field
+   //             (next) => {
+   //                if (!model.attributes.id) {
+   //                   next(
+   //                      new Error(
+   //                         "Model " +
+   //                            modelName +
+   //                            ' does not have an "id" column'
+   //                      )
+   //                   );
+   //                } else next();
+   //             },
 
-               // Find server side controller & blueprints URL
-               (next) => {
-                  var lcModelName = modelName.toLowerCase();
-                  var controllerInfo = _.find(sails.controllers, (c) => {
-                     // 1st try: look for `model` config in the controllers
-                     if (c._config && c._config.model == lcModelName)
-                        return true;
-                     else return false;
-                  });
-                  if (!controllerInfo) {
-                     // 2nd try: look for matching controller-model name
-                     controllerInfo = _.find(sails.controllers, (c) => {
-                        if (!c.identity) return false;
-                        var nameParts = c.identity.split("/");
-                        var finalName = nameParts[nameParts.length - 1];
-                        if (finalName == lcModelName) return true;
-                        else return false;
-                     });
-                  }
+   //             // Find server side controller & blueprints URL
+   //             (next) => {
+   //                var lcModelName = modelName.toLowerCase();
+   //                var controllerInfo = _.find(sails.controllers, (c) => {
+   //                   // 1st try: look for `model` config in the controllers
+   //                   if (c._config && c._config.model == lcModelName)
+   //                      return true;
+   //                   else return false;
+   //                });
+   //                if (!controllerInfo) {
+   //                   // 2nd try: look for matching controller-model name
+   //                   controllerInfo = _.find(sails.controllers, (c) => {
+   //                      if (!c.identity) return false;
+   //                      var nameParts = c.identity.split("/");
+   //                      var finalName = nameParts[nameParts.length - 1];
+   //                      if (finalName == lcModelName) return true;
+   //                      else return false;
+   //                   });
+   //                }
 
-                  modelURL = (controllerInfo && controllerInfo.identity) || "";
-                  next();
-               },
+   //                modelURL = (controllerInfo && controllerInfo.identity) || "";
+   //                next();
+   //             },
 
-               // Find app in database
-               (next) => {
-                  ABApplication.find({ id: appID }).exec(function(err, list) {
-                     if (err) {
-                        next(err);
-                     } else if (!list || !list[0]) {
-                        next(new Error("application not found: " + appID));
-                     } else {
-                        application = list[0];
-                        next();
-                     }
-                  });
-               },
+   //             // Find app in database
+   //             (next) => {
+   //                ABApplication.find({ id: appID }).exec(function(err, list) {
+   //                   if (err) {
+   //                      next(err);
+   //                   } else if (!list || !list[0]) {
+   //                      next(new Error("application not found: " + appID));
+   //                   } else {
+   //                      application = list[0];
+   //                      next();
+   //                   }
+   //                });
+   //             },
 
-               // Find site languages
-               (next) => {
-                  SiteMultilingualLanguage.find().exec((err, list) => {
-                     if (err) next(err);
-                     else if (!list || !list[0]) {
-                        languages = ["en"];
-                        next();
-                     } else {
-                        list.forEach((lang) => {
-                           languages.push(lang.language_code);
-                        });
-                        next();
-                     }
-                  });
-               },
+   //             // Find site languages
+   //             (next) => {
+   //                SiteMultilingualLanguage.find().exec((err, list) => {
+   //                   if (err) next(err);
+   //                   else if (!list || !list[0]) {
+   //                      languages = ["en"];
+   //                      next();
+   //                   } else {
+   //                      list.forEach((lang) => {
+   //                         languages.push(lang.language_code);
+   //                      });
+   //                      next();
+   //                   }
+   //                });
+   //             },
 
-               // Prepare object
-               (next) => {
-                  objectData = {
-                     id: uuid.v4(),
-                     name: modelName,
-                     labelFormat: "",
-                     isImported: true,
-                     urlPath: modelURL,
-                     importFromObject: "",
-                     translations: [],
-                     fields: []
-                  };
+   //             // Prepare object
+   //             (next) => {
+   //                objectData = {
+   //                   id: uuid.v4(),
+   //                   name: modelName,
+   //                   labelFormat: "",
+   //                   isImported: true,
+   //                   urlPath: modelURL,
+   //                   importFromObject: "",
+   //                   translations: [],
+   //                   fields: []
+   //                };
 
-                  // Add label translations
-                  languages.forEach((langCode) => {
-                     objectData.translations.push({
-                        language_code: langCode,
-                        label: modelName
-                     });
-                  });
+   //                // Add label translations
+   //                languages.forEach((langCode) => {
+   //                   objectData.translations.push({
+   //                      language_code: langCode,
+   //                      label: modelName
+   //                   });
+   //                });
 
-                  next();
-               },
+   //                next();
+   //             },
 
-               // Prepare object fields
-               (next) => {
-                  for (var colName in model.attributes) {
-                     var col = model.attributes[colName];
+   //             // Prepare object fields
+   //             (next) => {
+   //                for (var colName in model.attributes) {
+   //                   var col = model.attributes[colName];
 
-                     // In Sails models, there is a `definition` object and
-                     // an `attributes` object. The `definition` uses the
-                     // real column names and has additional properties.
-                     var realName = col.columnName || colName;
-                     var def = model.definition[realName];
+   //                   // In Sails models, there is a `definition` object and
+   //                   // an `attributes` object. The `definition` uses the
+   //                   // real column names and has additional properties.
+   //                   var realName = col.columnName || colName;
+   //                   var def = model.definition[realName];
 
-                     // Skip these columns
-                     var ignore = ["id", "createdAt", "updatedAt"];
-                     if (ignore.indexOf(colName) >= 0) {
-                        continue;
-                     }
+   //                   // Skip these columns
+   //                   var ignore = ["id", "createdAt", "updatedAt"];
+   //                   if (ignore.indexOf(colName) >= 0) {
+   //                      continue;
+   //                   }
 
-                     // Skip foreign keys.
-                     // They will be handled as associations later.
-                     if (
-                        !def ||
-                        col.model ||
-                        col.collection ||
-                        def.foreignKey
-                     ) {
-                        continue;
-                     }
+   //                   // Skip foreign keys.
+   //                   // They will be handled as associations later.
+   //                   if (
+   //                      !def ||
+   //                      col.model ||
+   //                      col.collection ||
+   //                      def.foreignKey
+   //                   ) {
+   //                      continue;
+   //                   }
 
-                     // Skip if column name is not match in list
-                     var allowCol = columnList.filter(function(c) {
-                        return c.name == realName;
-                     })[0];
-                     if (allowCol == null) {
-                        continue;
-                     }
+   //                   // Skip if column name is not match in list
+   //                   var allowCol = columnList.filter(function(c) {
+   //                      return c.name == realName;
+   //                   })[0];
+   //                   if (allowCol == null) {
+   //                      continue;
+   //                   }
 
-                     // Check if the column's type is supported
-                     if (!sailsToAppBuilderReference[col.type]) {
-                        return next(
-                           new Error(
-                              `${modelName} contains a column "${colName}" that is of an unsupported type: ${col.type}`
-                           )
-                        );
-                     }
+   //                   // Check if the column's type is supported
+   //                   if (!sailsToAppBuilderReference[col.type]) {
+   //                      return next(
+   //                         new Error(
+   //                            `${modelName} contains a column "${colName}" that is of an unsupported type: ${col.type}`
+   //                         )
+   //                      );
+   //                   }
 
-                     var defaultValue = col.default;
-                     if (typeof col.default == "function") {
-                        defaultValue = col.default();
-                     }
+   //                   var defaultValue = col.default;
+   //                   if (typeof col.default == "function") {
+   //                      defaultValue = col.default();
+   //                   }
 
-                     // Clone the reference defaults for this type
-                     var colData = _.cloneDeep(
-                        sailsToAppBuilderReference[col.type]
-                     );
-                     // Populate with imported values
-                     colData.id = uuid.v4();
-                     colData.columnName = colName;
-                     colData.settings.default = defaultValue;
-                     colData.settings.imported = true;
+   //                   // Clone the reference defaults for this type
+   //                   var colData = _.cloneDeep(
+   //                      sailsToAppBuilderReference[col.type]
+   //                   );
+   //                   // Populate with imported values
+   //                   colData.id = uuid.v4();
+   //                   colData.columnName = colName;
+   //                   colData.settings.default = defaultValue;
+   //                   colData.settings.imported = true;
 
-                     // Label translations
-                     colData.translations = [];
-                     languages.forEach((langCode) => {
-                        colData.translations.push({
-                           language_code: langCode,
-                           label: colName
-                        });
-                     });
+   //                   // Label translations
+   //                   colData.translations = [];
+   //                   languages.forEach((langCode) => {
+   //                      colData.translations.push({
+   //                         language_code: langCode,
+   //                         label: colName
+   //                      });
+   //                   });
 
-                     console.log("Adding column:", colData);
+   //                   console.log("Adding column:", colData);
 
-                     objectData.fields.push(colData);
-                  }
-                  next();
-               },
+   //                   objectData.fields.push(colData);
+   //                }
+   //                next();
+   //             },
 
-               // Create column associations in database
-               function(next) {
-                  /*
-                        model.associations == [
-                            {
-                                alias: 'assoc name 1',
-                                type: 'collection',
-                                collection: 'model name',
-                                via: 'column name'
-                            },
-                            {
-                                alias: 'assoc name 2',
-                                type: 'model',
-                                model: 'model name'
-                            }
-                        ]
-                    */
+   //             // Create column associations in database
+   //             function(next) {
+   //                /*
+   //                      model.associations == [
+   //                          {
+   //                              alias: 'assoc name 1',
+   //                              type: 'collection',
+   //                              collection: 'model name',
+   //                              via: 'column name'
+   //                          },
+   //                          {
+   //                              alias: 'assoc name 2',
+   //                              type: 'model',
+   //                              model: 'model name'
+   //                          }
+   //                      ]
+   //                  */
 
-                  async.forEach(
-                     model.associations,
-                     function(assoc, assocDone) {
-                        var targetLinkName, targetRelation, targetModelName;
+   //                async.forEach(
+   //                   model.associations,
+   //                   function(assoc, assocDone) {
+   //                      var targetLinkName, targetRelation, targetModelName;
 
-                        if (assoc.type == "model") {
-                           targetRelation = "one";
-                           targetModelName = assoc.model;
-                        } else {
-                           targetRelation = "many";
-                           targetModelName = assoc.collection;
-                        }
+   //                      if (assoc.type == "model") {
+   //                         targetRelation = "one";
+   //                         targetModelName = assoc.model;
+   //                      } else {
+   //                         targetRelation = "many";
+   //                         targetModelName = assoc.collection;
+   //                      }
 
-                        var targetModel = sails.models[targetModelName];
-                        var sourceRelation = "one";
-                        if (Array.isArray(targetModel.associations)) {
-                           targetModel.associations.forEach(
-                              (targetModelAssoc) => {
-                                 if (
-                                    targetModelAssoc.collection ==
-                                    modelName.toLowerCase()
-                                 ) {
-                                    sourceRelation = "many";
-                                    targetLinkName = targetModelAssoc.alias;
-                                 } else if (
-                                    targetModelAssoc.model ==
-                                    modelName.toLowerCase()
-                                 ) {
-                                    targetLinkName = targetModelAssoc.alias;
-                                 }
-                              }
-                           );
-                        }
+   //                      var targetModel = sails.models[targetModelName];
+   //                      var sourceRelation = "one";
+   //                      if (Array.isArray(targetModel.associations)) {
+   //                         targetModel.associations.forEach(
+   //                            (targetModelAssoc) => {
+   //                               if (
+   //                                  targetModelAssoc.collection ==
+   //                                  modelName.toLowerCase()
+   //                               ) {
+   //                                  sourceRelation = "many";
+   //                                  targetLinkName = targetModelAssoc.alias;
+   //                               } else if (
+   //                                  targetModelAssoc.model ==
+   //                                  modelName.toLowerCase()
+   //                               ) {
+   //                                  targetLinkName = targetModelAssoc.alias;
+   //                               }
+   //                            }
+   //                         );
+   //                      }
 
-                        // Look for target object within application
-                        var targetObject;
-                        for (
-                           var i = 0;
-                           i < application.json.objects.length;
-                           i++
-                        ) {
-                           if (
-                              application.json.objects[i].name ==
-                              targetModelName
-                           ) {
-                              targetObject = application.json.objects[i];
-                              break;
-                           }
-                        }
+   //                      // Look for target object within application
+   //                      var targetObject;
+   //                      for (
+   //                         var i = 0;
+   //                         i < application.json.objects.length;
+   //                         i++
+   //                      ) {
+   //                         if (
+   //                            application.json.objects[i].name ==
+   //                            targetModelName
+   //                         ) {
+   //                            targetObject = application.json.objects[i];
+   //                            break;
+   //                         }
+   //                      }
 
-                        // Skip if the target object has not been imported into
-                        // this application yet.
-                        if (!targetObject) return assocDone();
+   //                      // Skip if the target object has not been imported into
+   //                      // this application yet.
+   //                      if (!targetObject) return assocDone();
 
-                        //// Create the new connection columns:
-                        // Clone the reference defaults
-                        var sourceColData = _.cloneDeep(
-                           sailsToAppBuilderReference.connectObject
-                        );
-                        var targetColData = _.cloneDeep(
-                           sailsToAppBuilderReference.connectObject
-                        );
+   //                      //// Create the new connection columns:
+   //                      // Clone the reference defaults
+   //                      var sourceColData = _.cloneDeep(
+   //                         sailsToAppBuilderReference.connectObject
+   //                      );
+   //                      var targetColData = _.cloneDeep(
+   //                         sailsToAppBuilderReference.connectObject
+   //                      );
 
-                        // Populate with imported values:
-                        sourceColData.id = uuid.v4();
-                        targetColData.id = uuid.v4();
+   //                      // Populate with imported values:
+   //                      sourceColData.id = uuid.v4();
+   //                      targetColData.id = uuid.v4();
 
-                        // Source column
-                        sourceColData.columnName = assoc.alias;
-                        sourceColData.settings.isImported = true;
-                        sourceColData.settings.linkType = sourceRelation;
-                        sourceColData.settings.linkViaType = targetRelation;
-                        sourceColData.settings.linkObject = targetObject.id;
-                        sourceColData.settings.linkColumn = targetColData.id;
-                        sourceColData.translations = [];
-                        languages.forEach((langCode) => {
-                           sourceColData.translations.push({
-                              language_code: langCode,
-                              label: assoc.alias
-                           });
-                        });
+   //                      // Source column
+   //                      sourceColData.columnName = assoc.alias;
+   //                      sourceColData.settings.isImported = true;
+   //                      sourceColData.settings.linkType = sourceRelation;
+   //                      sourceColData.settings.linkViaType = targetRelation;
+   //                      sourceColData.settings.linkObject = targetObject.id;
+   //                      sourceColData.settings.linkColumn = targetColData.id;
+   //                      sourceColData.translations = [];
+   //                      languages.forEach((langCode) => {
+   //                         sourceColData.translations.push({
+   //                            language_code: langCode,
+   //                            label: assoc.alias
+   //                         });
+   //                      });
 
-                        // Target column
-                        targetColData.columnName = targetLinkName;
-                        targetColData.settings.isImported = true;
-                        targetColData.settings.linkType = targetRelation;
-                        targetColData.settings.linkViaType = sourceRelation;
-                        targetColData.settings.linkObject = objectData.id;
-                        targetColData.settings.linkColumn = sourceColData.id;
-                        targetColData.translations = [];
-                        languages.forEach((langCode) => {
-                           targetColData.translations.push({
-                              language_code: langCode,
-                              label: targetLinkName
-                           });
-                        });
+   //                      // Target column
+   //                      targetColData.columnName = targetLinkName;
+   //                      targetColData.settings.isImported = true;
+   //                      targetColData.settings.linkType = targetRelation;
+   //                      targetColData.settings.linkViaType = sourceRelation;
+   //                      targetColData.settings.linkObject = objectData.id;
+   //                      targetColData.settings.linkColumn = sourceColData.id;
+   //                      targetColData.translations = [];
+   //                      languages.forEach((langCode) => {
+   //                         targetColData.translations.push({
+   //                            language_code: langCode,
+   //                            label: targetLinkName
+   //                         });
+   //                      });
 
-                        // Add columns to the object being created
-                        objectData.fields.push(sourceColData);
-                        targetObject.fields.push(targetColData);
+   //                      // Add columns to the object being created
+   //                      objectData.fields.push(sourceColData);
+   //                      targetObject.fields.push(targetColData);
 
-                        // ( `targetObject` is already a reference to the
-                        //   existing object in `application.json.objects` )
+   //                      // ( `targetObject` is already a reference to the
+   //                      //   existing object in `application.json.objects` )
 
-                        return assocDone();
-                     },
-                     (err) => {
-                        if (err) next(err);
-                        else next();
-                     }
-                  );
-               },
+   //                      return assocDone();
+   //                   },
+   //                   (err) => {
+   //                      if (err) next(err);
+   //                      else next();
+   //                   }
+   //                );
+   //             },
 
-               // Save to database
-               (next) => {
-                  application.json.objects.push(objectData);
+   //             // Save to database
+   //             (next) => {
+   //                application.json.objects.push(objectData);
 
-                  ABApplication.update(
-                     { id: appID },
-                     { json: application.json }
-                  ).exec((err, updated) => {
-                     if (err) {
-                        console.log("ERROR: ", err);
-                        next(err);
-                     } else if (!updated || !updated[0]) {
-                        console.log("ERROR: app not updated");
-                        next(new Error("Application not updated"));
-                     } else {
-                        next();
-                     }
-                  });
-               }
-            ],
-            function(err) {
-               if (err) dfd.reject(err);
-               else {
-                  dfd.resolve(objectData);
-               }
-            }
-         );
-      }
+   //                ABApplication.update(
+   //                   { id: appID },
+   //                   { json: application.json }
+   //                ).exec((err, updated) => {
+   //                   if (err) {
+   //                      console.log("ERROR: ", err);
+   //                      next(err);
+   //                   } else if (!updated || !updated[0]) {
+   //                      console.log("ERROR: app not updated");
+   //                      next(new Error("Application not updated"));
+   //                   } else {
+   //                      next();
+   //                   }
+   //                });
+   //             }
+   //          ],
+   //          function(err) {
+   //             if (err) dfd.reject(err);
+   //             else {
+   //                dfd.resolve(objectData);
+   //             }
+   //          }
+   //       );
+   //    }
 
-      return dfd;
-   },
+   //    return dfd;
+   // },
 
    findModelAttributes: function(modelName) {
       var dfd = AD.sal.Deferred();
@@ -3268,142 +3274,132 @@ module.exports = {
             cond = { id: appID };
          }
 
-         ABApplication.find(cond)
-            .then((list) => {
-               list.forEach((l) => {
-                  var listMA = l.toABClass().mobileApps();
+         var list = ABApplication.applications();
 
-                  //// NOTE: at this point each listMA entry is an instance of ABMobileApp
-                  if (listMA.length > 0) {
-                     mobileApps = mobileApps.concat(listMA);
+         list.forEach((l) => {
+            var listMA = l.mobileApps();
+
+            //// NOTE: at this point each listMA entry is an instance of ABMobileApp
+            if (listMA.length > 0) {
+               mobileApps = mobileApps.concat(listMA);
+            }
+         });
+
+         /// NOTE: we can remove this reference once we stop hardcoding the SDCApp:
+         var ABMobileApp = require(path.join(
+            "..",
+            "classes",
+            "platform",
+            "ABMobileApp"
+         ));
+
+         /// Hard Code the SDC App here:
+         /// 1st verify sails.config.codepush.* settings are defined:
+         sails.config.codepush = sails.config.codepush || {};
+         sails.config.codepush.production =
+            sails.config.codepush.production || {};
+         sails.config.codepush.staging = sails.config.codepush.staging || {};
+         sails.config.codepush.develop = sails.config.codepush.develop || {};
+
+         var SDCApp = new ABMobileApp({
+            id: "SDC.id",
+            settings: {
+               deepLink: "",
+               codePushKeys: {
+                  production: {
+                     ios:
+                        sails.config.codepush.production.ios ||
+                        "ios.codepush.production.key",
+                     android:
+                        sails.config.codepush.production.android ||
+                        "android.codepush.production.key"
+                  },
+                  staging: {
+                     ios:
+                        sails.config.codepush.staging.ios ||
+                        "ios.codepush.staging.key",
+                     android:
+                        sails.config.codepush.staging.android ||
+                        "android.codepush.staging.key"
+                  },
+                  develop: {
+                     ios:
+                        sails.config.codepush.develop.ios ||
+                        "ios.codepush.develop.key",
+                     android:
+                        sails.config.codepush.develop.android ||
+                        "android.codepush.develop.key"
                   }
-               });
-
-               /// NOTE: we can remove this reference once we stop hardcoding the SDCApp:
-               var ABMobileApp = require(path.join(
-                  "..",
-                  "classes",
-                  "platform",
-                  "ABMobileApp"
-               ));
-
-               /// Hard Code the SDC App here:
-               /// 1st verify sails.config.codepush.* settings are defined:
-               sails.config.codepush = sails.config.codepush || {};
-               sails.config.codepush.production =
-                  sails.config.codepush.production || {};
-               sails.config.codepush.staging =
-                  sails.config.codepush.staging || {};
-               sails.config.codepush.develop =
-                  sails.config.codepush.develop || {};
-
-               var SDCApp = new ABMobileApp({
-                  id: "SDC.id",
-                  settings: {
-                     deepLink: "",
-                     codePushKeys: {
-                        production: {
-                           ios:
-                              sails.config.codepush.production.ios ||
-                              "ios.codepush.production.key",
-                           android:
-                              sails.config.codepush.production.android ||
-                              "android.codepush.production.key"
-                        },
-                        staging: {
-                           ios:
-                              sails.config.codepush.staging.ios ||
-                              "ios.codepush.staging.key",
-                           android:
-                              sails.config.codepush.staging.android ||
-                              "android.codepush.staging.key"
-                        },
-                        develop: {
-                           ios:
-                              sails.config.codepush.develop.ios ||
-                              "ios.codepush.develop.key",
-                           android:
-                              sails.config.codepush.develop.android ||
-                              "android.codepush.develop.key"
-                        }
-                     },
-                     platforms: {
-                        ios: {
-                           // deeplink info:
-                           deeplink: {
-                              appID: "723276MJFQ.net.appdevdesigns.connexted",
-                              paths: ["/ul"]
-                           }
-                        },
-                        android: {
-                           apk: {
-                              // appbuilder/mobile/:mobileID/apk:
-                              // should return one of these files:
-
-                              // current points to the version that should be considered the
-                              // 'current' one to download
-                              current: "0",
-
-                              // version id :  fileName
-                              // '5':'mobileApp_v5.apk',
-                              // '4':'mobileApp_v4.apk',
-                              // '3':'mobileApp_v3.apk',
-                              // '2':'mobileApp_v2.apk',
-                              // '1':'mobileApp_v1.apk',
-                              "0": "sdc-android.apk"
-                           },
-                           deeplink: {
-                              relation: [
-                                 "delegate_permission/common.handle_all_urls"
-                              ],
-                              target: {
-                                 namespace: "connexted",
-                                 package_name: "net.appdevdesigns.connexted",
-                                 sha256_cert_fingerprints: [
-                                    "67:72:07:40:E0:CF:CA:9C:27:35:14:53:8E:A0:CA:E6:A1:EE:15:1C:A5:36:BB:47:E8:18:BF:CE:0D:47:D4:13"
-                                 ]
-                              }
-                           }
-                        }
+               },
+               platforms: {
+                  ios: {
+                     // deeplink info:
+                     deeplink: {
+                        appID: "723276MJFQ.net.appdevdesigns.connexted",
+                        paths: ["/ul"]
                      }
                   },
-                  translations: [
-                     {
-                        language_code: "en",
-                        label: "SDC App",
-                        description: "Keep things running"
-                     }
-                  ],
+                  android: {
+                     apk: {
+                        // appbuilder/mobile/:mobileID/apk:
+                        // should return one of these files:
 
-                  appID: "App.id" // not normally part of mobileApp data.  but can get from mobileApp.parent.id
-               });
+                        // current points to the version that should be considered the
+                        // 'current' one to download
+                        current: "0",
 
-               mobileApps.unshift(SDCApp);
-
-               // perform a translation:
-               mobileApps.forEach((app) => {
-                  var trans = app.translations.filter((t) => {
-                     return t.language_code == "en";
-                  })[0];
-                  if (trans) {
-                     for (var t in trans) {
-                        if (t != "language_code") {
-                           app[t] = trans[t];
+                        // version id :  fileName
+                        // '5':'mobileApp_v5.apk',
+                        // '4':'mobileApp_v4.apk',
+                        // '3':'mobileApp_v3.apk',
+                        // '2':'mobileApp_v2.apk',
+                        // '1':'mobileApp_v1.apk',
+                        "0": "sdc-android.apk"
+                     },
+                     deeplink: {
+                        relation: [
+                           "delegate_permission/common.handle_all_urls"
+                        ],
+                        target: {
+                           namespace: "connexted",
+                           package_name: "net.appdevdesigns.connexted",
+                           sha256_cert_fingerprints: [
+                              "67:72:07:40:E0:CF:CA:9C:27:35:14:53:8E:A0:CA:E6:A1:EE:15:1C:A5:36:BB:47:E8:18:BF:CE:0D:47:D4:13"
+                           ]
                         }
                      }
                   }
-               });
+               }
+            },
+            translations: [
+               {
+                  language_code: "en",
+                  label: "SDC App",
+                  description: "Keep things running"
+               }
+            ],
 
-               resolve(mobileApps);
-            })
-            .catch((err) => {
-               console.log(err);
-               ADCore.error.log(
-                  "AppBuilder:AppBuilderService:mobileApps:: Error searching for ABApplication:",
-                  { error: err, cond: cond }
-               );
-               reject(err);
-            });
+            appID: "App.id" // not normally part of mobileApp data.  but can get from mobileApp.parent.id
+         });
+
+         mobileApps.unshift(SDCApp);
+
+         // perform a translation:
+         mobileApps.forEach((app) => {
+            app.translate();
+            // var trans = app.translations.filter((t) => {
+            //    return t.language_code == "en";
+            // })[0];
+            // if (trans) {
+            //    for (var t in trans) {
+            //       if (t != "language_code") {
+            //          app[t] = trans[t];
+            //       }
+            //    }
+            // }
+         });
+
+         resolve(mobileApps);
       });
    }
 };
