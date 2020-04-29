@@ -332,16 +332,15 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                      label: L("ab.component.label.dataSource", "*Object:"),
                      labelWidth: App.config.labelWidthLarge,
                      on: {
-                        onChange: function(newv, oldv) {
+                        onChange: (newv, oldv) => {
                            if (newv != oldv) {
                               $$(ids.detailsPage).setValue("");
                               $$(ids.editPage).setValue("");
 
-                              var currDC = _logic
-                                 .currentEditObject()
-                                 .application.datacollections(
-                                    (dc) => dc.id == newv
-                                 )[0];
+                              let editingGrid = _logic.currentEditObject();
+                              let currDC = editingGrid.application.datacollections(
+                                 (dc) => dc.id == newv
+                              )[0];
                               // disallow edit data of query
                               if (currDC && currDC.sourceType == "query") {
                                  $$(ids.isEditable).setValue(false);
@@ -662,6 +661,10 @@ module.exports = class ABViewGrid extends ABViewGridCore {
       for (let key in linkSettings) {
          view.settings[key] = linkSettings[key];
       }
+
+      // Populate values to link page properties
+      this.linkPageComponent.viewLoad(view);
+      this.linkPageComponent.setSettings(view.settings);
    }
 
    static propertyUpdateGridFilterObject(ids, view) {
