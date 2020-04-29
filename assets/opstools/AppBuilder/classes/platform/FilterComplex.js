@@ -157,16 +157,16 @@ module.exports = class FilterComplex extends FilterComplexCore {
       });
 
       // Default options list to push to all fields
-      this.queryFieldOptions = [
-         {
-            value: this.labels.component.inQueryField,
-            id: "in_query_field"
-         },
-         {
-            value: this.labels.component.notInQueryField,
-            id: "not_in_query_field"
-         }
-      ];
+      // this.queryFieldOptions = [
+      //    {
+      //       value: this.labels.component.inQueryField,
+      //       id: "in_query_field"
+      //    },
+      //    {
+      //       value: this.labels.component.notInQueryField,
+      //       id: "not_in_query_field"
+      //    }
+      // ];
 
       this.recordRuleOptions = [];
       this.recordRuleFieldOptions = [];
@@ -193,7 +193,12 @@ module.exports = class FilterComplex extends FilterComplexCore {
                      view: "querybuilder",
                      id: ids.querybuilder,
                      fields: [],
-                     filters: []
+                     filters: [],
+                     on: {
+                        onKeySelect: (form) => {
+                           this.uiCustomValue(form);
+                        }
+                     }
                   }
                ]
             },
@@ -272,6 +277,19 @@ module.exports = class FilterComplex extends FilterComplexCore {
 
          convertToColName(qbSettings);
          $$(this.ids.querybuilder).setValue(qbSettings);
+
+         // Update custom value
+         let $selectors = $$(this.ids.querybuilder).queryView(
+            {
+               view: "querybuilderline"
+            },
+            "all"
+         );
+         if ($selectors) {
+            ($selectors || []).forEach(($sElem) => {
+               this.uiCustomValue($sElem);
+            });
+         }
       }
    }
 
@@ -319,6 +337,105 @@ module.exports = class FilterComplex extends FilterComplexCore {
             el.config.filters.add(filter);
          });
       }
+   }
+
+   uiCustomValue($selector) {
+      if (
+         !$selector ||
+         !$selector.config ||
+         !$selector.config.value ||
+         !$selector.config.value.key
+      )
+         return;
+
+      let columnName = $selector.config.value.key;
+      let rule = $selector.config.value.rule;
+      // let value = $selector.config.value.value;
+
+      let $valueElem = $selector.queryView({ customEdit: true });
+      if (!$valueElem) return;
+
+      let field = this._Fields.filter((f) => f.columnName == columnName)[0];
+      if (!field) return;
+
+      if (rule == "in_query" || rule == "not_in_query") {
+         this.uiInQueryValue($valueElem, field);
+      } else if (
+         rule == "in_data_collection" ||
+         rule == "not_in_data_collection"
+      ) {
+         this.uiInDataCollectionValue($valueElem, field);
+      } else if (field.key == "list") {
+         this.uiListValue($valueElem, field);
+      }
+   }
+
+   uiInQueryValue($value, field) {
+      let options = [];
+      let Queries = [];
+
+      // populate the list of Queries for this_object:
+      if (field.id == "this_object" && this._Object) {
+         Queries = this.queries((q) => q.canFilterObject(this._Object));
+      }
+      // populate the list of Queries for a query field
+      else {
+         Queries = this.queries((q) => {
+            return (
+               (this._Object ? this._Object.id : "") != q.id && // Prevent filter looping
+               q.canFilterObject(field.datasourceLink)
+            );
+         });
+      }
+
+      Queries.forEach((q) => {
+         options.push({
+            id: q.id,
+            value: q.label
+         });
+      });
+
+      $value.define("options", options);
+      $value.refresh();
+   }
+
+   uiInDataCollectionValue($value, field) {
+      let options = [];
+
+      // get id of the link object
+      let linkObjectId;
+      if (field.id == "this_object" && this._Object) {
+         linkObjectId = this._Object.id;
+      } else {
+         linkObjectId = field.settings.linkObject;
+      }
+
+      // pull data collection list
+      if (this._Application && linkObjectId) {
+         options = this._Application
+            .datacollections(
+               (dc) => dc.datasource && dc.datasource.id == linkObjectId
+            )
+            .map((dc) => {
+               return { id: dc.id, value: dc.label };
+            });
+      }
+
+      $value.define("options", options);
+      $value.refresh();
+   }
+
+   uiListValue($value, field) {
+      let options = field.settings.options.map(function(opt) {
+         return {
+            id: opt.id,
+            value: opt.text,
+            hex: opt.hex
+         };
+      });
+
+      $value.define("options", options);
+      $value.refresh();
    }
 
    popUp() {
