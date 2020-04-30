@@ -108,7 +108,7 @@ module.exports = class ABMLClass extends ABMLClassCore {
       def.name = def.name || this.name || this.label || "name";
       def.type = def.type || this.type || "type";
       if (def.id) {
-         // here ABDefinition is our sails.model()
+         // here ABDefinition communicates directly with our sails model
          return ABDefinition.update(def.id, def);
       } else {
          return ABDefinition.create(def).then((data) => {

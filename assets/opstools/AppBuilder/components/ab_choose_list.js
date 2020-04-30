@@ -329,6 +329,17 @@ module.exports = class ABChooseList extends ABComponent {
             return new Promise((resolve, reject) => {
                let selectedApp = $$(ids.list).getItem(appId);
 
+               // Since moving to ABDefinition, we no longer have
+               // to pull a fuller version of the ABApplication from
+               // the server:
+
+               if (selectedApp) {
+                  resolve(selectedApp);
+                  return;
+               }
+               reject(new Error(`unknown App.id [${appId}]`));
+
+               /*
                // loaded full data of application already
                if (selectedApp._isFullLoaded) {
                   resolve(selectedApp);
@@ -349,6 +360,7 @@ module.exports = class ABChooseList extends ABComponent {
                      resolve(_data.listApplications.getItem(appId));
                   });
                }
+               */
             });
          },
 

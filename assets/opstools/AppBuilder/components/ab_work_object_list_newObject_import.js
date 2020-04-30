@@ -20,7 +20,8 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
          common: App.labels,
          component: {
             existing: L("ab.object.import.title", "*Existing"),
-            columns: L("ab.object.import.columns", "*Columns")
+            columns: L("ab.object.import.columns", "*Columns"),
+            noFields: L("ab.object.import.noFields", "*No Fields Defined")
          }
       };
 
@@ -69,26 +70,17 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
             currentApp = app;
             _logic.formClear();
             _logic.busyStart();
-            // currentApp.objectFind()
-            currentApp
-               .objectInfo()
-               .then((objects) => {
-                  let availableObjs = [];
 
-                  objects.forEach((obj) => {
-                     // skip if this object is in application
-                     if (currentApp.objects((o) => o.id == obj.id)[0]) return;
+            // now all objects are *global* but an application might only
+            // reference a sub set of them.  Here we just need to show
+            // the objects our current application isn't referencing:
 
-                     availableObjs.push(obj);
-                  });
+            var availableObjs = currentApp.objectsExcluded(
+               (o) => !o.isSystemObject
+            );
+            $$(ids.objectList).parse(availableObjs, "json");
 
-                  $$(ids.objectList).parse(availableObjs, "json");
-
-                  _logic.busyEnd();
-               })
-               .catch((err) => {
-                  _logic.busyEnd();
-               });
+            _logic.busyEnd();
          },
 
          busyStart: function() {
@@ -118,47 +110,50 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
 
                let colNames = [];
 
-               Promise.resolve()
-                  .then(() => currentApp.objectGet(selectedObj.id))
+               // Now that ABObjects are ABDefinitions, we no longer
+               // have to lookup the data from the server:
 
-                  .then((obj) => {
-                     // Parse results and update column list
-                     if (obj) {
-                        obj.fields().forEach((f) => {
-                           // Skip these columns
-                           // TODO : skip connect field
-                           // if (col.model) continue;
-                           // if (col.collection) continue;
+               selectedObj.fields().forEach((f) => {
+                  // Skip these columns
+                  // TODO : skip connect field
+                  // if (col.model) continue;
+                  // if (col.collection) continue;
 
-                           let fieldClass = ABFieldManager.allFields().filter(
-                              (field) => field.defaults().key == f.key
-                           )[0];
-                           if (fieldClass == null) return;
+                  let fieldClass = ABFieldManager.allFields().filter(
+                     (field) => field.defaults().key == f.key
+                  )[0];
+                  if (fieldClass == null) return;
 
-                           // If connect field does not link to objects in app, then skip
-                           if (
-                              f.key == "connectObject" &&
-                              !currentApp.objects(
-                                 (obj) => obj.id == f.settings.linkObject
-                              )[0]
-                           ) {
-                              return;
-                           }
+                  // If connect field does not link to objects in app, then skip
+                  if (
+                     f.key == "connectObject" &&
+                     !currentApp.objectsIncluded(
+                        (obj) => obj.id == f.settings.linkObject
+                     )[0]
+                  ) {
+                     return;
+                  }
 
-                           colNames.push({
-                              id: f.id,
-                              label: f.label,
-                              isvisible: true,
-                              icon: f.icon
-                              // disabled: !supported
-                           });
-                        });
-                     }
-
-                     $$(ids.columnList).parse(colNames);
-
-                     _logic.busyEnd();
+                  colNames.push({
+                     id: f.id,
+                     label: f.label,
+                     isvisible: true,
+                     icon: f.icon
+                     // disabled: !supported
                   });
+               });
+
+               if (colNames.length == 0) {
+                  colNames.push({
+                     id: "none",
+                     label: labels.component.noFields,
+                     isvisible: true
+                  });
+               }
+
+               $$(ids.columnList).parse(colNames);
+
+               _logic.busyEnd();
             }
          },
 
@@ -198,31 +193,12 @@ module.exports = class AB_Work_Object_List_NewObject_Import extends ABComponent 
             saveButton.disable();
             _logic.busyStart();
 
-            // var columns = $$(ids.columnList)
-            //     .data
-            //     .find({})
-            //     .map((col) => {
-            //         return {
-            //             id: col.id,
-            //             isHidden: !col.isvisible
-            //         };
-            //     });
-
-            // OP.Comm.Service.post({
-            //     url: '/app_builder/application/' + currentApp.id + '/importModel',
-            //     data: {
-            //         sourceAppId: selectedObj.application.id,
-            //         objectId: selectedObj.id,
-            //         columns: columns
-            //     }
-            // })
             currentApp
-               .objectImport(selectedObj.id)
+               .objectInsert(selectedObj)
                .then((newObj) => {
                   saveButton.enable();
                   _logic.busyEnd();
-
-                  _logic.callbacks.onDone(newObj);
+                  _logic.callbacks.onDone(selectedObj);
                })
                .catch((err) => {
                   console.log("ERROR:", err);

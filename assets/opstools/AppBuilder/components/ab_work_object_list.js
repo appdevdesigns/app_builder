@@ -529,7 +529,7 @@ module.exports = class AB_Work_Object_List extends ABComponent {
                return;
             }
 
-            let objects = CurrentApplication.objects();
+            let objects = CurrentApplication.objectsIncluded();
             objectList.parse(objects);
 
             // if (objectList.exists(object.id))
@@ -555,12 +555,12 @@ module.exports = class AB_Work_Object_List extends ABComponent {
          },
 
          exclude: function() {
-            var objectId = $$(ids.list).getSelectedId(false);
+            var object = $$(ids.list).getSelectedItem(false);
 
             _logic.listBusy();
 
-            CurrentApplication.objectExclude(objectId).then(() => {
-               objectList.remove(objectId);
+            CurrentApplication.objectRemove(object).then(() => {
+               objectList.remove(object.id);
 
                _logic.listReady();
 

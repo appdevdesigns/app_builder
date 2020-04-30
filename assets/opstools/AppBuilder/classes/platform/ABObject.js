@@ -222,19 +222,22 @@ module.exports = class ABObject extends ABObjectCore {
 
       var removeFromApplications = () => {
          return new Promise((next, err) => {
-            ABApplication.allCurrentApplications()
-               .then((apps) => {
-                  var appsWithObject = apps.find((a) => {
-                     return a.objects((o) => o.id == this.id);
-                  });
-                  appsWithObject.forEach((app) => {
-                     app.objectRemove(this);
-                     // Q: Do we do an app.save() here and then resolve()?
-                  });
-               })
-               .then(() => {
-                  next();
+            ABApplication.allCurrentApplications().then((apps) => {
+               // NOTE: apps is a webix datacollection
+
+               var allRemoves = [];
+
+               var appsWithObject = apps.find((a) => {
+                  return a.objectsIncluded((o) => o.id == this.id);
                });
+               appsWithObject.forEach((app) => {
+                  allRemoves.push(app.objectRemove(this));
+               });
+
+               return Promise.all(allRemoves)
+                  .then(next)
+                  .catch(err);
+            });
          });
       };
 
@@ -333,20 +336,8 @@ module.exports = class ABObject extends ABObjectCore {
                // }
 
                this.application
-                  .objectSave(this)
-                  .then((newObj) => {
-                     debugger;
-                     if (newObj && newObj.id && !this.id) this.id = newObj.id;
-
-                     // if (isAdd) {
-                     //     // on a Create: trigger a migrateCreate object
-                     //     this.migrateCreate()
-                     //         .then(() => {
-                     //             resolve(this);
-                     //         })
-                     //         .catch(reject);
-                     // } else {
-
+                  .objectInsert(this)
+                  .then(() => {
                      resolve(this);
                      // }
                   })

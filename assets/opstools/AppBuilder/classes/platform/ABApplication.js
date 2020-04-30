@@ -16,6 +16,10 @@ const ABProcessLane = require("./process/ABProcessLane");
 const ABProcess = require("./ABProcess");
 
 var _AllApplications = [];
+var __AllObjects = {
+   /* ABObject.id : ABObject */
+};
+// {obj} : a hash of all ABObjects in our system.
 
 var dfdReady = null;
 
@@ -52,7 +56,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
       });
       this._datacollections = newDatacollections;
 
-      // instance keeps a link to our Model for .save() and .destroy();
+      // instance keeps a link to our Model for .permissions and views;
       this.Model = OP.Model.get("opstools.BuildApp.ABApplication");
 
       // [fix] prevent crash if no model was returned
@@ -188,29 +192,32 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    static create(values) {
+      var newApp = new ABApplication(values);
+      return newApp.save();
+
       //// TODO: redo this as an ABDefinition!
+      // debugger;
+      // return new Promise(function(resolve, reject) {
+      //    var newApp = {};
+      //    OP.Multilingual.unTranslate(
+      //       values,
+      //       newApp,
+      //       ABApplication.fieldsMultilingual()
+      //    );
+      //    values.json = newApp;
+      //    newApp.name = values.name;
 
-      return new Promise(function(resolve, reject) {
-         var newApp = {};
-         OP.Multilingual.unTranslate(
-            values,
-            newApp,
-            ABApplication.fieldsMultilingual()
-         );
-         values.json = newApp;
-         newApp.name = values.name;
+      //    var ModelApplication = OP.Model.get("opstools.BuildApp.ABApplication");
+      //    ModelApplication.create(values)
+      //       .then(function(app) {
+      //          // return an instance of ABApplication
+      //          var App = new ABApplication(app);
 
-         var ModelApplication = OP.Model.get("opstools.BuildApp.ABApplication");
-         ModelApplication.create(values)
-            .then(function(app) {
-               // return an instance of ABApplication
-               var App = new ABApplication(app);
-
-               _AllApplications.add(App, 0);
-               resolve(App);
-            })
-            .catch(reject);
-      });
+      //          _AllApplications.add(App, 0);
+      //          resolve(App);
+      //       })
+      //       .catch(reject);
+      // });
    }
 
    //// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
@@ -308,11 +315,20 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    destroy() {
-      if (this.id) {
-         return this.Model.destroy(this.id).then(() => {
+      return super
+         .destroy()
+         .then(() => {
+            // TODO:
+            // go through any Application Unique objects and
+            // make sure they are destroyed as well, like:
+            // - interface objects
+            // ...
+
+            return Promise.resolve();
+         })
+         .then(() => {
             _AllApplications.remove(this.id);
          });
-      }
    }
 
    /**
@@ -325,21 +341,14 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    save() {
-      //// TODO: redo this as an ABDefinition
-      var values = this.toObj();
-
-      // we already have an .id, so this must be an UPDATE
-      if (values.id) {
-         return this.Model.update(values.id, values).then(() => {
-            _AllApplications.updateItem(values.id, this);
-         });
-      } else {
-         // must be a CREATE:
-         return this.Model.create(values).then((data) => {
-            this.id = data.id;
+      return super.save().then(() => {
+         var currEntry = _AllApplications.getItem(this.id);
+         if (currEntry) {
+            _AllApplications.updateItem(this.id, this);
+         } else {
             _AllApplications.add(this, 0);
-         });
-      }
+         }
+      });
    }
 
    /**
@@ -353,17 +362,17 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     *
     * @return {json}
     */
-   toObj() {
-      //// TODO: isn't this an MLObject?
+   // toObj() {
+   //    //// TODO: isn't this an MLObject?
 
-      OP.Multilingual.unTranslate(
-         this,
-         this.json,
-         ABApplication.fieldsMultilingual()
-      );
+   //    OP.Multilingual.unTranslate(
+   //       this,
+   //       this.json,
+   //       ABApplication.fieldsMultilingual()
+   //    );
 
-      return super.toObj();
-   }
+   //    return super.toObj();
+   // }
 
    /// ABApplication info methods
 
@@ -377,6 +386,9 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    updateInfo() {
+      debugger;
+      return this.save();
+      /*
       var values = this.toObj();
       values.json = values.json || {};
       values.json.translations = values.json.translations || [];
@@ -385,6 +397,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
          isAdminApp: values.isAdminApp,
          translations: values.json.translations
       });
+      */
    }
 
    /// ABApplication Permission methods
@@ -447,31 +460,11 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    ///
 
    objectsAll() {
-      return ABDefinition.allObjects();
+      return ABDefinition.allObjects().map((d) => {
+         return __AllObjects[d.id] ? __AllObjects[d.id] : this.objectNew(d);
+      });
    }
-   /*
-    objectLoad() {
-        console.error("ABApplication.objectLoad() is called");
-        if (this.loadedObjects) return Promise.resolve();
 
-        return new Promise((resolve, reject) => {
-            this.Model.staticData
-                .objectLoad(this.id)
-                .catch(reject)
-                .then((objects) => {
-                    this.loadedObjects = true;
-
-                    var newObjects = [];
-                    (objects || []).forEach((obj) => {
-                        newObjects.push(this.objectNew(obj));
-                    });
-                    this._objects = newObjects;
-
-                    resolve();
-                });
-        });
-    }
-*/
    /**
     * @method objectNew()
     *
@@ -483,93 +476,76 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     *
     * @return {ABObject}
     */
-   // objectNew(values) {
-   //     return new ABObject(values, this);
-   // }
+   objectNew(values) {
+      var obj = super.objectNew(values);
+      __AllObjects[obj.id] = obj;
+      return obj;
+   }
 
    /**
-    * @method objectDestroy()
+    * @method objectRemove()
     *
-    * remove the current ABObject from our list of ._objects.
-    *
+    * remove the current ABObject from our list of .objectIDs.
+    * NOTE: this method persists the changes to the server.
     * @param {ABObject} object
     * @return {Promise}
     */
-   objectDestroy(object) {
-      var remaininObjects = this.objects(function(o) {
-         return o.id != object.id;
-      });
-      this._objects = remaininObjects;
-
-      return this.Model.staticData.objectDestroy(object.id).then(() => {
-         // TODO : Should update _AllApplications in
-      });
-   }
-
    objectRemove(object) {
-      var remainingObjects = this.objects(function(o) {
-         return o.id != object.id;
+      var begLen = this.objectIDs.length();
+      this.objectIDs = this.objectIDs.filter((id) => {
+         return id != object.id;
       });
-      this._objects = remainingObjects;
-      this.objectIDs = remainingObjects.map((o) => {
-         return o.id;
-      });
-
-      // return this.Model.staticData.objectDestroy(object.id)
-      //  .then(() => {
-      //      // TODO : Should update _AllApplications in
-      //  });
+      // if there was a change then save this.
+      if (begLen != this.objectIDs.length) {
+         return this.save();
+      }
+      return Promise.resolve();
    }
 
    /**
     * @method objectSave()
     *
-    * persist the current ABObject in our list of ._objects.
+    * persist the current ABObject in our list of .objectIDs.
     *
     * @param {ABObject} object
     * @return {Promise}
     */
    objectSave(object) {
-      var isIncluded =
-         this.objects(function(o) {
-            return o.id == object.id;
-         }).length > 0;
+      // we need to make sure this object is included in our .objectIDs
+      var isIncluded = this.objectIDs.indexOf(object.id) != -1;
       if (!isIncluded) {
-         this._objects.push(object);
          this.objectIDs.push(object.id);
-         return this.Model.staticData.objectSave(this.id, object.toObj());
+         // Save our own Info:
+         return this.save();
       }
 
       // nothing changed, so nothing to do:
       return Promise.resolve();
-
-      // update
-      // return this.Model.staticData.objectSave(this.id, object.toObj());
    }
 
    /**
     * @method objectInsert()
     *
-    * persist the current ABObject in our list of ._objects.
+    * persist the current ABObject in our list of .objectIDs.
     *
     * @param {ABObject} object
     * @return {Promise}
     */
    objectInsert(object) {
-      var isIncluded =
-         this.objects(function(o) {
-            return o.id == object.id;
-         }).length > 0;
+      var isIncluded = this.objectIDs.indexOf(object.id) != -1;
       if (!isIncluded) {
-         this._objects.push(object);
          this.objectIDs.push(object.id);
+         // Save our own Info:
+         return this.save();
       }
+      return Promise.resolve();
    }
 
    objectGet(id) {
       console.error("ABApplication.objectGet(): refactor this!");
 
       return new Promise((resolve, reject) => {
+         debugger;
          this.Model.staticData
             .objectGet(id)
             .catch(reject)
@@ -587,6 +563,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
       console.error("ABApplication.objectFind(): refactor this!");
 
       return new Promise((resolve, reject) => {
+         debugger;
          this.Model.staticData
             .objectFind(cond)
             .catch(reject)
@@ -608,6 +585,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
    objectInfo(cond) {
       return new Promise((resolve, reject) => {
+         debugger;
          this.Model.staticData
             .objectInfo(cond)
             .catch(reject)
@@ -622,9 +600,10 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
             });
       });
    }
-
+   /*
    objectImport(objectId) {
       return new Promise((resolve, reject) => {
+         debugger;
          this.Model.staticData
             .objectImport(this.id, objectId)
             .catch(reject)
@@ -660,6 +639,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    }
 
    objectExclude(objectId) {
+      debugger;
       return new Promise((resolve, reject) => {
          // this.Model.staticData
          //     .objectExclude(this.id, objectId)
@@ -692,9 +672,10 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
          // });
       });
    }
-
+*/
    objectRefresh(objectId) {
       return new Promise((resolve, reject) => {
+         debugger;
          this.Model.staticData
             .objectGet(objectId)
             .catch(reject)
