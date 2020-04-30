@@ -886,6 +886,16 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                                              }
                                           );
 
+                                          // Print number with commas
+                                          if (sum) {
+                                             sum = sum
+                                                .toString()
+                                                .replace(
+                                                   /\B(?=(\d{3})+(?!\d))/g,
+                                                   ","
+                                                );
+                                          }
+
                                           return sum;
                                        }
                                        // NOTE: AppBuilder custom filter of another data source
