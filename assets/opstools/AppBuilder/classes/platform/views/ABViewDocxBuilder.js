@@ -870,9 +870,17 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                                              (childItem) => {
                                                 if (!childItem[prop]) return;
 
+                                                let number = childItem[prop];
+                                                if (typeof number == "string") {
+                                                   number = number.replace(
+                                                      /,/g,
+                                                      ""
+                                                   );
+                                                }
+
                                                 try {
                                                    sum += parseFloat(
-                                                      childItem[prop] || 0
+                                                      number || 0
                                                    );
                                                 } catch (e) {}
                                              }
