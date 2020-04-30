@@ -33,12 +33,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
     * @param {fn} filter   an optional filter that works on the ABDefinition
     * @return [array] of ABDefinition
     */
-   static all(filter) {
-      if (!filter)
-         filter = function() {
-            return true;
-         };
-
+   static all(filter = () => true) {
       return Object.keys(__AllDefinitions)
          .map((k) => {
             return __AllDefinitions[k];
@@ -49,11 +44,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
          });
    }
 
-   static allObjects(f) {
-      if (!f)
-         f = function() {
-            return true;
-         };
+   static allObjects(f = () => true) {
       var allObjs = ABDefinition.all((d) => {
          return d.type == "object";
       });
