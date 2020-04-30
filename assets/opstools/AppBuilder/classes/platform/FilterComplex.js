@@ -325,6 +325,10 @@ module.exports = class FilterComplex extends FilterComplexCore {
       this.uiInit();
    }
 
+   toShortHand() {
+      return "Add Filters";
+   }
+
    uiInit() {
       let el = $$(this.ids.querybuilder);
       if (el) {
@@ -449,6 +453,13 @@ module.exports = class FilterComplex extends FilterComplexCore {
       };
 
       this.myPopup = webix.ui(ui);
+
+      if (this.application) {
+         this.applicationLoad(this.application);
+      }
+      if (this.fields) {
+         this.fieldsLoad(this.fields);
+      }
       if (this.condition) {
          this.setValue(this.condition);
       }
@@ -456,4 +467,3 @@ module.exports = class FilterComplex extends FilterComplexCore {
       this.myPopup.show();
    }
 };
-

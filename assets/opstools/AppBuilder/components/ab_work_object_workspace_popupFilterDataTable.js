@@ -6,7 +6,7 @@
  */
 
 const ABComponent = require("../classes/platform/ABComponent");
-const RowFilter = require("../classes/platform/RowFilter");
+const RowFilter = require("../classes/platform/FilterComplex");
 
 module.exports = class AB_Work_Object_Workspace_PopupFilterDataTable extends ABComponent {
    constructor(App, idBase) {
@@ -79,7 +79,6 @@ module.exports = class AB_Work_Object_Workspace_PopupFilterDataTable extends ABC
           */
          objectLoad: function(object) {
             CurrentObject = object;
-
             DataFilter.applicationLoad(
                CurrentObject ? CurrentObject.application : null
             );

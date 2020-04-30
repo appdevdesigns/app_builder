@@ -71,7 +71,10 @@ module.exports = class ABFieldComponent {
          showIcon: App.unique(this.idBase + "_showIcon"),
          required: App.unique(this.idBase + "_required"),
          numberOfNull: App.unique(this.idBase + "_numberOfNull"),
-         unique: App.unique(this.idBase + "_unique")
+         unique: App.unique(this.idBase + "_unique"),
+         filterComplex: App.unique(this.idBase + "_filtercomplex"),
+         shorthand: App.unique(this.idBase + "_shorthand"),
+         validationRules: App.unique(this.idBase + "_validationRules")
       };
 
       this.eachDeep(elements, (e) => {

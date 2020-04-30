@@ -6,6 +6,7 @@
  */
 
 var ABFieldCore = require("../../core/dataFields/ABFieldCore");
+var FilterComplex = require("../FilterComplex");
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -83,6 +84,30 @@ module.exports = class ABField extends ABFieldCore {
       $$(ids.showIcon).setValue(field.settings.showIcon);
       $$(ids.required).setValue(field.settings.required);
       $$(ids.unique).setValue(field.settings.unique);
+
+      var Filter = new FilterComplex(
+         field.object.application.App,
+         "field_validation_rules"
+      );
+
+      if (field.settings && field.settings.validationRules) {
+         $$(ids.validationRules).setValue(field.settings.validationRules);
+      }
+
+      $$(ids.shorthand).setValue(Filter.toShortHand());
+      $$(ids.shorthand).attachEvent("onItemClick", function() {
+         if (field.settings && field.settings.validationRules) {
+            Filter.condition = JSON.parse(field.settings.validationRules);
+         }
+         Filter.application = field.object.application;
+         Filter.fields = field.object.fields();
+         Filter.popUp();
+      });
+      Filter.on("save", (validationRules) => {
+         field.settings.validationRules = JSON.stringify(validationRules);
+         $$(ids.shorthand).setValue(Filter.toShortHand());
+         $$(ids.validationRules).setValue(JSON.stringify(validationRules));
+      });
    }
 
    /**
@@ -262,6 +287,19 @@ module.exports = class ABField extends ABFieldCore {
                labelRight: App.labels.unique,
                disallowEdit: true,
                labelWidth: App.config.labelWidthCheckbox
+            },
+            {
+               id: ids.shorthand,
+               view: "label",
+               label: "replace"
+            },
+            // have a hidden field to contain the validationRules
+            // value we will parse out later
+            {
+               id: ids.validationRules,
+               view: "text",
+               hidden: true,
+               name: "validationRules"
             }
          ]
       };

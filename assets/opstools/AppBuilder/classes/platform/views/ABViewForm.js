@@ -8,6 +8,8 @@ const ABViewFormTextbox = require("./ABViewFormTextbox");
 const ABRecordRule = require("../../rules/ABViewRuleListFormRecordRules");
 const ABSubmitRule = require("../../rules/ABViewRuleListFormSubmitRules");
 
+var FilterComplex = require("../FilterComplex");
+
 let PopupRecordRule = null;
 let PopupSubmitRule = null;
 
@@ -676,10 +678,42 @@ module.exports = class ABViewForm extends ABViewFormCore {
       };
       var ids = {
          component: myUnique("_component"),
-         layout: myUnique("_form_layout")
+         layout: myUnique("_form_layout"),
+         filterComplex: myUnique("_filter_complex")
       };
 
       var component = super.component(App);
+
+      // Pull fields that have validation rules
+      var fieldValidations = [];
+      var validationUI = [];
+      var object = this.datacollection.datasource;
+      var existsFields = this.fieldComponents();
+      if (object != null) {
+         object.fields().forEach((f) => {
+            var view = existsFields.filter((com) => {
+               return f.id == com.settings.fieldId;
+            })[0];
+
+            if (view && f.settings.validationRules) {
+               var Filter = new FilterComplex(App, f.columnName);
+               validationUI.push(Filter.ui);
+               fieldValidations.push({
+                  filter: Filter,
+                  view: Filter.ids.querybuilder,
+                  columnName: f.columnName,
+                  validationRules: f.settings.validationRules
+               });
+            }
+         });
+      }
+
+      var fieldValidationsHolder = [
+         {
+            hidden: true,
+            rows: validationUI
+         }
+      ];
 
       // an ABViewForm_ is a collection of rows:
       var _ui = {
@@ -688,7 +722,14 @@ module.exports = class ABViewForm extends ABViewFormCore {
          // body: {
          id: ids.component,
          view: "form",
-         rows: component.ui.rows
+         rows: component.ui.rows.concat(fieldValidationsHolder),
+         elementsConfig: {
+            on: {
+               onChange: function(newv, oldv) {
+                  this.validate();
+               }
+            }
+         }
          // }
       };
 
@@ -747,6 +788,24 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   emitter: linkDv,
                   eventName: "changeCursor",
                   listener: _logic.displayParentData
+               });
+            }
+
+            if (fieldValidations.length) {
+               fieldValidations.forEach((f) => {
+                  f.filter.applicationLoad(dc.datasource.application);
+                  f.filter.fieldsLoad(dc.datasource.fields());
+                  f.filter.setValue(JSON.parse(f.validationRules));
+                  var formField = $$(ids.component).queryView({
+                     name: f.columnName
+                  });
+                  formField.define("validate", function() {
+                     var filters = $$(f.view).getFilterHelper();
+                     var values = $$(ids.component).getValues();
+                     var isValid = filters(values);
+                     return isValid;
+                  });
+                  formField.refresh();
                });
             }
          }
@@ -1062,6 +1121,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
          validator = object.isValidData(formVals);
          isValid = validator.pass();
       }
+
+      $$(formView).validate();
 
       // if data is invalid
       if (!isValid) {
