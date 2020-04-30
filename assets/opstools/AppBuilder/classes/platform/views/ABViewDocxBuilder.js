@@ -860,6 +860,25 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                                                    : false;
                                              }
                                           );
+                                       } else if (tag.indexOf("$sum|") == 0) {
+                                          let prop = (
+                                             tag.split("|")[1] || ""
+                                          ).trim();
+
+                                          let sum = 0;
+                                          (scope["data"] || []).forEach(
+                                             (childItem) => {
+                                                if (!childItem[prop]) return;
+
+                                                try {
+                                                   sum += parseFloat(
+                                                      childItem[prop] || 0
+                                                   );
+                                                } catch (e) {}
+                                             }
+                                          );
+
+                                          return sum;
                                        }
                                        // NOTE: AppBuilder custom filter of another data source
                                        else if (tag.indexOf("$") == 0) {
