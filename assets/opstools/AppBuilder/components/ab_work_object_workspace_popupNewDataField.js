@@ -347,6 +347,9 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                         field.settings.linkColumn = linkCol.id;
                      }
                   } else {
+                     // NOTE: update label before .toObj for .unTranslate to .translations
+                     if (vals.label) _editField.label = vals.label;
+
                      // use our _editField, backup our oldData
                      oldData = _editField.toObj();
 
