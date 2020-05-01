@@ -293,10 +293,14 @@ module.exports = class ABObject extends ABObjectCore {
                fieldDrops.push(f.destroy());
             });
 
-            return Promise.all(fieldDrops).then(() => {
-               // now me.
-               return super.destroy();
-            });
+            return Promise.all(fieldDrops)
+               .then(() => {
+                  // now me.
+                  return super.destroy();
+               })
+               .then(() => {
+                  this.emit("destroyed");
+               });
          });
    }
 
