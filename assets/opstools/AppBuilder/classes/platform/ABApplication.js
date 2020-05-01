@@ -105,6 +105,12 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
       });
    }
 
+   static allCurrentApplications() {
+      return new Promise((resolve, reject) => {
+         resolve(_AllApplications);
+      });
+   }
+
    /**
     * @function applicationInfo
     * Get id and label of all applications
