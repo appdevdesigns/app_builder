@@ -338,10 +338,13 @@ module.exports = class ABField extends ABFieldCore {
             // .migrateDrop()  before we actually .objectDestroy() this.
             this.migrateDrop()
                .then(() => {
-                  return this.object.fieldRemove(this);
+                  // the server still references an ABField in relationship to it's
+                  // ABObject, so we need to destroy the Field 1st, then remove it
+                  // from it's object.
+                  return super.destroy();
                })
                .then(() => {
-                  return super.destroy();
+                  return this.object.fieldRemove(this);
                })
                .then(resolve)
                .catch(reject);

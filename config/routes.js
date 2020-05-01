@@ -28,26 +28,26 @@ module.exports = {
       "app_builder/ABApplicationController.applicationSave",
 
    /* Objects */
-   "get /app_builder/application/:appID/object":
-      "app_builder/ABObjectController.objectApplication",
+   // "get /app_builder/application/:appID/object":
+   //    "app_builder/ABObjectController.objectApplication",
 
-   "get /app_builder/object": "app_builder/ABObjectController.objectFind",
+   // "get /app_builder/object": "app_builder/ABObjectController.objectFind",
 
-   "get /app_builder/object/info": "app_builder/ABObjectController.objectInfo",
+   // "get /app_builder/object/info": "app_builder/ABObjectController.objectInfo",
 
-   "get /app_builder/object/:objID":
-      "app_builder/ABObjectController.objectFindOne",
+   // "get /app_builder/object/:objID":
+   //    "app_builder/ABObjectController.objectFindOne",
 
-   "put /app_builder/object": "app_builder/ABObjectController.objectSave",
+   // "put /app_builder/object": "app_builder/ABObjectController.objectSave",
 
-   "delete /app_builder/object/:objectId":
-      "app_builder/ABObjectController.objectDestroy",
+   // "delete /app_builder/object/:objectId":
+   //    "app_builder/ABObjectController.objectDestroy",
 
-   "put /app_builder/application/:appID/object/:objID":
-      "app_builder/ABObjectController.importObject",
+   // "put /app_builder/application/:appID/object/:objID":
+   //    "app_builder/ABObjectController.importObject",
 
-   "delete /app_builder/application/:appID/object/:objID":
-      "app_builder/ABObjectController.excludeObject",
+   // "delete /app_builder/application/:appID/object/:objID":
+   //    "app_builder/ABObjectController.excludeObject",
 
    /* Application Views */
    "put /app_builder/application/:appID/view":

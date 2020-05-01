@@ -21,7 +21,7 @@ const ABObject = require(path.join(
    "platform",
    "ABObject"
 ));
-
+var GenApplication = null;
 // const ABRole = require("../systemObjects/role");
 // const ABScope = require("../systemObjects/scope");
 
@@ -69,6 +69,13 @@ module.exports = {
       return Promise.resolve();
    },
 
+   getApplication: () => {
+      if (!GenApplication) {
+         GenApplication = new ABApplication({});
+      }
+      return GenApplication;
+   },
+
    getObjectRoleId: () => {
       return ROLE_OBJECT_ID;
    },
@@ -80,7 +87,7 @@ module.exports = {
       } else {
          var def = ABDefinition.definition(id);
          if (def) {
-            return new ABObject(def, new ABApplication({}));
+            return new ABObject(def, GenApplication);
          }
          return null;
       }

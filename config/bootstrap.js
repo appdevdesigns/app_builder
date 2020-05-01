@@ -15,6 +15,15 @@ var async = require("async");
 var ABGraphObject = require(path.join("..", "api", "graphModels", "ABObject"));
 var ABGraphQuery = require(path.join("..", "api", "graphModels", "ABQuery"));
 
+const ABDefinition = require(path.join(
+   __dirname,
+   "..",
+   "api",
+   "classes",
+   "platform",
+   "ABDefinition"
+));
+
 const ABApplication = require(path.join(
    __dirname,
    "..",
@@ -53,6 +62,9 @@ module.exports = function(cb) {
             verifyWellKnownDir,
             verifyWellKnownConfigs,
             verifyDataDir,
+
+            // define our ABDefinition Lifecycle callbacks
+            loadDefinitionCallbacks,
 
             // load all our ABDefinitions
             loadDefinitions,
@@ -182,7 +194,7 @@ function cacheABClassObjects(next) {
       })
    );
 */
-   var genApp = new ABApplication({});
+   var genApp = ABSystemObject.getApplication();
    var objDefs = (allDefinitions || []).filter((d) => d.type == "object");
    objDefs.forEach((o) => {
       new ABObject(o.json, genApp);
@@ -670,6 +682,78 @@ AppDev Team
 //          next();
 //       });
 // }
+
+function loadDefinitionCallbacks(next) {
+   // ABObject.beforeCreate Lifecycle
+   ABModelLifecycle.register("object.beforeCreate", (values, cb) => {
+      var def = values.json;
+      if (typeof def == "string") {
+         try {
+            def = JSON.parse(def);
+         } catch (e) {}
+      }
+      var pending = [];
+      // track any Async operations.
+
+      switch (values.type) {
+         case "object":
+            // Make sure .tableName is set:
+            if (!def.tableName) {
+               // TODO: Remove Object.tableName from depending on Application.
+               var appDef = ABDefinition.definition(def.createdInAppID);
+               if (appDef) {
+                  // NOTE: do NOT use ABSystemObject.getApplication() here!
+                  var app = new ABApplication(appDef);
+                  def.tableName = AppBuilder.rules.toObjectNameFormat(
+                     app.dbApplicationName(),
+                     def.name
+                  );
+               }
+            }
+            break;
+      }
+
+      // make sure all Async operations are complete before calling
+      // our CB()
+      Promise.all(pending)
+         .then(() => {
+            cb();
+         })
+         .catch((err) => {
+            sails.log.error("object.beforeCreate :: Error:", err);
+            cb(err);
+         });
+   });
+
+   // ABObject.beforeCreate Lifecycle
+   ABModelLifecycle.register("object.afterUpdate", (values, cb) => {
+      var def = values.json;
+      if (typeof def == "string") {
+         try {
+            def = JSON.parse(def);
+         } catch (e) {}
+      }
+      var pending = [];
+      // track any Async operations.
+
+      // After an Update, create a new instance of ABObject so
+      // we update our ABObjectCache
+      new ABObject(def, ABSystemObject.getApplication());
+
+      // make sure all Async operations are complete before calling
+      // our CB()
+      Promise.all(pending)
+         .then(() => {
+            cb();
+         })
+         .catch((err) => {
+            sails.log.error("object.afterUpdate :: Error:", err);
+            cb(err);
+         });
+   });
+
+   next();
+}
 
 function loadDefinitions(next) {
    ABDefinitionModel.refresh()

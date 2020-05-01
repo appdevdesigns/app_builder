@@ -75,7 +75,7 @@ module.exports = {
          values.json.id = values.id;
       }
 
-      cb();
+      ABModelLifecycle.process(`${values.type}.beforeCreate`, values, cb);
    },
 
    beforeUpdate: function(values, cb) {
@@ -94,7 +94,12 @@ module.exports = {
       // Cache in .constructor of ABClassObject
       // updatedRecord.toABClass();
       __AllDefinitions[updatedRecord.id] = updatedRecord;
-      cb();
+
+      ABModelLifecycle.process(
+         `${updatedRecord.type}.afterUpdate`,
+         updatedRecord,
+         cb
+      );
    },
 
    beforeDestroy: function(criteria, cb) {

@@ -478,6 +478,9 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     */
    objectNew(values) {
       var obj = super.objectNew(values);
+      obj.on("destroyed", () => {
+         delete __AllObjects[obj.id];
+      });
       __AllObjects[obj.id] = obj;
       return obj;
    }
@@ -491,7 +494,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    objectRemove(object) {
-      var begLen = this.objectIDs.length();
+      var begLen = this.objectIDs.length;
       this.objectIDs = this.objectIDs.filter((id) => {
          return id != object.id;
       });
