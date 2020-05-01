@@ -80,7 +80,10 @@ module.exports = class ABObject extends ABObjectCore {
       // label/name must be unique:
       var isNameUnique =
          this.application.objects((o) => {
-            return o.name.toLowerCase() == this.name.toLowerCase();
+            return (
+               o.id != this.id &&
+               o.name.toLowerCase() == this.name.toLowerCase()
+            );
          }).length == 0;
       if (!isNameUnique) {
          validator.addError(
@@ -311,10 +314,10 @@ module.exports = class ABObject extends ABObjectCore {
 
       // if this is our initial save()
       if (!this.id) {
-         // this.id = OP.Util.uuid();	// setup default .id
          this.label = this.label || this.name;
-         // this.urlPath =
-         //     this.urlPath || this.application.name + "/" + this.name;
+         if (!this.createdInAppID) {
+            this.createdInAppID = this.application.id;
+         }
          isAdd = true;
       }
 

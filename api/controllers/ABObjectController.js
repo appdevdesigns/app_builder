@@ -101,6 +101,7 @@ module.exports = {
     *
     * Add a new object
     */
+   /*
    objectSave: function(req, res) {
       let appID = req.query.appID;
       let object = req.body.object;
@@ -178,6 +179,7 @@ module.exports = {
             });
          });
    },
+   */
 
    /**
     * DELETE /app_builder/object/:objectId

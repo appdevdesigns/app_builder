@@ -143,7 +143,6 @@ module.exports = class ABField extends ABFieldCore {
                               next(exists);
                            });
                      })
-                     .then(next)
                      .catch(err);
                });
             })
@@ -169,7 +168,8 @@ module.exports = class ABField extends ABFieldCore {
                   let tasks = [];
 
                   let queries = ABObjectCache.list(
-                     (obj) => obj.canFilterField && obj.canFilterField(this)
+                     (obj) =>
+                        obj && obj.canFilterField && obj.canFilterField(this)
                   );
                   (queries || []).forEach((q) => {
                      // Remove the field from query
