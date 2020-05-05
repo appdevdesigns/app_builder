@@ -153,7 +153,8 @@ module.exports = class FilterComplex extends FilterComplexCore {
       let ids = (this.ids = {
          filterForm: this.unique(idBase + "_rowFilter_form"),
          popup: this.unique(idBase + "_popup"),
-         querybuilder: this.unique(idBase + "_querybuilder")
+         querybuilder: this.unique(idBase + "_querybuilder"),
+         save: this.unique(idBase + "_save")
       });
 
       // Default options list to push to all fields
@@ -187,6 +188,8 @@ module.exports = class FilterComplex extends FilterComplexCore {
             {
                view: "form",
                id: ids.filterForm,
+               type: "clean",
+               borderless: true,
                // hidden: true,
                elements: [
                   {
@@ -203,8 +206,10 @@ module.exports = class FilterComplex extends FilterComplexCore {
                ]
             },
             {
+               id: ids.save,
                view: "button",
-               value: "Save",
+               css: "webix_primary",
+               value: L("ab.filter_fields.Save", "*Save"),
                click: () => {
                   if (this.myPopup) this.myPopup.hide();
                   this.emit("save", this.getValue());

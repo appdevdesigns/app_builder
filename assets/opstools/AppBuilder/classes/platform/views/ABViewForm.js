@@ -695,14 +695,28 @@ module.exports = class ABViewForm extends ABViewFormCore {
                return f.id == com.settings.fieldId;
             })[0];
 
+            // check to see if field has validation rules
             if (view && f.settings.validationRules) {
-               var Filter = new FilterComplex(App, f.columnName);
-               validationUI.push(Filter.ui);
-               fieldValidations.push({
-                  filter: Filter,
-                  view: Filter.ids.querybuilder,
-                  columnName: f.columnName,
-                  validationRules: f.settings.validationRules
+               // parse the rules because they were stored as a string
+               f.settings.validationRules = JSON.parse(
+                  f.settings.validationRules
+               );
+               // there could be more than one so lets loop through and build the UI
+               f.settings.validationRules.forEach((rule) => {
+                  var Filter = new FilterComplex(
+                     App,
+                     f.columnName + "_" + webix.uid()
+                  );
+                  // add the new ui to an array so we can add them all at the same time
+                  validationUI.push(Filter.ui);
+                  // store the filter's info so we can assign values and settings after the ui is rendered
+                  fieldValidations.push({
+                     filter: Filter,
+                     view: Filter.ids.querybuilder,
+                     columnName: f.columnName,
+                     validationRules: rule.rules,
+                     invalidMessage: rule.invalidMessage
+                  });
                });
             }
          });
@@ -792,17 +806,58 @@ module.exports = class ABViewForm extends ABViewFormCore {
             }
 
             if (fieldValidations.length) {
+               // we need to store the rules for use later so lets build a container array
+               var complexValidations = [];
                fieldValidations.forEach((f) => {
+                  // init each ui to have the properties (app and fields) of the object we are editing
                   f.filter.applicationLoad(dc.datasource.application);
                   f.filter.fieldsLoad(dc.datasource.fields());
-                  f.filter.setValue(JSON.parse(f.validationRules));
-                  var formField = $$(ids.component).queryView({
-                     name: f.columnName
+                  // now we can set the value because the fields are properly initialized
+                  f.filter.setValue(f.validationRules);
+                  // if there are validation rules present we need to store them in a lookup hash
+                  // so multiple rules can be stored on a single field
+                  if (!Array.isArray(complexValidations[f.columnName]))
+                     complexValidations[f.columnName] = [];
+
+                  // now we can push the rules into the hash
+                  complexValidations[f.columnName].push({
+                     filters: $$(f.view).getFilterHelper(),
+                     // values: $$(ids.component).getValues(),
+                     invalidMessage: f.invalidMessage
                   });
-                  formField.define("validate", function() {
-                     var filters = $$(f.view).getFilterHelper();
-                     var values = $$(ids.component).getValues();
-                     var isValid = filters(values);
+               });
+               // use the lookup to build the validation rules
+               Object.keys(complexValidations).forEach(function(key) {
+                  // get our field that has validation rules
+                  var formField = $$(ids.component).queryView({
+                     name: key
+                  });
+                  // store the rules in a data param to be used later
+                  formField.$view.complexValidations = complexValidations[key];
+                  // define validation rules
+                  formField.define("validate", function(nval, oval, field) {
+                     // get field now that we are validating
+                     var fieldValidating = $$(ids.component).queryView({
+                        name: field
+                     });
+                     // default valid is true
+                     var isValid = true;
+                     // check each rule that was stored previously on the element
+                     fieldValidating.$view.complexValidations.forEach(
+                        (filter) => {
+                           // use helper funtion to check if valid
+                           var ruleValid = filter.filters(this.getValues());
+                           // if invalid we need to tell the field
+                           if (ruleValid == false) {
+                              isValid = false;
+                              // we also need to define an error message
+                              fieldValidating.define(
+                                 "invalidMessage",
+                                 filter.invalidMessage
+                              );
+                           }
+                        }
+                     );
                      return isValid;
                   });
                   formField.refresh();
