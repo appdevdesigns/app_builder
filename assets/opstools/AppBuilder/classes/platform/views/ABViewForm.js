@@ -698,9 +698,12 @@ module.exports = class ABViewForm extends ABViewFormCore {
             // check to see if field has validation rules
             if (view && f.settings.validationRules) {
                // parse the rules because they were stored as a string
-               f.settings.validationRules = JSON.parse(
-                  f.settings.validationRules
-               );
+               // check if rules are still a string...if so lets parse them
+               if (typeof f.settings.validationRules === "string") {
+                  f.settings.validationRules = JSON.parse(
+                     f.settings.validationRules
+                  );
+               }
                // there could be more than one so lets loop through and build the UI
                f.settings.validationRules.forEach((rule) => {
                   var Filter = new FilterComplex(
@@ -736,14 +739,14 @@ module.exports = class ABViewForm extends ABViewFormCore {
          // body: {
          id: ids.component,
          view: "form",
-         rows: component.ui.rows.concat(fieldValidationsHolder),
-         elementsConfig: {
-            on: {
-               onChange: function(newv, oldv) {
-                  this.validate();
-               }
-            }
-         }
+         rows: component.ui.rows.concat(fieldValidationsHolder)
+         // elementsConfig: {
+         //    on: {
+         //       onChange: function(newv, oldv) {
+         //          this.validate();
+         //       }
+         //    }
+         // }
          // }
       };
 
