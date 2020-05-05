@@ -3,8 +3,8 @@
 // Manages the settings for a collection of views in the AppBuilder Object Workspace
 
 const ABObjectWorkspaceViewGrid = require("./ABObjectWorkspaceViewGrid");
-const ABObjectWorkspaceViewKanban = require("./ABObjectWorkspaceViewGrid");
-const ABObjectWorkspaceViewGantt = require("./ABObjectWorkspaceViewGrid");
+const ABObjectWorkspaceViewKanban = require("./ABObjectWorkspaceViewKanban");
+const ABObjectWorkspaceViewGantt = require("./ABObjectWorkspaceViewGantt");
 
 var hashViews = {};
 hashViews[ABObjectWorkspaceViewGrid.type()] = ABObjectWorkspaceViewGrid;
