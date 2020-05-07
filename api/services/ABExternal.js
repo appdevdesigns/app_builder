@@ -169,8 +169,8 @@ module.exports = {
     * @method getTableList
     * Get the list of table name
     *
-    * @param {guid} - The id of ABApplication
-    * @param {string} - The name of database connection
+    * @param {guid} appID - The id of ABApplication
+    * @param {string} connName - The name of database connection
     *
     * @return Promise -
     * 			return {Array} [
@@ -180,7 +180,7 @@ module.exports = {
    getTableList: (appID, connName = "appBuilder") => {
       var allTableNames = [],
          existsTableNames = [];
-
+      debugger;
       return (
          Promise.resolve()
             .then(function() {
@@ -228,6 +228,13 @@ module.exports = {
             })
             .then(function() {
                return new Promise((resolve, reject) => {
+                  var application = ABSystemObject.getApplication();
+                  application.objects().forEach((obj) => {
+                     existsTableNames.push(obj.dbTableName());
+                  });
+
+                  resolve();
+                  /*
                   ABApplication.find({ id: appID }).exec(function(err, list) {
                      if (err) reject(err);
                      else if (!list || !list[0]) {
@@ -242,6 +249,7 @@ module.exports = {
                         resolve();
                      }
                   });
+                  */
                });
             })
             // Get only not exists table names
@@ -459,6 +467,10 @@ module.exports = {
       columnList,
       connName = "appBuilder"
    ) {
+      ////
+      //// LEFT OFF HERE:
+      //// Refactor out ABApplication
+      ////
       let knexAppBuilder = ABMigration.connection("appBuilder"),
          knexTable = ABMigration.connection(connName),
          application,
@@ -479,24 +491,27 @@ module.exports = {
          });
       };
 
+      debugger;
+      application = ABSystemObject.getApplication();
+
       return (
          Promise.resolve()
 
             // Find app in database
-            .then(function() {
-               return new Promise((resolve, reject) => {
-                  ABApplication.find({ id: appID }).exec(function(err, list) {
-                     if (err) {
-                        reject(err);
-                     } else if (!list || !list[0]) {
-                        reject(new Error("application not found: " + appID));
-                     } else {
-                        application = list[0];
-                        resolve();
-                     }
-                  });
-               });
-            })
+            // .then(function() {
+            //    return new Promise((resolve, reject) => {
+            //       ABApplication.find({ id: appID }).exec(function(err, list) {
+            //          if (err) {
+            //             reject(err);
+            //          } else if (!list || !list[0]) {
+            //             reject(new Error("application not found: " + appID));
+            //          } else {
+            //             application = list[0];
+            //             resolve();
+            //          }
+            //       });
+            //    });
+            // })
 
             // Find site languages
             .then(function() {
@@ -710,7 +725,7 @@ module.exports = {
                                  targetType = targetAssociate.type;
                               }
                            }
-
+                           debugger;
                            // Get id of ABObject and ABColumn
                            let targetObj = (
                               application.json.objects || []
@@ -766,11 +781,11 @@ module.exports = {
                            );
 
                            targetObj.fields.push(targetColData);
-
+                           debugger;
                            // Refresh the target model
                            let targetObjClass = new ABObjectExternal(
                               targetObj,
-                              application.toABClass()
+                              application
                            );
                            targetObjClass.modelRefresh();
                         }
@@ -785,10 +800,11 @@ module.exports = {
 
             // Create federated table
             .then(function() {
+               debugger;
                return new Promise((resolve, reject) => {
                   let externalObject = new ABObjectExternal(
                      objectData,
-                     application.toABClass()
+                     application
                   );
 
                   externalObject

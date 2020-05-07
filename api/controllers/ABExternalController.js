@@ -23,7 +23,10 @@ module.exports = {
          .then((result) => {
             res.AD.success(result);
          })
-         .catch(res.AD.error);
+         .catch((err) => {
+            console.error(err);
+            res.AD.error(err);
+         });
    },
 
    /**
@@ -39,7 +42,10 @@ module.exports = {
          .then((result) => {
             res.AD.success(result);
          })
-         .catch(res.AD.error);
+         .catch((err) => {
+            console.error(err);
+            res.AD.error(err);
+         });
    },
 
    /**

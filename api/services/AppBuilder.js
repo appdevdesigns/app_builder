@@ -49,7 +49,7 @@ var cliCommand = "appdev"; // use the global appdev command
 var appsBuildInProgress = {}; // a hash of deferreds for apps currently being built.
 // {  ABApplication.id : dfd }
 
-var __dfdBuildDirectoryCreated = null;
+// var __dfdBuildDirectoryCreated = null;
 
 var DataFields = {};
 
@@ -116,6 +116,7 @@ function getPageKey(appName, pageName) {
 }
 
 module.exports = {
+   /*
    buildDirectory: {
       init: function() {
          if (!__dfdBuildDirectoryCreated) {
@@ -151,6 +152,7 @@ module.exports = {
          return __dfdBuildDirectoryCreated;
       }
    },
+   */
 
    /**
     * AppBuilder.paths
@@ -276,6 +278,8 @@ module.exports = {
                      }
                   });
                })
+
+               // Attempt to Lookup a Query if the ID wasn't for an Object:
                .then(() => {
                   return new Promise((next, err) => {
                      if (result) return next();
@@ -1444,6 +1448,9 @@ module.exports = {
     *      The ABObject primary key ID.
     * @return Deferred
     */
+   /*
+     /// OLD AppBuilder method to create Sails Objects
+
    buildObject: function(objectID) {
       var dfd = AD.sal.Deferred();
 
@@ -1932,6 +1939,7 @@ module.exports = {
 
       return dfd;
    },
+   */
 
    /**
     * Generate the client side controller for a root page
@@ -1939,6 +1947,8 @@ module.exports = {
     * @param integer pageID
     * @return Deferred
     */
+   /* 
+     // OLD AppBuilder method for creating Opsportal Pages:
    buildPage: function(pageID) {
       var dfd = AD.sal.Deferred();
       var cwd = process.cwd();
@@ -2197,6 +2207,7 @@ module.exports = {
 
       return dfd;
    },
+   */
 
    /**
     * Remove pages
@@ -2309,6 +2320,7 @@ module.exports = {
     * @param integer pageID
     * @return Deferred
     */
+   /*
    exportPage: function(pageID) {
       var dfd = AD.sal.Deferred();
       var cwd = process.cwd();
@@ -2592,7 +2604,7 @@ module.exports = {
                 .done(function() {
                     next();
                 });
-                */
+                * /
             },
 
             // Create Page's permission action
@@ -2733,6 +2745,7 @@ module.exports = {
 
       return dfd;
    },
+   */
 
    /**
     * Imports an existing object for use in an AB application.

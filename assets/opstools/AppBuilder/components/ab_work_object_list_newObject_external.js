@@ -144,6 +144,7 @@ module.exports = class AB_Work_Object_List_NewObject_External extends ABComponen
                   _logic.busyEnd();
                })
                .catch((err) => {
+                  console.error(err);
                   _logic.busyEnd();
                });
          },
@@ -373,28 +374,28 @@ module.exports = class AB_Work_Object_List_NewObject_External extends ABComponen
                   type: {
                      height: 40
                   },
-                  activeContent: {
-                     isvisible: {
-                        view: "checkbox",
-                        width: 30
-                     },
-                     fieldKey: {
-                        view: "combo",
-                        width: 120,
-                        options: {
-                           body: {
-                              template:
-                                 '<span class="webix_icon fa fa-#icon#" style="float: left; line-height: 30px;"></span>' +
-                                 '<span style="float: left; width: 40px;">#name#</span>',
-                              data: _logic.getTypeOptions()
-                           }
-                        }
-                     },
-                     label: {
-                        view: "text",
-                        width: 170
-                     }
-                  },
+                  // activeContent: {
+                  //    isvisible: {
+                  //       view: "checkbox",
+                  //       width: 30
+                  //    },
+                  //    fieldKey: {
+                  //       view: "combo",
+                  //       width: 120,
+                  //       options: {
+                  //          body: {
+                  //             template:
+                  //                '<span class="webix_icon fa fa-#icon#" style="float: left; line-height: 30px;"></span>' +
+                  //                '<span style="float: left; width: 40px;">#name#</span>',
+                  //             data: _logic.getTypeOptions()
+                  //          }
+                  //       }
+                  //    },
+                  //    label: {
+                  //       view: "text",
+                  //       width: 170
+                  //    }
+                  // },
                   template: (obj, common) => {
                      // For disabled columns, display strikethrough text
                      if (obj.disabled) {
@@ -411,20 +412,23 @@ module.exports = class AB_Work_Object_List_NewObject_External extends ABComponen
                      }
                      // For normal columns, display checkbox and text
                      else {
-                        return `
-                                        <span style="float: left;">${common.isvisible(
-                                           obj,
-                                           common
-                                        )}</span>
-                                        <span style="float: left;">${common.fieldKey(
-                                           obj,
-                                           common
-                                        )}</span>
-                                        <span style="float: left;">${common.label(
-                                           obj,
-                                           common
-                                        )}</span>
-                                        `;
+                        // NOTE: webix v7 removes ActiveContent
+                        // so refactor this:
+                        // return `
+                        //                 <span style="float: left;">${common.isvisible(
+                        //                    obj,
+                        //                    common
+                        //                 )}</span>
+                        //                 <span style="float: left;">${common.fieldKey(
+                        //                    obj,
+                        //                    common
+                        //                 )}</span>
+                        //                 <span style="float: left;">${common.label(
+                        //                    obj,
+                        //                    common
+                        //                 )}</span>
+                        //                 `;
+                        return `${obj.label}`;
                      }
                   }
                },

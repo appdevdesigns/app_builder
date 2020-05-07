@@ -25,10 +25,10 @@ let ABRoleController = {
 
       RoleModel.modelAPI()
          .findAll(cond, req.user.data)
-         .catch(res.AD.error)
          .then((roles) => {
             res.AD.success(roles || []);
-         });
+         })
+         .catch(res.AD.error);
    },
 
    // GET /app_builder/role/:id
@@ -55,15 +55,15 @@ let ABRoleController = {
                },
                req.user.data
             )
-            .catch((err) => {
-               if (res) res.AD.error(err);
-
-               reject(err);
-            })
             .then((role = []) => {
                if (res) res.AD.success(role[0]);
 
                resolve(role[0]);
+            })
+            .catch((err) => {
+               if (res) res.AD.error(err);
+
+               reject(err);
             });
       });
    },
@@ -120,6 +120,8 @@ let ABRoleController = {
    // GET /app_builder/role/:id/users
    roleUsers: function(req, res) {
       return (
+         // Q: what happens when .findOne() rejects() the promise?
+         //    does this terminate?  or does this cause an unhandled exception?
          Promise.resolve()
             // Find role
             .then(() => ABRoleController.findOne(req))
