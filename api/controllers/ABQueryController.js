@@ -123,7 +123,6 @@ module.exports = {
 
                      // Set table name here
                      query.viewName = AppBuilder.rules.toObjectNameFormat(
-                        appClass.dbApplicationName(),
                         "View_" + query.name
                      );
 

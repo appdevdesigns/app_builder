@@ -443,12 +443,19 @@ module.exports = {
        *
        * return a properly formatted Object/Table Name
        *
-       * @param {string} appName  The name of the Application for this object
        * @param {string} objectName  The name of the Object we are conditioning.
        * @return {string}
        */
-      toObjectNameFormat: function(appName, objectName) {
-         return appName + "_" + AppBuilder.rules.nameFilter(objectName);
+      toObjectNameFormat: function(objectName, oldFormat) {
+         if (oldFormat) {
+            objectName = oldFormat;
+            // temp alert to catch any missing internal API calls:
+            var alertErr = new Error(
+               "Depreciated API: .toObjectNameFormat() no longer needs appName"
+            );
+            console.error(alertErr);
+         }
+         return "AB_" + AppBuilder.rules.nameFilter(objectName);
       },
 
       /**

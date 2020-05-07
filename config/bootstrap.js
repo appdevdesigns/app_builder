@@ -695,22 +695,10 @@ function loadDefinitionCallbacks(next) {
       var pending = [];
       // track any Async operations.
 
-      switch (values.type) {
-         case "object":
-            // Make sure .tableName is set:
-            if (!def.tableName) {
-               // TODO: Remove Object.tableName from depending on Application.
-               var appDef = ABDefinition.definition(def.createdInAppID);
-               if (appDef) {
-                  // NOTE: do NOT use ABSystemObject.getApplication() here!
-                  var app = new ABApplication(appDef);
-                  def.tableName = AppBuilder.rules.toObjectNameFormat(
-                     app.dbApplicationName(),
-                     def.name
-                  );
-               }
-            }
-            break;
+      // Make sure .tableName is set:
+      if (!def.tableName) {
+         // NOTE: do NOT use ABSystemObject.getApplication() here!
+         def.tableName = AppBuilder.rules.toObjectNameFormat(def.name);
       }
 
       // make sure all Async operations are complete before calling
