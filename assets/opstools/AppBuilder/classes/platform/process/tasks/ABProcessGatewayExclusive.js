@@ -44,7 +44,7 @@ module.exports = class ABProcessGatewayExclusive extends ABProcessGatewayExclusi
       // fields are available to this task:
       //   returns an [{ key:'{uuid}', label:"" field:{ABDataField} }, {}, ...]
       var listDataFields = this.process.processDataFields(this);
-      var abFields = listDataFields.map((f) => {
+      var abFields = (listDataFields || []).map((f) => {
          return f.field;
       });
 
@@ -66,7 +66,11 @@ module.exports = class ABProcessGatewayExclusive extends ABProcessGatewayExclusi
 
          var connUI = {
             view: "fieldset",
-            label: `to ${connectedElement.name}`,
+            label: `to ${
+               connectedElement
+                  ? connectedElement.name
+                  : "unlabeled Task(" + conn.id + ")"
+            }`,
             body: {
                rows: [
                   {
@@ -118,7 +122,7 @@ module.exports = class ABProcessGatewayExclusive extends ABProcessGatewayExclusi
          this.conditions[conn.id].label = this.property(
             `${id}_${conn.id}_label`
          );
-         if (this.__dfLookup[conn.id]) {
+         if (this.__dfLookup && this.__dfLookup[conn.id]) {
             var DF = this.__dfLookup[conn.id];
             this.conditions[conn.id].filterValue = DF.getValue();
          }
