@@ -1,5 +1,5 @@
 // import ABApplication from "./ABApplication"
-import ABApplication from "./ABApplication"; // NOTE: change to require()
+const ABApplication = require("./ABApplication"); // NOTE: change to require()
 
 const ABProcessCore = require("../core/ABProcessCore");
 
