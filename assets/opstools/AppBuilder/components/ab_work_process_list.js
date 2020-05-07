@@ -56,7 +56,9 @@ export default class AB_Work_Process_List extends OP.Component {
             this._logic.clickNewProcess(selectNew);
          });
 
-         ListComponent.on("removed", (process) => {});
+         ListComponent.on("deleted", (process) => {
+            this.emit("deleted", process);
+         });
 
          ListComponent.on("exclude", (process) => {
             this._logic.exclude(process);

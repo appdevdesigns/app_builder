@@ -29,6 +29,7 @@ module.exports = class AB_Work_Process extends OP.Component {
       var ProcessWorkspace = new AB_Work_Process_Workspace(App);
 
       let CurrentApplication;
+      let CurrentProcess;
 
       // Our webix UI definition:
       this.ui = {
@@ -56,6 +57,12 @@ module.exports = class AB_Work_Process extends OP.Component {
 
          ProcessList.on("selected", (process) => {
             _logic.workonProcess(process);
+         });
+
+         ProcessList.on("deleted", (process) => {
+            if (CurrentProcess.id == process.id) {
+               _logic.workonProcess(null);
+            }
          });
       };
 
@@ -95,6 +102,7 @@ module.exports = class AB_Work_Process extends OP.Component {
          },
 
          workonProcess: function(process) {
+            CurrentProcess = process;
             if (process == null) ProcessWorkspace.clearWorkspace();
             else ProcessWorkspace.populateWorkspace(process);
          }

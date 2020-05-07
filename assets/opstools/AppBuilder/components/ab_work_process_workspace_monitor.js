@@ -313,7 +313,7 @@ export default class ABWorkProcessWorkspaceMonitor extends OP.Component {
          clearWorkspace: function() {
             // NOTE: to clear a visual glitch when multiple views are updating
             // at one time ... stop the animation on this one:
-            $$(ids.noSelection).show(false, false);
+            // $$(ids.noSelection).show(false, false);
          },
 
          /**
