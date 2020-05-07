@@ -8,7 +8,7 @@ import PaletteProvider from "./ab_work_process_workspace_customBPMN_paletteProvi
 import ReplaceMenuProvider from "./ab_work_process_workspace_customBPMN_replaceMenuProvider";
 
 export default {
-    __init__: ["paletteProvider", "replaceMenuProvider"],
-    paletteProvider: ["type", PaletteProvider],
-    replaceMenuProvider: ["type", ReplaceMenuProvider]
+   __init__: ["paletteProvider", "replaceMenuProvider"],
+   paletteProvider: ["type", PaletteProvider],
+   replaceMenuProvider: ["type", ReplaceMenuProvider]
 };

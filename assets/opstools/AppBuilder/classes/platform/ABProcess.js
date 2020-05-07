@@ -1,5 +1,5 @@
 // import ABApplication from "./ABApplication"
-const ABApplication = require("./ABApplication"); // NOTE: change to require()
+// const ABApplication = require("./ABApplication"); // NOTE: change to require()
 
 const ABProcessCore = require("../core/ABProcessCore");
 
@@ -79,20 +79,22 @@ module.exports = class ABProcess extends ABProcessCore {
                   // in the background
                   // remove this reference from ALL Applications that link
                   // to me:
-                  ABApplication.allCurrentApplications().then((apps) => {
-                     var appsWithProcess = apps.find((a) => {
-                        return a.hasProcess(this);
-                     });
-                     if (appsWithProcess.length > 0) {
-                        appsWithProcess.forEach((removeMe) => {
-                           console.log(
-                              " ABProcess.destroy():additional Apps:" +
-                                 removeMe.label
-                           );
-                           removeMe.processRemove(this);
+                  this.application.constructor
+                     .allCurrentApplications()
+                     .then((apps) => {
+                        var appsWithProcess = apps.find((a) => {
+                           return a.hasProcess(this);
                         });
-                     }
-                  });
+                        if (appsWithProcess.length > 0) {
+                           appsWithProcess.forEach((removeMe) => {
+                              console.log(
+                                 " ABProcess.destroy():additional Apps:" +
+                                    removeMe.label
+                              );
+                              removeMe.processRemove(this);
+                           });
+                        }
+                     });
                });
          });
       });

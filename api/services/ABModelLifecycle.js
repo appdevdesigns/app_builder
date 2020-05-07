@@ -35,15 +35,14 @@ module.exports = {
     * @param {fn} cb the final callback.
     */
    process: function(key, data, cb) {
-      console.log(`lifecycle: ${key}`);
       // if no handlers for the provided key, then just
       // call the callback successfully.
       if (!Handlers[key]) {
-         console.log("   ... no handler!");
          cb();
          return;
       }
 
+      console.log(`processing lifecycle: ${key}`);
       //process the callback:
       Handlers[key](data, (err) => {
          if (err) {
