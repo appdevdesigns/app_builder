@@ -57,7 +57,9 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
                         let field = this.object.fields((f) => f.id == fId)[0];
                         if (!field) return;
 
-                        columnNames.push(`new.\`${field.columnName}\``);
+                        columnNames.push(
+                           `COALESCE(NEW.\`${field.columnName}\`, '')`
+                        );
                      });
 
                      if (!columnNames || !columnNames.length) return next();
@@ -70,7 +72,7 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
                            SET new.\`${
                               this.columnName
                            }\` = CONCAT(${columnNames.join(", '+', ")});`
-                           // SET new.\`${this.columnName}\` = CONCAT(new.`COLUMN1`, '+', new.`COLUMN2`, '+', ...);`
+                           // SET NEW.\`${this.columnName}\` = CONCAT(COALESCE(NEW.`COLUMN1`, ''), '+', COALESCE(NEW.`COLUMN2`, ''),
                         )
                         .then(() => {
                            next();
@@ -84,6 +86,22 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
                         });
                   })
             )
+            // Update this index value to old records
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     knex
+                        .raw(
+                           `UPDATE ${tableName} SET \`${this.columnName}\` = \`${this.columnName}\``
+                        )
+                        .then(() => {
+                           next();
+                        })
+                        .catch((error) => {
+                           bad(error);
+                        });
+                  })
+            )
       );
    }
 
@@ -93,7 +111,8 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
     * @param {knex} knex the Knex connection.
     */
    migrateUpdate(knex) {
-      return this.migrateCreate(knex);
+      // This field type does not update
+      return Promise.resolve();
    }
 
    /**
