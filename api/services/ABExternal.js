@@ -180,7 +180,7 @@ module.exports = {
    getTableList: (appID, connName = "appBuilder") => {
       var allTableNames = [],
          existsTableNames = [];
-      debugger;
+
       return (
          Promise.resolve()
             .then(function() {
@@ -491,7 +491,6 @@ module.exports = {
          });
       };
 
-      debugger;
       application = ABSystemObject.getApplication();
 
       return (
@@ -588,7 +587,7 @@ module.exports = {
             .then(function() {
                return new Promise((resolve, reject) => {
                   objectData = {
-                     id: uuid(),
+                     // id: uuid(),
                      connName: connName,
                      name: tableName,
                      tableName: tableName,
@@ -653,8 +652,7 @@ module.exports = {
                      let colData = FieldManager.newField(
                         {
                            key: inputCol.fieldKey,
-
-                           id: uuid.v4(),
+                           // id: uuid.v4(),
                            columnName: colName,
                            settings: {
                               isImported: true,
@@ -725,7 +723,7 @@ module.exports = {
                                  targetType = targetAssociate.type;
                               }
                            }
-                           debugger;
+
                            // Get id of ABObject and ABColumn
                            let targetObj = (
                               application.json.objects || []
@@ -781,7 +779,7 @@ module.exports = {
                            );
 
                            targetObj.fields.push(targetColData);
-                           debugger;
+
                            // Refresh the target model
                            let targetObjClass = new ABObjectExternal(
                               targetObj,
@@ -797,7 +795,7 @@ module.exports = {
                   resolve();
                });
             })
-
+            /*
             // Create federated table
             .then(function() {
                debugger;
@@ -817,7 +815,7 @@ module.exports = {
                      .catch(reject);
                });
             })
-
+*/
             // Create column associations in database
             .then(function() {
                return new Promise((resolve, reject) => {
@@ -829,8 +827,34 @@ module.exports = {
             // Save to database
             .then(function() {
                return new Promise((resolve, reject) => {
-                  application.json.objects = application.json.objects || [];
-                  application.json.objects.push(objectData);
+                  // application.json.objects = application.json.objects || [];
+                  // application.json.objects.push(objectData);
+
+                  // Here we have a built out objectData structure that mimics
+                  // our previous design. Now we parse this structure to create
+                  // live ABObject:
+
+                  // Create our Base Object
+                  var newObject = new ABObjectExternal(objectData, application);
+
+                  // create each field,
+                  var allFields = [];
+                  var allFieldSaves = [];
+                  (objectData.fields || []).forEach((f) => {
+                     var newField = newObject.fieldNew(f);
+                     allFields.push(newField);
+                     allFieldSaves.push(newField.save());
+                  });
+                  Promise.all(allFieldSaves)
+                     .then(() => {
+                        // insert fields into object and save()
+                        newObject._fields = allFields;
+                        return newObject.save();
+                     })
+                     .then(resolve)
+                     .catch(reject);
+
+                  /*
 
                   ABApplication.update(
                      { id: appID },
@@ -846,6 +870,7 @@ module.exports = {
                         resolve(application.json.objects);
                      }
                   });
+*/
                });
             })
       );

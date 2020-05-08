@@ -1,6 +1,3 @@
-// import ABApplication from "./ABApplication"
-// const ABApplication = require("./ABApplication"); // NOTE: change to require()
-
 const ABProcessCore = require("../core/ABProcessCore");
 
 function L(key, altText) {
