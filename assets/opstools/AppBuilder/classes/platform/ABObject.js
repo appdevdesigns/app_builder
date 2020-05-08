@@ -352,6 +352,10 @@ module.exports = class ABObject extends ABObjectCore {
             editable: isEditable
          });
 
+         if (isEditable) {
+            header.validationRules = f.settings.validationRules;
+         }
+
          header.alias = f.alias || undefined; // query type
          header.fieldID = f.id;
          header.fieldURL = f.urlPointer();

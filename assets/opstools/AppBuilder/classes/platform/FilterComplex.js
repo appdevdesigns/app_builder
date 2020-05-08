@@ -343,6 +343,7 @@ module.exports = class FilterComplex extends FilterComplexCore {
          // Set filters
          el.config.filters.clearAll();
          (this.filtersToQB() || []).forEach((filter) => {
+            filter.id = Object.keys(filter.type)[0] + "_" + filter.id;
             el.config.filters.add(filter);
          });
       }
