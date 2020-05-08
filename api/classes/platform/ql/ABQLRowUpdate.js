@@ -45,8 +45,18 @@ class ABQLRowUpdate extends ABQLRowUpdateCore {
             prev: context
          };
 
-         if (!context.object) {
+         if (!context.object || context.data == null) {
             // weird!  pass along our context with data == null;
+
+            if (!context.data) {
+               var current = context;
+               console.error("no data provided to ABQLRowUpdate:", current);
+               while (current.prev) {
+                  current = current.prev;
+                  console.error("prev:", current);
+               }
+            }
+
             return nextContext;
          }
 

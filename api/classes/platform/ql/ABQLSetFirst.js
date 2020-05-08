@@ -43,6 +43,7 @@ class ABQLSetFirst extends ABQLSetFirstCore {
 
          if (!context.data) {
             // weird!  pass along our context with data == null;
+            nextContext.log = "no data set! can't setFirst() of null.";
             return nextContext;
          }
 

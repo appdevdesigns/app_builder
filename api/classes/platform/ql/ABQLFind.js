@@ -58,6 +58,13 @@ class ABQLFind extends ABQLFindCore {
                .findAll(reducedCondition)
                .then((rows) => {
                   nextContext.data = rows;
+                  if (!rows) {
+                     nextContext.origCond = JSON.stringify(cond);
+                     nextContext.reducedCondition = JSON.stringify(
+                        reducedCondition
+                     );
+                     nextContext.log = "no rows returned";
+                  }
                   resolve(nextContext);
                })
                .catch(reject);
