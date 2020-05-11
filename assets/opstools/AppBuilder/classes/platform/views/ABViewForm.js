@@ -1152,14 +1152,27 @@ module.exports = class ABViewForm extends ABViewFormCore {
             type: "form"
          });
 
-         if (err && err.invalidAttributes) {
-            // mark error
-            for (let attr in err.invalidAttributes) {
-               let invalidAttrs = err.invalidAttributes[attr];
-               if (invalidAttrs && invalidAttrs[0])
-                  invalidAttrs = invalidAttrs[0];
+         // mark error
+         if (err) {
+            if (err.invalidAttributes) {
+               for (let attr in err.invalidAttributes) {
+                  let invalidAttrs = err.invalidAttributes[attr];
+                  if (invalidAttrs && invalidAttrs[0])
+                     invalidAttrs = invalidAttrs[0];
 
-               formView.markInvalid(attr, invalidAttrs.message);
+                  formView.markInvalid(attr, invalidAttrs.message);
+               }
+            } else if (err.sqlMessage) {
+               webix.message({
+                  text: err.sqlMessage,
+                  type: "error"
+               });
+            } else {
+               webix.message({
+                  text: "System could not save your data",
+                  type: "error"
+               });
+               console.error(err);
             }
          }
 
