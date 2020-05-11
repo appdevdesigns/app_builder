@@ -1,5 +1,7 @@
 const ABFieldCustomIndexCore = require("../../core/dataFields/ABFieldCustomIndexCore");
 
+const MAX_VALUE_LENGTH = 535;
+
 module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
    constructor(values, object) {
       super(values, object);
@@ -18,6 +20,15 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
    migrateCreate(knex) {
       let tableName = this.object.dbTableName();
 
+      let combinedFieldIds = (this.settings.combinedFields || "").split(",");
+      let columnNames = [];
+      (combinedFieldIds || []).forEach((fId) => {
+         let field = this.object.fields((f) => f.id == fId)[0];
+         if (!field) return;
+
+         columnNames.push(field.columnName);
+      });
+
       return (
          Promise.resolve()
             .then(
@@ -34,7 +45,7 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
                                  // Create a new column here.
                                  t.specificType(
                                     this.columnName,
-                                    "VARCHAR(535) NULL UNIQUE"
+                                    `VARCHAR(${MAX_VALUE_LENGTH}) NULL UNIQUE`
                                  );
                               })
                               .then(() => {
@@ -48,30 +59,20 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
             .then(
                () =>
                   new Promise((next, bad) => {
-                     let combinedFieldIds = (
-                        this.settings.combinedFields || ""
-                     ).split(",");
-
-                     let columnNames = [];
-                     (combinedFieldIds || []).forEach((fId) => {
-                        let field = this.object.fields((f) => f.id == fId)[0];
-                        if (!field) return;
-
-                        columnNames.push(
-                           `COALESCE(NEW.\`${field.columnName}\`, '')`
-                        );
-                     });
-
                      if (!columnNames || !columnNames.length) return next();
 
                      knex
                         .raw(
-                           `CREATE TRIGGER ${this.updateTriggerName}
-                           BEFORE UPDATE ON ${tableName}
-                           FOR EACH ROW
-                           SET new.\`${
-                              this.columnName
-                           }\` = CONCAT(${columnNames.join(", '+', ")});`
+                           `CREATE TRIGGER \`${this.updateTriggerName}\`
+                           BEFORE UPDATE ON \`${tableName}\` FOR EACH ROW
+                           SET @new_index_value = CONCAT(${columnNames
+                              .map(
+                                 (colName) => `COALESCE(NEW.\`${colName}\`, '')`
+                              )
+                              .join(", '+', ")}),
+                              NEW.\`${
+                                 this.columnName
+                              }\` = IF(@new_index_value = "" OR @new_index_value IS NULL, NULL, @new_index_value);`
                            // SET NEW.\`${this.columnName}\` = CONCAT(COALESCE(NEW.`COLUMN1`, ''), '+', COALESCE(NEW.`COLUMN2`, ''),
                         )
                         .then(() => {
@@ -98,7 +99,8 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
                            next();
                         })
                         .catch((error) => {
-                           bad(error);
+                           if (error.code == "ER_DUP_ENTRY") next();
+                           else bad(error);
                         });
                   })
             )

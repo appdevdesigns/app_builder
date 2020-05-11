@@ -159,7 +159,13 @@ module.exports = class ABField extends ABFieldCore {
                            t.dropColumn(this.columnName);
                         })
                         .then(next)
-                        .catch(err);
+                        .catch((error) => {
+                           if (error.code == "ER_CANT_DROP_FIELD_OR_KEY") {
+                              next();
+                           } else {
+                              err(err);
+                           }
+                        });
                   })
             )
 
