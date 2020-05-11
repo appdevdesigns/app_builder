@@ -594,6 +594,7 @@ module.exports = {
                      transColumnName: transColumnName,
                      labelFormat: "",
                      isExternal: 1,
+                     createdInAppID: appID,
                      translations: [],
                      objectWorkspace: {
                         hiddenFields: []
@@ -827,9 +828,6 @@ module.exports = {
             // Save to database
             .then(function() {
                return new Promise((resolve, reject) => {
-                  // application.json.objects = application.json.objects || [];
-                  // application.json.objects.push(objectData);
-
                   // Here we have a built out objectData structure that mimics
                   // our previous design. Now we parse this structure to create
                   // live ABObject:
@@ -851,7 +849,17 @@ module.exports = {
                         newObject._fields = allFields;
                         return newObject.save();
                      })
-                     .then(resolve)
+                     .then(() => {
+                        // We need to make sure all the definitions get back
+                        // to the client.
+                        var definitions = [];
+                        definitions.push(newObject.toDefinition().toObj());
+                        allFields.forEach((f) => {
+                           definitions.push(f.toDefinition().toObj());
+                        });
+
+                        resolve(definitions);
+                     })
                      .catch(reject);
 
                   /*

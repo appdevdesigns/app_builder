@@ -176,9 +176,10 @@ module.exports = class ABModel extends ABModelCore {
          tableName = this.object.dbTableName(true);
 
       if (!__ModelPool[modelName]) {
-         var knex = ABMigration.connection(
-            this.object.isImported ? this.object.connName : undefined
-         );
+         var connectionName = this.object.isExternal
+            ? this.object.connName
+            : undefined;
+         var knex = ABMigration.connection(connectionName);
 
          // Compile our jsonSchema from our DataFields
          // jsonSchema is only used by Objection.js to validate data before

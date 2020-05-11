@@ -11,6 +11,8 @@ const ABField = require("../classes/platform/dataFields/ABField.js");
 // const ABObject = require('../classes/ABObject.js');
 const ABFieldManager = require("../classes/core/ABFieldManager.js");
 
+const ABDefinition = require("../classes/platform/ABDefinition.js");
+
 module.exports = class AB_Work_Object_List_NewObject_External extends ABComponent {
    constructor(App) {
       super(App, "ab_work_object_list_newObject_external");
@@ -255,35 +257,59 @@ module.exports = class AB_Work_Object_List_NewObject_External extends ABComponen
 
             this.abExternal
                .tableImport(tableName, columns, connName)
-               .then((objectList) => {
+               .then((definitionList) => {
+                  // insert the new definitions into our live system.
+                  (definitionList || []).forEach((def) => {
+                     ABDefinition.insert(def);
+                  });
+
                   saveButton.enable();
                   _logic.busyEnd();
 
-                  objectList.forEach((objValue) => {
-                     var indexObj = -1,
-                        updateObj = currentApp.objectNew(objValue); // the import object
-
-                     currentApp.objects().forEach((obj, index) => {
-                        if (obj.id == objValue.id) indexObj = index;
-                     });
-
-                     // Update a object into list
-                     if (indexObj > -1) {
-                        currentApp._objects[indexObj] = updateObj;
+                  var updateObj = null;
+                  var objDef = definitionList.find((d) => d.type == "object");
+                  if (objDef) {
+                     var def = ABDefinition.definition(objDef.id);
+                     if (def) {
+                        updateObj = currentApp.objectNew(def);
                      }
-                     // Add new object to list
-                     else {
-                        currentApp._objects.push(updateObj);
-                     }
+                  }
 
-                     if (tableName == updateObj.tableName)
-                        _logic.callbacks.onDone(updateObj);
+                  currentApp.objectSave(updateObj).then(() => {
+                     _logic.callbacks.onDone(updateObj);
                   });
+
+                  // objectList.forEach((objValue) => {
+                  //    var indexObj = -1,
+                  //       updateObj = currentApp.objectNew(objValue); // the import object
+
+                  //    currentApp.objects().forEach((obj, index) => {
+                  //       if (obj.id == objValue.id) indexObj = index;
+                  //    });
+
+                  //    // Update a object into list
+                  //    if (indexObj > -1) {
+                  //       currentApp._objects[indexObj] = updateObj;
+                  //    }
+                  //    // Add new object to list
+                  //    else {
+                  //       currentApp._objects.push(updateObj);
+                  //    }
+
+                  //    if (tableName == updateObj.tableName)
+                  //       _logic.callbacks.onDone(updateObj);
+                  // });
 
                   // _logic.callbacks.onDone(newObj);
                })
                .catch((err) => {
                   console.log("ERROR:", err);
+                  webix.alert({
+                     title: "Error Importing External Object",
+                     ok: "fix it",
+                     text: err.toString(),
+                     type: "alert-error"
+                  });
                   saveButton.enable();
                   _logic.busyEnd();
                });

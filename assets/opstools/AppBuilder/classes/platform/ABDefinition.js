@@ -135,6 +135,12 @@ module.exports = class ABDefinition extends ABDefinitionCore {
       return null;
    }
 
+   static insert(def) {
+      if (def) {
+         __AllDefinitions[def.id] = def;
+      }
+   }
+
    fromValues(attributes) {
       /*
 		{

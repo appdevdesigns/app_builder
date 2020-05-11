@@ -69,8 +69,8 @@ module.exports = class ABClassObject extends ABObjectCore {
    ///
 
    dbSchemaName() {
-      return sails.config.connections["appBuilder"].database;
-      // return sails.config.connections[this.connName || "appBuilder"].database;
+      // return sails.config.connections["appBuilder"].database;
+      return sails.config.connections[this.connName || "appBuilder"].database;
    }
 
    dbTableName(prefixSchema = false) {
