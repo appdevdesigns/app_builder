@@ -687,42 +687,44 @@ module.exports = class ABViewForm extends ABViewFormCore {
       // Pull fields that have validation rules
       var fieldValidations = [];
       var validationUI = [];
-      var object = this.datacollection.datasource;
-      var existsFields = this.fieldComponents();
-      if (object != null) {
-         object.fields().forEach((f) => {
-            var view = existsFields.filter((com) => {
-               return f.id == com.settings.fieldId;
-            })[0];
+      if (this.datacollection && this.datacollection.datasource) {
+         var object = this.datacollection.datasource;
+         var existsFields = this.fieldComponents();
+         if (object != null) {
+            object.fields().forEach((f) => {
+               var view = existsFields.filter((com) => {
+                  return f.id == com.settings.fieldId;
+               })[0];
 
-            // check to see if field has validation rules
-            if (view && f.settings.validationRules) {
-               // parse the rules because they were stored as a string
-               // check if rules are still a string...if so lets parse them
-               if (typeof f.settings.validationRules === "string") {
-                  f.settings.validationRules = JSON.parse(
-                     f.settings.validationRules
-                  );
-               }
-               // there could be more than one so lets loop through and build the UI
-               f.settings.validationRules.forEach((rule) => {
-                  var Filter = new FilterComplex(
-                     App,
-                     f.columnName + "_" + webix.uid()
-                  );
-                  // add the new ui to an array so we can add them all at the same time
-                  validationUI.push(Filter.ui);
-                  // store the filter's info so we can assign values and settings after the ui is rendered
-                  fieldValidations.push({
-                     filter: Filter,
-                     view: Filter.ids.querybuilder,
-                     columnName: f.columnName,
-                     validationRules: rule.rules,
-                     invalidMessage: rule.invalidMessage
+               // check to see if field has validation rules
+               if (view && f.settings.validationRules) {
+                  // parse the rules because they were stored as a string
+                  // check if rules are still a string...if so lets parse them
+                  if (typeof f.settings.validationRules === "string") {
+                     f.settings.validationRules = JSON.parse(
+                        f.settings.validationRules
+                     );
+                  }
+                  // there could be more than one so lets loop through and build the UI
+                  f.settings.validationRules.forEach((rule) => {
+                     var Filter = new FilterComplex(
+                        App,
+                        f.columnName + "_" + webix.uid()
+                     );
+                     // add the new ui to an array so we can add them all at the same time
+                     validationUI.push(Filter.ui);
+                     // store the filter's info so we can assign values and settings after the ui is rendered
+                     fieldValidations.push({
+                        filter: Filter,
+                        view: Filter.ids.querybuilder,
+                        columnName: f.columnName,
+                        validationRules: rule.rules,
+                        invalidMessage: rule.invalidMessage
+                     });
                   });
-               });
-            }
-         });
+               }
+            });
+         }
       }
 
       var fieldValidationsHolder = [

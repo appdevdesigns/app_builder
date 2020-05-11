@@ -12,9 +12,9 @@ var FilterComplex = require("../classes/platform/FilterComplex");
 
 module.exports = class ABWorkObjectDatatable extends ABComponent {
    /**
-     * 
-     * @param {*} App 
-     * @param {*} idBase 
+     *
+     * @param {*} App
+     * @param {*} idBase
      * @param {Object} params - {
      *			allowDelete: bool,
     			detailsView: {string} - id of page,
@@ -1081,17 +1081,22 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             );
 
             var fieldValidations = [];
+            var rulePops = [];
 
             columnHeaders.forEach(function(col) {
                col.fillspace = false;
 
-               if (col.validationRules) {
+               // parse the rules because they were stored as a string
+               // check if rules are still a string...if so lets parse them
+               if (
+                  col.validationRules &&
+                  typeof col.validationRules === "string"
+               ) {
+                  col.validationRules = JSON.parse(col.validationRules);
+               }
+
+               if (col.validationRules && col.validationRules.length) {
                   var validationUI = [];
-                  // parse the rules because they were stored as a string
-                  // check if rules are still a string...if so lets parse them
-                  if (typeof col.validationRules === "string") {
-                     col.validationRules = JSON.parse(col.validationRules);
-                  }
                   // there could be more than one so lets loop through and build the UI
                   col.validationRules.forEach((rule) => {
                      var Filter = new FilterComplex(
@@ -1109,8 +1114,11 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                         invalidMessage: rule.invalidMessage
                      });
                   });
+                  // create a unique view id for popup
                   var popUpId = ids.rules + "_" + col.id + "_" + webix.uid();
-                  console.log("add popup " + popUpId);
+                  // store the popup ids so we can remove the later
+                  rulePops.push(popUpId);
+                  // add the popup to the UI but don't show it
                   webix.ui({
                      view: "popup",
                      css: "ab-rules-popup",
@@ -1196,6 +1204,19 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                });
                // define validation rules
                dataTable.define("rules", rules);
+               // store the array of view ids on the webix object so we can get it later
+               dataTable.config.rulePops = rulePops;
+               dataTable.refresh();
+            } else {
+               var dataTable = $$(ids.component);
+               // check if the previous datatable had rule popups and remove them
+               if (dataTable.config.rulePops) {
+                  dataTable.config.rulePops.forEach((popup) => {
+                     $$(popup).destructor();
+                  });
+               }
+               // remove any validation rules from the previous table
+               dataTable.define("rules", {});
                dataTable.refresh();
             }
 
