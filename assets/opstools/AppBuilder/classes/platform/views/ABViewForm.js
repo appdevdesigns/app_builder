@@ -2,6 +2,7 @@ const ABViewFormCore = require("../../core/views/ABViewFormCore");
 const ABViewFormButton = require("./ABViewFormButton");
 const ABViewFormCustom = require("./ABViewFormCustom");
 const ABViewFormComponent = require("./ABViewFormComponent");
+const ABViewFormSelectMultiple = require("./ABViewFormSelectMultiple");
 const ABViewFormTextbox = require("./ABViewFormTextbox");
 
 const ABRecordRule = require("../../rules/ABViewRuleListFormRecordRules");

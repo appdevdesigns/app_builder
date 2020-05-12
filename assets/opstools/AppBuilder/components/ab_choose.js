@@ -38,9 +38,16 @@ module.exports = class ABChoose extends ABComponent {
 
       // This component's Init definition:
       this.init = function() {
-         AppConfig.init();
-         AppList.init();
-         AppForm.init();
+         // get all the objects and store them locally:
+         OP.Model.get("opstools.BuildApp.ABApplication")
+            .staticData.objectFind()
+            // .catch(reject)
+            .then((objects) => {
+               webix.storage.local.put("_ABObjects", objects);
+               AppConfig.init();
+               AppList.init();
+               AppForm.init();
+            });
 
          AppList.on("view.config", () => {
             AppConfig.show();

@@ -40,7 +40,7 @@ function newPendingTransaction() {
 function resolvePendingTransaction() {
    countResolvedTransactions += 1;
    if (countResolvedTransactions > countPendingTransactions) {
-      countPendingTransactions = countPendingTransactions;
+      countPendingTransactions = countResolvedTransactions;
    }
 }
 
@@ -621,6 +621,18 @@ module.exports = {
             //// Step 4:  Process any afterCreate() lifecycle handlers
             ////
             (next) => {
+               var key = `${object.id}.added`;
+               ABProcess.trigger(key, newItem)
+                  .then(() => {
+                     next();
+                  })
+                  .catch(next);
+            },
+
+            ////
+            //// Step 4b:  (old Method) Process any afterCreate() lifecycle handlers
+            ////
+            (next) => {
                var key = `${object.id}.afterCreate`;
                ABModelLifecycle.process(key, newItem, next);
             }
@@ -1049,7 +1061,6 @@ console.error(err);
                   "AppBuilder:ABModelController:find(): find() did not complete. No Error Provided."
                );
             }
-
             res.AD.error(err, err.HTTPCode || 400);
          });
    },
@@ -1059,6 +1070,7 @@ console.error(err);
       var object;
       var oldItem;
       var relatedItems = [];
+      var numRows = null;
 
       if (id == -1) {
          var invalidError = ADCore.error.fromKey("E_MISSINGPARAM");
@@ -1084,9 +1096,6 @@ console.error(err);
 
             // step #2
             function(next) {
-               // NOTE: We will update relation data of deleted items on client side
-               return next();
-
                // We are deleting an item...but first fetch its current data
                // so we can clean up any relations on the client side after the delete
                object
@@ -1212,41 +1221,64 @@ console.error(err);
                   .query()
                   .delete()
                   .where(object.PK(), "=", id)
-                  .then((numRows) => {
+                  .then((countRows) => {
                      resolvePendingTransaction();
-                     res.AD.success({ numRows: numRows });
-
-                     // We want to broadcast the change from the server to the client so all datacollections can properly update
-                     // Build a payload that tells us what was updated
-                     var payload = {
-                        objectId: object.id,
-                        id: id
-                     };
-
-                     // Broadcast the delete
-                     sails.sockets.broadcast(
-                        object.id,
-                        "ab.datacollection.delete",
-                        payload
-                     );
-
-                     // // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
-                     // updateConnectedFields(object, oldItem[0]);
-                     // if (relatedItems.length) {
-                     //     relatedItems.forEach((r) => {
-                     //         updateConnectedFields(r.object, r.items);
-                     //     });
-                     // }
+                     numRows = countRows;
                      next();
                   })
                   .catch(next);
+            },
+
+            // step #5: Process the .deleted object lifecycle
+            (next) => {
+               if (!oldItem) {
+                  next();
+                  return;
+               }
+
+               var key = `${object.id}.deleted`;
+               ABProcess.trigger(key, oldItem[0])
+                  .then(() => {
+                     next();
+                  })
+                  .catch(next);
+            },
+
+            // step #6: now resolve the transaction and return data to the client
+            (next) => {
+               res.AD.success({ numRows: numRows });
+
+               // We want to broadcast the change from the server to the client so all datacollections can properly update
+               // Build a payload that tells us what was updated
+               var payload = {
+                  objectId: object.id,
+                  id: id
+               };
+
+               // Broadcast the delete
+               sails.sockets.broadcast(
+                  object.id,
+                  "ab.datacollection.delete",
+                  payload
+               );
+
+               // // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
+               // updateConnectedFields(object, oldItem[0]);
+               // if (relatedItems.length) {
+               //     relatedItems.forEach((r) => {
+               //         updateConnectedFields(r.object, r.items);
+               //     });
+               // }
+               next();
             }
          ],
          function(err) {
             if (err) {
                if (!(err instanceof ValidationError)) {
                   resolvePendingTransaction();
-                  ADCore.error.log("Error performing delete!", { error: err });
+                  ADCore.error.log("Error performing delete!", {
+                     error: err
+                  });
                   res.AD.error(err);
                   sails.log.error("!!!! error:", err);
                }
@@ -1551,26 +1583,29 @@ console.error(err);
                               .then((newItem) => {
                                  let result = newItem[0];
 
-                                 resolvePendingTransaction();
-                                 res.AD.success(result);
+                                 var key = `${object.id}.updated`;
+                                 return ABProcess.trigger(key, result)
+                                    .then(() => {
+                                       resolvePendingTransaction();
+                                       res.AD.success(result);
 
-                                 // We want to broadcast the change from the server to the client so all datacollections can properly update
-                                 // Build a payload that tells us what was updated
-                                 var payload = {
-                                    objectId: object.id,
-                                    data: result
-                                 };
+                                       // We want to broadcast the change from the server to the client so all datacollections can properly update
+                                       // Build a payload that tells us what was updated
+                                       var payload = {
+                                          objectId: object.id,
+                                          data: result
+                                       };
 
-                                 // Broadcast the update
-                                 sails.sockets.broadcast(
-                                    object.id,
-                                    "ab.datacollection.update",
-                                    payload
-                                 );
-
-                                 // updateConnectedFields(object, newItem[0], oldItem[0]);
-
-                                 Promise.resolve();
+                                       // Broadcast the update
+                                       sails.sockets.broadcast(
+                                          object.id,
+                                          "ab.datacollection.update",
+                                          payload
+                                       );
+                                    })
+                                    .catch((err) => {
+                                       return Promise.reject(err);
+                                    });
                               });
                         });
                   },
@@ -1752,13 +1787,20 @@ console.error(err);
 
                   var attr = errorResponse.invalidAttributes;
 
-                  validationErrors.forEach((e) => {
-                     attr[e.name] = attr[e.name] || [];
-                     attr[e.name].push(e);
-                  });
+                  for (var e in err.data) {
+                     attr[e] = attr[e] || [];
+                     err.data[e].forEach((eObj) => {
+                        eObj.name = e;
+                        attr[e].push(eObj);
+                     });
+                  }
 
-                  resolvePendingTransaction();
                   res.AD.error(errorResponse);
+               } else {
+                  var errorResponse = {
+                     error: "E_VALIDATION",
+                     invalidAttributes: {}
+                  };
 
                   return;
                }
@@ -1784,8 +1826,10 @@ console.error(err);
 
                allParams = cleanUp(object, allParams);
 
-               // sails.log.verbose('ABModelController.upsert(): allParams:', allParams);
-               console.log("ABModelController.upsert(): allParams:", allParams);
+               sails.log.verbose(
+                  "ABModelController.upsert(): allParams:",
+                  allParams
+               );
 
                // Upsert data
                model

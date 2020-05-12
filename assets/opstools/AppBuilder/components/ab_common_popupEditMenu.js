@@ -83,7 +83,11 @@ module.exports = class ABCommonPopupEditMenu extends ABComponent {
             icon: "fa fa-reply",
             command: "exclude"
          },
-         { label: labels.common.delete, icon: "fa fa-trash", command: "delete" }
+         {
+            label: labels.common.delete,
+            icon: "fa fa-trash",
+            command: "delete"
+         }
       ];
 
       this.init = (options) => {
@@ -153,7 +157,7 @@ module.exports = class ABCommonPopupEditMenu extends ABComponent {
           * @function onItemClick
           * process which item in our popup was selected.
           */
-         onItemClick: function(itemNode) {
+         onItemClick: (itemNode) => {
             // hide our popup before we trigger any other possible UI animation: (like .edit)
             // NOTE: if the UI is animating another component, and we do .hide()
             // while it is in progress, the UI will glitch and give the user whiplash.
@@ -171,7 +175,8 @@ module.exports = class ABCommonPopupEditMenu extends ABComponent {
                return mo.label == label;
             })[0];
             if (option) {
-               this.callbacks.onClick(option.command);
+               this._logic.callbacks.onClick(option.command);
+               this.emit("click", option.command);
             }
 
             this.hide();
@@ -191,5 +196,6 @@ module.exports = class ABCommonPopupEditMenu extends ABComponent {
       // external interface:
       this.menuOptions = _logic.menuOptions;
       this.show = _logic.show;
+      this.hide = _logic.hide;
    }
 };

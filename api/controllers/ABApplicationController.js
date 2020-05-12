@@ -88,7 +88,7 @@ module.exports = {
       let cond = req.query;
 
       ApplicationGraph.find({
-         select: ["id", "json.translations"],
+         // select: ["id", "json.translations"],
          where: cond
       }).then(
          (apps) => {

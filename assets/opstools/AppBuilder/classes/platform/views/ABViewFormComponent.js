@@ -118,6 +118,9 @@ module.exports = class ABViewFormComponent extends ABViewFormComponentCore {
             _ui.disabled = true;
          }
 
+         // this may be needed if we want to format data at this point
+         // if (field.format) data = field.format(data);
+
          _ui.validate = (val, data, colName) => {
             let validator = OP.Validation.validator();
 

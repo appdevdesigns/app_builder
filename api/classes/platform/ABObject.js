@@ -1,16 +1,14 @@
 const path = require("path");
 const _ = require("lodash");
 
-// var ABObjectBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes",  "ABObjectBase.js"));
 const ABObjectCore = require(path.join(
    __dirname,
    "..",
    "core",
    "ABObjectCore.js"
 ));
-// const ABFieldManager = require(path.join(__dirname, "..", "core", "ABFieldManager"));
-
 const Model = require("objection").Model;
+const ABModel = require(path.join(__dirname, "ABModel.js"));
 
 // const ABGraphScope = require("../../graphModels/ABScope");
 // const ABObjectScope = require("../../systemObjects/scope");
@@ -101,38 +99,44 @@ module.exports = class ABClassObject extends ABObjectCore {
       sails.log.verbose(".... dbTableName:" + tableName);
 
       return new Promise((resolve, reject) => {
-         knex.schema.hasTable(tableName).then((exists) => {
-            // if it doesn't exist, then create it and any known fields:
-            if (!exists) {
-               sails.log.verbose("... creating!!!");
-               return knex.schema.createTable(tableName, (t) => {
-                  // Use .uuid to be primary key instead
-                  // t.increments('id').primary();
-                  t.string("uuid").primary();
-                  // NOTE: MySQL version 5 does not support default with a function
-                  // .defaultTo(knex.raw('uuid()')));
+         knex.schema
+            .hasTable(tableName)
+            .then((exists) => {
+               // if it doesn't exist, then create it and any known fields:
+               if (!exists) {
+                  sails.log.verbose("... creating!!!");
+                  return knex.schema
+                     .createTable(tableName, (t) => {
+                        // Use .uuid to be primary key instead
+                        // t.increments('id').primary();
+                        t.string("uuid").primary();
+                        // NOTE: MySQL version 5 does not support default with a function
+                        // .defaultTo(knex.raw('uuid()')));
 
-                  t.timestamps();
-                  t.engine("InnoDB");
-                  t.charset("utf8");
-                  t.collate("utf8_unicode_ci");
+                        t.timestamps();
+                        t.engine("InnoDB");
+                        t.charset("utf8");
+                        t.collate("utf8_unicode_ci");
 
-                  var fieldUpdates = [];
+                        var fieldUpdates = [];
 
-                  this.fields().forEach((f) => {
-                     fieldUpdates.push(f.migrateCreate(knex));
-                  });
+                        this.fields().forEach((f) => {
+                           fieldUpdates.push(f.migrateCreate(knex));
+                        });
 
-                  // Adding a new field to store various item properties in JSON (ex: height)
-                  fieldUpdates.push(t.text("properties"));
+                        // Adding a new field to store various item properties in JSON (ex: height)
+                        fieldUpdates.push(t.text("properties"));
 
-                  Promise.all(fieldUpdates).then(resolve, reject);
-               });
-            } else {
-               sails.log.verbose("... already there.");
-               resolve();
-            }
-         });
+                        return Promise.all(fieldUpdates);
+                     })
+                     .then(resolve)
+                     .catch(reject);
+               } else {
+                  sails.log.verbose("... already there.");
+                  resolve();
+               }
+            })
+            .catch(reject);
       });
    }
 
@@ -194,6 +198,12 @@ module.exports = class ABClassObject extends ABObjectCore {
       // 		.replace(/[^a-zA-Z0-9]/g, ""); // remove special characters to allow model name to be class name
 
       // return this.tableName.replace(/[^a-zA-Z0-9]/g, ""); // remove special characters to allow model name to be class name
+   }
+
+   // TODO: this should become model(), and current model() should become
+   // modelKnex();
+   modelAPI() {
+      return super.model();
    }
 
    /**
@@ -900,16 +910,6 @@ module.exports = class ABClassObject extends ABObjectCore {
                                           option.text == condition.value
                                     )[0];
                                     if (inputID) condition.value = inputID.id;
-                                 }
-
-                                 // If this is formula field and this object is not ABObjectQuery
-                                 else if (
-                                    field.key == "formula" &&
-                                    !this.viewName
-                                 ) {
-                                    condition.key = this.convertFormulaField(
-                                       field
-                                    );
                                  }
                               }
                            }

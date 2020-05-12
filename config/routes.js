@@ -302,7 +302,20 @@ module.exports = {
       "app_builder/ABEventController.sendFeeConfirmation",
 
    "get /events/feeconfirm/:regID/:isConfirmed":
-      "app_builder/ABEventController.receiveFeeConfirmationResponse"
+      "app_builder/ABEventController.receiveFeeConfirmationResponse",
+
+   /* Process Manager Related URLs */
+   // these are primarily for testing right now:
+   "get /process/trigger/:key": "app_builder/ABTriggerController.trigger",
+
+   // ---> initiates a "trigger" that can spawn a new process
+   "post /app_builder/abprocessinstance/reset":
+      "app_builder/ABProcessInstanceController.resetInstance",
+   // ---> initiates a "reset" on a process instance to retry after an Error
+
+   "get /process/inbox": "app_builder/ABProcessController.userInbox",
+   "post /process/inbox/:uuid":
+      "app_builder/ABProcessController.userInboxUpdate"
 
    /*
 

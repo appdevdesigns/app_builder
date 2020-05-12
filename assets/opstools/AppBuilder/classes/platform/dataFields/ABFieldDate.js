@@ -5,32 +5,6 @@ function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
 }
 
-var ids = {
-   default: "ab-date-default",
-   currentToDefault: "ab-date-current-to-default",
-
-   dateDisplay: "ab-date-display",
-
-   dateFormat: "date-format",
-   defaultDate: "default-date",
-   defaultDateValue: "default-date-value",
-   timeFormat: "time-format",
-   defaultTime: "default-time",
-   defaultTimeValue: "default-time-value",
-
-   // validation
-   validateCondition: "ab-date-validate-condition",
-   validateRange: "ab-date-validate-range",
-   validateRangeUnit: "ab-date-validate-range-unit",
-   validateRangeBefore: "ab-date-validate-range-before",
-   validateRangeAfter: "ab-date-validate-range-after",
-   validateRangeBeforeLabel: "ab-date-validate-before-label",
-   validateRangeAfterLabel: "ab-date-validate-after-label",
-
-   validateStartDate: "ab-date-validate-start-date",
-   validateEndDate: "ab-date-validate-end-date"
-};
-
 function defaultDateChange() {
    var defaultDateValue = $$(ids.defaultDate).getValue();
    var defaultDate = parseInt(defaultDateValue);
@@ -105,6 +79,7 @@ function refreshDateValue() {
 }
 
 function defaultTimeChange() {
+   console.log("defaultTimeChange");
    var dateFormat = parseInt($$(ids.defaultTime).getValue());
    switch (dateFormat) {
       case 1:
@@ -136,6 +111,7 @@ function defaultTimeChange() {
 }
 
 function refreshTimevalue() {
+   console.log("refreshTimevalue");
    var timeFormat = parseInt($$(ids.timeFormat).getValue());
 
    var formatString = "";
@@ -162,6 +138,32 @@ function refreshTimevalue() {
    $$(ids.defaultTimeValue).define("format", formatString);
    $$(ids.defaultTimeValue).refresh();
 }
+
+var ids = {
+   default: "ab-date-default",
+   currentToDefault: "ab-date-current-to-default",
+
+   dateDisplay: "ab-date-display",
+
+   dateFormat: "date-format",
+   defaultDate: "default-date",
+   defaultDateValue: "default-date-value",
+   timeFormat: "time-format",
+   defaultTime: "default-time",
+   defaultTimeValue: "default-time-value",
+
+   // validation
+   validateCondition: "ab-date-validate-condition",
+   validateRange: "ab-date-validate-range",
+   validateRangeUnit: "ab-date-validate-range-unit",
+   validateRangeBefore: "ab-date-validate-range-before",
+   validateRangeAfter: "ab-date-validate-range-after",
+   validateRangeBeforeLabel: "ab-date-validate-before-label",
+   validateRangeAfterLabel: "ab-date-validate-after-label",
+
+   validateStartDate: "ab-date-validate-start-date",
+   validateEndDate: "ab-date-validate-end-date"
+};
 
 /**
  * ABFieldDateComponent
@@ -579,9 +581,9 @@ var ABFieldDateComponent = new ABFieldComponent({
       }
 
       // dateDisplay: (date, settings) => {
-      // 	var dateFormat = getDateFormat(settings);
+      //     var dateFormat = getDateFormat(settings);
 
-      // 	return webix.Date.dateToStr(dateFormat)(date);
+      //     return webix.Date.dateToStr(dateFormat)(date);
       // }
    },
 
