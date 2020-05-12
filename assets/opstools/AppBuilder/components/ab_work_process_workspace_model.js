@@ -68,6 +68,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
             {
                id: ids.button,
                view: "button",
+               css: "webix_primary",
                type: "form",
                label: labels.component.save,
                icon: "fa fa-save",
