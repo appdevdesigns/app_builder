@@ -873,7 +873,7 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                                                 let number = childItem[prop];
                                                 if (typeof number == "string") {
                                                    number = number.replace(
-                                                      /,/g,
+                                                      /[^\d.]/g, // return only number and dot
                                                       ""
                                                    );
                                                 }
