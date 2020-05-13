@@ -295,13 +295,17 @@ module.exports = class ABClassObject extends ABObjectCore {
             if (f.settings.isSource == true) {
                sourceTable = tableName;
                targetTable = linkObject.dbTableName(true);
-               targetPkName = linkObject.PK();
+               targetPkName = f.indexField
+                  ? f.indexField.columnName
+                  : linkObject.PK();
                relation = Model.BelongsToOneRelation;
                columnName = f.columnName;
             } else {
                sourceTable = linkObject.dbTableName(true);
                targetTable = tableName;
-               targetPkName = this.PK();
+               targetPkName = f.indexField
+                  ? f.indexField.columnName
+                  : this.PK();
                relation = Model.HasOneRelation;
                columnName = linkField.columnName;
             }
@@ -396,7 +400,10 @@ module.exports = class ABClassObject extends ABObjectCore {
 
                   to: "{targetTable}.{primaryField}"
                      .replace("{targetTable}", linkObject.dbTableName(true))
-                     .replace("{primaryField}", linkObject.PK())
+                     .replace(
+                        "{primaryField}",
+                        f.indexField ? f.indexField.columnName : linkObject.PK()
+                     )
                }
             };
          }
@@ -411,7 +418,10 @@ module.exports = class ABClassObject extends ABObjectCore {
                join: {
                   from: "{sourceTable}.{primaryField}"
                      .replace("{sourceTable}", tableName)
-                     .replace("{primaryField}", this.PK()),
+                     .replace(
+                        "{primaryField}",
+                        f.indexField ? f.indexField.columnName : this.PK()
+                     ),
 
                   to: "{targetTable}.{field}"
                      .replace("{targetTable}", linkObject.dbTableName(true))
@@ -765,7 +775,7 @@ module.exports = class ABClassObject extends ABObjectCore {
                         // @param {obj} condition  a QueryBuilder compatible condition object
                         // @param {ObjectionJS Query} Query the query object to perform the operations.
                         var parseCondition = (condition, Query) => {
-                           // 'have_no_relation' condition will be applied later
+                           // 'have_no_relation' condition will be applied below
                            if (condition.rule == "have_no_relation") return;
 
                            // FIX: some improper inputs:

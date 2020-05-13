@@ -136,17 +136,26 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
     */
    migrateCreate(knex) {
       return new Promise((resolve, reject) => {
-         var tableName = this.object.dbTableName(true);
+         let tableName = this.object.dbTableName(true);
 
          // find linked object
-         var linkObject = this.datasourceLink;
-         var linkKnex = ABMigration.connection(linkObject.connName);
+         let linkObject = this.datasourceLink;
+         let linkKnex = ABMigration.connection(linkObject.connName);
 
-         var linkTableName = linkObject.dbTableName(true),
-            linkPK = linkObject.PK(),
-            // TODO : should check duplicate column
-            linkColumnName = this.fieldLink.columnName;
-         // linkColumnName = this.object.name;
+         let linkTableName = linkObject.dbTableName(true);
+         // TODO : should check duplicate column
+         let linkColumnName = this.fieldLink.columnName;
+
+         // pull FK
+         let linkFK = linkObject.PK();
+         if (this.settings.isCustomFK && this.settings.indexField) {
+            let indexField = linkObject.fields(
+               (f) => f.id == this.settings.indexField
+            )[0];
+            if (indexField) {
+               linkFK = indexField.columnName;
+            }
+         }
 
          // 1:M - create a column in the table and references to id of the link table
          if (
@@ -172,7 +181,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         .table(tableName, (t) => {
                            let linkCol;
 
-                           if (linkPK == "id")
+                           if (linkFK == "id")
                               linkCol = t
                                  .integer(this.columnName)
                                  .unsigned()
@@ -186,7 +195,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                               this.connName == linkObject.connName
                            ) {
                               linkCol
-                                 .references(linkPK)
+                                 .references(linkFK)
                                  .inTable(linkTableName)
                                  .onDelete("SET NULL")
                                  .withKeyName(
@@ -236,7 +245,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                      knex.schema
                         .table(tableName, (t) => {
                            let linkCol;
-                           if (linkPK == "id")
+                           if (linkFK == "id")
                               linkCol = t
                                  .integer(this.columnName)
                                  .unsigned()
@@ -250,7 +259,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                               this.connName == linkObject.connName
                            ) {
                               linkCol
-                                 .references(linkPK)
+                                 .references(linkFK)
                                  .inTable(linkTableName)
                                  .onDelete("SET NULL")
                                  .withKeyName(
@@ -298,10 +307,20 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                   (exists, next) => {
                      if (exists) return next();
 
+                     let linkToFK = this.object.PK();
+                     if (this.settings.isCustomFK && this.settings.indexField) {
+                        let indexToField = this.object.fields(
+                           (f) => f.id == this.settings.indexField
+                        )[0];
+                        if (indexToField) {
+                           linkToFK = indexToField.columnName;
+                        }
+                     }
+
                      linkKnex.schema
                         .table(linkTableName, (t) => {
                            let linkCol;
-                           if (this.object.PK() == "id")
+                           if (linkToFK == "id")
                               linkCol = t
                                  .integer(linkColumnName)
                                  .unsigned()
@@ -315,7 +334,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                               this.connName == linkObject.connName
                            ) {
                               linkCol
-                                 .references(this.object.PK())
+                                 .references(linkToFK)
                                  .inTable(tableName)
                                  .onDelete("SET NULL")
                                  .withKeyName(
@@ -396,7 +415,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         // uuid
                         else linkCol = t.string(this.object.name).nullable();
 
-                        if (linkPK == "id")
+                        if (linkFK == "id")
                            linkCol2 = t
                               .integer(linkObject.name)
                               .unsigned()
@@ -417,7 +436,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                               .onDelete("SET NULL");
 
                            linkCol2
-                              .references(linkPK)
+                              .references(linkFK)
                               .inTable(linkTableName)
                               .withKeyName(targetFkName)
                               .onDelete("SET NULL");
@@ -495,9 +514,18 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
             // drop foreign key
             knex.schema
                .table(tableName, (t) => {
-                  t.dropForeign(this.columnName)
-                     .dropIndex(this.columnName)
-                     .dropUnique(this.columnName);
+                  let tasks = [];
+
+                  tasks.push(
+                     t.dropForeign(
+                        this.columnName,
+                        getConstraintName(this.object.name, this.columnName)
+                     )
+                  );
+                  tasks.push(t.dropIndex(this.columnName));
+                  tasks.push(t.dropUnique(this.columnName));
+
+                  return Promise.all(tasks);
                })
                .then(() => {
                   // drop column
@@ -576,8 +604,13 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
       if (myParameter) {
          if (myParameter[this.columnName]) {
             let PK;
+            let indexField = this.indexField;
             let datasourceLink = this.datasourceLink;
-            if (datasourceLink) {
+
+            // custom index
+            if (indexField) {
+               PK = indexField.columnName;
+            } else if (datasourceLink) {
                PK = datasourceLink.PK();
             }
 

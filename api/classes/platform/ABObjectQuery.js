@@ -486,27 +486,28 @@ module.exports = class ABClassQuery extends ABClassObject {
             // NOTE: query v1
             if (!baseAlias) baseAlias = baseObject.dbTableName(true);
 
-            var connectionField = baseObject.fields((f) => {
+            let connectionField = baseObject.fields((f) => {
                return f.id == link.fieldID;
             })[0];
             if (!connectionField) return; // no link so skip this turn.
 
-            var connectedObject = connectionField.datasourceLink;
-            var joinTable = connectedObject.dbTableName(true);
+            let connectedObject = connectionField.datasourceLink;
+            let joinTable = connectedObject.dbTableName(true);
 
-            var fieldLinkType = connectionField.linkType();
+            let fieldLinkType = connectionField.linkType();
+            let fieldIndex = connectionField.indexField;
 
-            var joinAlias = link.alias;
+            let joinAlias = link.alias;
 
             // NOTE: query v1
-            var aliasName = link.alias;
+            let aliasName = link.alias;
             if (!aliasName) aliasName = joinTable;
 
             switch (fieldLinkType) {
                case "one":
                   if (
                      connectionField.settings.isSource || // 1:1 - this column is source
-                     connectionField.linkViaType() == "many"
+                     connectionField.linkViaType() == "many" // 1:M
                   ) {
                      // 1:M
                      // the base object can have 1 connected object
@@ -514,10 +515,13 @@ module.exports = class ABClassQuery extends ABClassObject {
                      // baseObject JOIN  connectedObject ON baseObject.columnName = connectedObject.id
 
                      // columnName comes from the baseObject
-                     var columnName = connectionField.columnName;
-                     var baseClause = baseAlias + "." + columnName;
-                     var connectedClause =
-                        aliasName + "." + connectedObject.PK();
+                     let columnName = connectionField.columnName;
+                     let baseClause = `${baseAlias}.${columnName}`;
+                     let connectedClause = `${aliasName}.${
+                        fieldIndex
+                           ? fieldIndex.columnName
+                           : connectedObject.PK()
+                     }`;
                      makeLink(
                         baseObject,
                         link,
@@ -528,17 +532,20 @@ module.exports = class ABClassQuery extends ABClassObject {
                         connectedClause
                      );
                   } else {
+                     // 1:1 NOT .isSource
                      // the base object can have 1 connected object
                      // the base object's .id is in the connected Objects' colum
                      // baseObject JOIN  connectedObject ON baseObject.id = connectedObject.columnName
 
                      // columnName comes from the baseObject
-                     var connectedField = connectionField.fieldLink;
+                     let connectedField = connectionField.fieldLink;
                      if (!connectedField) return; // this is a problem!
 
-                     var columnName = connectedField.columnName;
-                     var baseClause = baseAlias + "." + baseObject.PK();
-                     var connectedClause = aliasName + "." + columnName;
+                     let columnName = connectedField.columnName;
+                     let baseClause = `${baseAlias}.${
+                        fieldIndex ? fieldIndex.columnName : baseObject.PK()
+                     }`;
+                     let connectedClause = `${aliasName}.${columnName}`;
                      makeLink(
                         baseObject,
                         link,
@@ -552,6 +559,7 @@ module.exports = class ABClassQuery extends ABClassObject {
                   break;
 
                case "many":
+                  // M:1
                   if (connectionField.linkViaType() == "one") {
                      // the base object can have many connectedObjects
                      // the connected object can only have one base object
@@ -559,12 +567,14 @@ module.exports = class ABClassQuery extends ABClassObject {
                      // baseObject JOIN connectedObject ON baseObject.id == connectedObject.columnName
 
                      // columnName comes from the baseObject
-                     var connectedField = connectionField.fieldLink;
+                     let connectedField = connectionField.fieldLink;
                      if (!connectedField) return; // this is a problem!
 
-                     var columnName = connectedField.columnName;
-                     var baseClause = baseAlias + "." + baseObject.PK();
-                     var connectedClause = aliasName + "." + columnName;
+                     let columnName = connectedField.columnName;
+                     let baseClause = `${baseAlias}.${
+                        fieldIndex ? fieldIndex.columnName : baseObject.PK()
+                     }`;
+                     let connectedClause = `${aliasName}.${columnName}`;
                      makeLink(
                         baseObject,
                         link,
@@ -590,13 +600,13 @@ module.exports = class ABClassQuery extends ABClassObject {
                      joinTable = connectionField.joinTableName(true);
 
                      // get baseObjectColumn in joinTable
-                     var baseObjectColumn = baseObject.name; // AppBuilder.rules.toJunctionTableFK(baseObject.name, connectionField.columnName);
+                     let baseObjectColumn = baseObject.name; // AppBuilder.rules.toJunctionTableFK(baseObject.name, connectionField.columnName);
 
-                     var connectedAlias = null;
+                     let connectedAlias = null;
                      if (joinAlias) connectedAlias = joinAlias + "_MN"; // alias name of M:N connection
 
-                     var baseClause = baseAlias + "." + baseObject.PK();
-                     var joinClause =
+                     let baseClause = baseAlias + "." + baseObject.PK();
+                     let joinClause =
                         (connectedAlias || joinTable) + "." + baseObjectColumn;
 
                      // make JOIN
@@ -612,10 +622,10 @@ module.exports = class ABClassQuery extends ABClassObject {
 
                      //// Now connect connectedObject
                      // get connectedObjectColumn in joinTable
-                     var connectedField = connectionField.fieldLink;
-                     var connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
+                     // let connectedField = connectionField.fieldLink;
+                     let connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
 
-                     var connectedClause =
+                     let connectedClause =
                         aliasName + "." + connectedObject.PK();
                      joinClause =
                         (connectedAlias || joinTable) +

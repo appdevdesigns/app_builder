@@ -93,7 +93,8 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
                   new Promise((next, bad) => {
                      knex
                         .raw(
-                           `UPDATE ${tableName} SET \`${this.columnName}\` = \`${this.columnName}\``
+                           `UPDATE ${tableName} SET \`${this.columnName}\` = \`${this.columnName}\`
+                           WHERE \`${this.columnName}\` IS NULL;`
                         )
                         .then(() => {
                            next();
