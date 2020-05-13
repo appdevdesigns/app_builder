@@ -141,9 +141,9 @@ module.exports = class ABField extends ABFieldCore {
                            .hasColumn(tableName, this.columnName)
                            .then((exists) => {
                               next(exists);
-                           });
+                           })
+                           .catch(err);
                      })
-                     .then(next)
                      .catch(err);
                });
             })
@@ -154,8 +154,7 @@ module.exports = class ABField extends ABFieldCore {
                   new Promise((next, err) => {
                      if (!isColumnExists) return next();
 
-                     knex.schema
-                        .table(tableName, (t) => {
+                     knex.schema.table(tableName, (t) => {
                            t.dropColumn(this.columnName);
                         })
                         .then(next)
