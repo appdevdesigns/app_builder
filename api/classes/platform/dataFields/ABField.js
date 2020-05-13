@@ -187,7 +187,8 @@ module.exports = class ABField extends ABFieldCore {
                   });
 
                   Promise.all(tasks)
-                     .catch(err)
+                     // .catch(err)
+                     .catch(() => next()) // ignore error of queries
                      .then(() => next());
                });
             })
