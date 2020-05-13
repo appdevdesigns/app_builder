@@ -71,7 +71,10 @@ module.exports = class ABFieldComponent {
          showIcon: App.unique(this.idBase + "_showIcon"),
          required: App.unique(this.idBase + "_required"),
          numberOfNull: App.unique(this.idBase + "_numberOfNull"),
-         unique: App.unique(this.idBase + "_unique")
+         unique: App.unique(this.idBase + "_unique"),
+         filterComplex: App.unique(this.idBase + "_filtercomplex"),
+         shorthand: App.unique(this.idBase + "_shorthand"),
+         validationRules: App.unique(this.idBase + "_validationRules")
       };
 
       this.eachDeep(elements, (e) => {
@@ -287,6 +290,28 @@ module.exports = class ABFieldComponent {
           */
          values: () => {
             var settings = $$(ids.component).getValues();
+            if ($$(ids.filterComplex)) {
+               var validationRules = [];
+               var forms = $$(ids.filterComplex).queryView(
+                  { view: "form", css: "abValidationForm" },
+                  "all"
+               );
+               forms.forEach((form) => {
+                  var rules = form
+                     .queryView({ view: "querybuilder" })
+                     .getValue();
+                  var invalidMessage = form
+                     .queryView({ name: "invalidMessage" })
+                     .getValue();
+                  var validationObj = {
+                     invalidMessage: invalidMessage,
+                     rules: rules
+                  };
+                  validationRules.push(validationObj);
+               });
+               settings.validationRules = JSON.stringify(validationRules);
+            }
+
             var values = ABField.editorValues(settings);
 
             values.key = this.fieldDefaults.key;

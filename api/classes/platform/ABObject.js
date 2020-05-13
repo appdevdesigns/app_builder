@@ -926,6 +926,17 @@ module.exports = class ABClassObject extends ABObjectCore {
                               return "'" + value + "'";
                            }
 
+                           // remove fields from rules
+                           var fieldTypes = [
+                              "number_",
+                              "string_",
+                              "date_",
+                              "boolean_",
+                              "user_",
+                              "list_",
+                              "connectObject_"
+                           ];
+
                            // convert QB Rule to SQL operation:
                            var conversionHash = {
                               equals: "=",
@@ -969,6 +980,12 @@ module.exports = class ABClassObject extends ABObjectCore {
                               }
                            }
 
+                           // remove the field type from the rule
+                           var rule = condition.rule;
+                           fieldTypes.forEach((f) => {
+                              rule = rule.replace(f, "");
+                           });
+                           condition.rule = rule;
                            // basic case:  simple conversion
                            var operator = conversionHash[condition.rule];
                            var value = quoteMe(condition.value);
