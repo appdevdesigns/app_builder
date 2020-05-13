@@ -808,6 +808,11 @@ module.exports = class ABClassQuery extends ABClassObject {
 
          // Connect fields
          if (f.key == "connectObject") {
+            let selectField = "";
+            let objLink = f.datasourceLink;
+            let fieldLink = f.fieldLink;
+            let fieldIndex = f.indexField;
+
             let connectColFormat = (
                "(SELECT CONCAT(" +
                "'[',GROUP_CONCAT(JSON_OBJECT('id', `{linkDbName}`.`{linkTableName}`.`{columnName}`)),']')" +
@@ -817,14 +822,13 @@ module.exports = class ABClassQuery extends ABClassObject {
                " as `{displayPrefix}.{displayRelationName}`"
             ) // add object's name to display name
                .replace(/{prefix}/g, f.dbPrefix())
-               .replace(/{baseColumnName}/g, obj.PK())
+               .replace(
+                  /{baseColumnName}/g,
+                  fieldIndex ? fieldIndex.columnName : obj.PK()
+               )
                .replace(/{displayPrefix}/g, f.alias ? f.alias : obj.name)
                .replace(/{displayName}/g, f.columnName)
                .replace(/{displayRelationName}/g, f.relationName());
-
-            let selectField = "";
-            let objLink = f.datasourceLink;
-            let fieldLink = f.fieldLink;
 
             // 1:M
             if (
@@ -910,6 +914,8 @@ module.exports = class ABClassQuery extends ABClassObject {
             )[0];
             if (!fieldConnect) return;
 
+            let fieldCustomIndex = fieldConnect.indexField;
+
             let objectNumber = ABObjectCache.get(f.settings.object);
             if (!objectNumber) return;
 
@@ -952,7 +958,12 @@ module.exports = class ABClassQuery extends ABClassObject {
                   .replace("{table}", f.dbPrefix())
                   .replace("{column}", fieldConnect.columnName)
                   .replace("{linkTable}", objectNumber.dbTableName(true))
-                  .replace("{linkId}", objectNumber.PK());
+                  .replace(
+                     "{linkId}",
+                     fieldCustomIndex
+                        ? fieldCustomIndex.columnName
+                        : objectNumber.PK()
+                  );
             }
 
             // M:1 , 1:1 not Source
@@ -972,7 +983,12 @@ module.exports = class ABClassQuery extends ABClassObject {
                   .replace("{linkTable}", objectNumber.dbTableName(true))
                   .replace("{linkColumn}", connectedField.columnName)
                   .replace("{table}", f.dbPrefix())
-                  .replace("{id}", f.object.PK());
+                  .replace(
+                     "{id}",
+                     fieldCustomIndex
+                        ? fieldCustomIndex.columnName
+                        : f.object.PK()
+                  );
             }
 
             // M:N
