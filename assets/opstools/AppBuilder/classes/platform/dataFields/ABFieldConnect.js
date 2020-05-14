@@ -366,6 +366,8 @@ var ABFieldConnectComponent = new ABFieldComponent({
          );
          $$(ids.link1).show();
          $$(ids.link2).show();
+
+         ABFieldConnectComponent.logic.updateCustomIndex();
       },
 
       clickNewObject: () => {
@@ -421,13 +423,20 @@ var ABFieldConnectComponent = new ABFieldComponent({
       },
 
       checkCustomFK: () => {
+         $$(ids.indexField).hide();
+         $$(ids.indexField2).hide();
+
          let isChecked = $$(ids.isCustomFK).getValue();
          if (isChecked) {
-            $$(ids.indexField).show();
-            $$(ids.indexField2).show();
-         } else {
-            $$(ids.indexField).hide();
-            $$(ids.indexField2).hide();
+            let menuItems = $$(ids.indexField).getList().config.data;
+            if (menuItems && menuItems.length) {
+               $$(ids.indexField).show();
+            }
+
+            let menuItems2 = $$(ids.indexField2).getList().config.data;
+            if (menuItems2 && menuItems2.length) {
+               $$(ids.indexField2).show();
+            }
          }
       },
 
@@ -438,6 +447,9 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
          let sourceObject = null; // object stores index column
          let indexLinkFields = null; // the index fields of link object M:N
+
+         $$(ids.indexField2).define("options", []);
+         $$(ids.indexField2).refresh();
 
          // 1:1
          // 1:M
@@ -473,8 +485,6 @@ var ABFieldConnectComponent = new ABFieldComponent({
                      };
                   })
                );
-            } else {
-               $$(ids.indexField2).define("options", []);
             }
             $$(ids.indexField2).refresh();
          }

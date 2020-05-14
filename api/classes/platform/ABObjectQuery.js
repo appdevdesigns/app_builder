@@ -605,7 +605,20 @@ module.exports = class ABClassQuery extends ABClassObject {
                      let connectedAlias = null;
                      if (joinAlias) connectedAlias = joinAlias + "_MN"; // alias name of M:N connection
 
-                     let baseClause = baseAlias + "." + baseObject.PK();
+                     let customIndex = baseObject.PK();
+                     let indexField = connectionField.indexField;
+                     let indexField2 = connectionField.indexField2;
+
+                     if (indexField && indexField.object.id == baseObject.id) {
+                        customIndex = indexField.columnName;
+                     } else if (
+                        indexField2 &&
+                        indexField2.object.id == baseObject.id
+                     ) {
+                        customIndex = indexField2.columnName;
+                     }
+
+                     let baseClause = baseAlias + "." + customIndex;
                      let joinClause =
                         (connectedAlias || joinTable) + "." + baseObjectColumn;
 
@@ -625,8 +638,21 @@ module.exports = class ABClassQuery extends ABClassObject {
                      // let connectedField = connectionField.fieldLink;
                      let connectedObjectColumn = connectedObject.name; // AppBuilder.rules.toJunctionTableFK(connectedObject.name, connectedField.columnName);
 
-                     let connectedClause =
-                        aliasName + "." + connectedObject.PK();
+                     let customIndex2 = connectedObject.PK();
+
+                     if (
+                        indexField &&
+                        indexField.object.id == connectedObject.id
+                     ) {
+                        customIndex2 = indexField.columnName;
+                     } else if (
+                        indexField2 &&
+                        indexField2.object.id == connectedObject.id
+                     ) {
+                        customIndex2 = indexField2.columnName;
+                     }
+
+                     let connectedClause = aliasName + "." + customIndex2;
                      joinClause =
                         (connectedAlias || joinTable) +
                         "." +
@@ -812,6 +838,15 @@ module.exports = class ABClassQuery extends ABClassObject {
             let objLink = f.datasourceLink;
             let fieldLink = f.fieldLink;
             let fieldIndex = f.indexField;
+            let fieldIndex2 = f.indexField2;
+            let baseColumnName = obj.PK();
+
+            // custom index
+            if (fieldIndex && fieldIndex.object.id == obj.id) {
+               baseColumnName = fieldIndex.columnName;
+            } else if (fieldIndex2 && fieldIndex2.object.id == obj.id) {
+               baseColumnName = fieldIndex2.columnName;
+            }
 
             let connectColFormat = (
                "(SELECT CONCAT(" +
@@ -822,10 +857,7 @@ module.exports = class ABClassQuery extends ABClassObject {
                " as `{displayPrefix}.{displayRelationName}`"
             ) // add object's name to display name
                .replace(/{prefix}/g, f.dbPrefix())
-               .replace(
-                  /{baseColumnName}/g,
-                  fieldIndex ? fieldIndex.columnName : obj.PK()
-               )
+               .replace(/{baseColumnName}/g, baseColumnName)
                .replace(/{displayPrefix}/g, f.alias ? f.alias : obj.name)
                .replace(/{displayName}/g, f.columnName)
                .replace(/{displayRelationName}/g, f.relationName());
