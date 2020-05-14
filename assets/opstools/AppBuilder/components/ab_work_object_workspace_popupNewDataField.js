@@ -340,6 +340,7 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                               linkViaType: field.settings.linkType,
                               isCustomFK: field.settings.isCustomFK,
                               indexField: field.settings.indexField,
+                              indexField2: field.settings.indexField2,
                               isSource: 0,
                               width: width
                            }
