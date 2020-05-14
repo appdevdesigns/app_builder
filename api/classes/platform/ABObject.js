@@ -691,7 +691,8 @@ module.exports = class ABClassObject extends ABObjectCore {
          offset = options.offset,
          limit = options.limit;
 
-      if (options.where) where.rules.push(options.where);
+      if (options.where && options.where.rules && options.where.rules.length)
+         where.rules.push(options.where);
 
       return (
          Promise.resolve()
