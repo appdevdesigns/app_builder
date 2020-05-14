@@ -148,13 +148,9 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 
          // pull FK
          let linkFK = linkObject.PK();
-         if (this.settings.isCustomFK && this.settings.indexField) {
-            let indexField = linkObject.fields(
-               (f) => f.id == this.settings.indexField
-            )[0];
-            if (indexField) {
-               linkFK = indexField.columnName;
-            }
+         let indexField = this.indexField;
+         if (indexField) {
+            linkFK = indexField.columnName;
          }
 
          // 1:M - create a column in the table and references to id of the link table
@@ -307,20 +303,10 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                   (exists, next) => {
                      if (exists) return next();
 
-                     let linkToFK = this.object.PK();
-                     if (this.settings.isCustomFK && this.settings.indexField) {
-                        let indexToField = this.object.fields(
-                           (f) => f.id == this.settings.indexField
-                        )[0];
-                        if (indexToField) {
-                           linkToFK = indexToField.columnName;
-                        }
-                     }
-
                      linkKnex.schema
                         .table(linkTableName, (t) => {
                            let linkCol;
-                           if (linkToFK == "id")
+                           if (linkFK == "id")
                               linkCol = t
                                  .integer(linkColumnName)
                                  .unsigned()
@@ -334,7 +320,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                               this.connName == linkObject.connName
                            ) {
                               linkCol
-                                 .references(linkToFK)
+                                 .references(linkFK)
                                  .inTable(tableName)
                                  .onDelete("SET NULL")
                                  .withKeyName(
@@ -407,7 +393,14 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         let linkCol;
                         let linkCol2;
 
-                        if (this.object.PK() == "id")
+                        // custom index
+                        let linkFK2 = this.datasourceLink.PK();
+                        let indexField2 = this.indexField2;
+                        if (indexField2) {
+                           linkFK2 = indexField2.columnName;
+                        }
+
+                        if (linkFK == "id")
                            linkCol = t
                               .integer(this.object.name)
                               .unsigned()
@@ -415,7 +408,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         // uuid
                         else linkCol = t.string(this.object.name).nullable();
 
-                        if (linkFK == "id")
+                        if (linkFK2 == "id")
                            linkCol2 = t
                               .integer(linkObject.name)
                               .unsigned()
@@ -430,13 +423,13 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                            this.connName == linkObject.connName
                         ) {
                            linkCol
-                              .references(this.object.PK())
+                              .references(linkFK)
                               .inTable(tableName)
                               .withKeyName(sourceFkName)
                               .onDelete("SET NULL");
 
                            linkCol2
-                              .references(linkFK)
+                              .references(linkFK2)
                               .inTable(linkTableName)
                               .withKeyName(targetFkName)
                               .onDelete("SET NULL");
@@ -608,7 +601,23 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
             let datasourceLink = this.datasourceLink;
 
             // custom index
-            if (indexField) {
+            // M:N
+            if (
+               this.settings.linkType == "many" &&
+               this.settings.linkViaType == "many"
+            ) {
+               let indexField2 = this.indexField2;
+
+               if (indexField && indexField.object.id == datasourceLink.id) {
+                  PK = indexField.columnName;
+               } else if (
+                  indexField2 &&
+                  indexField2.object.id == datasourceLink.id
+               ) {
+                  PK = indexField2.columnName;
+               }
+               // M:1, 1:M, 1:1
+            } else if (indexField) {
                PK = indexField.columnName;
             } else if (datasourceLink) {
                PK = datasourceLink.PK();

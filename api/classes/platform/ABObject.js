@@ -330,17 +330,34 @@ module.exports = class ABClassObject extends ABObjectCore {
             f.settings.linkViaType == "many"
          ) {
             // get join table name
-            var joinTablename = f.joinTableName(true),
+            let joinTablename = f.joinTableName(true),
                joinColumnNames = f.joinColumnNames(),
                sourceTableName,
                sourcePkName,
-               targetTableName,
-               targetPkName;
+               targetTableName;
 
             sourceTableName = f.object.dbTableName(true);
             sourcePkName = f.object.PK();
             targetTableName = linkObject.dbTableName(true);
             targetPkName = linkObject.PK();
+
+            let indexField = f.indexField;
+            if (indexField) {
+               if (indexField.object.id == f.object.id) {
+                  sourcePkName = indexField.columnName;
+               } else if (indexField.object.id == linkObject.id) {
+                  targetPkName = indexField.columnName;
+               }
+            }
+
+            let indexField2 = f.indexField2;
+            if (indexField2) {
+               if (indexField2.object.id == f.object.id) {
+                  sourcePkName = indexField2.columnName;
+               } else if (indexField2.object.id == linkObject.id) {
+                  targetPkName = indexField2.columnName;
+               }
+            }
 
             // if (f.settings.isSource == true) {
             // 	sourceTableName = f.object.dbTableName(true);

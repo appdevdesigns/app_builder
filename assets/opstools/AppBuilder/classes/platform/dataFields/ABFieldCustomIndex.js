@@ -54,14 +54,14 @@ var ABFieldCustomIndexComponent = new ABFieldComponent({
       },
 
       show: () => {
-         let fields = ABFieldCustomIndexComponent.CurrentObject.fields().map(
-            (f) => {
-               return {
-                  id: f.id,
-                  value: f.label
-               };
-            }
-         );
+         let fields = ABFieldCustomIndexComponent.CurrentObject.fields((f) => {
+            return f.key != "connectObject";
+         }).map((f) => {
+            return {
+               id: f.id,
+               value: f.label
+            };
+         });
 
          let $combinedFields = $$(ids.combinedFields);
          if ($combinedFields) {

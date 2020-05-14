@@ -21,6 +21,7 @@ var ids = {
 
    isCustomFK: "ab-is-custom-fk",
    indexField: "ab-index-field",
+   indexField2: "ab-index-field2",
 
    connectDataPopup: "ab-connect-object-data-popup"
 };
@@ -248,6 +249,20 @@ var ABFieldConnectComponent = new ABFieldComponent({
                "*Select index field"
             ),
             options: []
+         },
+         {
+            id: ids.indexField2,
+            name: "indexField2",
+            view: "richselect",
+            disallowEdit: true,
+            hidden: true,
+            labelWidth: App.config.labelWidthLarge,
+            label: L("ab.dataField.connectObject.indexField", "*Index Field:"),
+            placeholder: L(
+               "ab.dataField.connectObject.indexFieldPlaceholder",
+               "*Select index field"
+            ),
+            options: []
          }
       ];
    },
@@ -409,16 +424,20 @@ var ABFieldConnectComponent = new ABFieldComponent({
          let isChecked = $$(ids.isCustomFK).getValue();
          if (isChecked) {
             $$(ids.indexField).show();
+            $$(ids.indexField2).show();
          } else {
             $$(ids.indexField).hide();
+            $$(ids.indexField2).hide();
          }
       },
 
       updateCustomIndex: () => {
+         let linkObjectId = $$(ids.linkObject).getValue();
          let linkType = $$(ids.linkType).getValue();
          let linkViaType = $$(ids.linkViaType).getValue();
 
          let sourceObject = null; // object stores index column
+         let indexLinkFields = null; // the index fields of link object M:N
 
          // 1:1
          // 1:M
@@ -426,7 +445,6 @@ var ABFieldConnectComponent = new ABFieldComponent({
             (linkType == "one" && linkViaType == "one") ||
             (linkType == "one" && linkViaType == "many")
          ) {
-            let linkObjectId = $$(ids.linkObject).getValue();
             sourceObject = ABFieldConnectComponent.CurrentApplication.objects(
                (o) => o.id == linkObjectId
             )[0];
@@ -435,32 +453,58 @@ var ABFieldConnectComponent = new ABFieldComponent({
          else if (linkType == "many" && linkViaType == "one") {
             sourceObject = ABFieldConnectComponent.CurrentObject;
          }
-         // TODO
-         // // M:N
-         // else if (linkType == "many" && linkViaType == "many") {
-         // }
+         // M:N
+         else if (linkType == "many" && linkViaType == "many") {
+            sourceObject = ABFieldConnectComponent.CurrentObject;
+
+            let linkObject = ABFieldConnectComponent.CurrentApplication.objects(
+               (o) => o.id == linkObjectId
+            )[0];
+
+            // Populate the second index fields
+            indexLinkFields = linkObject.indexFields();
+            if (indexLinkFields && indexLinkFields.length > 0) {
+               $$(ids.indexField2).define(
+                  "options",
+                  indexLinkFields.map((f) => {
+                     return {
+                        id: f.id,
+                        value: `${linkObject.label} - ${f.label}`
+                     };
+                  })
+               );
+            } else {
+               $$(ids.indexField2).define("options", []);
+            }
+            $$(ids.indexField2).refresh();
+         }
+
+         $$(ids.indexField).hide();
+         $$(ids.indexField2).hide();
 
          if (!sourceObject) {
             $$(ids.isCustomFK).hide();
-            $$(ids.indexField).hide();
             return;
          }
 
          let indexFields = sourceObject.indexFields();
-         if (!indexFields || indexFields.length < 1) {
+         if (
+            (!indexFields || indexFields.length < 1) &&
+            (!indexLinkFields || indexLinkFields.length < 1)
+         ) {
             $$(ids.isCustomFK).hide();
-            $$(ids.indexField).hide();
+            $$(ids.indexField).define("options", []);
+            $$(ids.indexField).refresh();
             return;
          }
 
          $$(ids.isCustomFK).show();
-         $$(ids.indexField).hide();
          $$(ids.indexField).define(
             "options",
             indexFields.map((f) => {
                return {
                   id: f.id,
-                  value: f.label
+                  value: `${sourceObject.label} - ${f.label}`
                };
             })
          );
