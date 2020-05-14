@@ -19,7 +19,8 @@ module.exports = {
             "js/moment-locales.min",
             "js/docxtemplater-image-module.v3.0.2.min",
             "OpsPortal/classes/OpsWebixDataCollection",
-            "opstools/BuildApp/OP_Bundle"
+            "opstools/BuildApp/OP_Bundle",
+            "js/formio/formio.full.min"
          ],
          format: "global"
       },
@@ -56,6 +57,14 @@ module.exports = {
       "js/jszip-utils.min": {
          format: "global",
          deps: [],
+         sideBundle: true
+      },
+      "js/formio/formio.full.min": {
+         format: "global",
+         deps: [
+            "js/formio/formio.builder.min.css",
+            "js/formio/formio.form.min.css"
+         ],
          sideBundle: true
       }
    }

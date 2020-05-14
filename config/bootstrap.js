@@ -45,7 +45,8 @@ module.exports = function(cb) {
             addSDCAppInfo,
             defaultEmailNotificationInvite,
             addSDCAppDataDirectory,
-            addSDCObjectLifecycleBeforeCreate
+            addSDCObjectLifecycleBeforeCreate,
+            loadDefinitions
          ],
          (err, data) => {
             cb(err);
@@ -643,6 +644,14 @@ function initialGraphDB(next) {
       .then(() => {
          next();
       });
+}
+
+function loadDefinitions(next) {
+   ABDefinitionModel.refresh()
+      .then(() => {
+         next();
+      })
+      .catch(next);
 }
 
 function initialSystemObjects(next) {

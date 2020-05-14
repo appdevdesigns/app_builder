@@ -8,11 +8,13 @@
 const ABComponent = require("../classes/platform/ABComponent");
 const AB_Work_HeaderEditMenu = require("./ab_work_object_workspace_popupHeaderEditMenu");
 
+var FilterComplex = require("../classes/platform/FilterComplex");
+
 module.exports = class ABWorkObjectDatatable extends ABComponent {
    /**
-     * 
-     * @param {*} App 
-     * @param {*} idBase 
+     *
+     * @param {*} App
+     * @param {*} idBase
      * @param {Object} params - {
      *			allowDelete: bool,
     			detailsView: {string} - id of page,
@@ -68,7 +70,8 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
       // internal list of Webix IDs to reference our UI components.
       var ids = {
          component: this.unique(idBase + "_datatable"),
-         tooltip: this.unique(idBase + "_datatable_tooltip")
+         tooltip: this.unique(idBase + "_datatable_tooltip"),
+         rules: this.unique(idBase + "_datatable_rules")
       };
 
       var defaultHeight = 0;
@@ -76,6 +79,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
       var selectedItems = [];
       var columnSplitRight = 0;
       var columnSplitLeft = 0;
+      var validationError = false;
 
       var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App, idBase);
 
@@ -199,7 +203,14 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                // return passValidate;
             },
             onAfterEditStop: function(state, editor, ignoreUpdate) {
-               _logic.onAfterEditStop(state, editor, ignoreUpdate);
+               if (validationError == false)
+                  _logic.onAfterEditStop(state, editor, ignoreUpdate);
+            },
+            onValidationError: function() {
+               validationError = true;
+            },
+            onValidationSuccess: function() {
+               validationError = false;
             },
             // We are sorting with server side requests now so we can remove this
             // onAfterLoad: function () {
@@ -336,16 +347,12 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
             var displayRecords = [];
 
-            // WORKAROUND: .Sj() => ._get_y_range function of webix's datatable.
-            // It is a private function. It returns what record index are showing
-            // let scrollState = DataTable.Sj(), // webix5
-            // let scrollState = DataTable.Ug(), // webix6.1.0
-            // let scrollState = DataTable.pw(), // webix6.2.0
-            // let scrollState = DataTable.xw(), // webix6.2.6
-            let scrollState = DataTable.vw(), // webix7.2.0
-               // let scrollState = DataTable._get_y_range(),
-               startRecIndex = scrollState[0],
-               endRecIndex = scrollState[1],
+            let verticalScrollState = DataTable.getScrollState().y,
+               rowHeight = DataTable.config.rowHeight,
+               height = DataTable.$view.querySelector(".webix_ss_body")
+                  .clientHeight,
+               startRecIndex = Math.floor(verticalScrollState / rowHeight),
+               endRecIndex = startRecIndex + DataTable.getVisibleCount(),
                index = 0;
 
             DataTable.data.order.each(function(id) {
@@ -650,6 +657,27 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
             var DataTable = $$(ids.component);
 
+            // if you don't edit an empty cell we just need to move on
+            if (
+               (state.old == null && state.value == "") ||
+               (state.old == "" && state.value == "")
+            ) {
+               DataTable.clearSelection();
+               return false;
+            }
+
+            switch (editor.config.editor) {
+               case "number":
+                  state.value = parseInt(state.value);
+                  break;
+               case "datetime":
+                  state.value = state.value.getTime();
+                  state.old = state.old.getTime();
+                  break;
+               default:
+               // code block
+            }
+
             if (state.value != state.old) {
                var item = DataTable.getItem(editor.row);
                item[editor.column] = state.value;
@@ -704,7 +732,6 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             } else {
                DataTable.clearSelection();
             }
-
             return false;
 
             // var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
@@ -1053,8 +1080,54 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                settings.hiddenFields
             );
 
+            var fieldValidations = [];
+            var rulePops = [];
+
             columnHeaders.forEach(function(col) {
                col.fillspace = false;
+
+               // parse the rules because they were stored as a string
+               // check if rules are still a string...if so lets parse them
+               if (
+                  col.validationRules &&
+                  typeof col.validationRules === "string"
+               ) {
+                  col.validationRules = JSON.parse(col.validationRules);
+               }
+
+               if (col.validationRules && col.validationRules.length) {
+                  var validationUI = [];
+                  // there could be more than one so lets loop through and build the UI
+                  col.validationRules.forEach((rule) => {
+                     var Filter = new FilterComplex(
+                        App,
+                        col.id + "_" + webix.uid()
+                     );
+                     // add the new ui to an array so we can add them all at the same time
+                     validationUI.push(Filter.ui);
+                     // store the filter's info so we can assign values and settings after the ui is rendered
+                     fieldValidations.push({
+                        filter: Filter,
+                        view: Filter.ids.querybuilder,
+                        columnName: col.id,
+                        validationRules: rule.rules,
+                        invalidMessage: rule.invalidMessage
+                     });
+                  });
+                  // create a unique view id for popup
+                  var popUpId = ids.rules + "_" + col.id + "_" + webix.uid();
+                  // store the popup ids so we can remove the later
+                  rulePops.push(popUpId);
+                  // add the popup to the UI but don't show it
+                  webix.ui({
+                     view: "popup",
+                     css: "ab-rules-popup",
+                     id: popUpId,
+                     body: {
+                        rows: validationUI
+                     }
+                  });
+               }
 
                // group header
                if (settings.groupBy && settings.groupBy == col.id) {
@@ -1076,6 +1149,76 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                   }
                }
             });
+
+            if (fieldValidations.length) {
+               // we need to store the rules for use later so lets build a container array
+               var complexValidations = [];
+               fieldValidations.forEach((f) => {
+                  // init each ui to have the properties (app and fields) of the object we are editing
+                  f.filter.applicationLoad(App);
+                  f.filter.fieldsLoad(CurrentObject.fields());
+                  // now we can set the value because the fields are properly initialized
+                  f.filter.setValue(f.validationRules);
+                  // if there are validation rules present we need to store them in a lookup hash
+                  // so multiple rules can be stored on a single field
+                  if (!Array.isArray(complexValidations[f.columnName]))
+                     complexValidations[f.columnName] = [];
+
+                  // now we can push the rules into the hash
+                  complexValidations[f.columnName].push({
+                     filters: $$(f.view).getFilterHelper(),
+                     values: $$(ids.component).getSelectedItem(),
+                     invalidMessage: f.invalidMessage
+                  });
+               });
+               var rules = {};
+               var dataTable = $$(ids.component);
+               // store the rules in a data param to be used later
+               dataTable.$view.complexValidations = complexValidations;
+               // use the lookup to build the validation rules
+               Object.keys(complexValidations).forEach(function(key) {
+                  rules[key] = function(value, data) {
+                     // default valid is true
+                     var isValid = true;
+                     var invalidMessage = "";
+                     dataTable.$view.complexValidations[key].forEach(
+                        (filter) => {
+                           // use helper funtion to check if valid
+                           var ruleValid = filter.filters(data);
+                           // if invalid we need to tell the field
+                           if (ruleValid == false) {
+                              isValid = false;
+                              invalidMessage = filter.invalidMessage;
+                           }
+                        }
+                     );
+                     if (isValid == false) {
+                        // we also need to define an error message
+                        webix.message({
+                           type: "error",
+                           text: invalidMessage
+                        });
+                     }
+                     return isValid;
+                  };
+               });
+               // define validation rules
+               dataTable.define("rules", rules);
+               // store the array of view ids on the webix object so we can get it later
+               dataTable.config.rulePops = rulePops;
+               dataTable.refresh();
+            } else {
+               var dataTable = $$(ids.component);
+               // check if the previous datatable had rule popups and remove them
+               if (dataTable.config.rulePops) {
+                  dataTable.config.rulePops.forEach((popup) => {
+                     $$(popup).destructor();
+                  });
+               }
+               // remove any validation rules from the previous table
+               dataTable.define("rules", {});
+               dataTable.refresh();
+            }
 
             if (settings.labelAsField) {
                console.log(CurrentObject);

@@ -7,6 +7,8 @@ function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
 }
 
+var defaultValues = ABFieldListCore.defaultValues();
+
 var ids = {
    isMultiple: "ab-list-multiple-option",
    hasColors: "ab-list-colors-option",
@@ -15,8 +17,6 @@ var ids = {
    options: "ab-list-option",
    colorboard: "ab-colorboard"
 };
-
-var defaultValues = ABFieldListCore.defaultValues();
 
 var colors = [
    ["#F44336", "#E91E63", "#9C27B0", "#673AB7"],
@@ -209,6 +209,7 @@ var ABFieldListComponent = new ABFieldComponent({
                            "ab.dataField.list.optionDeleteText",
                            "*All exisiting entries with this value will be cleared. Are you sure you want to delete this option?"
                         ),
+
                         fnYes: () => {
                            // store the item that will be deleted for the save action
                            ABFieldListComponent._currentField.pendingDeletions =

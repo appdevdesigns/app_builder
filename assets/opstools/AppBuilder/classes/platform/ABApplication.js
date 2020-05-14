@@ -7,7 +7,17 @@ let ABMobileApp = require("./ABMobileApp");
 let ABViewManager = require("./ABViewManager");
 let ABViewPage = require("./views/ABViewPage");
 
+const ABDefinition = require("./ABDefinition");
+
+const ABProcessTaskManager = require("../core/process/ABProcessTaskManager");
+const ABProcessParticipant = require("./process/ABProcessParticipant");
+const ABProcessLane = require("./process/ABProcessLane");
+
+const ABProcess = require("./ABProcess");
+
 var _AllApplications = [];
+
+var dfdReady = null;
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -43,7 +53,11 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
       this._datacollections = newDatacollections;
 
       // multilingual fields: label, description
-      this.translate(this, this.json, ABApplication.fieldsMultilingual());
+      OP.Multilingual.translate(
+         this,
+         this.json,
+         ABApplication.fieldsMultilingual()
+      );
 
       // instance keeps a link to our Model for .save() and .destroy();
       this.Model = OP.Model.get("opstools.BuildApp.ABApplication");
@@ -91,6 +105,12 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
       });
    }
 
+   static allCurrentApplications() {
+      return new Promise((resolve, reject) => {
+         resolve(_AllApplications);
+      });
+   }
+
    /**
     * @function applicationInfo
     * Get id and label of all applications
@@ -99,28 +119,57 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     */
    static applicationInfo() {
       return new Promise((resolve, reject) => {
-         var ModelApplication = OP.Model.get("opstools.BuildApp.ABApplication");
-         ModelApplication.Models(ABApplication); // set the Models  setting.
+         // NOTE: make sure all ABDefinitions are loaded before
+         // pulling our Applications ...
+         ABDefinition.loadAll().then(() => {
+            var ModelApplication = OP.Model.get(
+               "opstools.BuildApp.ABApplication"
+            );
+            ModelApplication.Models(ABApplication); // set the Models  setting.
 
-         ModelApplication.staticData
-            .info()
-            .then(function(list) {
-               let apps = [];
+            ModelApplication.staticData
+               .info()
+               .then(function(list) {
+                  let apps = [];
 
-               (list || []).forEach((app) => {
-                  apps.push(new ABApplication(app));
+                  (list || []).forEach((app) => {
+                     apps.push(new ABApplication(app));
+                  });
+
+                  // if (_AllApplications == null) {
+                  _AllApplications = new webix.DataCollection({
+                     data: apps || []
+                  });
+                  // }
+
+                  resolve(_AllApplications);
+
+                  if (dfdReady) {
+                     dfdReady.__resolve();
+                  }
+               })
+               .catch((err) => {
+                  reject(err);
+                  if (dfdReady) {
+                     dfdReady.__reject(err);
+                  }
                });
-
-               // if (_AllApplications == null) {
-               _AllApplications = new webix.DataCollection({
-                  data: apps || []
-               });
-               // }
-
-               resolve(_AllApplications);
-            })
-            .catch(reject);
+         });
       });
+   }
+
+   static isReady() {
+      if (!dfdReady) {
+         dfdReady = Promise.resolve().then(() => {
+            return new Promise((resolve, reject) => {
+               setTimeout(() => {
+                  dfdReady.__resolve = resolve;
+                  dfdReady.__reject = reject;
+               }, 0);
+            });
+         });
+      }
+      return dfdReady;
    }
 
    /**
@@ -303,6 +352,27 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
             _AllApplications.add(this, 0);
          });
       }
+   }
+
+   /**
+    * @method toObj()
+    *
+    * properly compile the current state of this ABApplication instance
+    * into the values needed for saving to the DB.
+    *
+    * Most of the instance data is stored in .json field, so be sure to
+    * update that from all the current values of our child fields.
+    *
+    * @return {json}
+    */
+   toObj() {
+      OP.Multilingual.unTranslate(
+         this,
+         this.json,
+         ABApplication.fieldsMultilingual()
+      );
+
+      return super.toObj();
    }
 
    /// ABApplication info methods
@@ -1135,5 +1205,148 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
          .catch(() => {
             console.error("!!! error with .ABApplication.mobileAppSave()");
          });
+   }
+
+   ///
+   /// Processes
+   ///
+
+   /**
+    * @method processNew(id)
+    *
+    * return an instance of a new ABProcess that is tied to this
+    * ABApplication.
+    *
+    * NOTE: this new app is not included in our this.mobileApp until a .save()
+    * is performed on the App.
+    *
+    * @return {ABMobileApp}
+    */
+   processNew(id) {
+      var processDef = ABDefinition.definition(id);
+      if (processDef) {
+         return new ABProcess(processDef, this);
+      }
+      return null;
+   }
+
+   /**
+    * @method processCreate()
+    *
+    * create a new Process tied to this Application.
+    * and update our references to point to this process.
+    *
+    * @return {Promise}  resolved with an {ABProcess}
+    */
+   processCreate(json) {
+      var newProcess = new ABProcess(json, this);
+      return newProcess
+         .save()
+         .then(() => {
+            this.processIDs.push(newProcess.id);
+            this._processes.push(newProcess);
+            return this.save();
+         })
+         .then(() => {
+            return newProcess;
+         });
+   }
+
+   /**
+    * @method processRemove()
+    *
+    * update our references to no longer point to this process.
+    *
+    * NOTE: it doesn't delete the process. Just excludes it from our list.
+    *
+    * @return {Promise}  resolved with an {}
+    */
+   processRemove(Process) {
+      // remove references to the Process:
+      this.processIDs = this.processIDs.filter((pid) => {
+         return pid != Process.id;
+      });
+      this._processes = this._processes.filter((p) => {
+         return p.id != Process.id;
+      });
+      return this.save();
+   }
+
+   ///
+   /// Process Elements:
+   /// All process objects are stored as an internal Element:
+   ///
+
+   /**
+    * @method processElementNew(id)
+    *
+    * return an instance of a new ABProcessOBJ that is tied to this
+    * ABApplication->ABProcess.
+    *
+    * @param {string} id the ABDefinition.id of the element we are creating
+    * @param {ABProcess} process the process this task is a part of.
+    * @return {ABProcessTask}
+    */
+   processElementNew(id, process) {
+      var taskDef = ABDefinition.definition(id);
+      if (taskDef) {
+         switch (taskDef.type) {
+            case ABProcessParticipant.defaults().type:
+               return new ABProcessParticipant(taskDef, process, this);
+               break;
+
+            case ABProcessLane.defaults().type:
+               return new ABProcessLane(taskDef, process, this);
+               break;
+
+            default:
+               // default to a Task
+               return ABProcessTaskManager.newTask(taskDef, process, this);
+               break;
+         }
+      }
+      return null;
+   }
+
+   /**
+    * @method processElementNewForModelDefinition(def)
+    *
+    * return an instance of a new ABProcess[OBJ] that is tied to the given
+    * BPMI:Element definition.
+    *
+    * @param {BPMI:Element} element the element definition from our BPMI
+    *              modler.
+    * @return {ABProcess[OBJ]}
+    */
+   processElementNewForModelDefinition(element, process) {
+      var newElement = null;
+
+      switch (element.type) {
+         case "bpmn:Participant":
+            newElement = new ABProcessParticipant({}, process, this);
+            break;
+
+         case "bpmn:Lane":
+            newElement = new ABProcessLane({}, process, this);
+            break;
+
+         default:
+            var defaultDef = ABProcessTaskManager.definitionForElement(element);
+            if (defaultDef) {
+               newElement = ABProcessTaskManager.newTask(
+                  defaultDef,
+                  process,
+                  this
+               );
+            }
+            break;
+      }
+
+      // now make sure this new Obj pulls any relevant info from the
+      // diagram element
+      if (newElement) {
+         newElement.fromElement(element);
+      }
+      return newElement;
    }
 };

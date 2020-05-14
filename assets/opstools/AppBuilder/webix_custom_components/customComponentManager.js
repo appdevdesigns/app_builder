@@ -13,6 +13,8 @@ const EditList = require("./editlist");
 const EditTree = require("./edittree");
 const EditUnitList = require("./editunitlist");
 const FocusableTemplate = require("./focusableTemplate");
+const FormIOBuilder = require("./formioBuilder");
+const FormIOPreview = require("./formioPreview");
 const NumberText = require("./numbertext");
 const TotalFooter = require("./totalfooter");
 const TreeSuggest = require("./treesuggest");
@@ -26,6 +28,8 @@ var componentList = [
    EditTree,
    EditUnitList,
    FocusableTemplate,
+   FormIOBuilder,
+   FormIOPreview,
    NumberText,
    TotalFooter,
    TreeSuggest

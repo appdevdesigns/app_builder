@@ -6,6 +6,7 @@
  */
 
 var ABFieldCore = require("../../core/dataFields/ABFieldCore");
+var FilterComplex = require("../FilterComplex");
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -55,12 +56,27 @@ module.exports = class ABField extends ABFieldCore {
          columnName: "",
          showIcon: 1,
          required: 0,
-         unique: 0
+         unique: 0,
+         validationRules: ""
       };
 
       for (var f in defaultValues) {
          var component = $$(ids[f]);
          if (component) component.setValue(defaultValues[f]);
+      }
+
+      // reset the validation rules UI
+      var filterViews = $$(ids.filterComplex).queryView(
+         {
+            view: "form",
+            css: "abValidationForm"
+         },
+         "all"
+      );
+      if (filterViews.length) {
+         filterViews.forEach((v) => {
+            $$(ids.filterComplex).removeView(v);
+         });
       }
 
       // hide warning message of null data
@@ -83,6 +99,13 @@ module.exports = class ABField extends ABFieldCore {
       $$(ids.showIcon).setValue(field.settings.showIcon);
       $$(ids.required).setValue(field.settings.required);
       $$(ids.unique).setValue(field.settings.unique);
+
+      if (field.settings && field.settings.validationRules) {
+         var rules = JSON.parse(field.settings.validationRules);
+         rules.forEach((settings) => {
+            field.addValidation(ids, settings);
+         });
+      }
    }
 
    /**
@@ -131,6 +154,10 @@ module.exports = class ABField extends ABFieldCore {
          console.warn(
             "Field has not implemented .requiredOnChange() is that okay?"
          );
+      };
+
+      var addValidation = (ids) => {
+         return this._CurrentField.addValidation(ids);
       };
 
       // if the provided a requriedOnChange() override, use that:
@@ -262,6 +289,27 @@ module.exports = class ABField extends ABFieldCore {
                labelRight: App.labels.unique,
                disallowEdit: true,
                labelWidth: App.config.labelWidthCheckbox
+            },
+            {
+               id: ids.filterComplex,
+               rows: []
+            },
+            {
+               id: ids.addValidation,
+               view: "button",
+               label: L("ab.field.addfieldvalidation", "Add Field Validation"),
+               css: "webix_primary",
+               click: () => {
+                  addValidation(ids);
+               }
+            },
+            // have a hidden field to contain the validationRules
+            // value we will parse out later
+            {
+               id: ids.validationRules,
+               view: "text",
+               hidden: true,
+               name: "validationRules"
             }
          ]
       };
@@ -280,6 +328,50 @@ module.exports = class ABField extends ABFieldCore {
       delete settings.columnName;
 
       return obj;
+   }
+
+   addValidation(ids, settings) {
+      var App = this.object.application.App;
+      var Filter = new FilterComplex(App, "field_validation_rules");
+      $$(ids.filterComplex).addView({
+         view: "form",
+         css: "abValidationForm",
+         cols: [
+            {
+               rows: [
+                  {
+                     view: "text",
+                     name: "invalidMessage",
+                     labelWidth: App.config.labelWidthLarge,
+                     value:
+                        settings && settings.invalidMessage
+                           ? settings.invalidMessage
+                           : "",
+                     label: L(
+                        "ab.validataion.invalidMessage",
+                        "Invalid Message"
+                     )
+                  },
+                  Filter.ui
+               ]
+            },
+            {
+               view: "button",
+               css: "webix_danger",
+               icon: "fa fa-trash",
+               type: "icon",
+               autowidth: true,
+               click: function() {
+                  var $viewCond = this.getParentView();
+                  $$(ids.filterComplex).removeView($viewCond);
+               }
+            }
+         ]
+      });
+      $$(Filter.ids.save).hide();
+      Filter.applicationLoad(this.object.application);
+      Filter.fieldsLoad(this.object.fields());
+      if (settings && settings.rules) Filter.setValue(settings.rules);
    }
 
    /*

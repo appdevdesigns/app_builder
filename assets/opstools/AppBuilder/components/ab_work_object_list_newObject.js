@@ -194,13 +194,22 @@ module.exports = class AB_Work_Object_List_NewObject extends ABComponent {
                .then(function(obj) {
                   // successfully done:
                   cb(null, obj) // tell current tab component save successful
-                     .then(() => _logic.done(obj));
+                     .then(() => _logic.done(obj))
+                     .catch((err) => {
+                        console.error(err);
+                     });
                })
                .catch(function(err) {
                   // hide progress
                   _logic.hideBusy();
 
-                  cb(err); // tell current Tab component there was an error
+                  // an error happend during the server side creation.
+                  // so remove this object from the current object list of
+                  // the currentApplication.
+                  currentApplication.objectDestroy(newObject).then(() => {
+                     // tell current Tab component there was an error
+                     cb(err).catch((err) => {});
+                  });
                });
          },
 

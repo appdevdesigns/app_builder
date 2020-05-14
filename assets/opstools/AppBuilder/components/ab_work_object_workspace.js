@@ -171,11 +171,11 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
       var newViewButton = {
          view: "button",
          type: "icon",
+         autowidth: true,
          css: "webix_primary",
          label: labels.component.newView,
-         width: 120,
-         icon: "fa fa-plus-circle",
-         align: "left",
+         icon: "fa fa-plus",
+         align: "center",
          id: ids.viewMenuNewView,
          click: function() {
             PopupViewSettingsComponent.show();

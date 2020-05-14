@@ -163,7 +163,7 @@ module.exports = class ABViewText extends ABViewTextCore {
          (dc) => dc.id == dvId
       )[0];
 
-      if (!datacollection && view.parent.key == "datacollection") {
+      if (!datacollection && view.parent.key == "dataview") {
          datacollection = view.application.datacollections(
             (dc) => dc.id == view.parent.settings.dataviewID
          )[0];

@@ -16,8 +16,12 @@ let defaultSettings = {
    multiple: false
 };
 
+let ABFieldSelectivityDefaults = {
+   key: "Selectivity"
+};
+
 module.exports = class ABFieldSelectivity extends ABField {
-   constructor(values, object, fieldDefaults) {
+   constructor(values, object, fieldDefaults = ABFieldSelectivityDefaults) {
       super(values, object, fieldDefaults);
    }
 
@@ -88,7 +92,8 @@ module.exports = class ABFieldSelectivity extends ABField {
          if (settings.isUsers) {
             settings.templates = {
                multipleSelectedItem: function(options) {
-                  return `<span class="selectivity-multiple-selected-item ${
+                  return;
+                  `<span class="selectivity-multiple-selected-item ${
                      options.highlighted ? " highlighted" : ""
                   }"
 								style="background-color: #eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"

@@ -10,6 +10,7 @@ const ABComponent = require("../classes/platform/ABComponent");
 const AB_Work_Object = require("./ab_work_object");
 const AB_Work_Query = require("./ab_work_query");
 const AB_Work_Datacollection = require("./ab_work_dataview");
+const AB_Work_Process = require("./ab_work_process");
 const AB_Work_Interface = require("./ab_work_interface");
 
 // export to ABLiveTool
@@ -40,6 +41,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {
                "ab.datacollection.title",
                "*Data Collections"
             ),
+            processTitle: L("ab.process.title", "*Process"),
             interfaceTitle: L("ab.interface.title", "*Interface"),
             userTitle: L("ab.user.title", "*Users"),
             roleTitle: L("ab.role.title", "*Roles")
@@ -56,6 +58,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {
          tab_object: this.unique("tab_object"),
          tab_query: this.unique("tab_query"),
          tab_dataview: this.unique("tab_dataview"),
+         tab_processview: this.unique("tab_processview"),
          tab_interface: this.unique("tab_interface"),
          tab_admin: this.unique("tab_admin"),
          tab_user: this.unique("tab_user"),
@@ -68,6 +71,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {
       var AppObjectWorkspace = new AB_Work_Object(App);
       var AppQueryWorkspace = new AB_Work_Query(App);
       var AppDatacollectionWorkspace = new AB_Work_Datacollection(App);
+      var AppProcessWorkspace = new AB_Work_Process(App);
       var AppInterfaceWorkspace = new AB_Work_Interface(App);
 
       var sidebarItems = [
@@ -85,6 +89,11 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {
             id: ids.tab_dataview,
             value: labels.component.datacollectionTitle,
             icon: "fa fa-fw fa-table"
+         },
+         {
+            id: ids.tab_processview,
+            value: labels.component.processTitle,
+            icon: "fa fa-fw fa-code-fork"
          },
          {
             id: ids.tab_interface,
@@ -223,6 +232,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {
                         AppObjectWorkspace.ui,
                         AppQueryWorkspace.ui,
                         AppDatacollectionWorkspace.ui,
+                        AppProcessWorkspace.ui,
                         AppInterfaceWorkspace.ui
                      ]
                   }
@@ -236,6 +246,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {
          AppObjectWorkspace.init();
          AppQueryWorkspace.init();
          AppDatacollectionWorkspace.init();
+         AppProcessWorkspace.init();
          AppInterfaceWorkspace.init();
 
          //// TODO: keep track of the last workspace in application.workspace.lastWorkspace on every
@@ -295,6 +306,7 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {
             AppObjectWorkspace.applicationLoad(application);
             AppQueryWorkspace.applicationLoad(application);
             AppDatacollectionWorkspace.applicationLoad(application);
+            AppProcessWorkspace.applicationLoad(application);
             AppInterfaceWorkspace.applicationLoad(application);
 
             _logic.show();
@@ -322,6 +334,11 @@ module.exports = window.ABWorkUI = class AB_Work extends ABComponent {
                // Datacollection Workspace Tab
                case ids.tab_dataview:
                   AppDatacollectionWorkspace.show();
+                  break;
+
+               // Process Workspace Tab
+               case ids.tab_processview:
+                  AppProcessWorkspace.show();
                   break;
 
                // Interface Workspace Tab

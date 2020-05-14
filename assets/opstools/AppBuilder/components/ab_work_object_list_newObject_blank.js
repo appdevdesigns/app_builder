@@ -143,13 +143,35 @@ module.exports = class AB_Work_Object_List_NewObject_Blank extends ABComponent {
             values.primaryColumnName = "uuid";
 
             // now send data back to be added:
-            _logic.callbacks.onSave(values, function(validator) {
-               if (validator) {
-                  validator.updateForm(Form);
+            _logic.callbacks.onSave(values, function(err) {
+               if (err) {
+                  console.error(err);
+                  var message = "the entered data is invalid";
+                  // if this was our OP.Validation() object:
+                  if (err.updateForm) {
+                     err.updateForm(Form);
+                  } else {
+                     if (err.code && err.data) {
+                        if (err.data.sqlMessage) {
+                           message = err.data.sqlMessage;
+                        }
+                     } else {
+                        if (err.message) {
+                           message = err.message;
+                        }
+                     }
+                  }
+
+                  webix.alert({
+                     title: "Error creating Object " + values.name,
+                     ok: "fix it",
+                     text: message,
+                     type: "alert-error"
+                  });
 
                   // get notified if there was an error saving.
                   saveButton.enable();
-                  return Promise.reject("the enter data is invalid");
+                  return Promise.reject(message);
                }
 
                // if there was no error, clear the form for the next

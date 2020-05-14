@@ -5,6 +5,11 @@ module.exports = class RowUpdater extends ABComponent {
    constructor(App, idBase) {
       super(App, idBase);
 
+      // make sure App is a valid value:
+      if (!App) {
+         App = this.App;
+      }
+
       let L = this.Label;
 
       let labels = {
@@ -97,7 +102,6 @@ module.exports = class RowUpdater extends ABComponent {
                   options = options.filter((opt) => opt.id != fieldId);
                });
             }
-
             return options;
          },
 
@@ -139,6 +143,7 @@ module.exports = class RowUpdater extends ABComponent {
                      icon: "fa fa-trash",
                      type: "icon",
                      autowidth: true,
+
                      click: function() {
                         let $viewCond = this.getParentView();
 
@@ -187,8 +192,16 @@ module.exports = class RowUpdater extends ABComponent {
          },
 
          selectField: function(columnId, $viewCond) {
-            let field = _Object.fields((col) => col.id == columnId)[0],
-               fieldComponent = field.formComponent(),
+            let field = _Object.fields((col) => col.id == columnId)[0];
+            if (!field) {
+               console.error(
+                  "RowUpdater.selectField() could not find a field for [" +
+                     columnId +
+                     "]"
+               );
+               return;
+            }
+            let fieldComponent = field.formComponent(),
                formFieldWidget = fieldComponent.newInstance(
                   field.object.application,
                   _mockFormWidget
