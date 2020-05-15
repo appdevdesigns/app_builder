@@ -79,6 +79,8 @@ module.exports = class ABField extends ABFieldCore {
          });
       }
 
+      $$(ids.addValidation).hide();
+
       // hide warning message of null data
       $$(ids.numberOfNull).hide();
    }
@@ -99,6 +101,10 @@ module.exports = class ABField extends ABFieldCore {
       $$(ids.showIcon).setValue(field.settings.showIcon);
       $$(ids.required).setValue(field.settings.required);
       $$(ids.unique).setValue(field.settings.unique);
+
+      if (this._CurrentField) {
+         $$(ids.addValidation).show();
+      }
 
       if (field.settings && field.settings.validationRules) {
          var rules = JSON.parse(field.settings.validationRules);

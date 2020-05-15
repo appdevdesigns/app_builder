@@ -73,6 +73,7 @@ module.exports = class ABFieldComponent {
          numberOfNull: App.unique(this.idBase + "_numberOfNull"),
          unique: App.unique(this.idBase + "_unique"),
          filterComplex: App.unique(this.idBase + "_filtercomplex"),
+         addValidation: App.unique(this.idBase + "_addvalidation"),
          shorthand: App.unique(this.idBase + "_shorthand"),
          validationRules: App.unique(this.idBase + "_validationRules")
       };
