@@ -258,6 +258,9 @@ module.exports = class AB_Work_Object_List_NewObject_External extends ABComponen
                   saveButton.enable();
                   _logic.busyEnd();
 
+                  if (objectList && !objectList.forEach)
+                     objectList = [objectList];
+
                   objectList.forEach((objValue) => {
                      var indexObj = -1,
                         updateObj = currentApp.objectNew(objValue); // the import object
