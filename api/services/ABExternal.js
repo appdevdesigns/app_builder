@@ -26,6 +26,9 @@ const FieldManager = require(path.join(
    "ABFieldManager.js"
 ));
 
+const ABGraphApplication = require("../graphModels/ABApplication");
+const ABGraphObject = require("../graphModels/ABObject");
+
 // Build a reference of AB defaults for all supported Sails data field types
 var mysqlTypeToABFields = {};
 FieldManager.allFields().forEach((Field) => {
@@ -228,20 +231,18 @@ module.exports = {
             })
             .then(function() {
                return new Promise((resolve, reject) => {
-                  ABApplication.find({ id: appID }).exec(function(err, list) {
-                     if (err) reject(err);
-                     else if (!list || !list[0]) {
-                        reject(new Error("Application not found: " + appID));
-                     } else {
-                        let application = list[0].toABClass();
+                  ABGraphApplication.findOne(appID)
+                     .then((application) => {
+                        if (!application) return resolve();
 
-                        application.objects().forEach((obj) => {
+                        let app = application.toABClass();
+                        app.objects().forEach((obj) => {
                            existsTableNames.push(obj.dbTableName());
                         });
 
                         resolve();
-                     }
-                  });
+                     })
+                     .catch(reject);
                });
             })
             // Get only not exists table names
@@ -485,16 +486,16 @@ module.exports = {
             // Find app in database
             .then(function() {
                return new Promise((resolve, reject) => {
-                  ABApplication.find({ id: appID }).exec(function(err, list) {
-                     if (err) {
-                        reject(err);
-                     } else if (!list || !list[0]) {
-                        reject(new Error("application not found: " + appID));
-                     } else {
-                        application = list[0];
-                        resolve();
-                     }
-                  });
+                  ABGraphApplication.findOne(appID)
+                     .then((app) => {
+                        if (!app) {
+                           reject(new Error("application not found: " + appID));
+                        } else {
+                           application = app;
+                           resolve();
+                        }
+                     })
+                     .catch(reject);
                });
             })
 
@@ -811,27 +812,52 @@ module.exports = {
             })
 
             // Save to database
-            .then(function() {
-               return new Promise((resolve, reject) => {
-                  application.json.objects = application.json.objects || [];
-                  application.json.objects.push(objectData);
+            .then(
+               () =>
+                  new Promise((resolve, reject) => {
+                     ABGraphObject.upsert(objectData.id, objectData)
+                        .catch(reject)
+                        .then(() => {
+                           resolve();
+                        });
+                  })
+            )
 
-                  ABApplication.update(
-                     { id: appID },
-                     { json: application.json }
-                  ).exec((err, updated) => {
-                     if (err) {
-                        console.log("ERROR: ", err);
-                        reject(err);
-                     } else if (!updated || !updated[0]) {
-                        console.log("ERROR: app not updated");
-                        reject(new Error("Application not updated"));
-                     } else {
-                        resolve(application.json.objects);
-                     }
-                  });
-               });
-            })
+            // Relate
+            .then(
+               () =>
+                  new Promise((resolve, reject) => {
+                     if (!application || !objectData) return resolve();
+
+                     application
+                        .relate("objects", objectData.id)
+                        .catch(reject)
+                        .then(() => {
+                           resolve(objectData);
+                        });
+                  })
+            )
+         // .then(function() {
+         //    return new Promise((resolve, reject) => {
+         //       application.json.objects = application.json.objects || [];
+         //       application.json.objects.push(objectData);
+
+         //       ABApplication.update(
+         //          { id: appID },
+         //          { json: application.json }
+         //       ).exec((err, updated) => {
+         //          if (err) {
+         //             console.log("ERROR: ", err);
+         //             reject(err);
+         //          } else if (!updated || !updated[0]) {
+         //             console.log("ERROR: app not updated");
+         //             reject(new Error("Application not updated"));
+         //          } else {
+         //             resolve(application.json.objects);
+         //          }
+         //       });
+         //    });
+         // })
       );
    }
 };

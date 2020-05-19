@@ -20,7 +20,8 @@ module.exports = {
             "js/docxtemplater-image-module.v3.0.2.min",
             "OpsPortal/classes/OpsWebixDataCollection",
             "opstools/BuildApp/OP_Bundle",
-            "js/formio/formio.full.min"
+            "js/formio/formio.full.min",
+            "js/webix/components/activecontent"
          ],
          format: "global"
       },
