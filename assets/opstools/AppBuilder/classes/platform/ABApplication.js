@@ -393,6 +393,8 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
       return this.Model.staticData.updateInfo(this.id, {
          isAdminApp: values.isAdminApp,
+         isAccessManaged: values.isAccessManaged,
+         accessManagers: values.accessManagers,
          translations: values.json.translations
       });
    }
