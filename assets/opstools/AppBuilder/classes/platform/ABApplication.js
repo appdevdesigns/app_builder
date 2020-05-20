@@ -21,6 +21,11 @@ var __AllObjects = {
 };
 // {obj} : a hash of all ABObjects in our system.
 
+var __AllQueries = {
+   /* ABQuery.id : ABObjectQuery */
+};
+// {obj} : a hash of all ABObjectQueriess in our system.
+
 var dfdReady = null;
 
 function L(key, altText) {
@@ -86,23 +91,23 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     *
     * @return {Promise}
     */
-   static allApplications() {
-      debugger;
+   // static allApplications() {
+   //    debugger;
 
-      return new Promise((resolve, reject) => {
-         var ModelApplication = OP.Model.get("opstools.BuildApp.ABApplication");
-         ModelApplication.Models(ABApplication); // set the Models  setting.
+   //    return new Promise((resolve, reject) => {
+   //       var ModelApplication = OP.Model.get("opstools.BuildApp.ABApplication");
+   //       ModelApplication.Models(ABApplication); // set the Models  setting.
 
-         ModelApplication.findAll()
-            .then(function(data) {
-               // NOTE: data is already a DataCollection from .findAll()
-               _AllApplications = data;
+   //       ModelApplication.findAll()
+   //          .then(function(data) {
+   //             // NOTE: data is already a DataCollection from .findAll()
+   //             _AllApplications = data;
 
-               resolve(data);
-            })
-            .catch(reject);
-      });
-   }
+   //             resolve(data);
+   //          })
+   //          .catch(reject);
+   //    });
+   // }
 
    static allCurrentApplications() {
       return new Promise((resolve, reject) => {
@@ -848,8 +853,16 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    /// Queries
    ///
 
+   queriesAll() {
+      return ABDefinition.allQueries().map((d) => {
+         return __AllQueries[d.id] ? __AllQueries[d.id] : this.queryNew(d);
+      });
+   }
+
    queryLoad() {
       if (this.loadedQueries) return Promise.resolve();
+      debugger;
+      //// REFACTOR THIS:
 
       return new Promise((resolve, reject) => {
          this.Model.staticData
@@ -873,21 +886,21 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    }
 
    queryGet(id) {
+      debugger;
+      // REFACTOR THIS!!
+
       return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .queryGet(id)
-            .catch(reject)
-            .then((query) => {
-               if (query) {
-                  resolve(this.queryNew(query, this));
-               } else {
-                  resolve(null);
-               }
-            });
+         var query = this.queries((q) => {
+            return q.id == id;
+         })[0];
+
+         resolve(query);
       });
    }
 
    queryFind(cond) {
+      debugger;
+      //// REFACTOR THIS???
       return new Promise((resolve, reject) => {
          this.Model.staticData
             .queryFind(cond)
@@ -909,6 +922,9 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    }
 
    queryInfo(cond) {
+      debugger;
+      // REFACTOR THIS!!!
+
       return this.Model.staticData.queryInfo(cond);
    }
 
@@ -924,24 +940,32 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {ABObjectQuery}
     */
    queryNew(values) {
-      return new ABObjectQuery(values, this);
+      var query = new ABObjectQuery(values, this);
+      query.on("destroyed", () => {
+         delete __AllQueries[query.id];
+      });
+      __AllQueries[query.id] = query;
+      return query;
    }
 
    /**
-    * @method queryDestroy()
+    * @method queryRemove()
     *
-    * remove the current ABObjectQuery from our list of ._queries.
+    * remove the current ABObjectQuery from our list of .queryIDs.
     *
     * @param {ABObject} query
     * @return {Promise}
     */
-   queryDestroy(query) {
-      var remaininQueries = this.queries(function(q) {
-         return q.id != query.id;
+   queryRemove(query) {
+      var begLen = this.queryIDs.length;
+      this.queryIDs = this.queryIDs.filter((id) => {
+         return id != query.id;
       });
-      this._queries = remaininQueries;
-
-      return this.Model.staticData.queryDestroy(query.id);
+      // if there was a change then save this.
+      if (begLen != this.queryIDs.length) {
+         return this.save();
+      }
+      return Promise.resolve();
    }
 
    /**
@@ -952,19 +976,20 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @param {ABObjectQuery} query
     * @return {Promise}
     */
-   querySave(query) {
-      var isIncluded =
-         this.queries(function(q) {
-            return q.id == query.id;
-         }).length > 0;
+   queryInsert(query) {
+      var isIncluded = this.queryIDs.indexOf(query.id) != -1;
       if (!isIncluded) {
-         this._queries.push(query);
+         this.queryIDs.push(query.id);
+         // Save our own Info:
+         return this.save();
       }
-
-      return this.Model.staticData.querySave(this.id, query.toObj());
+      return Promise.resolve();
    }
 
    queryImport(queryId) {
+      debugger;
+      // REFACTOR THIS!
+
       return new Promise((resolve, reject) => {
          this.Model.staticData
             .queryImport(this.id, queryId)
@@ -985,6 +1010,9 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    }
 
    queryExclude(queryId) {
+      debugger;
+      // REFACTOR THIS!!!
+
       return new Promise((resolve, reject) => {
          this.Model.staticData
             .queryExclude(this.id, queryId)

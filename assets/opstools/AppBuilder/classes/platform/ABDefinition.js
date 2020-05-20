@@ -51,6 +51,13 @@ module.exports = class ABDefinition extends ABDefinitionCore {
       return allObjs.filter(f);
    }
 
+   static allQueries(f = () => true) {
+      var allObjs = ABDefinition.all((d) => {
+         return d.type == "query";
+      });
+      return allObjs.filter(f);
+   }
+
    /**
     * @method create()
     *
