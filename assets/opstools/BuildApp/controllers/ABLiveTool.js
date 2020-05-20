@@ -4,821 +4,1414 @@ steal(
    function() {
       System.import("appdev").then(function() {
          System.import("opstools/BuildApp").then(function() {
-            steal
-               .import("appdev/ad", "appdev/control/control")
-               .then(function() {
-                  // Namespacing conventions:
-                  // AD.Control.extend('[application].[controller]', [{ static },] {instance} );
-                  AD.Control.extend("opstools.BuildApp.ABLiveTool", {
-                     init: function(element, options) {
-                        var self = this;
+            steal.import("appdev/ad", "appdev/control/control").then(function() {
+               // Namespacing conventions:
+               // AD.Control.extend('[application].[controller]', [{ static },] {instance} );
+               AD.Control.extend("opstools.BuildApp.ABLiveTool", {
+                  init: function(element, options) {
+                     var self = this;
 
-                        options = AD.defaults(
-                           {
-                              app: -1,
-                              page: -1,
-                              areaKey: "",
-                              toolKey: -1
-                           },
-                           options
-                        );
-                        self.options = options;
+                     options = AD.defaults(
+                        {
+                           app: -1,
+                           page: -1,
+                           areaKey: "",
+                           toolKey: -1
+                        },
+                        options
+                     );
+                     self.options = options;
 
-                        // Call parent init
-                        self._super(element, options);
+                     // Call parent init
+                     self._super(element, options);
 
-                        // Validate
-                        if (options.app == null || options.app < 0) {
-                           AD.error.log("Application id is invalid.");
-                           return;
-                        }
+                     // Validate
+                     if (options.app == null || options.app < 0) {
+                        AD.error.log("Application id is invalid.");
+                        return;
+                     }
 
-                        if (options.page == null || options.page < 0) {
-                           AD.error.log("Page id is invalid.");
-                           return;
-                        }
+                     if (options.page == null || options.page < 0) {
+                        AD.error.log("Page id is invalid.");
+                        return;
+                     }
 
-                        self.containerDomID = self.unique(
-                           "ab_live_tool",
-                           self.options.app,
-                           self.options.page
-                        );
+                     self.containerDomID = self.unique("ab_live_tool", self.options.app, self.options.page);
 
-                        self.debounceResize = false;
-                        self.resizeValues = { height: 0, width: 0 };
+                     self.debounceResize = false;
+                     self.resizeValues = {
+                        height: 0,
+                        width: 0
+                     };
 
-                        self.App = new OP.Component(
-                           null,
-                           self.containerDomID
-                        ).App;
+                     self.App = new OP.Component(null, self.containerDomID).App;
 
-                        // Store page/sub page .components()
-                        // These values will be defined in .renderPage()
-                        self.pageComponents = {}; // { pageId: component }
+                     // Store page/sub page .components()
+                     // These values will be defined in .renderPage()
+                     self.pageComponents = {}; // { pageId: component }
 
-                        // Has this app been selected by the user yet?
-                        self.activated = false;
+                     // Has this app been selected by the user yet?
+                     self.activated = false;
 
-                        self.initDOM();
-                        self.initModels();
+                     self.initDOM();
+                     self.initRoles();
+                     self.initModels();
+                     self.initAMP();
 
-                        self.__events = {};
+                     self.__events = {};
 
-                        if (self.__events.areaShow == null)
-                           self.__events.areaShow = AD.comm.hub.subscribe(
-                              "opsportal.area.show",
-                              function(message, data) {
-                                 self.menuChange(data.area);
-                              }
-                           );
-
-                        if (self.__events.toolShow == null)
-                           self.__events.toolShow = AD.comm.hub.subscribe(
-                              "opsportal.tool.show",
-                              function(message, data) {
-                                 self.menuChange(data.area, data.tool);
-                              }
-                           );
-
-                        if (self.__events.resize == null)
-                           self.__events.resize = AD.comm.hub.subscribe(
-                              "opsportal.resize",
-                              function(message, data) {
-                                 if (data && data.height) {
-                                    self.height = data.height;
-                                 }
-                                 self.debounceResize = false; // if we do not set this the resize is never set
-                                 self.resize(self.height);
-                              }
-                           );
-
-                        if (self.__events.adjust == null)
-                           self.__events.adjust = AD.comm.hub.subscribe(
-                              "component.adjust",
-                              function(message, data) {
-                                 self.containerID = null;
-                                 if (data && data.containerID) {
-                                    self.containerID = data.containerID;
-                                 }
-                                 self.adjust(self.containerID);
-                              }
-                           );
-
-                        // Check this is active
-                        self.menuChange();
-
-                        // FIX: If there is only menu item, then click the first item to default
-                        var menuList = document.getElementsByClassName(
-                           "op-list"
-                        )[0];
-                        if (menuList) {
-                           var menuItems = menuList.getElementsByClassName(
-                              "op-container"
-                           );
-                           if (menuItems.length === 1) {
-                              menuItems[0].click();
-                           }
-                        }
-                     },
-
-                     initDOM: function() {
-                        // console.log('... creating ABLiveTool <div> ');
-
-                        var css =
-                           "background-color: #fff !important; font-size: 30px; line-height: 80px; padding-top: 160px; text-align: center; width: 100%;";
-
-                        this.element.html(
-                           '<div id="#domID#">'.replace(
-                              /#domID#/g,
-                              this.containerDomID
-                           ) +
-                              '<div style="' +
-                              css +
-                              '" class="ab-loading"><i class="fa fa-refresh fa-spin fa-3x fa-fw"></i><br/>Loading&#8230;' +
-                              "</div></div>"
-                        );
-
-                        // this.element.html(
-                        // 	('<div id="#domID#"></div>' +
-                        // 		'<i id="#domID#-reload-button" class="fa fa-refresh ab-reload-page-button" aria-hidden="true"></i>')
-                        // 		.replace(/#domID#/g, this.containerDomID));
-                     },
-
-                     initModels: function() {
-                        this.Models = {};
-                        this.Models.ABApplication = OP.Model.get(
-                           "opstools.BuildApp.ABApplication"
-                        );
-                     },
-
-                     initPage: function() {
-                        var self = this;
-
-                        // Wait until the tool's area has been shown
-                        if (!self.activated) return;
-
-                        self.renderPageContainer();
-
-                        self.initEvents(self.rootPage);
-
-                        webix.ready(function() {
-                           self.showPage();
-
-                           self.resize(self.height || 600);
+                     if (self.__events.areaShow == null)
+                        self.__events.areaShow = AD.comm.hub.subscribe("opsportal.area.show", function(message, data) {
+                           self.menuChange(data.area);
                         });
-                     },
 
-                     menuChange: function(areaKey, toolKey) {
-                        var self = this;
+                     if (self.__events.toolShow == null)
+                        self.__events.toolShow = AD.comm.hub.subscribe("opsportal.tool.show", function(message, data) {
+                           self.menuChange(data.area, data.tool);
+                        });
 
-                        // Get current area key
-                        if (areaKey == null) {
-                           let currAreaElem = document.querySelector(
-                              "#op-list-menu > .op-container.active"
-                           );
-                           if (!currAreaElem) return;
-
-                           areaKey = currAreaElem.getAttribute("area");
-                        }
-
-                        // Get current tool key
-                        if (toolKey == null) {
-                           // get active tool element
-                           let currToolElem = document.querySelector(
-                              '#op-masthead-sublinks [area="{area}"] .active'.replace(
-                                 "{area}",
-                                 areaKey
-                              )
-                           );
-                           if (!currToolElem) return;
-
-                           toolKey = currToolElem.getAttribute("op-tool-id");
-                        }
-
-                        // Check it is our page
-                        if (
-                           self.options.areaKey == areaKey &&
-                           self.options.toolKey == toolKey
-                        ) {
-                           if (!self.activated) {
-                              self.activated = true;
-
-                              self.getData();
-                           } else {
-                              self.showPage();
+                     if (self.__events.resize == null)
+                        self.__events.resize = AD.comm.hub.subscribe("opsportal.resize", function(message, data) {
+                           if (data && data.height) {
+                              self.height = data.height;
                            }
+                           self.debounceResize = false; // if we do not set this the resize is never set
+                           self.resize(self.height);
+                        });
+
+                     if (self.__events.adjust == null)
+                        self.__events.adjust = AD.comm.hub.subscribe("component.adjust", function(message, data) {
+                           self.containerID = null;
+                           if (data && data.containerID) {
+                              self.containerID = data.containerID;
+                           }
+                           self.adjust(self.containerID);
+                        });
+
+                     // Check this is active
+                     self.menuChange();
+
+                     // FIX: If there is only menu item, then click the first item to default
+                     var menuList = document.getElementsByClassName("op-list")[0];
+                     if (menuList) {
+                        var menuItems = menuList.getElementsByClassName("op-container");
+                        if (menuItems.length === 1) {
+                           menuItems[0].click();
                         }
-                     },
+                     }
+                  },
 
-                     getData: function() {
-                        var self = this,
-                           q = $.Deferred();
-
-                        self.data = {};
-                        async.series(
-                           [
-                              // Show loading spinners
-                              function(next) {
-                                 var areaMenuItem = document.body.querySelector(
-                                    '[class="op-container"][area="' +
-                                       self.options.areaKey +
-                                       '"]'
-                                 );
-                                 if (areaMenuItem) {
-                                    areaMenuItem.insertAdjacentHTML(
-                                       "beforeend",
-                                       '<span class="icon ' +
-                                          self.options.areaKey +
-                                          '_appLoading"><i class="fa fa-refresh fa-spin"></i></span>'
-                                    );
-                                 }
-
-                                 next();
-                              },
-                              // Get application data
-                              function(next) {
-                                 ABApplication.livepage(
-                                    self.options.app,
-                                    self.options.page
-                                 )
-                                    .catch(console.error)
-                                    .then(function(result) {
-                                       self.data.application = result;
-
-                                       // Store the root page
-                                       if (self.rootPage == null)
-                                          self.rootPage = self.data.application.pages(
-                                             (p) => p.id == self.options.page
-                                          )[0];
-
-                                       next();
-                                    }, next);
-                              },
-
-                              // Bind objects and queries from data views
-                              function(next) {
-                                 if (!self.data.application) return next();
-
-                                 let storeObject = (datasource) => {
-                                    if (
-                                       self.data.application.objects(
-                                          (o) => o.id == datasource.id
-                                       ).length < 1
-                                    ) {
-                                       self.data.application._objects.push(
-                                          datasource
-                                       );
+                  initAMP: function() {
+                     var smalltreedata = [
+                        {
+                           id: "root",
+                           access: "0",
+                           value: "Root page",
+                           open: true,
+                           data: [
+                              {
+                                 id: "1",
+                                 access: "0",
+                                 open: true,
+                                 value: "First Sub Page",
+                                 data: [
+                                    {
+                                       id: "1.1",
+                                       access: "0",
+                                       value: "Tab 1"
+                                    },
+                                    {
+                                       id: "1.2",
+                                       access: "0",
+                                       open: true,
+                                       value: "Tab 2",
+                                       data: [
+                                          {
+                                             id: "1.2.1",
+                                             access: "0",
+                                             value: "Tab 1"
+                                          },
+                                          {
+                                             id: "1.2.2",
+                                             access: "0",
+                                             value: "Tab 2"
+                                          },
+                                          {
+                                             id: "1.2.3",
+                                             access: "0",
+                                             value: "Tab 3"
+                                          },
+                                          {
+                                             id: "1.2.4",
+                                             access: "0",
+                                             value: "Tab 4"
+                                          },
+                                          {
+                                             id: "1.2.5",
+                                             access: "0",
+                                             value: "Tab 5"
+                                          }
+                                       ]
+                                    },
+                                    {
+                                       id: "1.3",
+                                       access: "0",
+                                       value: "Tab 3"
                                     }
-                                 };
+                                 ]
+                              },
+                              {
+                                 id: "2",
+                                 access: "0",
+                                 open: true,
+                                 value: "Second Sub Page",
+                                 data: [
+                                    {
+                                       id: "2.1",
+                                       access: "0",
+                                       value: "Tab 1"
+                                    },
+                                    {
+                                       id: "2.2",
+                                       access: "0",
+                                       value: "Tab 2"
+                                    }
+                                 ]
+                              }
+                           ]
+                        }
+                     ];
 
-                                 self.data.application
-                                    .datacollections()
-                                    .forEach((dc) => {
-                                       if (!dc) return;
+                     // This is also defined in assets/opstools/AppBuilder/classes/core/views/ABViewCore.js
+                     // In the furture we can remove from this location when App Builder is not dependant on OpsPortal
+                     var accessLevels = [
+                        {
+                           id: "0",
+                           value: "No Access"
+                        },
+                        {
+                           id: "1",
+                           value: "Read Only"
+                        },
+                        {
+                           id: "2",
+                           value: "Full Access"
+                        }
+                     ];
 
-                                       dc.init();
-
-                                       let datasource = dc.datasource;
-                                       if (!datasource) return;
-
-                                       // Queries
-                                       if (
-                                          dc.settings &&
-                                          dc.settings.isQuery &&
-                                          self.data.application.queries(
-                                             (q) => q.id == datasource.id
-                                          ).length < 1
-                                       ) {
-                                          self.data.application._queries.push(
-                                             datasource
-                                          );
-
-                                          datasource
-                                             .objects()
-                                             .forEach((obj) => {
-                                                storeObject(obj);
-                                             });
-                                       }
-                                       // Objects
-                                       else {
-                                          storeObject(datasource);
+                     /* UI for Trees
+                        var tree2 = {
+                           id: "linetree2_" + this.containerDomID,
+                           view: "edittree",
+                           type: "lineTree",
+                           editable: true,
+                           editor: "combo",
+                           editValue: "access",
+                           threeState: true,
+                           template: (obj, common) => {
+                              var treeOptions = $$(
+                                 "linetree2_" + this.containerDomID
+                              ).config.options;
+                              var option = treeOptions.find(
+                                 (o) => o.id === obj.access
+                              );
+                              var color = "#ff4938";
+                              var icon = "lock";
+                              if (option.id == "0") {
+                                 color = "#ff4938";
+                                 icon = "lock";
+                              } else if (option.id == "1") {
+                                 color = "#00C853";
+                                 icon = "pencil";
+                              } else if (option.id == "2") {
+                                 color = "#FFAB00";
+                                 icon = "eye";
+                              }
+                              return (
+                                 `
+                                            <span class="accessLevel">
+                                              <span class="fa-stack">
+                                                <i style="color: ${color};" class="fa fa-circle fa-stack-2x"></i>
+                                                <i class="fa fa-${icon} fa-stack-1x fa-inverse"></i>
+                                              </span>` +
+                                 common.icon(obj, common) +
+                                 `<span>${obj.value}</span>
+                                              <i class="externalLink fa fa-external-link"></i>
+                                            </span>`
+                              );
+                           },
+                           options: accessLevels,
+                           data: webix.copy(smalltreedata),
+                           on: {
+                              onDataUpdate: (id, data, old) => {
+                                 var tree = $$(
+                                    "linetree2_" + this.containerDomID
+                                 );
+                                 if (data.access == "0") {
+                                    tree.blockEvent();
+                                    tree.data.eachSubItem(id, (child) => {
+                                       var childData = tree.getItem(child.id);
+                                       if (childData.access != data.access) {
+                                          childData.access = data.access;
+                                          tree.updateItem(child.id, childData);
                                        }
                                     });
-
-                                 next();
-                              },
-
-                              function(next) {
-                                 if (self.rootPage == null) return next();
-
-                                 self.initPage();
-
-                                 // let areaKey = 'ab-' + self.data.application.name.trim();
-                                 // areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
-
-                                 // // If there is a ops-area, it should trigger that ops-area to render page
-                                 // // Because 'opsportal.tool.show' and 'opsportal.area.show' are not trigger
-                                 // var opsMenus = document.body.querySelectorAll('#op-list-menu > .op-container');
-                                 // if (opsMenus.length == 1) {
-                                 // 	opsMenus[0].click();
-                                 // }
-                                 // // If this area is showing
-                                 // else {
-                                 // 	// TODO: How to get current area ?
-                                 // 	var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
-                                 // 	if (currPanel) {
-                                 // 		var currArea = currPanel.getAttribute('area');
-                                 // 		if (currArea == areaKey) {
-                                 // 			callback(null, { area: areaKey });
-                                 // 		}
-                                 // 	}
-                                 // }
-
-                                 next();
-                              },
-
-                              // Hide loading spinners
-                              function(next) {
-                                 // we will remove the loading spinners on the menu now
-                                 var opsMenuItem = document.body.querySelectorAll(
-                                    "#op-list-menu > .op-container ." +
-                                       self.options.areaKey +
-                                       "_appLoading"
-                                 );
-                                 (opsMenuItem || []).forEach((x) => {
-                                    x.remove();
-                                 });
-
-                                 next();
+                                    tree.unblockEvent();
+                                 } else {
+                                    var parentBranch = tree.getParentId(id);
+                                    var parentData = tree.getItem(parentBranch);
+                                    if (parentData) {
+                                       if (parentData.access == "0") {
+                                          parentData.access = "2";
+                                          tree.updateItem(
+                                             parentBranch,
+                                             parentData
+                                          );
+                                       }
+                                    }
+                                 }
                               }
-                           ],
-                           function(err) {
-                              if (err) q.reject(err);
-                              else q.resolve();
                            }
-                        );
+                        };
 
-                        return q;
-                     },
-
-                     renderPageContainer: function() {
-                        var self = this;
-
-                        if (self.rootPage == null) return;
-
-                        // Clear UI content
-                        var rootDomId = self.getPageDomID(self.rootPage.id);
-
-                        // var parentContainer = self.element.parent()[0];
-                        // parentContainer.style.width = "900px";
-                        // parentContainer.style.margin = "0 auto";
-
-                        if ($$(rootDomId)) webix.ui({}, $$(rootDomId));
-
-                        // Create a sub pages container
-                        if ($$(self.containerDomID)) {
-                           $$(self.containerDomID).destructor();
-                        }
-                        webix.ui({
-                           view: "multiview",
-                           container: self.containerDomID,
-                           css: "ab-main-container ab-generated-page",
-                           id: self.containerDomID,
-                           cells: [{}],
+                        var tree3 = {
+                           id: "linetree3_" + this.containerDomID,
+                           view: "edittree",
+                           type: "lineTree",
+                           editable: true,
+                           editor: "combo",
+                           editValue: "access",
+                           threeState: true,
+                           template: (obj, common) => {
+                              var treeOptions = $$(
+                                 "linetree3_" + this.containerDomID
+                              ).config.options;
+                              var option = treeOptions.find(
+                                 (o) => o.id === obj.access
+                              );
+                              var color = "#ff4938";
+                              var icon = "lock";
+                              if (option.id == "0") {
+                                 color = "#ff4938";
+                                 icon = "lock";
+                              } else if (option.id == "1") {
+                                 color = "#00C853";
+                                 icon = "pencil";
+                              } else if (option.id == "2") {
+                                 color = "#FFAB00";
+                                 icon = "eye";
+                              }
+                              return (
+                                 `
+                                            <span class="accessLevel">
+                                              <span class="fa-stack">
+                                                <i style="color: ${color};" class="fa fa-circle fa-stack-2x"></i>
+                                                <i class="fa fa-${icon} fa-stack-1x fa-inverse"></i>
+                                              </span>` +
+                                 common.icon(obj, common) +
+                                 `<span>${obj.value}</span>
+                                              <i class="externalLink fa fa-external-link"></i>
+                                            </span>`
+                              );
+                           },
+                           options: accessLevels,
+                           data: webix.copy(smalltreedata),
                            on: {
-                              onViewChange: function(prevId, nextId) {
-                                 self.resize();
+                              onDataUpdate: (id, data, old) => {
+                                 var tree = $$(
+                                    "linetree3_" + this.containerDomID
+                                 );
+                                 if (data.access == "0") {
+                                    tree.blockEvent();
+                                    tree.data.eachSubItem(id, (child) => {
+                                       var childData = tree.getItem(child.id);
+                                       if (childData.access != data.access) {
+                                          childData.access = data.access;
+                                          tree.updateItem(child.id, childData);
+                                       }
+                                    });
+                                    tree.unblockEvent();
+                                 } else {
+                                    var parentBranch = tree.getParentId(id);
+                                    var parentData = tree.getItem(parentBranch);
+                                    if (parentData) {
+                                       if (parentData.access == "0") {
+                                          parentData.access = "2";
+                                          tree.updateItem(
+                                             parentBranch,
+                                             parentData
+                                          );
+                                       }
+                                    }
+                                 }
                               }
                            }
-                        });
+                        };
+                        */
 
-                        // Render the root page
-                        self.renderPage(self.rootPage);
-                     },
+                     var newRolePopup = {
+                        view: "popup",
+                        id: "role_popup_" + this.containerDomID,
+                        position: "center",
+                        height: 250,
+                        width: 350,
+                        modal: true,
+                        body: {
+                           rows: [
+                              {
+                                 view: "toolbar",
+                                 id: "myToolbar",
+                                 css: "webix_dark",
+                                 cols: [
+                                    {
+                                       view: "label",
+                                       label: "Add Role",
+                                       align: "center"
+                                    }
+                                 ]
+                              },
+                              {
+                                 view: "form",
+                                 elements: [
+                                    /* We are not managing users yet so take this out
+                                       {
+                                         view: "text",
+                                         label: "Create new",
+                                         labelWidth: 90
+                                       },
+                                       {
+                                         view: "label",
+                                         label: "- or -",
+                                         align: "center"
+                                       },*/
+                                    {
+                                       view: "combo",
+                                       label: "",
+                                       id: "role_popup_options_" + this.containerDomID,
+                                       placeholder: "Choose role",
+                                       options: []
+                                    },
+                                    {
+                                       cols: [
+                                          {
+                                             view: "button",
+                                             value: "Cancel",
+                                             click: () => {
+                                                $$("role_popup_" + this.containerDomID).hide();
+                                             }
+                                          },
+                                          {
+                                             view: "button",
+                                             value: "Add",
+                                             css: "webix_primary",
+                                             click: () => {
+                                                var role = $$("role_popup_options_" + this.containerDomID).getValue();
 
-                     renderPage: function(page) {
-                        var self = this,
-                           pageDomId = this.getPageDomID(page.id);
+                                                $$("amp_accordion_" + this.containerDomID).config.roles.push(role);
 
-                        var component = page.component(self.App);
-                        var ui = component.ui;
+                                                var tree = {
+                                                   id: "linetree_" + this.containerDomID + "_" + role,
+                                                   view: "edittree",
+                                                   type: "lineTree",
+                                                   editable: true,
+                                                   editor: "combo",
+                                                   editValue: "access",
+                                                   threeState: true,
+                                                   template: (obj, common) => {
+                                                      var treeOptions = $$("linetree_" + this.containerDomID + "_" + role).config.options;
+                                                      var option = treeOptions.find((o) => o.id === obj.access);
+                                                      var color = "#ff4938";
+                                                      var icon = "lock";
+                                                      if (option.id == "0") {
+                                                         color = "#ff4938";
+                                                         icon = "lock";
+                                                      } else if (option.id == "1") {
+                                                         color = "#FFAB00";
+                                                         icon = "eye";
+                                                      } else if (option.id == "2") {
+                                                         color = "#00C853";
+                                                         icon = "pencil";
+                                                      }
+                                                      return (
+                                                         `
+                                                           <span class="accessLevel">
+                                                             <span class="fa-stack">
+                                                               <i style="color: ${color};" class="fa fa-circle fa-stack-2x"></i>
+                                                               <i class="fa fa-${icon} fa-stack-1x fa-inverse"></i>
+                                                             </span>` +
+                                                         common.icon(obj, common) +
+                                                         `<span>${obj.value}</span>
+                                                                <i class="externalLink fa fa-external-link"></i>
+                                                              </span>`
+                                                      );
+                                                   },
+                                                   options: accessLevels,
+                                                   data: webix.copy(smalltreedata),
+                                                   onClick: {
+                                                      externalLink: function(event, column, target) {
+                                                         webix.message("Jump to this view.");
+                                                         return false;
+                                                      }
+                                                   },
+                                                   on: {
+                                                      onDataUpdate: (id, data, old) => {
+                                                         var tree = $$("linetree_" + this.containerDomID + "_" + role);
+                                                         if (data.access == "0") {
+                                                            tree.blockEvent();
+                                                            tree.data.eachSubItem(id, (child) => {
+                                                               var childData = tree.getItem(child.id);
+                                                               if (childData.access != data.access) {
+                                                                  childData.access = data.access;
+                                                                  tree.updateItem(child.id, childData);
+                                                               }
+                                                            });
+                                                            tree.unblockEvent();
+                                                         } else {
+                                                            var parentBranch = tree.getParentId(id);
+                                                            var parentData = tree.getItem(parentBranch);
+                                                            if (parentData) {
+                                                               if (parentData.access == "0") {
+                                                                  parentData.access = "2";
+                                                                  tree.updateItem(parentBranch, parentData);
+                                                               }
+                                                            }
+                                                         }
+                                                      }
+                                                   }
+                                                };
 
-                        // Keep the page component
-                        self.pageComponents[page.id] = component;
+                                                var newAccordionItem = {
+                                                   view: "accordionitem",
+                                                   header: $$("role_popup_options_" + this.containerDomID).getText(),
+                                                   body: {
+                                                      type: "clean",
+                                                      rows: [tree, manageUsers]
+                                                   },
+                                                   height: 430
+                                                };
 
-                        // Define page id to be batch id of webix.multiview
-                        ui.batch = page.id;
+                                                $$("amp_accordion_" + this.containerDomID).addView(newAccordionItem, 0);
 
-                        if (
-                           parseInt(page.settings.pageWidth) > 0 &&
-                           parseInt(page.settings.fixedPageWidth) == 1
-                        ) {
-                           var parentContainer = self.element.parent()[0];
-                           parentContainer.style.width =
-                              parseInt(page.settings.pageWidth) + "px";
-                           parentContainer.style.margin = "0 auto";
-                           parentContainer.classList.add(
-                              page.settings.pageBackground
-                           );
+                                                var index = 0;
+
+                                                $$("amp_accordion_" + this.containerDomID)
+                                                   .getChildViews()
+                                                   .forEach((ai) => {
+                                                      if (index == 0) {
+                                                         index++;
+                                                      } else {
+                                                         ai.collapse();
+                                                         index++;
+                                                      }
+                                                   });
+
+                                                $$("role_popup_" + this.containerDomID).hide();
+                                             }
+                                          }
+                                       ]
+                                    }
+                                 ]
+                              }
+                           ]
                         }
+                     };
 
-                        switch (page.settings.type) {
-                           case "popup":
-                              var popupTemplate = {
-                                 view: "window",
-                                 id: pageDomId,
-                                 modal: true,
-                                 position: "center",
-                                 resize: true,
-                                 width:
-                                    parseInt(page.settings.popupWidth) || 700,
-                                 height:
-                                    parseInt(page.settings.popupHeight) + 44 ||
-                                    450,
-                                 css: "ab-main-container",
-                                 head: {
+                     /* This is the sample UI for managing users we decided not to implement this yet
+                        var manageUsersPopup = {
+                           view: "popup",
+                           id: "user_popup_" + this.containerDomID,
+                           position: "center",
+                           height: 250,
+                           width: 350,
+                           modal: true,
+                           body: {
+                              rows: [
+                                 {
                                     view: "toolbar",
+                                    id: "myToolbar",
                                     css: "webix_dark",
                                     cols: [
                                        {
                                           view: "label",
-                                          label: page.label,
-                                          css: "modal_title",
+                                          label: "Manage Users",
                                           align: "center"
-                                       },
-                                       {
-                                          view: "button",
-                                          label: "Close",
-                                          autowidth: true,
-                                          align: "center",
-                                          click: function() {
-                                             var popup = this.getTopParentView();
-                                             popup.hide();
-                                          }
                                        }
                                     ]
                                  },
-                                 body: {
-                                    view: "scrollview",
-                                    scroll: true,
-                                    body: ui
+                                 {
+                                    view: "form",
+                                    elements: [
+                                       {
+                                          view: "multiselect",
+                                          label: "Participant",
+                                          labelWidth: 100,
+                                          options: [
+                                             {
+                                                id: 1,
+                                                value: "Alex Brown"
+                                             },
+                                             {
+                                                id: 2,
+                                                value: "Dan Simons"
+                                             },
+                                             {
+                                                id: 3,
+                                                value: "Gron Alanski"
+                                             },
+                                             {
+                                                id: 4,
+                                                value: "Dan Alanski"
+                                             }
+                                          ],
+                                          value: "1,4"
+                                       },
+                                       {
+                                          cols: [
+                                             {
+                                                view: "button",
+                                                value: "Cancel",
+                                                click: () => {
+                                                   $$(
+                                                      "user_popup_" +
+                                                         this.containerDomID
+                                                   ).hide();
+                                                }
+                                             },
+                                             {
+                                                view: "button",
+                                                value: "Save",
+                                                css: "webix_primary",
+                                                click: () => {
+                                                   $$(
+                                                      "user_popup_" +
+                                                         this.containerDomID
+                                                   ).hide();
+                                                }
+                                             }
+                                          ]
+                                       }
+                                    ]
+                                 }
+                              ]
+                           }
+                        };
+                        */
+
+                     var manageUsers = {
+                        rows: [
+                           {
+                              height: 10
+                           },
+                           {
+                              cols: [
+                                 {
+                                    width: 10
+                                 },
+                                 {
+                                    view: "button",
+                                    type: "icon",
+                                    icon: "fa fa-trash",
+                                    css: "webix_danger_inverse",
+                                    label: "Remove",
+                                    click: function() {
+                                       webix.confirm("Remove role from app?");
+                                    }
+                                 },
+                                 {
+                                    width: 10
+                                 }
+                                 /* We are not managing users yet
+                                    {
+                                      view: "button",
+                                      type: "icon",
+                                      icon: "fa fa-cog",
+                                      css: "webix_primary",
+                                      label: "Manage Users",
+                                      click: function() {
+                                        webix.ui(manageUsersPopup).show();
+                                      }
+                                    }
+                                    */
+                              ]
+                           },
+                           {
+                              height: 10
+                           }
+                        ]
+                     };
+
+                     /*
+                        var treeAccordionItem = {
+                           view: "accordionitem",
+                           header: "Bookkeeper",
+                           body: {
+                              type: "clean",
+                              rows: [tree1, manageUsers]
+                           },
+                           height: 430
+                        };
+                        */
+
+                     var accessLevelManager = {
+                        view: "scrollview",
+                        css: "lightgray ab_amp",
+                        body: {
+                           rows: [
+                              {
+                                 view: "accordion",
+                                 id: "amp_accordion_" + this.containerDomID,
+                                 roles: [],
+                                 css: "webix_dark",
+                                 rows: []
+                              },
+                              {
+                                 height: 10
+                              },
+                              {},
+                              {
+                                 cols: [
+                                    {
+                                       width: 10
+                                    },
+                                    {
+                                       view: "button",
+                                       type: "icon",
+                                       icon: "fa fa-plus",
+                                       label: "Add Role",
+                                       css: "webix_primary",
+                                       click: () => {
+                                          webix.ui(newRolePopup).show();
+
+                                          var roles = this.roles.filter((f) => {
+                                             return $$("amp_accordion_" + this.containerDomID).config.roles.indexOf(f.id) == -1;
+                                          });
+
+                                          $$("role_popup_options_" + this.containerDomID).define("options", roles);
+                                          $$("role_popup_options_" + this.containerDomID).refresh();
+                                       }
+                                    },
+                                    {
+                                       width: 10
+                                    }
+                                 ]
+                              },
+                              {
+                                 height: 10
+                              }
+                           ]
+                        }
+                     };
+
+                     webix.ui({
+                        view: "window",
+                        css: "ampWindow",
+                        id: "accessManager_" + this.containerDomID,
+                        position: function(state) {
+                           state.left = state.maxWidth - 350; // fixed values
+                           state.top = 0;
+                           state.width = 350; // relative values
+                           state.height = state.maxHeight;
+                        },
+                        //modal: true,
+                        head: {
+                           view: "toolbar",
+                           css: "webix_dark",
+                           cols: [
+                              {
+                                 width: 17
+                              },
+                              {
+                                 id: "taskTitle",
+                                 view: "label",
+                                 label: "Access Manager"
+                              },
+                              {
+                                 view: "button",
+                                 autowidth: true,
+                                 type: "icon",
+                                 icon: "nomargin fa fa-times",
+                                 click: () => {
+                                    $$("accessManager_" + this.containerDomID).hide();
+                                 }
+                              }
+                           ]
+                        },
+                        body: accessLevelManager
+                     });
+
+                     webix.ready(function() {
+                        webix.protoUI(
+                           {
+                              name: "edittree"
+                           },
+                           webix.EditAbility,
+                           webix.ui.tree
+                        );
+                     });
+                  },
+
+                  initDOM: function() {
+                     // console.log('... creating ABLiveTool <div> ');
+                     var css = "background-color: #fff !important; font-size: 30px; line-height: 80px; padding-top: 160px; text-align: center; width: 100%;";
+
+                     this.element.html(
+                        `<div id="${this.containerDomID}">
+                              <div style="${css}" class="ab-loading">
+                                 <i class="fa fa-refresh fa-spin fa-3x fa-fw"></i><br/>Loading&#8230;
+                              </div>
+                           </div>
+                           <div id="ampTree_${this.containerDomID}"></div>
+                           <div class="amp" onclick="$$('accessManager_${this.containerDomID}').show();">
+                              <i class="fa fa-fw fa-unlock fa-2x fa-inverse"></i>
+                              <i class="fa fa-fw fa-lock fa-2x fa-inverse"></i>
+                              Access Management
+                           </div>`
+                     );
+
+                     // this.element.html(
+                     // 	('<div id="#domID#"></div>' +
+                     // 		'<i id="#domID#-reload-button" class="fa fa-refresh ab-reload-page-button" aria-hidden="true"></i>')
+                     // 		.replace(/#domID#/g, this.containerDomID));
+                  },
+
+                  initModels: function() {
+                     this.Models = {};
+                     this.Models.ABApplication = OP.Model.get("opstools.BuildApp.ABApplication");
+                  },
+
+                  initPage: function() {
+                     var self = this;
+
+                     // Wait until the tool's area has been shown
+                     if (!self.activated) return;
+
+                     self.renderPageContainer();
+
+                     self.initEvents(self.rootPage);
+
+                     webix.ready(function() {
+                        self.showPage();
+
+                        self.resize(self.height || 600);
+                     });
+                  },
+
+                  initRoles: function() {
+                     if (this.roles && this.roles.length) return false;
+
+                     var self = this;
+                     this.ABRole = OP.Model.get("opstools.BuildApp.ABRole");
+
+                     var __Roles = [];
+
+                     this.ABRole.findAll()
+                        .then((list) => {
+                           // make sure they are all translated.
+                           list.data.each(function(l) {
+                              self.translate(l, l, ["name"]);
+                              __Roles.push({
+                                 id: l.uuid,
+                                 value: l.name
+                              });
+                           });
+                           this.roles = __Roles;
+                        })
+                        .catch((err) => {
+                           AD.error.log("ABProcessParticipantCore: Error loading Roles", {
+                              error: err
+                           });
+                        });
+                  },
+
+                  menuChange: function(areaKey, toolKey) {
+                     var self = this;
+
+                     // Get current area key
+                     if (areaKey == null) {
+                        let currAreaElem = document.querySelector("#op-list-menu > .op-container.active");
+                        if (!currAreaElem) return;
+
+                        areaKey = currAreaElem.getAttribute("area");
+                     }
+
+                     // Get current tool key
+                     if (toolKey == null) {
+                        // get active tool element
+                        let currToolElem = document.querySelector('#op-masthead-sublinks [area="{area}"] .active'.replace("{area}", areaKey));
+                        if (!currToolElem) return;
+
+                        toolKey = currToolElem.getAttribute("op-tool-id");
+                     }
+
+                     // Check it is our page
+                     if (self.options.areaKey == areaKey && self.options.toolKey == toolKey) {
+                        if (!self.activated) {
+                           self.activated = true;
+
+                           self.getData();
+                        } else {
+                           self.showPage();
+                        }
+                     }
+                  },
+
+                  getData: function() {
+                     var self = this,
+                        q = $.Deferred();
+
+                     self.data = {};
+                     async.series(
+                        [
+                           // Show loading spinners
+                           function(next) {
+                              var areaMenuItem = document.body.querySelector('[class="op-container"][area="' + self.options.areaKey + '"]');
+                              if (areaMenuItem) {
+                                 areaMenuItem.insertAdjacentHTML("beforeend", '<span class="icon ' + self.options.areaKey + '_appLoading"><i class="fa fa-refresh fa-spin"></i></span>');
+                              }
+
+                              next();
+                           },
+                           // Get application data
+                           function(next) {
+                              ABApplication.livepage(self.options.app, self.options.page)
+                                 .catch(console.error)
+                                 .then(function(result) {
+                                    self.data.application = result;
+
+                                    // Store the root page
+                                    if (self.rootPage == null) self.rootPage = self.data.application.pages((p) => p.id == self.options.page)[0];
+
+                                    next();
+                                 }, next);
+                           },
+
+                           // Bind objects and queries from data views
+                           function(next) {
+                              if (!self.data.application) return next();
+
+                              let storeObject = (datasource) => {
+                                 if (self.data.application.objects((o) => o.id == datasource.id).length < 1) {
+                                    self.data.application._objects.push(datasource);
                                  }
                               };
 
-                              if ($$(pageDomId)) {
-                                 // Destroy old popup
-                                 if ($$(pageDomId).config.view == "window") {
-                                    $$(pageDomId).destructor();
-                                 }
-                                 // Change page type (Page -> Popup)
-                                 else if ($$(self.containerDomID)) {
-                                    $$(self.containerDomID).removeView(
-                                       pageDomId
-                                    );
-                                 }
-                              }
+                              self.data.application.datacollections().forEach((dc) => {
+                                 if (!dc) return;
 
-                              // Create popup
-                              webix.ui(popupTemplate).hide();
+                                 dc.init();
 
-                              break;
-                           case "page":
-                           default:
-                              // console.log(ui);
-                              if ($$(pageDomId)) {
-                                 // Change page type (Popup -> Page)
-                                 if ($$(pageDomId).config.view == "window") {
-                                    $$(pageDomId).destructor();
+                                 let datasource = dc.datasource;
+                                 if (!datasource) return;
 
-                                    $$(self.containerDomID).addView(ui);
+                                 // Queries
+                                 if (dc.settings && dc.settings.isQuery && self.data.application.queries((q) => q.id == datasource.id).length < 1) {
+                                    self.data.application._queries.push(datasource);
+
+                                    datasource.objects().forEach((obj) => {
+                                       storeObject(obj);
+                                    });
                                  }
-                                 // Rebuild
+                                 // Objects
                                  else {
-                                    webix.ui(ui, $$(pageDomId));
+                                    storeObject(datasource);
                                  }
-                              }
-                              // Add to multi-view
-                              else if ($$(self.containerDomID))
-                                 $$(self.containerDomID).addView(ui);
+                              });
 
-                              break;
-                        }
+                              next();
+                           },
 
-                        // handle events
-                        self.initEvents(page);
+                           function(next) {
+                              if (self.rootPage == null) return next();
 
-                        // Render children pages
-                        if (page.pages) {
-                           (page.pages() || []).forEach(function(subpage) {
-                              self.renderPage(subpage);
-                           });
-                        }
+                              self.initPage();
 
-                        // Initial UI components
-                        setTimeout(function() {
-                           component.init();
-                        }, 50);
-                     },
+                              // let areaKey = 'ab-' + self.data.application.name.trim();
+                              // areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
 
-                     /**
-                      * @param ABPage page
-                      *      Optional page. Default is to show
-                      *      the root page.
-                      */
-                     showPage: function(pageId) {
-                        var self = this;
-
-                        // if pageId is not passed we will clear the peviousPageId so it won't load, this fixes a bug with the popup pages
-                        if (pageId == null) {
-                           self.previousPageId = null;
-                        }
-
-                        pageId =
-                           pageId ||
-                           (self.previousPageId == self.activePageId
-                              ? null
-                              : self.previousPageId) ||
-                           (self.rootPage ? self.rootPage.id : null);
-
-                        if (pageId == null) return;
-
-                        // Hide page popup
-                        var activePageDomId = self.getPageDomID(
-                           self.activePageId
-                        );
-                        if ($$(activePageDomId) && $$(activePageDomId).hide)
-                           $$(activePageDomId).hide();
-
-                        self.previousPageId = self.activePageId;
-                        self.activePageId = pageId;
-
-                        // Show page popup
-                        var pageDomId = self.getPageDomID(pageId);
-                        if ($$(pageDomId)) $$(pageDomId).show();
-
-                        // Question: should we do a resize() after all the components are rendered?
-
-                        // Change page by batch id
-                        var childViews = $$(
-                              self.containerDomID
-                           ).getChildViews(),
-                           batchExist = childViews.filter(function(v) {
-                              return v.config.batch == pageId;
-                           })[0];
-                        if (batchExist)
-                           $$(self.containerDomID).showBatch(pageId);
-
-                        // Trigger .onShow to the component
-                        var loadPage = setInterval(function() {
-                           // console.log("loading page");
-
-                           if (
-                              self.pageComponents[pageId] &&
-                              self.pageComponents[pageId].onShow
-                           ) {
-                              // console.log("canceling load");
-                              clearInterval(loadPage);
-                              for (const element of document
-                                 .getElementById(self.containerDomID)
-                                 .getElementsByClassName("ab-loading")) {
-                                 element.style.display = "none";
-                              }
-                              self.pageComponents[pageId].onShow();
-                           }
-                        }, 60);
-                     },
-
-                     initEvents(page) {
-                        var self = this;
-
-                        if (page == null) return;
-
-                        // { pageId: eventId, ..., pageIdn: eventIdn }
-                        self.changePageEventIds = self.changePageEventIds || {};
-
-                        if (!self.changePageEventIds[page.id]) {
-                           self.changePageEventIds[page.id] = page.on(
-                              "changePage",
-                              function(pageId) {
-                                 self.showPage(pageId);
-                              }
-                           );
-                        }
-
-                        let needToReloadPage = () => {
-                           // clear the cache of events
-                           self.changePageEventIds = {};
-
-                           // remove stored root page
-                           // it will re-render when this page will be triggered
-                           delete self.rootPage;
-
-                           self.activated = false;
-
-                           self.initDOM();
-                        };
-
-                        if (!self.updatePageEventId && page.isRoot()) {
-                           /**
-                            * @event ab.interface.update
-                            * This event is triggered when the root page is updated
-                            *
-                            * @param data.rootPage {uuid} - id of the root page
-                            */
-                           self.updatePageEventId = AD.comm.hub.subscribe(
-                              "ab.interface.update",
-                              function(msg, data) {
-                                 if (page.id == data.rootPageId) {
-                                    needToReloadPage();
-                                 }
-                              }
-                           );
-                        }
-
-                        if (
-                           !self.updateDatacollectionEventId &&
-                           page.isRoot()
-                        ) {
-                           /**
-                            * @event ab.datacollection.update
-                            * This event is triggered when the datacollection is updated
-                            *
-                            * @param data.datacollectionId {uuid} - id of the data view
-                            */
-                           self.updateDatacollectionEventId = AD.comm.hub.subscribe(
-                              "ab.datacollection.update",
-                              function(msg, data) {
-                                 let updatedDC = self.data.application.datacollections(
-                                    (dc) => dc.id == data.datacollectionId
-                                 )[0];
-                                 if (updatedDC) {
-                                    needToReloadPage();
-                                 }
-                              }
-                           );
-                        }
-                     },
-
-                     adjust: function(containerID) {
-                        if ($$(containerID)) {
-                           // $$(containerID).getTopParentView().resizeChildren();
-                           $$(containerID).adjust();
-                        }
-                     },
-
-                     resize: function(height) {
-                        var _this = this;
-
-                        // NOTE: resize() calls from the OpsPortal OPView element
-                        // .resize({ height:value });
-                        if (height) height = height.height || height;
-                        if (
-                           !$$(this.containerDomID) ||
-                           !$(this.element).is(":visible")
-                        )
-                           return;
-
-                        var width = this.element.width();
-                        if (!width) {
-                           this.element.parents().each(function(index, elm) {
-                              if ($(elm).width() > width)
-                                 width = $(elm).width();
-                           });
-                        }
-
-                        // QUESTION: where does self.height come from?  is this a webix setting?
-                        if (height == null && self.height == null) return;
-                        if (height == null) height = self.height;
-
-                        // track the last set of height/width values:
-                        this.resizeValues.height = height;
-                        this.resizeValues.width = width;
-                        // console.log('ABLiveTool.resize()');
-
-                        // this debounce method seems to cut down our resize()
-                        // operations to 1/3
-                        if (!this.debounceResize) {
-                           _this.debounceResize = true;
-
-                           setTimeout(function() {
-                              // console.log('ABLiveTool.debouncedResize()');
-                              if (_this.resizeValues.width > 0)
-                                 $$(_this.containerDomID).define(
-                                    "width",
-                                    width
-                                 );
-
-                              if (_this.resizeValues.height > 0)
-                                 $$(_this.containerDomID).define(
-                                    "height",
-                                    height
-                                 );
-
-                              $$(_this.containerDomID).resize();
-
-                              /// REFACTOR NOTES:
-                              // here is an example where we are not keeping strict boundries about which
-                              // object is supposed to know and do what.
-                              //
-                              // here we have a UI Object (ABLiveTool), that is trying to update the display
-                              // of a current Page (a View).
-                              //
-                              // This UI Object knows all the details about how a Page (View) should display
-                              // itself:  which .domID  it is attached to, that it needs to .adjust() itself,
-                              // and most importantly, that a page consists of components, and how it must
-                              // step through each component and .resize() each one of them.
-                              //
-                              // The problem is, now that we have a TabComponent that also has Pages(Views) as
-                              // components, this code must also be reduplicated there.  That is a bad design
-                              // pattern.
-                              //
-                              // Instead, our Page object should be responsible for itself.  It knows that it is
-                              // comprised of components, and that when a Page.resize() is requested, the Page
-                              // should be calling it's components to .resize() themselves.
-                              //
-                              // A UI Object like this, should only know that it is displaying a Page object.
-                              // We can call:
-                              // 		Page.show(divID);
-                              // 		Page.resize();
-                              // 		Page.remove();
-                              //
-                              // And that's all a UI object should be allowed to know.
-                              //
-                              // This UI Object can also know about it's outer Container, and do the resizing
-                              // of that object.  But to display and update a Page, we should only be limited
-                              // to the above interface.
-                              //
-                              // If this were the case, the TabComponent would also be able to reuse those same
-                              // methods on the Pages that it is managing.
-                              //
-
-                              // I went ahead and refactored ABPage to have a .resize()
-                              // it is not exactly the right solution, but it is close
-                              // see notes on ABPage.js .resize()
-                              // _this.activePage.resize();
-                              ////  OLD Logic:
-                              //
-                              // // Resize components
-                              // if (_this.activePage && _this.activePage.comInstances) {
-                              // 	for (var key in _this.activePage.comInstances) {
-                              // 		if (_this.activePage.comInstances[key].resize)
-                              // 			_this.activePage.comInstances[key].resize(width, height);
+                              // // If there is a ops-area, it should trigger that ops-area to render page
+                              // // Because 'opsportal.tool.show' and 'opsportal.area.show' are not trigger
+                              // var opsMenus = document.body.querySelectorAll('#op-list-menu > .op-container');
+                              // if (opsMenus.length == 1) {
+                              // 	opsMenus[0].click();
+                              // }
+                              // // If this area is showing
+                              // else {
+                              // 	// TODO: How to get current area ?
+                              // 	var currPanel = document.body.querySelector('#op-masthead-sublinks > ul:not([style*="display:none"]):not([style*="display: none"])');
+                              // 	if (currPanel) {
+                              // 		var currArea = currPanel.getAttribute('area');
+                              // 		if (currArea == areaKey) {
+                              // 			callback(null, { area: areaKey });
+                              // 		}
                               // 	}
                               // }
 
-                              _this.debounceResize = false;
-                           }, 5);
+                              next();
+                           },
+
+                           // Hide loading spinners
+                           function(next) {
+                              // we will remove the loading spinners on the menu now
+                              var opsMenuItem = document.body.querySelectorAll("#op-list-menu > .op-container ." + self.options.areaKey + "_appLoading");
+                              (opsMenuItem || []).forEach((x) => {
+                                 x.remove();
+                              });
+
+                              next();
+                           }
+                        ],
+                        function(err) {
+                           if (err) q.reject(err);
+                           else q.resolve();
                         }
-                     },
+                     );
 
-                     removePage: function(pageId) {
-                        var pageCom = this.pageComponents[pageId];
-                        var pageElemId = pageCom.ui.id;
+                     return q;
+                  },
 
-                        // swtich the page before it will be removed
-                        if (this.activePageId == pageId) {
-                           this.showPage(this.rootPage.id);
-                        }
+                  renderPageContainer: function() {
+                     var self = this;
 
-                        // remove from .multiview
-                        $$(this.containerDomID).removeView(pageElemId);
+                     if (self.rootPage == null) return;
 
-                        // destroy view's modal
-                        if ($$(pageElemId)) $$(pageElemId).destructor();
-                     },
+                     // Clear UI content
+                     var rootDomId = self.getPageDomID(self.rootPage.id);
 
-                     showUpdatingPopup: function() {
-                        let popup = document.createElement("div");
-                        let message = document.createTextNode(
-                           "UI is updating..."
-                        );
+                     // var parentContainer = self.element.parent()[0];
+                     // parentContainer.style.width = "900px";
+                     // parentContainer.style.margin = "0 auto";
 
-                        popup.appendChild(message);
+                     if ($$(rootDomId)) webix.ui({}, $$(rootDomId));
 
-                        let containerDOM = document.getElementById(
-                           this.containerDomID
-                        );
-                        document.body.insertBefore(popup, containerDOM);
-                     },
-
-                     hideUpdatingPopup: function() {
-                        // document.remo
-                     },
-
-                     getPageDomID: function(pageId) {
-                        return this.unique(
-                           "ab_live_page",
-                           this.options.app,
-                           pageId
-                        );
-                     },
-
-                     unique: function() {
-                        var args = Array.prototype.slice.call(arguments); // Convert to Array
-                        return args.join("_");
+                     // Create a sub pages container
+                     if ($$(self.containerDomID)) {
+                        $$(self.containerDomID).destructor();
                      }
-                  }); // end AD.Control.extend
-               }); // end steal.import
+                     webix.ui({
+                        view: "multiview",
+                        container: self.containerDomID,
+                        css: "ab-main-container ab-generated-page",
+                        id: self.containerDomID,
+                        cells: [{}],
+                        on: {
+                           onViewChange: function(prevId, nextId) {
+                              self.resize();
+                           }
+                        }
+                     });
+
+                     // Render the root page
+                     self.renderPage(self.rootPage);
+                  },
+
+                  renderPage: function(page) {
+                     var self = this,
+                        pageDomId = this.getPageDomID(page.id);
+
+                     var component = page.component(self.App);
+                     var ui = component.ui;
+
+                     // Keep the page component
+                     self.pageComponents[page.id] = component;
+
+                     // Define page id to be batch id of webix.multiview
+                     ui.batch = page.id;
+
+                     if (parseInt(page.settings.pageWidth) > 0 && parseInt(page.settings.fixedPageWidth) == 1) {
+                        var parentContainer = self.element.parent()[0];
+                        parentContainer.style.width = parseInt(page.settings.pageWidth) + "px";
+                        parentContainer.style.margin = "0 auto";
+                        parentContainer.classList.add(page.settings.pageBackground);
+                     }
+
+                     switch (page.settings.type) {
+                        case "popup":
+                           var popupTemplate = {
+                              view: "window",
+                              id: pageDomId,
+                              modal: true,
+                              position: "center",
+                              resize: true,
+                              width: parseInt(page.settings.popupWidth) || 700,
+                              height: parseInt(page.settings.popupHeight) + 44 || 450,
+                              css: "ab-main-container",
+                              head: {
+                                 view: "toolbar",
+                                 css: "webix_dark",
+                                 cols: [
+                                    {
+                                       view: "label",
+                                       label: page.label,
+                                       css: "modal_title",
+                                       align: "center"
+                                    },
+                                    {
+                                       view: "button",
+                                       label: "Close",
+                                       autowidth: true,
+                                       align: "center",
+                                       click: function() {
+                                          var popup = this.getTopParentView();
+                                          popup.hide();
+                                       }
+                                    }
+                                 ]
+                              },
+                              body: {
+                                 view: "scrollview",
+                                 scroll: true,
+                                 body: ui
+                              }
+                           };
+
+                           if ($$(pageDomId)) {
+                              // Destroy old popup
+                              if ($$(pageDomId).config.view == "window") {
+                                 $$(pageDomId).destructor();
+                              }
+                              // Change page type (Page -> Popup)
+                              else if ($$(self.containerDomID)) {
+                                 $$(self.containerDomID).removeView(pageDomId);
+                              }
+                           }
+
+                           // Create popup
+                           webix.ui(popupTemplate).hide();
+
+                           break;
+                        case "page":
+                        default:
+                           // console.log(ui);
+                           if ($$(pageDomId)) {
+                              // Change page type (Popup -> Page)
+                              if ($$(pageDomId).config.view == "window") {
+                                 $$(pageDomId).destructor();
+
+                                 $$(self.containerDomID).addView(ui);
+                              }
+                              // Rebuild
+                              else {
+                                 webix.ui(ui, $$(pageDomId));
+                              }
+                           }
+                           // Add to multi-view
+                           else if ($$(self.containerDomID)) $$(self.containerDomID).addView(ui);
+
+                           break;
+                     }
+
+                     // handle events
+                     self.initEvents(page);
+
+                     // Render children pages
+                     if (page.pages) {
+                        (page.pages() || []).forEach(function(subpage) {
+                           self.renderPage(subpage);
+                        });
+                     }
+
+                     // Initial UI components
+                     setTimeout(function() {
+                        component.init();
+                     }, 50);
+                  },
+
+                  /**
+                   * @param ABPage page
+                   *      Optional page. Default is to show
+                   *      the root page.
+                   */
+                  showPage: function(pageId) {
+                     var self = this;
+
+                     // if pageId is not passed we will clear the peviousPageId so it won't load, this fixes a bug with the popup pages
+                     if (pageId == null) {
+                        self.previousPageId = null;
+                     }
+
+                     pageId = pageId || (self.previousPageId == self.activePageId ? null : self.previousPageId) || (self.rootPage ? self.rootPage.id : null);
+
+                     if (pageId == null) return;
+
+                     // Hide page popup
+                     var activePageDomId = self.getPageDomID(self.activePageId);
+                     if ($$(activePageDomId) && $$(activePageDomId).hide) $$(activePageDomId).hide();
+
+                     self.previousPageId = self.activePageId;
+                     self.activePageId = pageId;
+
+                     // Show page popup
+                     var pageDomId = self.getPageDomID(pageId);
+                     if ($$(pageDomId)) $$(pageDomId).show();
+
+                     // Question: should we do a resize() after all the components are rendered?
+
+                     // Change page by batch id
+                     var childViews = $$(self.containerDomID).getChildViews(),
+                        batchExist = childViews.filter(function(v) {
+                           return v.config.batch == pageId;
+                        })[0];
+                     if (batchExist) $$(self.containerDomID).showBatch(pageId);
+
+                     // Trigger .onShow to the component
+                     var loadPage = setInterval(function() {
+                        // console.log("loading page");
+
+                        if (self.pageComponents[pageId] && self.pageComponents[pageId].onShow) {
+                           // console.log("canceling load");
+                           clearInterval(loadPage);
+                           for (const element of document.getElementById(self.containerDomID).getElementsByClassName("ab-loading")) {
+                              element.style.display = "none";
+                           }
+                           self.pageComponents[pageId].onShow();
+                        }
+                     }, 60);
+                  },
+
+                  initEvents(page) {
+                     var self = this;
+
+                     if (page == null) return;
+
+                     // { pageId: eventId, ..., pageIdn: eventIdn }
+                     self.changePageEventIds = self.changePageEventIds || {};
+
+                     if (!self.changePageEventIds[page.id]) {
+                        self.changePageEventIds[page.id] = page.on("changePage", function(pageId) {
+                           self.showPage(pageId);
+                        });
+                     }
+
+                     let needToReloadPage = () => {
+                        // clear the cache of events
+                        self.changePageEventIds = {};
+
+                        // remove stored root page
+                        // it will re-render when this page will be triggered
+                        delete self.rootPage;
+
+                        self.activated = false;
+
+                        self.initDOM();
+                     };
+
+                     if (!self.updatePageEventId && page.isRoot()) {
+                        /**
+                         * @event ab.interface.update
+                         * This event is triggered when the root page is updated
+                         *
+                         * @param data.rootPage {uuid} - id of the root page
+                         */
+                        self.updatePageEventId = AD.comm.hub.subscribe("ab.interface.update", function(msg, data) {
+                           if (page.id == data.rootPageId) {
+                              needToReloadPage();
+                           }
+                        });
+                     }
+
+                     if (!self.updateDatacollectionEventId && page.isRoot()) {
+                        /**
+                         * @event ab.datacollection.update
+                         * This event is triggered when the datacollection is updated
+                         *
+                         * @param data.datacollectionId {uuid} - id of the data view
+                         */
+                        self.updateDatacollectionEventId = AD.comm.hub.subscribe("ab.datacollection.update", function(msg, data) {
+                           let updatedDC = self.data.application.datacollections((dc) => dc.id == data.datacollectionId)[0];
+                           if (updatedDC) {
+                              needToReloadPage();
+                           }
+                        });
+                     }
+                  },
+
+                  adjust: function(containerID) {
+                     if ($$(containerID)) {
+                        // $$(containerID).getTopParentView().resizeChildren();
+                        $$(containerID).adjust();
+                     }
+                  },
+
+                  resize: function(height) {
+                     var _this = this;
+
+                     // NOTE: resize() calls from the OpsPortal OPView element
+                     // .resize({ height:value });
+                     if (height) height = height.height || height;
+                     if (!$$(this.containerDomID) || !$(this.element).is(":visible")) return;
+
+                     var width = this.element.width();
+                     if (!width) {
+                        this.element.parents().each(function(index, elm) {
+                           if ($(elm).width() > width) width = $(elm).width();
+                        });
+                     }
+
+                     // QUESTION: where does self.height come from?  is this a webix setting?
+                     if (height == null && self.height == null) return;
+                     if (height == null) height = self.height;
+
+                     // track the last set of height/width values:
+                     this.resizeValues.height = height;
+                     this.resizeValues.width = width;
+                     // console.log('ABLiveTool.resize()');
+
+                     // this debounce method seems to cut down our resize()
+                     // operations to 1/3
+                     if (!this.debounceResize) {
+                        _this.debounceResize = true;
+
+                        setTimeout(function() {
+                           // console.log('ABLiveTool.debouncedResize()');
+                           if (_this.resizeValues.width > 0) $$(_this.containerDomID).define("width", width);
+
+                           if (_this.resizeValues.height > 0) $$(_this.containerDomID).define("height", height);
+
+                           $$(_this.containerDomID).resize();
+
+                           /// REFACTOR NOTES:
+                           // here is an example where we are not keeping strict boundries about which
+                           // object is supposed to know and do what.
+                           //
+                           // here we have a UI Object (ABLiveTool), that is trying to update the display
+                           // of a current Page (a View).
+                           //
+                           // This UI Object knows all the details about how a Page (View) should display
+                           // itself:  which .domID  it is attached to, that it needs to .adjust() itself,
+                           // and most importantly, that a page consists of components, and how it must
+                           // step through each component and .resize() each one of them.
+                           //
+                           // The problem is, now that we have a TabComponent that also has Pages(Views) as
+                           // components, this code must also be reduplicated there.  That is a bad design
+                           // pattern.
+                           //
+                           // Instead, our Page object should be responsible for itself.  It knows that it is
+                           // comprised of components, and that when a Page.resize() is requested, the Page
+                           // should be calling it's components to .resize() themselves.
+                           //
+                           // A UI Object like this, should only know that it is displaying a Page object.
+                           // We can call:
+                           // 		Page.show(divID);
+                           // 		Page.resize();
+                           // 		Page.remove();
+                           //
+                           // And that's all a UI object should be allowed to know.
+                           //
+                           // This UI Object can also know about it's outer Container, and do the resizing
+                           // of that object.  But to display and update a Page, we should only be limited
+                           // to the above interface.
+                           //
+                           // If this were the case, the TabComponent would also be able to reuse those same
+                           // methods on the Pages that it is managing.
+                           //
+
+                           // I went ahead and refactored ABPage to have a .resize()
+                           // it is not exactly the right solution, but it is close
+                           // see notes on ABPage.js .resize()
+                           // _this.activePage.resize();
+                           ////  OLD Logic:
+                           //
+                           // // Resize components
+                           // if (_this.activePage && _this.activePage.comInstances) {
+                           // 	for (var key in _this.activePage.comInstances) {
+                           // 		if (_this.activePage.comInstances[key].resize)
+                           // 			_this.activePage.comInstances[key].resize(width, height);
+                           // 	}
+                           // }
+
+                           _this.debounceResize = false;
+                        }, 5);
+                     }
+                  },
+
+                  removePage: function(pageId) {
+                     var pageCom = this.pageComponents[pageId];
+                     var pageElemId = pageCom.ui.id;
+
+                     // swtich the page before it will be removed
+                     if (this.activePageId == pageId) {
+                        this.showPage(this.rootPage.id);
+                     }
+
+                     // remove from .multiview
+                     $$(this.containerDomID).removeView(pageElemId);
+
+                     // destroy view's modal
+                     if ($$(pageElemId)) $$(pageElemId).destructor();
+                  },
+
+                  showUpdatingPopup: function() {
+                     let popup = document.createElement("div");
+                     let message = document.createTextNode("UI is updating...");
+
+                     popup.appendChild(message);
+
+                     let containerDOM = document.getElementById(this.containerDomID);
+                     document.body.insertBefore(popup, containerDOM);
+                  },
+
+                  hideUpdatingPopup: function() {
+                     // document.remo
+                  },
+
+                  translate: function(obj, json, fields, languageCode = null) {
+                     json = json || {};
+                     fields = fields || [];
+
+                     if (!json.translations) {
+                        json.translations = [];
+                     }
+
+                     if (typeof json.translations == "string") {
+                        json.translations = JSON.parse(json.translations);
+                     }
+
+                     var currLanguage = languageCode || AD.lang.currentLanguage;
+
+                     if (fields && fields.length > 0) {
+                        // [fix] if no matching translation is in our json.translations
+                        //     object, then just use the 1st one.
+                        var first = null; // the first translation entry encountered
+                        var found = false; // did we find a matching translation?
+
+                        json.translations.forEach(function(t) {
+                           if (!first) first = t;
+
+                           // find the translation for the current language code
+                           if (t.language_code == currLanguage) {
+                              found = true;
+
+                              // copy each field to the root object
+                              fields.forEach(function(f) {
+                                 if (t[f] != null) obj[f] = t[f];
+
+                                 obj[f] = t[f] || ""; // default to '' if not found.
+                              });
+                           }
+                        });
+
+                        // if !found, then use the 1st entry we did find.  prepend desired
+                        // [language_code] to each of the fields.
+                        if (!found && first) {
+                           // copy each field to the root object
+                           fields.forEach(function(f) {
+                              if (first[f] != null && first[f] != "") obj[f] = `[${currLanguage}]${first[f]}`;
+                              else obj[f] = ""; // default to '' if not found.
+                           });
+                        }
+                     }
+                  },
+
+                  getPageDomID: function(pageId) {
+                     return this.unique("ab_live_page", this.options.app, pageId);
+                  },
+
+                  unique: function() {
+                     var args = Array.prototype.slice.call(arguments); // Convert to Array
+                     return args.join("_");
+                  }
+               }); // end AD.Control.extend
+            }); // end steal.import
          });
       }); // end System.import
    }

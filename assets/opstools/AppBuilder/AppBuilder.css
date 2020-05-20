@@ -160,6 +160,9 @@ label {
 .webix_dark .webix_icon_btn {
 	opacity: 0.4;
 }
+.ab_amp .webix_dark .webix_icon_btn {
+   opacity: 1;
+}
 .webix_el_button button {
 	/* font-size: 14px; */
 }
@@ -231,6 +234,10 @@ label {
 .webix_dark .webix_view {
 	background-color: transparent;
 	color: white;
+}
+.ab_amp .webix_dark .webix_view {
+	background-color: white;
+	color: inherit;
 }
 .webix_dark .webix_list-x .webix_list_item {
 	border-right: 0;
@@ -1032,4 +1039,64 @@ label {
 }
 .no-margin {
    margin: 0 !important;
+}
+.ab_amp .fa-stack { font-size: 0.65em; }
+.ab_amp i { vertical-align: middle; }
+.ab_amp.lightgray { background: #EEE }
+.ab_amp .webixLineTree:hover { cursor: pointer; }
+.ab_amp .accessLevel .fa-stack { vertical-align: top; margin-top: 3px; }
+.ab_amp .accessLevel:hover .fa-stack { transform: scale(1.25, 1.25) }
+.ab_amp .externalLink { color: #CCC; float: right; margin-top: 5px; }
+.ab_amp .externalLink:hover { color: #666 !important; }
+.ab_amp .webix_accordionitem .webix_accordionitem_button, .ab_amp .webix_accordionitem.collapsed .webix_accordionitem_button { float: left !important }
+.ab_amp .webix_accordionitem .webix_accordionitem_button { transform: rotate(180deg); }
+.ab_amp .webix_accordionitem.collapsed .webix_accordionitem_button { transform: rotate(-90deg); }
+.ab_amp .webix_accordionitem_header { background-color: #1CA1C1 !important }
+.ab_amp .webix_accordionitem_header.collapsed { background-color: white !important }
+.ab_amp .webix_danger_inverse button { border: 1px solid #ff4938; color: #ff4938 }
+.ab_amp .webix_danger_inverse .webix_icon_btn { color: #ff4938 }
+.ab_amp .webix_danger_inverse:hover button { background-color: #ff4938; color: #fff }
+.ab_amp .webix_danger_inverse:hover .webix_icon_btn { color: #fff }
+div.amp {
+   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+   background: rgb(28, 161, 193, 0.4);
+   padding: 5px 0;
+   display: inline-block;
+   right: 0;
+   top: 75px;
+   border-top-left-radius: 10px;
+   border-bottom-left-radius: 10px;
+   color: white;
+   font-size: 16px;
+   transition: 0.25s all;
+   position: absolute;
+   width: 40px;
+   white-space: nowrap;
+   overflow: hidden;
+   height: 32px;
+}
+div.amp:hover {
+   width: 210px !important;
+   cursor: pointer;
+   background: rgb(28, 161, 193) !important;
+}
+div.amp:hover .fa-unlock {
+   display: inline-block !important;
+   margin-right: -5px;
+}
+div.amp:hover .fa-lock {
+   display: none !important;
+}
+div.amp .fa-unlock, div.amp .fa-lock {
+   vertical-align: middle;
+   transform: scale(0.6, 0.6);
+   display: inline-block;
+   margin-top: -6px;
+   margin-right: 0;
+}
+div.amp .fa-unlock {
+   display: none;
+}
+.ampWindow .webix_toolbar.webix_dark {
+   background: #444 !important;
 }
