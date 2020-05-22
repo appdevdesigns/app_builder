@@ -141,7 +141,8 @@ module.exports = class ABField extends ABFieldCore {
                            .hasColumn(tableName, this.columnName)
                            .then((exists) => {
                               next(exists);
-                           });
+                           })
+                           .catch(err);
                      })
                      .catch(err);
                });
@@ -153,12 +154,17 @@ module.exports = class ABField extends ABFieldCore {
                   new Promise((next, err) => {
                      if (!isColumnExists) return next();
 
-                     knex.schema
-                        .table(tableName, (t) => {
+                     knex.schema.table(tableName, (t) => {
                            t.dropColumn(this.columnName);
                         })
                         .then(next)
-                        .catch(err);
+                        .catch((error) => {
+                           if (error.code == "ER_CANT_DROP_FIELD_OR_KEY") {
+                              next();
+                           } else {
+                              err(err);
+                           }
+                        });
                   })
             )
 
@@ -182,7 +188,8 @@ module.exports = class ABField extends ABFieldCore {
                   });
 
                   Promise.all(tasks)
-                     .catch(err)
+                     // .catch(err)
+                     .catch(() => next()) // ignore error of queries
                      .then(() => next());
                });
             })

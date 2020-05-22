@@ -82,6 +82,14 @@ module.exports = function(cb) {
             addSDCObjectLifecycleBeforeCreate
          ],
          (err, data) => {
+            if (err) {
+               if (err.message) {
+                  sails.log.error(
+                     "Error during AppBuilder/config/bootstrap.js"
+                  );
+                  sails.log.error(err.message);
+               }
+            }
             cb(err);
          }
       );

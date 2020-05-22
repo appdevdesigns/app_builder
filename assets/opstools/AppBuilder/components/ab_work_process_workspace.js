@@ -89,6 +89,7 @@ export default class ABWorkProcessWorkspace extends OP.Component {
                            view: "button",
                            label: labels.component.addNew,
                            type: "form",
+                           css: "webix_primary",
                            autowidth: true,
                            click: function() {
                               _logic.addNewProcess();

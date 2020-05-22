@@ -19,6 +19,10 @@ var ids = {
    link1: "ab-link1-field-options",
    link2: "ab-link2-field-options",
 
+   isCustomFK: "ab-is-custom-fk",
+   indexField: "ab-index-field",
+   indexField2: "ab-index-field2",
+
    connectDataPopup: "ab-connect-object-data-popup"
 };
 
@@ -99,30 +103,8 @@ var ABFieldConnectComponent = new ABFieldComponent({
             // height: 140,
             // template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
             on: {
-               onChange: function(newV, oldV) {
-                  if (!newV) {
-                     $$(ids.link1).hide();
-                     $$(ids.link2).hide();
-                  }
-                  if (newV == oldV || newV == "") return;
-                  var selectedObj = this.getList().getItem(newV);
-                  if (selectedObj) {
-                     var selectedObjLabel = selectedObj.value;
-                     $$(ids.fieldLinkVia).setValue(
-                        L(
-                           "ab.dataField.connectObject.selectedObject",
-                           "*<b>#selectedObjLabel#</b> entry."
-                        ).replace("#selectedObjLabel#", selectedObjLabel)
-                     );
-                     $$(ids.fieldLinkVia2).setValue(
-                        L(
-                           "ab.dataField.connectObject.connectWith",
-                           "*Each <b>#selectedObjLabel#</b> entry connects with"
-                        ).replace("#selectedObjLabel#", selectedObjLabel)
-                     );
-                     $$(ids.link1).show();
-                     $$(ids.link2).show();
-                  }
+               onChange: (newV, oldV) => {
+                  ABFieldConnectComponent.logic.selectObjectTo(newV, oldV);
                }
             }
          },
@@ -135,24 +117,8 @@ var ABFieldConnectComponent = new ABFieldComponent({
                "ab.dataField.connectObject.connectToNewObject",
                "*Connect to new Object"
             ),
-            click: function() {
-               if (App.actions.addNewObject) {
-                  async.series(
-                     [
-                        function(callback) {
-                           App.actions.addNewObject(false, callback); // pass false because after it is created we do not want it to select it in the object list
-                        },
-                        function(callback) {
-                           populateSelect(true, callback); // pass true because we want it to select the last item in the list that was just created
-                        }
-                     ],
-                     function(err) {
-                        // console.log('all functions complete')
-                     }
-                  );
-               } else {
-                  // alert("that didn't work");
-               }
+            click: () => {
+               ABFieldConnectComponent.logic.clickNewObject();
             }
          },
          {
@@ -183,23 +149,8 @@ var ABFieldConnectComponent = new ABFieldComponent({
                      }
                   ],
                   on: {
-                     onChange: function(newV, oldV) {
-                        if (newV == "many") {
-                           $$(ids.fieldLinkVia).define(
-                              "label",
-                              $$(ids.fieldLinkVia)
-                                 .getValue()
-                                 .replace("entry", "entries")
-                           );
-                        } else {
-                           $$(ids.fieldLinkVia).define(
-                              "label",
-                              $$(ids.fieldLinkVia)
-                                 .getValue()
-                                 .replace("entries", "entry")
-                           );
-                        }
-                        $$(ids.fieldLinkVia).refresh();
+                     onChange: (newValue, oldValue) => {
+                        ABFieldConnectComponent.logic.selectLinkType(newValue, oldValue);
                      }
                   }
                },
@@ -246,32 +197,8 @@ var ABFieldConnectComponent = new ABFieldComponent({
                      }
                   ],
                   on: {
-                     onChange: function(newV, oldV) {
-                        let labelEntry = L(
-                              "ab.dataField.connectObject.entry",
-                              "*entry"
-                           ),
-                           labelEntries = L(
-                              "ab.dataField.connectObject.entries",
-                              "*entries"
-                           );
-
-                        if (newV == "many") {
-                           $$(ids.fieldLink2).define(
-                              "label",
-                              $$(ids.fieldLink2)
-                                 .getValue()
-                                 .replace(labelEntry, labelEntries)
-                           );
-                        } else {
-                           $$(ids.fieldLink2).define(
-                              "label",
-                              $$(ids.fieldLink2)
-                                 .getValue()
-                                 .replace(labelEntries, labelEntry)
-                           );
-                        }
-                        $$(ids.fieldLink2).refresh();
+                     onChange: (newV, oldV) => {
+                        ABFieldConnectComponent.logic.selectLinkViaType(newV, oldV);
                      }
                   }
                },
@@ -291,6 +218,51 @@ var ABFieldConnectComponent = new ABFieldComponent({
             name: "isSource",
             view: "text",
             hidden: true
+         },
+         {
+            id: ids.isCustomFK,
+            name: "isCustomFK",
+            view: "checkbox",
+            disallowEdit: true,
+            labelWidth: 0,
+            labelRight: L(
+               "ab.dataField.connectObject.isCustomFK",
+               "*Custom Foreign Key"
+            ),
+            hidden: true,
+            on: {
+               onChange: () => {
+                  ABFieldConnectComponent.logic.checkCustomFK();
+               }
+            }
+         },
+         {
+            id: ids.indexField,
+            name: "indexField",
+            view: "richselect",
+            disallowEdit: true,
+            hidden: true,
+            labelWidth: App.config.labelWidthLarge,
+            label: L("ab.dataField.connectObject.indexField", "*Index Field:"),
+            placeholder: L(
+               "ab.dataField.connectObject.indexFieldPlaceholder",
+               "*Select index field"
+            ),
+            options: []
+         },
+         {
+            id: ids.indexField2,
+            name: "indexField2",
+            view: "richselect",
+            disallowEdit: true,
+            hidden: true,
+            labelWidth: App.config.labelWidthLarge,
+            label: L("ab.dataField.connectObject.indexField", "*Index Field:"),
+            placeholder: L(
+               "ab.dataField.connectObject.indexFieldPlaceholder",
+               "*Select index field"
+            ),
+            options: []
          }
       ];
    },
@@ -357,12 +329,198 @@ var ABFieldConnectComponent = new ABFieldComponent({
                ABFieldConnectComponent.CurrentObject.label
             )
          );
+
+         ABFieldConnectComponent.logic.updateCustomIndex();
       },
 
       populate: (ids, values) => {},
 
       values: (ids, values) => {
          return values;
+      },
+
+      selectObjectTo: (newValue, oldValue) => {
+         if (!newValue) {
+            $$(ids.link1).hide();
+            $$(ids.link2).hide();
+         }
+         if (newValue == oldValue || newValue == "") return;
+
+         let selectedObj = $$(ids.linkObject)
+            .getList()
+            .getItem(newValue);
+         if (!selectedObj) return;
+
+         let selectedObjLabel = selectedObj.value;
+         $$(ids.fieldLinkVia).setValue(
+            L(
+               "ab.dataField.connectObject.selectedObject",
+               "*<b>#selectedObjLabel#</b> entry."
+            ).replace("#selectedObjLabel#", selectedObjLabel)
+         );
+         $$(ids.fieldLinkVia2).setValue(
+            L(
+               "ab.dataField.connectObject.connectWith",
+               "*Each <b>#selectedObjLabel#</b> entry connects with"
+            ).replace("#selectedObjLabel#", selectedObjLabel)
+         );
+         $$(ids.link1).show();
+         $$(ids.link2).show();
+
+         ABFieldConnectComponent.logic.updateCustomIndex();
+      },
+
+      clickNewObject: () => {
+         if (!App.actions.addNewObject) return;
+
+         async.series(
+            [
+               function(callback) {
+                  App.actions.addNewObject(false, callback); // pass false because after it is created we do not want it to select it in the object list
+               },
+               function(callback) {
+                  populateSelect(true, callback); // pass true because we want it to select the last item in the list that was just created
+               }
+            ],
+            function(err) {
+               // console.log('all functions complete')
+            }
+         );
+      },
+
+      selectLinkType: (newValue, oldValue) => {
+         let labelEntry = L("ab.dataField.connectObject.entry", "*entry");
+         let labelEntries = L("ab.dataField.connectObject.entries", "*entries");
+
+         let message = $$(ids.fieldLinkVia).getValue() || "";
+
+         if (newValue == "many") {
+            message = message.replace(labelEntry, labelEntries);
+         } else {
+            message = message.replace(labelEntries, labelEntry);
+         }
+         $$(ids.fieldLinkVia).define("label", message);
+         $$(ids.fieldLinkVia).refresh();
+
+         ABFieldConnectComponent.logic.updateCustomIndex();
+      },
+
+      selectLinkViaType: (newValue, oldValue) => {
+         let labelEntry = L("ab.dataField.connectObject.entry", "*entry");
+         let labelEntries = L("ab.dataField.connectObject.entries", "*entries");
+
+         let message = $$(ids.fieldLink2).getValue() || "";
+
+         if (newValue == "many") {
+            message = message.replace(labelEntry, labelEntries);
+         } else {
+            message = message.replace(labelEntries, labelEntry);
+         }
+         $$(ids.fieldLink2).define("label", message);
+         $$(ids.fieldLink2).refresh();
+
+         ABFieldConnectComponent.logic.updateCustomIndex();
+      },
+
+      checkCustomFK: () => {
+         $$(ids.indexField).hide();
+         $$(ids.indexField2).hide();
+
+         let isChecked = $$(ids.isCustomFK).getValue();
+         if (isChecked) {
+            let menuItems = $$(ids.indexField).getList().config.data;
+            if (menuItems && menuItems.length) {
+               $$(ids.indexField).show();
+            }
+
+            let menuItems2 = $$(ids.indexField2).getList().config.data;
+            if (menuItems2 && menuItems2.length) {
+               $$(ids.indexField2).show();
+            }
+         }
+      },
+
+      updateCustomIndex: () => {
+         let linkObjectId = $$(ids.linkObject).getValue();
+         let linkType = $$(ids.linkType).getValue();
+         let linkViaType = $$(ids.linkViaType).getValue();
+
+         let sourceObject = null; // object stores index column
+         let indexLinkFields = null; // the index fields of link object M:N
+
+         $$(ids.indexField2).define("options", []);
+         $$(ids.indexField2).refresh();
+
+         // 1:1
+         // 1:M
+         if (
+            (linkType == "one" && linkViaType == "one") ||
+            (linkType == "one" && linkViaType == "many")
+         ) {
+            sourceObject = ABFieldConnectComponent.CurrentApplication.objects(
+               (o) => o.id == linkObjectId
+            )[0];
+         }
+         // M:1
+         else if (linkType == "many" && linkViaType == "one") {
+            sourceObject = ABFieldConnectComponent.CurrentObject;
+         }
+         // M:N
+         else if (linkType == "many" && linkViaType == "many") {
+            sourceObject = ABFieldConnectComponent.CurrentObject;
+
+            let linkObject = ABFieldConnectComponent.CurrentApplication.objects(
+               (o) => o.id == linkObjectId
+            )[0];
+
+            // Populate the second index fields
+            indexLinkFields = linkObject.indexFields();
+            if (indexLinkFields && indexLinkFields.length > 0) {
+               $$(ids.indexField2).define(
+                  "options",
+                  indexLinkFields.map((f) => {
+                     return {
+                        id: f.id,
+                        value: `${linkObject.label} - ${f.label}`
+                     };
+                  })
+               );
+            }
+            $$(ids.indexField2).refresh();
+         }
+
+         $$(ids.indexField).hide();
+         $$(ids.indexField2).hide();
+
+         if (!sourceObject) {
+            $$(ids.isCustomFK).hide();
+            return;
+         }
+
+         let indexFields = sourceObject.indexFields();
+         if (
+            (!indexFields || indexFields.length < 1) &&
+            (!indexLinkFields || indexLinkFields.length < 1)
+         ) {
+            $$(ids.isCustomFK).hide();
+            $$(ids.indexField).define("options", []);
+            $$(ids.indexField).refresh();
+            return;
+         }
+
+         $$(ids.isCustomFK).show();
+         $$(ids.indexField).define(
+            "options",
+            indexFields.map((f) => {
+               return {
+                  id: f.id,
+                  value: `${sourceObject.label} - ${f.label}`
+               };
+            })
+         );
+         $$(ids.indexField).refresh();
+
+         ABFieldConnectComponent.logic.checkCustomFK();
       }
    }
 });

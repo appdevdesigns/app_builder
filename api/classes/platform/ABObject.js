@@ -305,13 +305,17 @@ module.exports = class ABClassObject extends ABObjectCore {
             if (f.settings.isSource == true) {
                sourceTable = tableName;
                targetTable = linkObject.dbTableName(true);
-               targetPkName = linkObject.PK();
+               targetPkName = f.indexField
+                  ? f.indexField.columnName
+                  : linkObject.PK();
                relation = Model.BelongsToOneRelation;
                columnName = f.columnName;
             } else {
                sourceTable = linkObject.dbTableName(true);
                targetTable = tableName;
-               targetPkName = this.PK();
+               targetPkName = f.indexField
+                  ? f.indexField.columnName
+                  : this.PK();
                relation = Model.HasOneRelation;
                columnName = linkField.columnName;
             }
@@ -336,17 +340,34 @@ module.exports = class ABClassObject extends ABObjectCore {
             f.settings.linkViaType == "many"
          ) {
             // get join table name
-            var joinTablename = f.joinTableName(true),
+            let joinTablename = f.joinTableName(true),
                joinColumnNames = f.joinColumnNames(),
                sourceTableName,
                sourcePkName,
-               targetTableName,
-               targetPkName;
+               targetTableName;
 
             sourceTableName = f.object.dbTableName(true);
             sourcePkName = f.object.PK();
             targetTableName = linkObject.dbTableName(true);
             targetPkName = linkObject.PK();
+
+            let indexField = f.indexField;
+            if (indexField) {
+               if (indexField.object.id == f.object.id) {
+                  sourcePkName = indexField.columnName;
+               } else if (indexField.object.id == linkObject.id) {
+                  targetPkName = indexField.columnName;
+               }
+            }
+
+            let indexField2 = f.indexField2;
+            if (indexField2) {
+               if (indexField2.object.id == f.object.id) {
+                  sourcePkName = indexField2.columnName;
+               } else if (indexField2.object.id == linkObject.id) {
+                  targetPkName = indexField2.columnName;
+               }
+            }
 
             // if (f.settings.isSource == true) {
             // 	sourceTableName = f.object.dbTableName(true);
@@ -406,7 +427,10 @@ module.exports = class ABClassObject extends ABObjectCore {
 
                   to: "{targetTable}.{primaryField}"
                      .replace("{targetTable}", linkObject.dbTableName(true))
-                     .replace("{primaryField}", linkObject.PK())
+                     .replace(
+                        "{primaryField}",
+                        f.indexField ? f.indexField.columnName : linkObject.PK()
+                     )
                }
             };
          }
@@ -421,7 +445,10 @@ module.exports = class ABClassObject extends ABObjectCore {
                join: {
                   from: "{sourceTable}.{primaryField}"
                      .replace("{sourceTable}", tableName)
-                     .replace("{primaryField}", this.PK()),
+                     .replace(
+                        "{primaryField}",
+                        f.indexField ? f.indexField.columnName : this.PK()
+                     ),
 
                   to: "{targetTable}.{field}"
                      .replace("{targetTable}", linkObject.dbTableName(true))
@@ -664,7 +691,8 @@ module.exports = class ABClassObject extends ABObjectCore {
          offset = options.offset,
          limit = options.limit;
 
-      if (options.where) where.rules.push(options.where);
+      if (options.where && options.where.rules && options.where.rules.length)
+         where.rules.push(options.where);
 
       return (
          Promise.resolve()
@@ -775,7 +803,7 @@ module.exports = class ABClassObject extends ABObjectCore {
                         // @param {obj} condition  a QueryBuilder compatible condition object
                         // @param {ObjectionJS Query} Query the query object to perform the operations.
                         var parseCondition = (condition, Query) => {
-                           // 'have_no_relation' condition will be applied later
+                           // 'have_no_relation' condition will be applied below
                            if (condition.rule == "have_no_relation") return;
 
                            // FIX: some improper inputs:
@@ -926,6 +954,17 @@ module.exports = class ABClassObject extends ABObjectCore {
                               return "'" + value + "'";
                            }
 
+                           // remove fields from rules
+                           var fieldTypes = [
+                              "number_",
+                              "string_",
+                              "date_",
+                              "boolean_",
+                              "user_",
+                              "list_",
+                              "connectObject_"
+                           ];
+
                            // convert QB Rule to SQL operation:
                            var conversionHash = {
                               equals: "=",
@@ -969,6 +1008,12 @@ module.exports = class ABClassObject extends ABObjectCore {
                               }
                            }
 
+                           // remove the field type from the rule
+                           var rule = condition.rule;
+                           fieldTypes.forEach((f) => {
+                              rule = rule.replace(f, "");
+                           });
+                           condition.rule = rule;
                            // basic case:  simple conversion
                            var operator = conversionHash[condition.rule];
                            var value = quoteMe(condition.value);

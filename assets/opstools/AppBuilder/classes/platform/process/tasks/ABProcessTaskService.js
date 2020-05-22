@@ -24,7 +24,7 @@ module.exports = class ABProcessTaskService extends ABProcessTaskServiceCore {
     *        the webix $$(id) of the properties panel area.
     */
    propertiesShow(id) {
-      var ids = this.propertyIDs(id);
+      // var ids = this.propertyIDs(id);
 
       var ui = {
          id: id,

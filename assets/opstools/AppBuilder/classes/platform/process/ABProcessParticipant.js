@@ -11,6 +11,46 @@ var ABRole = require("../ABRole.js");
 
 let __Roles = null;
 let __Users = null;
+let __alertCount = 0;
+let __alertTimeout = 0;
+function loadUsers() {
+   var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
+   if (SiteUser) {
+      SiteUser.findAll()
+         .fail(function(err) {
+            AD.error.log("ABProcessParticipantCore: Error loading SiteUser", {
+               error: err
+            });
+         })
+         .then(function(list) {
+            list.forEach(function(l) {
+               __Users.push({
+                  id: l.uuid || l.id,
+                  value: l.username
+               });
+            });
+         });
+   } else {
+      __alertCount++;
+      if (__alertCount >= 5) {
+         __alertCount = 0;
+
+         console.warn(
+            "opstools.RBAC.SiteUser : not found yet ... trying again",
+            "(NOTE: if the current viewer does not have permission to see RBAC, this will continue to fail."
+         );
+      }
+
+      __alertTimeout++;
+      if (__alertTimeout < 1000) {
+         setTimeout(loadUsers, 1000);
+      } else {
+         console.error(
+            "ABProcessParticipantCore: opstools.RBAC.SiteUser  not available for current user."
+         );
+      }
+   }
+}
 
 // #HACK: temporary implementation until we pull Roles into AppBuilder.
 if (!__Roles) {
@@ -33,33 +73,6 @@ if (!__Roles) {
 // #HACK: temporary implementation until we pull Users into AppBuilder.
 if (!__Users) {
    __Users = [];
-   function loadUsers() {
-      var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
-      if (SiteUser) {
-         SiteUser.findAll()
-            .fail(function(err) {
-               AD.error.log(
-                  "ABProcessParticipantCore: Error loading SiteUser",
-                  {
-                     error: err
-                  }
-               );
-            })
-            .then(function(list) {
-               list.forEach(function(l) {
-                  __Users.push({
-                     id: l.uuid || l.id,
-                     value: l.username
-                  });
-               });
-            });
-      } else {
-         console.warn(
-            "opstools.RBAC.SiteUser : not found yet ... trying again"
-         );
-         setTimeout(loadUsers, 1000);
-      }
-   }
    loadUsers();
 }
 
@@ -266,7 +279,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                         labelWidth: 0,
                         width: 120,
                         value: obj.useRole ? obj.useRole : 0,
-                        click: function(id, event) {
+                        click: function(id /*, event */) {
                            if ($$(id).getValue()) {
                               $$(ids.role).enable();
                            } else {
@@ -293,7 +306,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                         labelWidth: 0,
                         width: 120,
                         value: obj.useAccount ? obj.useAccount : 0,
-                        click: function(id, event) {
+                        click: function(id /*, event */) {
                            if ($$(id).getValue()) {
                               $$(ids.account).enable();
                            } else {

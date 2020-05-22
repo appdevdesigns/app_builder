@@ -408,7 +408,6 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                            label: L("ab.component.label.settings", "*Settings"),
                            icon: "fa fa-gear",
                            type: "icon",
-                           badge: 0,
                            click: function() {
                               _logic.toolbarFieldsVisible(this.$view);
                            }
@@ -432,7 +431,6 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                            label: L("ab.component.label.settings", "*Settings"),
                            icon: "fa fa-gear",
                            type: "icon",
-                           badge: 0,
                            click: function() {
                               _logic.gridFilterMenuShow(this.$view);
                            }
@@ -456,7 +454,6 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                            label: L("ab.component.label.settings", "*Settings"),
                            icon: "fa fa-gear",
                            type: "icon",
-                           badge: 0,
                            click: function() {
                               _logic.toolbarFrozen(this.$view);
                            }
@@ -481,7 +478,6 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                            label: L("ab.component.label.settings", "*Settings"),
                            icon: "fa fa-gear",
                            type: "icon",
-                           badge: 0,
                            click: function() {
                               _logic.summaryColumns(this.$view);
                            }
@@ -506,7 +502,6 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                            label: L("ab.component.label.settings", "*Settings"),
                            icon: "fa fa-gear",
                            type: "icon",
-                           badge: 0,
                            click: function() {
                               _logic.countColumns(this.$view);
                            }
@@ -962,7 +957,6 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                         label: L("ab.object.toolbar.massUpdate", "*Edit"),
                         icon: "fa fa-pencil-square-o",
                         type: "icon",
-                        badge: 0,
                         disabled: true,
                         autowidth: true,
                         click: function() {
@@ -976,7 +970,6 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                         label: L("ab.object.toolbar.deleteRecords", "*Delete"),
                         icon: "fa fa-trash",
                         type: "icon",
-                        badge: 0,
                         disabled: true,
                         autowidth: true,
                         click: function() {
@@ -990,7 +983,6 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                         label: L("ab.object.toolbar.filterFields", "*Filters"),
                         icon: "fa fa-filter",
                         type: "icon",
-                        badge: 0,
                         autowidth: true,
                         click: function() {
                            _logic.toolbarFilter(this.$view);
@@ -1003,7 +995,6 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                         label: L("ab.object.toolbar.sortFields", "*Sort"),
                         icon: "fa fa-sort",
                         type: "icon",
-                        badge: 0,
                         autowidth: true,
                         click: function() {
                            _logic.toolbarSort(this.$view);
@@ -1016,7 +1007,6 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                         label: L("ab.object.toolbar.export", "*Export"),
                         icon: "fa fa-print",
                         type: "icon",
-                        badge: 0,
                         autowidth: true,
                         click: function() {
                            _logic.toolbarExport(this.$view);

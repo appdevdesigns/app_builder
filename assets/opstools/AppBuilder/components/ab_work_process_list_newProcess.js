@@ -73,6 +73,7 @@ export default class ab_work_process_list_newProcess extends OP.Component {
                      {
                         view: "button",
                         id: ids.buttonSave,
+                        css: "webix_primary",
                         value: labels.component.addNewProcess,
                         autowidth: true,
                         type: "form",

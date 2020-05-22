@@ -235,14 +235,13 @@ module.exports = {
 
                   resolve();
                   /*
-                  ABApplication.find({ id: appID }).exec(function(err, list) {
-                     if (err) reject(err);
-                     else if (!list || !list[0]) {
-                        reject(new Error("Application not found: " + appID));
-                     } else {
-                        let application = list[0].toABClass();
+                  ABGraphApplication.findOne(appID)
+                     .then((application) => {
+                        if (!application) return resolve();
 
-                        application.objects().forEach((obj) => {
+
+                        let app = application.toABClass();
+                        app.objects().forEach((obj) => {
                            existsTableNames.push(obj.dbTableName());
                         });
 
@@ -499,16 +498,16 @@ module.exports = {
             // Find app in database
             // .then(function() {
             //    return new Promise((resolve, reject) => {
-            //       ABApplication.find({ id: appID }).exec(function(err, list) {
-            //          if (err) {
-            //             reject(err);
-            //          } else if (!list || !list[0]) {
-            //             reject(new Error("application not found: " + appID));
-            //          } else {
-            //             application = list[0];
-            //             resolve();
-            //          }
-            //       });
+            //       ABGraphApplication.findOne(appID)
+            //          .then((app) => {
+            //             if (!app) {
+            //                reject(new Error("application not found: " + appID));
+            //             } else {
+            //                application = app;
+            //                resolve();
+            //             }
+            //          })
+            //          .catch(reject);
             //    });
             // })
 
@@ -862,25 +861,48 @@ module.exports = {
                      })
                      .catch(reject);
 
-                  /*
-
-                  ABApplication.update(
-                     { id: appID },
-                     { json: application.json }
-                  ).exec((err, updated) => {
-                     if (err) {
-                        console.log("ERROR: ", err);
-                        reject(err);
-                     } else if (!updated || !updated[0]) {
-                        console.log("ERROR: app not updated");
-                        reject(new Error("Application not updated"));
-                     } else {
-                        resolve(application.json.objects);
-                     }
-                  });
-*/
+                  // ABApplication.update(
+                  //    { id: appID },
+                  //    { json: application.json }
+                  // ).exec((err, updated) => {
+                  //    if (err) {
+                  //       console.log("ERROR: ", err);
+                  //       reject(err);
+                  //    } else if (!updated || !updated[0]) {
+                  //       console.log("ERROR: app not updated");
+                  //       reject(new Error("Application not updated"));
+                  //    } else {
+                  //       resolve(application.json.objects);
+                  //    }
+                  // });
                });
             })
+
+         // .then(
+         //    () =>
+         //       new Promise((resolve, reject) => {
+         //          ABGraphObject.upsert(objectData.id, objectData)
+         //             .catch(reject)
+         //             .then(() => {
+         //                resolve();
+         //             });
+         //       })
+         // )
+
+         // // Relate
+         // .then(
+         //    () =>
+         //       new Promise((resolve, reject) => {
+         //          if (!application || !objectData) return resolve();
+
+         //          application
+         //             .relate("objects", objectData.id)
+         //             .catch(reject)
+         //             .then(() => {
+         //                resolve(objectData);
+         //             });
+         //       })
+         // )
       );
    }
 };

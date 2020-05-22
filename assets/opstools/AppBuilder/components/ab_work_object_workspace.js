@@ -171,11 +171,11 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
       var newViewButton = {
          view: "button",
          type: "icon",
+         autowidth: true,
          css: "webix_primary",
          label: labels.component.newView,
-         width: 120,
-         icon: "fa fa-plus-circle",
-         align: "left",
+         icon: "fa fa-plus",
+         align: "center",
          id: ids.viewMenuNewView,
          click: function() {
             PopupViewSettingsComponent.show();
@@ -789,34 +789,42 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                      ),
                      callback: function(isOK) {
                         if (isOK) {
-                           field.destroy().then(() => {
-                              DataTable.refreshHeader();
-                              _logic.loadData();
+                           field
+                              .destroy()
+                              .then(() => {
+                                 DataTable.refreshHeader();
+                                 _logic.loadData();
 
-                              // recursive fn to remove any form/detail fields related to this field
-                              function checkPages(list, cb) {
-                                 if (list.length == 0) {
-                                    cb();
-                                 } else {
-                                    var page = list.shift();
+                                 // recursive fn to remove any form/detail fields related to this field
+                                 function checkPages(list, cb) {
+                                    if (list.length == 0) {
+                                       cb();
+                                    } else {
+                                       var page = list.shift();
 
-                                    // begin calling removeField for each main page in the app
-                                    // this will kick off a chain of events that will have removeField called on
-                                    // all pages, subpages, widgets and views.
-                                    page.removeField(field, (err) => {
-                                       if (err) {
-                                          cb(err);
-                                       } else {
-                                          checkPages(list, cb);
-                                       }
-                                    });
+                                       // begin calling removeField for each main page in the app
+                                       // this will kick off a chain of events that will have removeField called on
+                                       // all pages, subpages, widgets and views.
+                                       page.removeField(field, (err) => {
+                                          if (err) {
+                                             cb(err);
+                                          } else {
+                                             checkPages(list, cb);
+                                          }
+                                       });
+                                    }
                                  }
-                              }
-                              checkPages(
-                                 CurrentApplication.pages(),
-                                 (err) => {}
-                              );
-                           });
+                                 checkPages(
+                                    CurrentApplication.pages(),
+                                    (err) => {}
+                                 );
+                              })
+                              .catch((err) => {
+                                 OP.Error.log("Error trying to delete field", {
+                                    error: err,
+                                    fields: field
+                                 });
+                              });
                         }
                      }
                   });
