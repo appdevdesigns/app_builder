@@ -54,7 +54,6 @@ steal(
                      self.activated = false;
 
                      self.initDOM();
-                     self.initRoles();
                      self.initModels();
                      self.initAMP();
 
@@ -102,6 +101,7 @@ steal(
                   },
 
                   initAMP: function() {
+                     var self = this;
                      var smalltreedata = [
                         {
                            id: "root",
@@ -351,7 +351,7 @@ steal(
 
                      var newRolePopup = {
                         view: "popup",
-                        id: "role_popup_" + this.containerDomID,
+                        id: "role_popup_" + self.containerDomID,
                         position: "center",
                         height: 250,
                         width: 350,
@@ -387,7 +387,7 @@ steal(
                                     {
                                        view: "combo",
                                        label: "",
-                                       id: "role_popup_options_" + this.containerDomID,
+                                       id: "role_popup_options_" + self.containerDomID,
                                        placeholder: "Choose role",
                                        options: []
                                     },
@@ -397,7 +397,7 @@ steal(
                                              view: "button",
                                              value: "Cancel",
                                              click: () => {
-                                                $$("role_popup_" + this.containerDomID).hide();
+                                                $$("role_popup_" + self.containerDomID).hide();
                                              }
                                           },
                                           {
@@ -405,12 +405,12 @@ steal(
                                              value: "Add",
                                              css: "webix_primary",
                                              click: () => {
-                                                var role = $$("role_popup_options_" + this.containerDomID).getValue();
+                                                var role = $$("role_popup_options_" + self.containerDomID).getValue();
 
-                                                $$("amp_accordion_" + this.containerDomID).config.roles.push(role);
+                                                $$("amp_accordion_" + self.containerDomID).config.roles.push(role);
 
                                                 var tree = {
-                                                   id: "linetree_" + this.containerDomID + "_" + role,
+                                                   id: "linetree_" + self.containerDomID + "_" + role,
                                                    view: "edittree",
                                                    type: "lineTree",
                                                    editable: true,
@@ -418,7 +418,7 @@ steal(
                                                    editValue: "access",
                                                    threeState: true,
                                                    template: (obj, common) => {
-                                                      var treeOptions = $$("linetree_" + this.containerDomID + "_" + role).config.options;
+                                                      var treeOptions = $$("linetree_" + self.containerDomID + "_" + role).config.options;
                                                       var option = treeOptions.find((o) => o.id === obj.access);
                                                       var color = "#ff4938";
                                                       var icon = "lock";
@@ -440,22 +440,43 @@ steal(
                                                                <i class="fa fa-${icon} fa-stack-1x fa-inverse"></i>
                                                              </span>` +
                                                          common.icon(obj, common) +
-                                                         `<span>${obj.value}</span>
+                                                         `<span>${obj.label}</span>
                                                                 <i class="externalLink fa fa-external-link"></i>
                                                               </span>`
                                                       );
                                                    },
                                                    options: accessLevels,
-                                                   data: webix.copy(smalltreedata),
+                                                   data: self.accessLevelTree,
                                                    onClick: {
-                                                      externalLink: function(event, column, target) {
-                                                         webix.message("Jump to this view.");
+                                                      externalLink: (event, branch, target) => {
+                                                         debugger;
+                                                         var branchInfo = $$("linetree_" + self.containerDomID + "_" + role).getItem(branch);
+                                                         if (branchInfo.type == "tab") {
+                                                            var redirectPage = self.rootPage.application.pages((p) => p.id == branchInfo.pageId, true)[0];
+                                                            if (!redirectPage) return;
+
+                                                            var tabView = redirectPage.views((v) => v.id == branchInfo.id, true)[0];
+                                                            if (!tabView) return;
+
+                                                            var tab = tabView.parent;
+                                                            if (!tab) return;
+
+                                                            setTimeout(function() {
+                                                               tab.emit("changePage", branchInfo.pageId);
+                                                            }, 0);
+                                                            tab.emit("changeTab", tabView.id);
+                                                         }
+                                                         // switch page
+                                                         else {
+                                                            var page = self.rootPage.application.pages((p) => p.id == branchInfo.id, true)[0];
+                                                            page.emit("changePage", branchInfo.id);
+                                                         }
                                                          return false;
                                                       }
                                                    },
                                                    on: {
                                                       onDataUpdate: (id, data, old) => {
-                                                         var tree = $$("linetree_" + this.containerDomID + "_" + role);
+                                                         var tree = $$("linetree_" + self.containerDomID + "_" + role);
                                                          if (data.access == "0") {
                                                             tree.blockEvent();
                                                             tree.data.eachSubItem(id, (child) => {
@@ -471,7 +492,7 @@ steal(
                                                             var parentData = tree.getItem(parentBranch);
                                                             if (parentData) {
                                                                if (parentData.access == "0") {
-                                                                  parentData.access = "2";
+                                                                  parentData.access = "1";
                                                                   tree.updateItem(parentBranch, parentData);
                                                                }
                                                             }
@@ -482,7 +503,7 @@ steal(
 
                                                 var newAccordionItem = {
                                                    view: "accordionitem",
-                                                   header: $$("role_popup_options_" + this.containerDomID).getText(),
+                                                   header: $$("role_popup_options_" + self.containerDomID).getText(),
                                                    body: {
                                                       type: "clean",
                                                       rows: [tree, manageUsers]
@@ -490,11 +511,13 @@ steal(
                                                    height: 430
                                                 };
 
-                                                $$("amp_accordion_" + this.containerDomID).addView(newAccordionItem, 0);
+                                                $$("amp_accordion_" + self.containerDomID).addView(newAccordionItem, 0);
+
+                                                $$("linetree_" + self.containerDomID + "_" + role).openAll();
 
                                                 var index = 0;
 
-                                                $$("amp_accordion_" + this.containerDomID)
+                                                $$("amp_accordion_" + self.containerDomID)
                                                    .getChildViews()
                                                    .forEach((ai) => {
                                                       if (index == 0) {
@@ -505,7 +528,7 @@ steal(
                                                       }
                                                    });
 
-                                                $$("role_popup_" + this.containerDomID).hide();
+                                                $$("role_popup_" + self.containerDomID).hide();
                                              }
                                           }
                                        ]
@@ -659,7 +682,7 @@ steal(
                            rows: [
                               {
                                  view: "accordion",
-                                 id: "amp_accordion_" + this.containerDomID,
+                                 id: "amp_accordion_" + self.containerDomID,
                                  roles: [],
                                  css: "webix_dark",
                                  rows: []
@@ -682,12 +705,12 @@ steal(
                                        click: () => {
                                           webix.ui(newRolePopup).show();
 
-                                          var roles = this.roles.filter((f) => {
-                                             return $$("amp_accordion_" + this.containerDomID).config.roles.indexOf(f.id) == -1;
+                                          var roles = self.roles.filter((f) => {
+                                             return $$("amp_accordion_" + self.containerDomID).config.roles.indexOf(f.id) == -1;
                                           });
 
-                                          $$("role_popup_options_" + this.containerDomID).define("options", roles);
-                                          $$("role_popup_options_" + this.containerDomID).refresh();
+                                          $$("role_popup_options_" + self.containerDomID).define("options", roles);
+                                          $$("role_popup_options_" + self.containerDomID).refresh();
                                        }
                                     },
                                     {
@@ -705,7 +728,7 @@ steal(
                      webix.ui({
                         view: "window",
                         css: "ampWindow",
-                        id: "accessManager_" + this.containerDomID,
+                        id: "accessManager_" + self.containerDomID,
                         position: function(state) {
                            state.left = state.maxWidth - 350; // fixed values
                            state.top = 0;
@@ -731,7 +754,7 @@ steal(
                                  type: "icon",
                                  icon: "nomargin fa fa-times",
                                  click: () => {
-                                    $$("accessManager_" + this.containerDomID).hide();
+                                    $$("accessManager_" + self.containerDomID).hide();
                                  }
                               }
                            ]
@@ -747,6 +770,56 @@ steal(
                            webix.EditAbility,
                            webix.ui.tree
                         );
+                     });
+                  },
+
+                  getAccessLevelTree: function(rootPage) {
+                     // this so it looks right/indented in a tree view:
+                     this.accessLevelTree = new webix.TreeCollection();
+
+                     /**
+                      * @method addPage
+                      *
+                      * @param {ABView} page
+                      * @param {integer} index
+                      * @param {uuid} parentId
+                      */
+                     var addPage = (page, index, parentId, type) => {
+                        // add to tree collection
+                        var branch = {
+                           id: page.id,
+                           access: "0",
+                           type: type,
+                           label: page.label,
+                           pageId: parentId || page.id
+                        };
+                        this.accessLevelTree.add(branch, index, parentId);
+
+                        // stop at detail views
+                        if (page.defaults.key == "detail") {
+                           return;
+                        }
+
+                        var subPages = page.pages ? page.pages() : [];
+                        subPages.forEach((childPage, childIndex) => {
+                           addPage(childPage, childIndex, page.id, "page");
+                        });
+
+                        // add tabs
+                        page
+                           .views((v) => v.defaults.key == "tab")
+                           .forEach((tab, tabIndex) => {
+                              // tab views
+                              tab.views().forEach((tabView, tabViewIndex) => {
+                                 // tab items will be below sub-page items
+                                 var tIndex = subPages.length + tabIndex + tabViewIndex;
+
+                                 addPage(tabView, tIndex, page.id, "tab");
+                              });
+                           });
+                     };
+                     rootPage.application.pages().forEach((p, index) => {
+                        addPage(p, index, null, "page");
                      });
                   },
 
@@ -797,24 +870,21 @@ steal(
                   },
 
                   initRoles: function() {
-                     if (this.roles && this.roles.length) return false;
-
                      var self = this;
-                     this.ABRole = OP.Model.get("opstools.BuildApp.ABRole");
 
                      var __Roles = [];
 
-                     this.ABRole.findAll()
+                     self.rootPage.application.class.ABRole.find()
                         .then((list) => {
                            // make sure they are all translated.
-                           list.data.each(function(l) {
-                              self.translate(l, l, ["name"]);
+                           list.forEach(function(l) {
+                              // self.translate(l, l, ["name"]);
                               __Roles.push({
                                  id: l.uuid,
                                  value: l.name
                               });
                            });
-                           this.roles = __Roles;
+                           self.roles = __Roles;
                         })
                         .catch((err) => {
                            AD.error.log("ABProcessParticipantCore: Error loading Roles", {
@@ -923,6 +993,7 @@ steal(
                            function(next) {
                               if (self.rootPage == null) return next();
 
+                              self.initRoles();
                               self.initPage();
 
                               // let areaKey = 'ab-' + self.data.application.name.trim();
@@ -1010,6 +1081,9 @@ steal(
 
                      var component = page.component(self.App);
                      var ui = component.ui;
+
+                     // Build the page tree for access level management
+                     self.getAccessLevelTree(page);
 
                      // Keep the page component
                      self.pageComponents[page.id] = component;

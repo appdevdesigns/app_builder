@@ -71,15 +71,11 @@ module.exports = class ABViewTab extends ABViewTabCore {
          if (tabElem.rows[0].cells && tabElem.rows[0].cells.length > 0) {
             tabElem.rows[0].cells.forEach((tabView) => {
                // Add 'move back' icon
-               tabView.header =
-                  '<i class="fa fa-caret-left move-back ab-tab-back"></i>' +
-                  tabView.header;
+               tabView.header = '<i class="fa fa-caret-left move-back ab-tab-back"></i>' + tabView.header;
                // Add 'edit' icon
-               tabView.header +=
-                  ' <i class="fa fa-pencil-square rename ab-tab-edit"></i>';
+               tabView.header += ' <i class="fa fa-pencil-square rename ab-tab-edit"></i>';
                // Add 'move next' icon
-               tabView.header +=
-                  ' <i class="fa fa-caret-right move-next ab-tab-next"></i>';
+               tabView.header += ' <i class="fa fa-caret-right move-next ab-tab-next"></i>';
             });
          }
       } else if (tabElem.cols) {
@@ -124,21 +120,14 @@ module.exports = class ABViewTab extends ABViewTabCore {
          };
 
          // Add action buttons
-         if (
-            tabElem.cols[tabIndex].data &&
-            tabElem.cols[tabIndex].data.length > 0
-         ) {
+         if (tabElem.cols[tabIndex].data && tabElem.cols[tabIndex].data.length > 0) {
             tabElem.cols[tabIndex].data.forEach((sidebarItem) => {
                // Add 'edit' icon
-               sidebarItem.value =
-                  sidebarItem.value +
-                  ' <i class="fa fa-pencil-square rename ab-tab-edit"></i>';
+               sidebarItem.value = sidebarItem.value + ' <i class="fa fa-pencil-square rename ab-tab-edit"></i>';
                // Add 'move up' icon
-               sidebarItem.value +=
-                  '<i class="fa fa-caret-up move-back ab-tab-up"></i>';
+               sidebarItem.value += '<i class="fa fa-caret-up move-back ab-tab-up"></i>';
                // Add 'move down' icon
-               sidebarItem.value +=
-                  ' <i class="fa fa-caret-down move-next ab-tab-down"></i>';
+               sidebarItem.value += ' <i class="fa fa-caret-down move-next ab-tab-down"></i>';
             });
          }
       }
@@ -158,11 +147,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
                autoheight: false,
                height: 1,
                width: 0,
-               template:
-                  '<div class="ab-component-tools ab-layout-view ab-tab-tools">' +
-                  '<i class="fa fa-trash ab-component-remove"></i>' +
-                  '<i class="fa fa-edit ab-component-edit"></i>' +
-                  "</div>",
+               template: '<div class="ab-component-tools ab-layout-view ab-tab-tools">' + '<i class="fa fa-trash ab-component-remove"></i>' + '<i class="fa fa-edit ab-component-edit"></i>' + "</div>",
                onClick: {
                   "ab-component-edit": function(e, id, trg) {
                      _logic.tabEdit(e, id, trg);
@@ -172,21 +157,14 @@ module.exports = class ABViewTab extends ABViewTabCore {
                   }
                }
             });
-         } else if (
-            $$(ids.component) &&
-            $$(ids.component).config.view == "multiview"
-         ) {
+         } else if ($$(ids.component) && $$(ids.component).config.view == "multiview") {
             webix.ui({
                container: $$(ids.component).$view,
                view: "template",
                autoheight: false,
                height: 1,
                width: 0,
-               template:
-                  '<div class="ab-component-tools ab-layout-view ab-tab-tools">' +
-                  '<i class="fa fa-trash ab-component-remove"></i>' +
-                  '<i class="fa fa-edit ab-component-edit"></i>' +
-                  "</div>",
+               template: '<div class="ab-component-tools ab-layout-view ab-tab-tools">' + '<i class="fa fa-trash ab-component-remove"></i>' + '<i class="fa fa-edit ab-component-edit"></i>' + "</div>",
                onClick: {
                   "ab-component-edit": function(e, id, trg) {
                      _logic.tabEdit(e, id, trg);
@@ -243,14 +221,8 @@ module.exports = class ABViewTab extends ABViewTabCore {
             var deletedView = this.views((v) => v.id == tabId)[0];
             if (deletedView) {
                OP.Dialog.Confirm({
-                  title: L(
-                     "ab.interface.component.tab.confirmDeleteTitle",
-                     "*Delete tab"
-                  ),
-                  text: L(
-                     "ab.interface.component.tab.confirmDeleteMessage",
-                     "Do you want to delete <b>{0}</b>?"
-                  ).replace("{0}", deletedView.label),
+                  title: L("ab.interface.component.tab.confirmDeleteTitle", "*Delete tab"),
+                  text: L("ab.interface.component.tab.confirmDeleteMessage", "Do you want to delete <b>{0}</b>?").replace("{0}", deletedView.label),
                   callback: (result) => {
                      if (result) {
                         // this.viewDestroy(deletedView);
@@ -357,12 +329,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
    }
 
    static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
-      var commonUI = super.propertyEditorDefaultElements(
-         App,
-         ids,
-         _logic,
-         ObjectDefaults
-      );
+      var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
       // create 'add new tab' popup
       webix
@@ -403,8 +370,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
                         },
                         body: {
                            data: App.icons,
-                           template:
-                              "<i class='fa fa-fw fa-#value#'></i> #value#"
+                           template: "<i class='fa fa-fw fa-#value#'></i> #value#"
                         }
                      }
                   },
@@ -429,9 +395,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
                            autowidth: true,
                            type: "form",
                            click: () => {
-                              let form = $$(
-                                 "ab-component-tab-add-new-tab-form"
-                              );
+                              let form = $$("ab-component-tab-add-new-tab-form");
                               if (form.validate()) {
                                  this.popupBusy();
 
@@ -444,30 +408,16 @@ module.exports = class ABViewTab extends ABViewTabCore {
 
                                     // Refresh UI
                                     let currView = _logic.currentEditObject();
-                                    currView.emit(
-                                       "properties.updated",
-                                       currView
-                                    );
+                                    currView.emit("properties.updated", currView);
                                  };
 
                                  // add
                                  if (vals.id == null) {
-                                    this.addTab(
-                                       ids,
-                                       _logic,
-                                       vals.label,
-                                       vals.tabicon
-                                    ).then(() => doneFn());
+                                    this.addTab(ids, _logic, vals.label, vals.tabicon).then(() => doneFn());
                                  }
                                  // edit
                                  else {
-                                    this.editTab(
-                                       ids,
-                                       _logic,
-                                       vals.id,
-                                       vals.label,
-                                       vals.tabicon
-                                    ).then(() => doneFn());
+                                    this.editTab(ids, _logic, vals.id, vals.label, vals.tabicon).then(() => doneFn());
                                  }
                               }
                            }
@@ -514,10 +464,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
          {
             view: "checkbox",
             name: "iconOnTop",
-            labelRight: L(
-               "ab.component.tab.darkTheme",
-               "*Position icon above text"
-            ),
+            labelRight: L("ab.component.tab.darkTheme", "*Position icon above text"),
             labelWidth: App.config.labelWidthCheckbox
          },
          {
@@ -557,29 +504,13 @@ module.exports = class ABViewTab extends ABViewTabCore {
    static propertyEditorPopulate(App, ids, view) {
       super.propertyEditorPopulate(App, ids, view);
 
-      $$(ids.height).setValue(
-         view.settings.height || ABViewTabPropertyComponentDefaults.height
-      );
-      $$(ids.minWidth).setValue(
-         view.settings.minWidth || ABViewTabPropertyComponentDefaults.minWidth
-      );
-      $$(ids.stackTabs).setValue(
-         view.settings.stackTabs || ABViewTabPropertyComponentDefaults.stackTabs
-      );
-      $$(ids.darkTheme).setValue(
-         view.settings.darkTheme || ABViewTabPropertyComponentDefaults.darkTheme
-      );
-      $$(ids.sidebarWidth).setValue(
-         view.settings.sidebarWidth ||
-            ABViewTabPropertyComponentDefaults.sidebarWidth
-      );
-      $$(ids.sidebarPos).setValue(
-         view.settings.sidebarPos ||
-            ABViewTabPropertyComponentDefaults.sidebarPos
-      );
-      $$(ids.iconOnTop).setValue(
-         view.settings.iconOnTop || ABViewTabPropertyComponentDefaults.iconOnTop
-      );
+      $$(ids.height).setValue(view.settings.height || ABViewTabPropertyComponentDefaults.height);
+      $$(ids.minWidth).setValue(view.settings.minWidth || ABViewTabPropertyComponentDefaults.minWidth);
+      $$(ids.stackTabs).setValue(view.settings.stackTabs || ABViewTabPropertyComponentDefaults.stackTabs);
+      $$(ids.darkTheme).setValue(view.settings.darkTheme || ABViewTabPropertyComponentDefaults.darkTheme);
+      $$(ids.sidebarWidth).setValue(view.settings.sidebarWidth || ABViewTabPropertyComponentDefaults.sidebarWidth);
+      $$(ids.sidebarPos).setValue(view.settings.sidebarPos || ABViewTabPropertyComponentDefaults.sidebarPos);
+      $$(ids.iconOnTop).setValue(view.settings.iconOnTop || ABViewTabPropertyComponentDefaults.iconOnTop);
 
       if (view.settings.stackTabs) {
          $$(ids.sidebarWidth).show();
@@ -636,17 +567,8 @@ module.exports = class ABViewTab extends ABViewTabCore {
          baseType: "sideBar", // inherit everything else from sidebar type
          name: "customIcons",
          icon: function(obj, common) {
-            if (obj.icon.length)
-               return (
-                  "<span class='webix_icon webix_sidebar_icon fa fa-fw fa-" +
-                  obj.icon +
-                  "'></span>"
-               );
-            return (
-               "<span class='webix_icon webix_sidebar_icon sidebarCustomIcon'>" +
-               obj.value.charAt(0).toUpperCase() +
-               "</span>"
-            );
+            if (obj.icon.length) return "<span class='webix_icon webix_sidebar_icon fa fa-fw fa-" + obj.icon + "'></span>";
+            return "<span class='webix_icon webix_sidebar_icon sidebarCustomIcon'>" + obj.value.charAt(0).toUpperCase() + "</span>";
          }
       });
 
@@ -683,13 +605,9 @@ module.exports = class ABViewTab extends ABViewTabCore {
                view: "sidebar",
                type: "customIcons", // define the sidebar type with the new template created above
                id: ids.sidebar,
-               width: this.settings.sidebarWidth
-                  ? this.settings.sidebarWidth
-                  : 0,
+               width: this.settings.sidebarWidth ? this.settings.sidebarWidth : 0,
                scroll: true,
-               position: this.settings.sidebarPos
-                  ? this.settings.sidebarPos
-                  : "left",
+               position: this.settings.sidebarPos ? this.settings.sidebarPos : "left",
                css: this.settings.darkTheme ? "webix_dark" : "",
                data: menuItems.concat(collapseMenu), // add you menu items along with the collapse option to start
                on: {
@@ -709,10 +627,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
                            $$(ids.sidebar).select(selectedItem);
                            // store this state in local storage the user preference is
                            // remembered next time they see this sidebar
-                           webix.storage.local.put(
-                              idBase + "-state",
-                              $$(ids.sidebar).getState()
-                           );
+                           webix.storage.local.put(idBase + "-state", $$(ids.sidebar).getState());
                         }, 0);
                      } else if (id == ids.expandMenu) {
                         setTimeout(function() {
@@ -727,10 +642,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
                            $$(ids.sidebar).select(selectedItem);
                            // store this state in local storage the user preference is
                            // remembered next time they see this sidebar
-                           webix.storage.local.put(
-                              idBase + "-state",
-                              $$(ids.sidebar).getState()
-                           );
+                           webix.storage.local.put(idBase + "-state", $$(ids.sidebar).getState());
                         }, 0);
                      } else {
                         // store the selecte menu item just in case someone toggles the menu later
@@ -802,18 +714,9 @@ module.exports = class ABViewTab extends ABViewTabCore {
                         // tab icon
                         if (v.view.tabicon) {
                            if (this.settings.iconOnTop) {
-                              tabTemplate =
-                                 "<div class='ab-tabIconContainer'><span class='fa fa-lg fa-fw fa-" +
-                                 v.view.tabicon +
-                                 "'></span><br/>" +
-                                 v.view.label +
-                                 "</div>";
+                              tabTemplate = "<div class='ab-tabIconContainer'><span class='fa fa-lg fa-fw fa-" + v.view.tabicon + "'></span><br/>" + v.view.label + "</div>";
                            } else {
-                              tabTemplate =
-                                 "<span class='fa fa-lg fa-fw fa-" +
-                                 v.view.tabicon +
-                                 "'></span> " +
-                                 v.view.label;
+                              tabTemplate = "<span class='fa fa-lg fa-fw fa-" + v.view.tabicon + "'></span> " + v.view.label;
                            }
                         }
                         // no icon
@@ -842,8 +745,12 @@ module.exports = class ABViewTab extends ABViewTabCore {
          },
 
          changeTab: (tabViewId) => {
-            // switch tab view
-            $$(ids.component).setValue(tabViewId);
+            if (this.settings.stackTabs) {
+               _onShow(tabViewId);
+            } else {
+               $$(tabViewId).show(false, false);
+               // $$(ids.component).setValue(tabViewId);
+            }
          }
       };
 
@@ -851,8 +758,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
       var _init = (options) => {
          var parent = this;
 
-         if ($$(ids.component))
-            webix.extend($$(ids.component), webix.ProgressBar);
+         if ($$(ids.component)) webix.extend($$(ids.component), webix.ProgressBar);
 
          this._viewComponents.forEach((v) => {
             // v.component.init(options);
@@ -898,8 +804,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
             // create view's component once
             if (v.component == null && v.view.id == viewId) {
                // show loading cursor
-               if ($$(ids.component) && $$(ids.component).showProgress)
-                  $$(ids.component).showProgress({ type: "icon" });
+               if ($$(ids.component) && $$(ids.component).showProgress) $$(ids.component).showProgress({ type: "icon" });
 
                v.component = v.view.component(App);
 
@@ -935,14 +840,12 @@ module.exports = class ABViewTab extends ABViewTabCore {
                setTimeout(() => {
                   // $$(v.view.id).adjust();
 
-                  if ($$(ids.component) && $$(ids.component).hideProgress)
-                     $$(ids.component).hideProgress();
+                  if ($$(ids.component) && $$(ids.component).hideProgress) $$(ids.component).hideProgress();
                }, 10);
             }
 
             // show UI
-            if (v.view.id == viewId && v.component && v.component.onShow)
-               v.component.onShow();
+            if (v.view.id == viewId && v.component && v.component.onShow) v.component.onShow();
 
             if (parent.settings.stackTabs && v.view.id == viewId) {
                $$(viewId).show(false, false);
