@@ -6,16 +6,13 @@
  */
 
 module.exports = {
+   attributes: {
+      application: {
+         model: "ABApplication"
+      },
 
-	attributes: {
-
-		application: {
-			model: 'ABApplication'
-		},
-
-		object: {
-			model: 'ABObject'
-		}
-	}
-
-}
+      object: {
+         model: "ABObject"
+      }
+   }
+};

@@ -1,4 +1,3 @@
-
 /*
  * countfooter
  *
@@ -6,63 +5,63 @@
  *
  */
 
+module.exports = class ABCountFooter {
+   get key() {
+      return "countfooter";
+   }
 
-export default class ABCountFooter {
+   constructor(App, key) {
+      // App 	{obj}	our application instance object.
+      // key {string}	the destination key in App.custom[componentKey] for the instance of this component:
 
-	get key() { return 'countfooter'; }
+      // super(App, key);
 
-	constructor(App, key) {
+      var L = App.Label;
 
-		// App 	{obj}	our application instance object.
-		// key {string}	the destination key in App.custom[componentKey] for the instance of this component:
+      var labels = {};
 
-		// super(App, key);
+      // internal list of Webix IDs to reference our UI components.
+      var ids = {};
 
-		var L = App.Label;
+      // Our webix UI definition:
+      var _ui = {};
+      this.view = this.key;
 
+      // our internal business logic
+      var _logic = {};
+      this._logic = _logic;
 
-		var labels = {};
+      // Tell Webix :
+      webix.ui.datafilter.countColumn = webix.extend(
+         {
+            refresh: function(datatable, node, info) {
+               var result = 0;
 
+               var rowData = datatable.find({}) || [];
+               rowData.forEach((row) => {
+                  if (row == null) return;
 
-		// internal list of Webix IDs to reference our UI components.
-		var ids = {};
+                  var data =
+                     row[info.columnId] || row[info.columnId + "__relation"];
 
-		// Our webix UI definition:
-		var _ui = {};
-		this.view = this.key;
+                  // array
+                  if (data && Array.isArray(data)) {
+                     result += data.length;
+                  } else if (
+                     data != null &&
+                     data != "" &&
+                     data != false &&
+                     data != "false" &&
+                     data != "0"
+                  ) {
+                     result += 1;
+                  }
+               });
 
-		// our internal business logic 
-		var _logic = {};
-		this._logic = _logic;
-
-
-
-		// Tell Webix :
-		webix.ui.datafilter.countColumn = webix.extend({
-			refresh: function (datatable, node, info) {
-				var result = 0;
-
-				var rowData = (datatable.find({}) || []);
-				rowData.forEach(row => {
-
-					if (row == null) return;
-
-					var data = (row[info.columnId] || row[info.columnId + '__relation']);
-
-					// array
-					if (data && Array.isArray(data)) {
-						result += data.length;
-					}
-					else if (data != null && data != '' && data != false && data != 'false' && data != '0') {
-						result += 1;
-					}
-
-				});
-
-				node.firstChild.innerHTML = result;
-			}
-		}, webix.ui.datafilter.summColumn);
-
-	}
-
-}
+               node.firstChild.innerHTML = result;
+            }
+         },
+         webix.ui.datafilter.summColumn
+      );
+   }
+};

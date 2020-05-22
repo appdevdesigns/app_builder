@@ -1,4 +1,3 @@
-
 /*
  * custom_activelist
  *
@@ -6,56 +5,41 @@
  *
  */
 
+module.exports = class ABCustomActiveList {
+   get key() {
+      return "activelist";
+   }
 
-export default class ABCustomActiveList  {
+   constructor(App, key) {
+      // App 	{obj}	our application instance object.
+      // key {string}	the destination key in App.custom[componentKey] for the instance of this component:
 
-	get key() { return 'activelist'; } 
+      // super(App, key);
 
-	constructor(App, key) {
-		// App 	{obj}	our application instance object.
-		// key {string}	the destination key in App.custom[componentKey] for the instance of this component:
+      var L = App.Label;
 
-		// super(App, key);
+      var labels = {
+         common: App.labels,
 
-		var L = App.Label;
+         component: {}
+      };
 
+      // internal list of Webix IDs to reference our UI components.
+      var ids = {
+         component: App.unique(this.key)
+      };
 
-		var labels = {
+      // Our webix UI definition:
+      var _ui = {
+         name: this.key
+      };
+      this.view = this.key;
 
-			common: App.labels,
+      // our internal business logic
+      var _logic = {};
+      this._logic = _logic;
 
-			component: {
-
-			}
-
-		}
-
-
-		// internal list of Webix IDs to reference our UI components.
-		var ids = {
-			component: App.unique(this.key),
-		}
-
-
-
-		// Our webix UI definition:
-		var _ui = {
-			name: this.key
-		};
-		this.view = this.key;
-
-
-
-		// our internal business logic 
-		var _logic = {
-
-		}
-		this._logic = _logic;
-
-
-
-		// Tell Webix to create an INSTANCE of our custom component:
-		webix.protoUI(_ui, webix.ui.list, webix.ActiveContent);
-	}
-
-}
+      // Tell Webix to create an INSTANCE of our custom component:
+      webix.protoUI(_ui, webix.ui.list, webix.ActiveContent);
+   }
+};

@@ -1,102 +1,102 @@
-import AB from '../../../components/ab'
-import ABFieldLongText from "../../../classes/dataFields/ABFieldLongText"
+import AB from "../../../components/ab";
+import ABFieldLongText from "../../../classes/dataFields/ABFieldLongText";
 
 describe("ABFieldLongText unit tests", () => {
+   function L(key, altText) {
+      return AD.lang.label.getLabel(key) || altText;
+   }
 
-	function L(key, altText) {
-		return AD.lang.label.getLabel(key) || altText;
-	}
+   var sandbox;
 
-	var sandbox;
+   var ab;
+   var mockApp;
+   var mockObject;
 
-	var ab;
-	var mockApp;
-	var mockObject;
+   var longTextField;
+   var longTextComponent;
 
-	var longTextField;
-	var longTextComponent;
+   var columnName = "TEST_LONGTEXT_COLUMN";
 
-	var columnName = 'TEST_LONGTEXT_COLUMN';
+   before(() => {
+      ab = new AB();
 
-	before(() => {
-		ab = new AB();
+      mockApp = ab._app;
+      mockObject = {};
 
-		mockApp = ab._app;
-		mockObject = {};
+      longTextField = new ABFieldLongText(
+         {
+            columnName: columnName,
+            settings: {}
+         },
+         mockObject
+      );
 
-		longTextField = new ABFieldLongText({
-			columnName: columnName,
-			settings: {}
-		}, mockObject);
+      longTextComponent = ABFieldLongText.propertiesComponent(mockApp);
+   });
 
-		longTextComponent = ABFieldLongText.propertiesComponent(mockApp);
-	});
+   beforeEach(() => {
+      sandbox = sinon.sandbox.create();
+   });
 
-	beforeEach(() => {
-		sandbox = sinon.sandbox.create();
-	});
+   afterEach(() => {
+      sandbox.restore();
+   });
 
-	afterEach(() => {
-		sandbox.restore();
-	});
+   /* Field test cases */
+   describe("LongText data field", () => {
+      it("should exist", () => {
+         assert.isDefined(longTextField);
+      });
 
-	/* Field test cases */
-	describe('LongText data field', () => {
+      it("should have valid defaults", () => {
+         let defaultValues = ABFieldLongText.defaults();
 
-		it('should exist', () => {
-			assert.isDefined(longTextField);
-		});
+         let menuName = L("ab.dataField.longstring.menuName", "*Long text");
+         let description = L(
+            "ab.dataField.longstring.description",
+            "*Multiple lines of text."
+         );
 
-		it('should have valid defaults', () => {
-			let defaultValues = ABFieldLongText.defaults();
+         assert.equal("LongText", defaultValues.key);
+         assert.equal("align-right", defaultValues.icon);
+         assert.equal(menuName, defaultValues.menuName);
+         assert.equal(description, defaultValues.description);
+      });
 
-			let menuName = L('ab.dataField.longstring.menuName', '*Long text');
-			let description = L('ab.dataField.longstring.description', '*Multiple lines of text.');
+      it(".columnHeader: should return column config", () => {
+         var columnConfig = longTextField.columnHeader();
+         assert.equal("text", columnConfig.editor, ": .editor should == text");
+         assert.isUndefined(columnConfig.sort, ": .sort should not be defined");
+      });
 
-			assert.equal('LongText', defaultValues.key);
-			assert.equal('align-right', defaultValues.icon);
-			assert.equal(menuName, defaultValues.menuName);
-			assert.equal(description, defaultValues.description);
-		});
+      it(".defaultValue: should follow empty textDefault setting", () => {
+         var rowData = {};
 
-		it('.columnHeader: should return column config', () => {
-			var columnConfig = longTextField.columnHeader();
-			assert.equal('text', columnConfig.editor, ': .editor should == text');
-			assert.isUndefined(columnConfig.sort, ': .sort should not be defined');
-		});
+         longTextField.settings.textDefault = null;
+         longTextField.defaultValue(rowData);
+         assert.isDefined(rowData[columnName]);
+         assert.equal("", rowData[columnName]);
 
-		it('.defaultValue: should follow empty textDefault setting', () => {
-			var rowData = {};
+         longTextField.settings.textDefault = undefined;
+         longTextField.defaultValue(rowData);
+         assert.isDefined(rowData[columnName]);
+         assert.equal("", rowData[columnName]);
+      });
 
-			longTextField.settings.textDefault = null;
-			longTextField.defaultValue(rowData);
-			assert.isDefined(rowData[columnName]);
-			assert.equal('', rowData[columnName]);
-			
-			longTextField.settings.textDefault = undefined;
-			longTextField.defaultValue(rowData);
-			assert.isDefined(rowData[columnName]);
-			assert.equal('', rowData[columnName]);
-		});
-		
-		it('.defaultValue: should follow non-empty textDefault setting', () => {
-			var rowData = {};
+      it(".defaultValue: should follow non-empty textDefault setting", () => {
+         var rowData = {};
 
-			longTextField.settings.default = 'hello world';
-			longTextField.defaultValue(rowData);
-			assert.isDefined(rowData[columnName]);
-			assert.equal('hello world', rowData[columnName]);
-		});
+         longTextField.settings.default = "hello world";
+         longTextField.defaultValue(rowData);
+         assert.isDefined(rowData[columnName]);
+         assert.equal("hello world", rowData[columnName]);
+      });
+   });
 
-	});
-
-
-	/* Long text field component test cases */
-	describe('Long text field component', () => {
-		it('should exist', () => {
-			assert.isDefined(longTextComponent);
-		});
-
-	});
-
+   /* Long text field component test cases */
+   describe("Long text field component", () => {
+      it("should exist", () => {
+         assert.isDefined(longTextComponent);
+      });
+   });
 });

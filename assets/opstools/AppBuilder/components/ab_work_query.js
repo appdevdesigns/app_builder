@@ -1,4 +1,3 @@
-
 /*
  * ab_work_query
  *
@@ -6,126 +5,98 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
-import AB_Work_Query_List from "./ab_work_query_list"
-import AB_Work_Query_Workspace from "./ab_work_query_workspace"
+const AB_Work_Query_List = require("./ab_work_query_list");
+const AB_Work_Query_Workspace = require("./ab_work_query_workspace");
 
+module.exports = class AB_Work_Query extends ABComponent {
+   //.extend(idBase, function(App) {
 
+   constructor(App) {
+      super(App, "ab_work_query");
+      var L = this.Label;
 
-export default class AB_Work_Query extends OP.Component {   //.extend(idBase, function(App) {
+      var labels = {
+         common: App.labels,
+         component: {}
+      };
 
-	constructor(App) {
-		super(App, 'ab_work_query');
-		var L = this.Label;
+      // internal list of Webix IDs to reference our UI components.
+      var ids = {
+         component: this.unique("component")
+      };
 
-		var labels = {
-			common : App.labels,
-			component: {
-			}
-		}
+      var QueryList = new AB_Work_Query_List(App);
+      var QueryWorkspace = new AB_Work_Query_Workspace(App);
 
+      let CurrentApplication;
 
-		// internal list of Webix IDs to reference our UI components.
-		var ids = {
-			component: this.unique('component'),
+      // Our webix UI definition:
+      this.ui = {
+         id: ids.component,
+         type: "space",
+         cols: [QueryList.ui, { view: "resizer" }, QueryWorkspace.ui]
+      };
 
-		}
+      // Our init() function for setting up our UI
+      this.init = function() {
+         QueryWorkspace.init();
+         QueryList.init({
+            onItemSelected: _logic.querySelected
+         });
+      };
 
+      // our internal business logic
+      var _logic = {
+         /**
+          * @function applicationLoad
+          *
+          * Initialize the Query Workspace with the given ABApplication.
+          *
+          * @param {ABApplication} application
+          */
+         applicationLoad: function(application) {
+            CurrentApplication = application;
 
-		var QueryList = new AB_Work_Query_List(App);
-		var QueryWorkspace = new AB_Work_Query_Workspace(App);
+            QueryWorkspace.clearWorkspace();
 
-		let CurrentApplication;
+            QueryList.applicationLoad(application);
+            QueryWorkspace.applicationLoad(application);
+         },
 
-		// Our webix UI definition:
-		this.ui = {
-			id: ids.component,
-			type: "space",
-			cols: [
-				QueryList.ui,
-				{ view: "resizer"},
-				QueryWorkspace.ui
-			]
-		};
+         querySelected: function(query) {
+            QueryWorkspace.resetTabs();
+            QueryWorkspace.populateQueryWorkspace(query);
+         },
 
+         /**
+          * @function show()
+          *
+          * Show this component.
+          */
+         show: function() {
+            $$(ids.component).show();
 
+            if (
+               CurrentApplication &&
+               (!CurrentApplication.loadedQueries || QueryList.count() < 1)
+            ) {
+               QueryList.busy();
 
+               CurrentApplication.queryLoad().then(() => {
+                  QueryList.refresh();
+                  QueryList.ready();
+               });
+            }
+         }
+      };
+      this._logic = _logic;
 
-
-		// Our init() function for setting up our UI
-		this.init = function() {
-
-			QueryWorkspace.init();
-			QueryList.init({
-				onItemSelected:_logic.querySelected
-			});
-
-		}
-
-
-		// our internal business logic
-		var _logic = {
-
-
-			/**
-			 * @function applicationLoad
-			 *
-			 * Initialize the Query Workspace with the given ABApplication.
-			 *
-			 * @param {ABApplication} application
-			 */
-			applicationLoad: function(application) {
-
-				CurrentApplication = application;
-
-				QueryWorkspace.clearWorkspace();
-
-				QueryList.applicationLoad(application);
-				QueryWorkspace.applicationLoad(application);
-			},
-
-
-			querySelected: function(query) {
-				QueryWorkspace.resetTabs();
-				QueryWorkspace.populateQueryWorkspace(query);
-			},
-
-			/**
-			 * @function show()
-			 *
-			 * Show this component.
-			 */
-			show:function() {
-
-				$$(ids.component).show();
-
-				if (CurrentApplication &&
-					(!CurrentApplication.loadedQueries ||
-					QueryList.count() < 1)) {
-
-					QueryList.busy();
-
-					CurrentApplication.queryLoad()
-						.then(() => {
-
-							QueryList.refresh();
-							QueryList.ready();
-
-						});
-				}
-
-			}
-		}
-		this._logic = _logic;
-
-
-
-		// 
-		// Define our external interface methods:
-		// 
-		this.applicationLoad = _logic.applicationLoad;
-		this.show = _logic.show;
-
-	}
-
-}
+      //
+      // Define our external interface methods:
+      //
+      this.applicationLoad = _logic.applicationLoad;
+      this.show = _logic.show;
+   }
+};

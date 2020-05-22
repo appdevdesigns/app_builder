@@ -5,287 +5,319 @@
  * route object.
  */
 
-
 module.exports = {
+   /* Application Info */
+   "get /app_builder/application": "app_builder/ABApplicationController.find",
 
-    /* Application Info */
-    'get /app_builder/application':
-        'app_builder/ABApplicationController.find',
+   "get /app_builder/application/info":
+      "app_builder/ABApplicationController.applicationInfo",
 
-    'get /app_builder/application/info':
-        'app_builder/ABApplicationController.applicationInfo',
+   "get /app_builder/application/:appID":
+      "app_builder/ABApplicationController.findOne",
 
-    'get /app_builder/application/:appID':
-        'app_builder/ABApplicationController.findOne',
+   "post /app_builder/application":
+      "app_builder/ABApplicationController.applicationCreate",
 
-    'post /app_builder/application':
-        'app_builder/ABApplicationController.applicationCreate',
+   "put /app_builder/application/:appID":
+      "app_builder/ABApplicationController.applicationUpdate",
 
-    'put /app_builder/application/:appID':
-        'app_builder/ABApplicationController.applicationUpdate',
+   "delete /app_builder/application/:appID":
+      "app_builder/ABApplicationController.applicationRemove",
 
-    'delete /app_builder/application/:appID':
-        'app_builder/ABApplicationController.applicationRemove',
+   "put /app_builder/application/:appID/info":
+      "app_builder/ABApplicationController.applicationSave",
 
-    'put /app_builder/application/:appID/info':
-        'app_builder/ABApplicationController.applicationSave',
+   /* Objects */
+   "get /app_builder/application/:appID/object":
+      "app_builder/ABObjectController.objectApplication",
 
-    /* Objects */
-    'get /app_builder/application/:appID/object':
-        'app_builder/ABObjectController.objectApplication',
+   "get /app_builder/object": "app_builder/ABObjectController.objectFind",
 
-    'get /app_builder/object':
-        'app_builder/ABObjectController.objectFind',
+   "get /app_builder/object/info": "app_builder/ABObjectController.objectInfo",
 
-    'get /app_builder/object/info':
-        'app_builder/ABObjectController.objectInfo',
+   "get /app_builder/object/:objectId":
+      "app_builder/ABObjectController.objectFindOne",
 
-    'get /app_builder/object/:objectId':
-        'app_builder/ABObjectController.objectFindOne',
+   "put /app_builder/object": "app_builder/ABObjectController.objectSave",
 
-    'put /app_builder/object':
-        'app_builder/ABObjectController.objectSave',
+   "delete /app_builder/object/:objectId":
+      "app_builder/ABObjectController.objectDestroy",
 
-    'delete /app_builder/object/:objectId':
-        'app_builder/ABObjectController.objectDestroy',
+   "put /app_builder/application/:appID/object/:objID":
+      "app_builder/ABObjectController.importObject",
 
-    'put /app_builder/application/:appID/object/:objID':
-        'app_builder/ABObjectController.importObject',
+   "delete /app_builder/application/:appID/object/:objID":
+      "app_builder/ABObjectController.excludeObject",
 
-    'delete /app_builder/application/:appID/object/:objID':
-        'app_builder/ABObjectController.excludeObject',
+   /* Application Views */
+   "put /app_builder/application/:appID/view":
+      "app_builder/ABApplicationController.viewSave",
 
-    /* Application Views */
-    'put /app_builder/application/:appID/view':
-        'app_builder/ABApplicationController.viewSave',
+   "delete /app_builder/application/:appID/view":
+      "app_builder/ABApplicationController.viewDestroy",
 
-    'delete /app_builder/application/:appID/view':
-        'app_builder/ABApplicationController.viewDestroy',
+   "put /app_builder/application/:appID/viewReorder":
+      "app_builder/ABApplicationController.viewReorder",
 
-    'put /app_builder/application/:appID/viewReorder':
-        'app_builder/ABApplicationController.viewReorder',
+   /* Queries */
+   "get /app_builder/application/:appID/query":
+      "app_builder/ABQueryController.queryApplication",
 
-    /* Queries */
-    'get /app_builder/application/:appID/query':
-        'app_builder/ABQueryController.queryApplication',
+   "get /app_builder/query": "app_builder/ABQueryController.queryFind",
 
-    'get /app_builder/query':
-        'app_builder/ABQueryController.queryFind',
+   "get /app_builder/query/info": "app_builder/ABQueryController.queryInfo",
 
-    'get /app_builder/query/info':
-        'app_builder/ABQueryController.queryInfo',
+   "get /app_builder/query/:queryID":
+      "app_builder/ABQueryController.queryFindOne",
 
-    'get /app_builder/query/:queryID':
-        'app_builder/ABQueryController.queryFindOne',
+   "put /app_builder/query": "app_builder/ABQueryController.querySave",
 
-    'put /app_builder/query':
-        'app_builder/ABQueryController.querySave',
+   "delete /app_builder/query/:queryID":
+      "app_builder/ABQueryController.queryDestroy",
 
-    'delete /app_builder/query/:queryID':
-        'app_builder/ABQueryController.queryDestroy',
+   "put /app_builder/application/:appID/query/:queryID":
+      "app_builder/ABQueryController.importQuery",
 
-    'put /app_builder/application/:appID/query/:queryID':
-        'app_builder/ABQueryController.importQuery',
+   "delete /app_builder/application/:appID/query/:queryID":
+      "app_builder/ABQueryController.excludeQuery",
 
-    'delete /app_builder/application/:appID/query/:queryID':
-        'app_builder/ABQueryController.excludeQuery',
+   /* Data views */
+   "get /app_builder/application/:appID/dataview":
+      "app_builder/ABDataviewController.dataviewApplication",
 
+   "get /app_builder/dataview": "app_builder/ABDataviewController.dataviewFind",
 
-    /* Data views */
-    'get /app_builder/application/:appID/dataview':
-        'app_builder/ABDataviewController.dataviewApplication',
+   "get /app_builder/dataview/info":
+      "app_builder/ABDataviewController.dataviewInfo",
 
-    'get /app_builder/dataview':
-        'app_builder/ABDataviewController.dataviewFind',
+   "get /app_builder/dataview/:dataviewId":
+      "app_builder/ABDataviewController.dataviewFindOne",
 
-    'get /app_builder/dataview/info':
-        'app_builder/ABDataviewController.dataviewInfo',
+   "put /app_builder/dataview": "app_builder/ABDataviewController.dataviewSave",
 
-    'get /app_builder/dataview/:dataviewId':
-        'app_builder/ABDataviewController.dataviewFindOne',
+   "delete /app_builder/dataview/:dataviewId":
+      "app_builder/ABDataviewController.dataviewDestroy",
 
-    'put /app_builder/dataview':
-        'app_builder/ABDataviewController.dataviewSave',
+   "put /app_builder/application/:appID/dataview/:dataviewID":
+      "app_builder/ABDataviewController.importDataview",
 
-    'delete /app_builder/dataview/:dataviewId':
-        'app_builder/ABDataviewController.dataviewDestroy',
+   "delete /app_builder/application/:appID/dataview/:dataviewID":
+      "app_builder/ABDataviewController.excludeDataview",
 
-    'put /app_builder/application/:appID/dataview/:dataviewID':
-        'app_builder/ABDataviewController.importDataview',
+   /* Scopes */
+   "get /app_builder/scope": "app_builder/ABScopeController.find",
 
-    'delete /app_builder/application/:appID/dataview/:dataviewID':
-        'app_builder/ABDataviewController.excludeDataview',
+   "get /app_builder/scope/:id": "app_builder/ABScopeController.findOne",
 
+   "get /app_builder/scope/:id/roles":
+      "app_builder/ABScopeController.scopeRole",
 
-    /* ABFieldUser */
-    'get /app_builder/user/list':
-        'app_builder/ABUserController.getUserList',
+   "put /app_builder/scope": "app_builder/ABScopeController.save",
 
+   "delete /app_builder/scope/:id": "app_builder/ABScopeController.destroy",
 
-    /* Application permissions */
-    'get /app_builder/user/roles':
-        'app_builder/ABUserController.getRoles',
+   "put /app_builder/role/:roleID/scope/:id":
+      "app_builder/ABScopeController.import",
 
-    'get /app_builder/:id/role':
-        'app_builder/ABRoleController.getRoles',
+   "delete /app_builder/role/:roleID/scope/:id":
+      "app_builder/ABScopeController.exclude",
 
-    'post /app_builder/:id/role':
-        'app_builder/ABRoleController.createRole',
+   /* Users */
+   "get /app_builder/user/list": "app_builder/ABUserController.getUserList",
 
-    'delete /app_builder/:id/role':
-        'app_builder/ABRoleController.deleteRole',
+   "get /app_builder/user/:user/roles":
+      "app_builder/ABUserController.getRoleScopes",
 
-    'put /app_builder/:id/role/assign':
-        'app_builder/ABRoleController.assignRole',
-        
-    /* Application page permissions */
-    'get /app_builder/page/:action_key/role': 
-        'app_builder/ABApplicationController.getPageRoles',
-    'delete /app_builder/page/:action_key/role': 
-        'app_builder/ABApplicationController.deletePageRoles',
-    'put /app_builder/page/:action_key/role': 
-        'app_builder/ABApplicationController.addPageRoles',
+   /* Roles */
+   // 'get /app_builder/application/:appID/role':
+   //     'app_builder/ABRoleController.roleApplication',
 
+   "get /app_builder/role": "app_builder/ABRoleController.find",
 
-    /* Live display */
-    'get /app_builder/application/:appID/livepage/:pageID':
-        'app_builder/ABApplicationController.livePage',
+   "get /app_builder/role/:id": "app_builder/ABRoleController.findOne",
 
+   "put /app_builder/role": "app_builder/ABRoleController.save",
 
-    /* Import & Export */
-    'get /app_builder/appJSON/:id':
-        'app_builder/ABApplicationController.jsonExport',
+   "delete /app_builder/role/:id": "app_builder/ABRoleController.destroy",
 
-    'post /app_builder/appJSON':
-        'app_builder/ABApplicationController.jsonImport',
+   // 'put /app_builder/application/:appID/role/:roleID':
+   //     'app_builder/ABRoleController.import',
 
-    // 'get /app_builder/application/:appID/findModels':
-    //     'app_builder/ABApplicationController.findModels',
-    
-    // 'post /app_builder/application/:appID/importModel':
-    //     'app_builder/ABApplicationController.importModel',
+   // 'delete /app_builder/application/:appID/role/:roleID':
+   //     'app_builder/ABRoleController.exclude',
 
-    /* Migration Services */
-    // app_builder/migrate/object/:objID
-    // app_builder/migrate/object/:objID/field/:fieldID
-    // post url   // create the object/field table info
-    // put  url   // update the object/field table info
-    // delete url // remove the object/field table info
-    'post /app_builder/migrate/object/:objID' : 
-        'app_builder/ABMigrationController.createObject',
+   "get /app_builder/role/:id/scope": "app_builder/ABRoleController.roleScope",
 
-    'delete /app_builder/migrate/object/:objID' : 
-        'app_builder/ABMigrationController.dropObject',
+   "get /app_builder/role/:id/users": "app_builder/ABRoleController.roleUsers",
 
-    'post /app_builder/migrate/object/:objID/field/:fieldID' : 
-        'app_builder/ABMigrationController.createField',
+   "post /app_builder/role/:id/username/:username":
+      "app_builder/ABRoleController.addUser",
 
-    'put /app_builder/migrate/object/:objID/field/:fieldID' :
-        'app_builder/ABMigrationController.updateField',
+   "delete /app_builder/role/:id/username/:username":
+      "app_builder/ABRoleController.removeUser",
 
-    'delete /app_builder/migrate/object/:objID/field/:fieldID' :
-        'app_builder/ABMigrationController.dropField',
+   /* Application permissions */
+   "get /app_builder/user/roles": "app_builder/ABUserController.getRoles",
 
+   "get /app_builder/:id/role": "app_builder/ABRoleController.getRoles",
 
-    /* Model Services */
-    // app_builder/model/application/:appID/object/:objID
-    // get  url   // find   the object data
-    // post url   // create the object data
-    // put  url   // update the object data
-    // delete url // remove the object data
-    // put  url   // refresh object model
-    'get /app_builder/model/application/:appID/object/:objID' : 
-        'app_builder/ABModelController.find',
+   "post /app_builder/:id/role": "app_builder/ABRoleController.createRole",
 
-    'post /app_builder/model/application/:appID/object/:objID' : 
-        'app_builder/ABModelController.create',
+   "delete /app_builder/:id/role": "app_builder/ABRoleController.deleteRole",
 
-    'put /app_builder/model/application/:appID/object/:objID/:id' : 
-        'app_builder/ABModelController.update',
+   "put /app_builder/:id/role/assign":
+      "app_builder/ABRoleController.assignRole",
 
-    'put /app_builder/model/application/:appID/object/:objID' :
-        'app_builder/ABModelController.upsert',
+   /* Application page permissions */
+   "get /app_builder/page/:action_key/role":
+      "app_builder/ABApplicationController.getPageRoles",
+   "delete /app_builder/page/:action_key/role":
+      "app_builder/ABApplicationController.deletePageRoles",
+   "put /app_builder/page/:action_key/role":
+      "app_builder/ABApplicationController.addPageRoles",
 
-    'delete /app_builder/model/application/:appID/object/:objID/:id' : 
-        'app_builder/ABModelController.delete',
+   /* Live display */
+   "get /app_builder/application/:appID/livepage/:pageID":
+      "app_builder/ABApplicationController.livePage",
 
-    'put /app_builder/model/application/:appID/refreshobject/:objID' : 
-        'app_builder/ABModelController.refresh',
+   /* Import & Export */
+   "get /app_builder/appJSON/:id":
+      "app_builder/ABApplicationController.jsonExport",
 
-    'get /app_builder/model/application/:appID/count/:objID' : 
-        'app_builder/ABModelController.count',
+   "post /app_builder/appJSON":
+      "app_builder/ABApplicationController.jsonImport",
 
+   // 'get /app_builder/application/:appID/findModels':
+   //     'app_builder/ABApplicationController.findModels',
 
-    /* Import External models */
-    'get /app_builder/external/connections' : 
-        'app_builder/ABExternalController.findDatabaseNames',
+   // 'post /app_builder/application/:appID/importModel':
+   //     'app_builder/ABApplicationController.importModel',
 
-    'get /app_builder/external/application/:appID' : 
-        'app_builder/ABExternalController.findTableNames',
+   /* Migration Services */
+   // app_builder/migrate/object/:objID
+   // app_builder/migrate/object/:objID/field/:fieldID
+   // post url   // create the object/field table info
+   // put  url   // update the object/field table info
+   // delete url // remove the object/field table info
+   "post /app_builder/migrate/object/:objID":
+      "app_builder/ABMigrationController.createObject",
 
-    'get /app_builder/external/model/:tableName/columns' : 
-        'app_builder/ABExternalController.findColumns',
+   "delete /app_builder/migrate/object/:objID":
+      "app_builder/ABMigrationController.dropObject",
 
-    'post /app_builder/external/application/:appID/model/:tableName' : 
-        'app_builder/ABExternalController.importTable',
+   "post /app_builder/migrate/object/:objID/field/:fieldID":
+      "app_builder/ABMigrationController.createField",
 
+   "put /app_builder/migrate/object/:objID/field/:fieldID":
+      "app_builder/ABMigrationController.updateField",
 
-// only for easy development/testing purposes:
-'get /app_builder/migrate/application/:appID/object/:objID' : 
-    'app_builder/ABMigrationController.createObject',
+   "delete /app_builder/migrate/object/:objID/field/:fieldID":
+      "app_builder/ABMigrationController.dropField",
 
-    // Email
-    'post /app_builder/email' : 
-        'app_builder/ABEmailController.send',
+   /* Model Services */
+   // app_builder/model/application/:appID/object/:objID
+   // get  url   // find   the object data
+   // post url   // create the object data
+   // put  url   // update the object data
+   // delete url // remove the object data
+   // put  url   // refresh object model
+   "get /app_builder/model/application/:appID/object/:objID":
+      "app_builder/ABModelController.find",
 
+   "post /app_builder/model/application/:appID/object/:objID":
+      "app_builder/ABModelController.create",
 
+   "put /app_builder/model/application/:appID/object/:objID/:id":
+      "app_builder/ABModelController.update",
 
+   "put /app_builder/model/application/:appID/object/:objID":
+      "app_builder/ABModelController.upsert",
 
-    /* Relay Settings */
+   "delete /app_builder/model/application/:appID/object/:objID/:id":
+      "app_builder/ABModelController.delete",
 
-    'get /app_builder/relay/users':
-        'app_builder/ABRelayController.users',
+   "put /app_builder/model/application/:appID/refreshobject/:objID":
+      "app_builder/ABModelController.refresh",
 
-    'get /app_builder/relay/uninitializedusers':
-        'app_builder/ABRelayController.uninitializedUsers',
+   "get /app_builder/model/application/:appID/count/:objID":
+      "app_builder/ABModelController.count",
 
-    'post /app_builder/relay/initialize':
-        'app_builder/ABRelayController.initialize',
+   /* Import External models */
+   "get /app_builder/external/connections":
+      "app_builder/ABExternalController.findDatabaseNames",
 
-    'post /app_builder/relay/publishusers':
-        'app_builder/ABRelayController.publishusers',
+   "get /app_builder/external/application/:appID":
+      "app_builder/ABExternalController.findTableNames",
 
-    'get /app_builder/mobile/apps':
-        'app_builder/ABApplicationController.listMobileApps',
+   "get /app_builder/external/model/:tableName/columns":
+      "app_builder/ABExternalController.findColumns",
 
-    'post /app_builder/QR/sendEmail':
-        'app_builder/ABMobileQRController.sendEmail',
+   "post /app_builder/external/application/:appID/model/:tableName":
+      "app_builder/ABExternalController.importTable",
 
-    'post /app_builder/QR/adminQRCode':
-        'app_builder/ABMobileQRController.adminQRCode',
+   // only for easy development/testing purposes:
+   "get /app_builder/migrate/application/:appID/object/:objID":
+      "app_builder/ABMigrationController.createObject",
 
-    'get /app_builder/qr/user-qr-code':
-        'app_builder/ABMobileQRController.userQRCode',
+   // Email
+   "post /app_builder/email": "app_builder/ABEmailController.send",
 
-    'get /app_builder/mobile/:mobileID/apk':
-        'app_builder/ABMobileQRController.sendAPK',
+   /* Relay Settings */
 
+   "get /app_builder/relay/users": "app_builder/ABRelayController.users",
 
-    /* Event Specific URLs */
+   "get /app_builder/relay/uninitializedusers":
+      "app_builder/ABRelayController.uninitializedUsers",
 
-    'post /app_builder/Event/sendConfirmationEmail':
-        'app_builder/ABEventController.sendRegistrationConfirmation',
+   "post /app_builder/relay/initialize":
+      "app_builder/ABRelayController.initialize",
 
-    'get /events/confirm/:regID/:isConfirmed': 
-        'app_builder/ABEventController.receiveRegistrationConfirmationResponse',
+   "post /app_builder/relay/publishusers":
+      "app_builder/ABRelayController.publishusers",
 
-    'post /app_builder/Event/sendFeeConfirmationEmail':
-        'app_builder/ABEventController.sendFeeConfirmation',
+   "get /app_builder/mobile/apps":
+      "app_builder/ABApplicationController.listMobileApps",
 
-    'get /events/feeconfirm/:regID/:isConfirmed': 
-        'app_builder/ABEventController.receiveFeeConfirmationResponse',
+   "post /app_builder/QR/sendEmail":
+      "app_builder/ABMobileQRController.sendEmail",
 
-  /*
+   "post /app_builder/QR/adminQRCode":
+      "app_builder/ABMobileQRController.adminQRCode",
+
+   "get /app_builder/qr/user-qr-code":
+      "app_builder/ABMobileQRController.userQRCode",
+
+   "get /app_builder/mobile/:mobileID/apk":
+      "app_builder/ABMobileQRController.sendAPK",
+
+   /* Event Specific URLs */
+
+   "post /app_builder/Event/sendConfirmationEmail":
+      "app_builder/ABEventController.sendRegistrationConfirmation",
+
+   "get /events/confirm/:regID/:isConfirmed":
+      "app_builder/ABEventController.receiveRegistrationConfirmationResponse",
+
+   "post /app_builder/Event/sendFeeConfirmationEmail":
+      "app_builder/ABEventController.sendFeeConfirmation",
+
+   "get /events/feeconfirm/:regID/:isConfirmed":
+      "app_builder/ABEventController.receiveFeeConfirmationResponse",
+
+   /* Process Manager Related URLs */
+   // these are primarily for testing right now:
+   "get /process/trigger/:key": "app_builder/ABTriggerController.trigger",
+
+   // ---> initiates a "trigger" that can spawn a new process
+   "post /app_builder/abprocessinstance/reset":
+      "app_builder/ABProcessInstanceController.resetInstance",
+   // ---> initiates a "reset" on a process instance to retry after an Error
+
+   "get /process/inbox": "app_builder/ABProcessController.userInbox",
+   "post /process/inbox/:uuid":
+      "app_builder/ABProcessController.userInboxUpdate"
+
+   /*
 
   '/': {
     view: 'user/signup'
@@ -299,7 +331,4 @@ module.exports = {
   'get /*(^.*)' : 'app_builder/PluginController.profile'
 
   */
-
-
 };
-

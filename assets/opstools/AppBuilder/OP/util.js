@@ -1,6 +1,3 @@
-
 export default {
-	
-	uuid: AD.util.uuid
-	
-}
+   uuid: AD.util.uuid
+};

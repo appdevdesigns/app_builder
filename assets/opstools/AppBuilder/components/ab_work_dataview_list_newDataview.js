@@ -5,239 +5,209 @@
  *
  */
 
-import ABBlankDataview from "./ab_work_dataview_list_newDataview_blank"
-import ABImportDataview from "./ab_work_dataview_list_newDataview_import"
+const ABComponent = require("../classes/platform/ABComponent");
+const ABBlankDataview = require("./ab_work_dataview_list_newDataview_blank");
+const ABImportDataview = require("./ab_work_dataview_list_newDataview_import");
 
-export default class AB_Work_Dataview_List_NewDataview extends OP.Component {
+module.exports = class AB_Work_Dataview_List_NewDataview extends ABComponent {
+   constructor(App) {
+      super(App, "ab_work_dataview_list_newdataview");
+      var L = this.Label;
 
-	constructor(App) {
-		super(App, 'ab_work_dataview_list_newdataview');
-		var L = this.Label;
+      var labels = {
+         common: App.labels,
+         component: {
+            addNew: L("ab.dataview.addNew", "*Add new data view")
+         }
+      };
 
-		var labels = {
-			common: App.labels,
-			component: {
-				addNew: L('ab.dataview.addNew', '*Add new data view')
-			}
-		}
+      // internal list of Webix IDs to reference our UI components.
+      var ids = {
+         component: this.unique("component"),
+         tab: this.unique("tab")
+      };
 
-		// internal list of Webix IDs to reference our UI components.
-		var ids = {
-			component: this.unique('component'),
-			tab: this.unique('tab')
-		}
+      let CurrentApplication;
 
-		let CurrentApplication;
+      let BlankTab = new ABBlankDataview(App);
+      let ImportTab = new ABImportDataview(App);
 
-		let BlankTab = new ABBlankDataview(App);
-		let ImportTab = new ABImportDataview(App);
+      // Our webix UI definition:
+      this.ui = {
+         view: "window",
+         id: ids.component,
+         position: "center",
+         modal: true,
+         head: labels.component.addNew,
+         body: {
+            view: "tabview",
+            id: ids.tab,
+            cells: [BlankTab.ui, ImportTab.ui],
+            tabbar: {
+               on: {
+                  onAfterTabClick: (id) => {
+                     _logic.switchTab(id);
+                  }
+               }
+            }
+         },
+         on: {
+            onBeforeShow: () => {
+               var id = $$(ids.tab).getValue();
+               _logic.switchTab(id);
+            }
+         }
+      };
 
+      // Our init() function for setting up our UI
+      this.init = (options) => {
+         webix.ui(this.ui);
+         webix.extend($$(ids.component), webix.ProgressBar);
 
-		// Our webix UI definition:
-		this.ui = {
-			view: "window",
-			id: ids.component,
-			position: "center",
-			modal: true,
-			head: labels.component.addNew,
-			body: {
-				view: "tabview",
-				id: ids.tab,
-				cells: [
-					BlankTab.ui,
-					ImportTab.ui
-				],
-				tabbar: {
-					on: {
-						onAfterTabClick: (id) => {
+         // register our callbacks:
+         for (var c in _logic.callbacks) {
+            _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+         }
+         var ourCBs = {
+            onCancel: _logic.hide,
+            onSave: _logic.save,
+            onDone: _logic.done,
+            onBusyStart: _logic.showBusy,
+            onBusyEnd: _logic.hideBusy
+         };
 
-							_logic.switchTab(id);
+         BlankTab.init(ourCBs);
+         ImportTab.init(ourCBs);
+      };
 
-						}
-					}
-				}
-			},
-			on: {
-				onBeforeShow: () => {
+      // our internal business logic
+      var _logic = (this._logic = {
+         /**
+          * @function applicationLoad()
+          *
+          * prepare ourself with the current application
+          */
+         applicationLoad: function(application) {
+            // _logic.show();
+            CurrentApplication = application; // remember our current Application.
+         },
 
-					var id = $$(ids.tab).getValue();
-					_logic.switchTab(id);
+         callbacks: {
+            onDone: function() {}
+         },
 
-				}
-			}
-		};
+         /**
+          * @function hide()
+          *
+          * remove the busy indicator from the form.
+          */
+         hide: function() {
+            if ($$(ids.component)) $$(ids.component).hide();
+         },
 
-		// Our init() function for setting up our UI
-		this.init = (options) => {
-			webix.ui(this.ui);
-			webix.extend($$(ids.component), webix.ProgressBar);
+         /**
+          * Show the busy indicator
+          */
+         showBusy: () => {
+            if ($$(ids.component)) {
+               $$(ids.component).showProgress();
+            }
+         },
 
-			// register our callbacks:
-			for (var c in _logic.callbacks) {
-				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-			}
-			var ourCBs = {
-				onCancel: _logic.hide,
-				onSave: _logic.save,
-				onDone: _logic.done,
-				onBusyStart: _logic.showBusy,
-				onBusyEnd: _logic.hideBusy
-			}
+         /**
+          * Hide the busy indicator
+          */
+         hideBusy: () => {
+            if ($$(ids.component)) {
+               $$(ids.component).hideProgress();
+            }
+         },
 
-			BlankTab.init(ourCBs);
-			ImportTab.init(ourCBs);
+         /**
+          * Finished saving, so hide the popup and clean up.
+          * @param {ABDataview} dataview
+          */
+         done: (dataview) => {
+            _logic.hideBusy();
+            _logic.hide(); // hide our popup
+            _logic.callbacks.onDone(null, dataview); // tell parent component we're done
+         },
 
-		}
+         /**
+          * @function save
+          *
+          * take the data gathered by our child creation tabs, and
+          * add it to our current application.
+          *
+          * @param {obj} values  key=>value hash of model values.
+          * @param {fn}  cb 		node style callback to indicate success/failure
+          * 						return Promise
+          */
+         save: function(values, cb) {
+            // must have an application set.
+            if (!CurrentApplication) {
+               OP.Dialog.Alert({
+                  title: "Shoot!",
+                  test: "No Application Set!  Why?"
+               });
+               cb(true); // there was an error.
+               return false;
+            }
 
-		// our internal business logic
-		var _logic = this._logic = {
+            // create a new (unsaved) instance of our object:
+            var newDataview = CurrentApplication.datacollectionNew(values);
 
-			/**
-			 * @function applicationLoad()
-			 *
-			 * prepare ourself with the current application
-			 */
-			applicationLoad: function (application) {
-				// _logic.show();
-				CurrentApplication = application;	// remember our current Application.
-			},
+            // have newObject validate it's values.
+            var validator = newDataview.isValid();
+            if (validator.fail()) {
+               cb(validator); // tell current Tab component the errors
+               return false; // stop here.
+            }
 
+            // show progress
+            _logic.showBusy();
 
-			callbacks: {
-				onDone: function () { }
-			},
+            // if we get here, save the new Object
+            newDataview
+               .save()
+               .then(function(obj) {
+                  // successfully done:
+                  cb(null, obj) // tell current tab component save successful
+                     .then(() => _logic.done(obj));
+               })
+               .catch(function(err) {
+                  // hide progress
+                  _logic.hideBusy();
 
+                  cb(err); // tell current Tab component there was an error
+               });
+         },
 
-			/**
-			 * @function hide()
-			 *
-			 * remove the busy indicator from the form.
-			 */
-			hide: function () {
-				if ($$(ids.component))
-					$$(ids.component).hide();
-			},
+         /**
+          * @function show()
+          *
+          * Show this component.
+          */
+         show: function() {
+            if ($$(ids.component)) $$(ids.component).show();
 
+            var id = $$(ids.tab).getValue();
+            _logic.switchTab(id);
+         },
 
-			/**
-			 * Show the busy indicator
-			 */
-			showBusy: () => {
-				if ($$(ids.component)) {
-					$$(ids.component).showProgress();
-				}
-			},
+         switchTab: function(tabId) {
+            if (tabId == BlankTab.ui.body.id) {
+               if (BlankTab.onShow) BlankTab.onShow(CurrentApplication);
+            } else if (tabId == ImportTab.ui.body.id) {
+               if (ImportTab.onShow) ImportTab.onShow(CurrentApplication);
+            }
+         }
+      });
 
-
-			/**
-			 * Hide the busy indicator
-			 */
-			hideBusy: () => {
-				if ($$(ids.component)) {
-					$$(ids.component).hideProgress();
-				}
-			},
-
-
-			/**
-			 * Finished saving, so hide the popup and clean up.
-			 * @param {ABDataview} dataview
-			 */
-			done: (dataview) => {
-				_logic.hideBusy();
-				_logic.hide();								// hide our popup
-				_logic.callbacks.onDone(null, dataview);	// tell parent component we're done
-			},
-
-
-			/**
-			 * @function save
-			 *
-			 * take the data gathered by our child creation tabs, and
-			 * add it to our current application.
-			 *
-			 * @param {obj} values  key=>value hash of model values.
-			 * @param {fn}  cb 		node style callback to indicate success/failure
-			 * 						return Promise
-			 */
-			save: function (values, cb) {
-
-				// must have an application set.
-				if (!CurrentApplication) {
-					OP.Dialog.Alert({
-						title: 'Shoot!',
-						test: 'No Application Set!  Why?'
-					});
-					cb(true);	// there was an error.
-					return false;
-				}
-
-				// create a new (unsaved) instance of our object:
-				var newDataview = CurrentApplication.dataviewNew(values);
-
-
-				// have newObject validate it's values.
-				var validator = newDataview.isValid();
-				if (validator.fail()) {
-					cb(validator);							// tell current Tab component the errors
-					return false;							// stop here.
-				}
-
-
-				// show progress
-				_logic.showBusy();
-
-				// if we get here, save the new Object
-				newDataview.save()
-					.then(function (obj) {
-
-						// successfully done:
-						cb(null, obj)									// tell current tab component save successful
-							.then(() => _logic.done(obj));
-					})
-					.catch(function (err) {
-						// hide progress
-						_logic.hideBusy();
-
-						cb(err);								// tell current Tab component there was an error
-					})
-			},
-
-
-			/**
-			 * @function show()
-			 *
-			 * Show this component.
-			 */
-			show: function () {
-				if ($$(ids.component))
-					$$(ids.component).show();
-
-				var id = $$(ids.tab).getValue();
-				_logic.switchTab(id);
-			},
-
-			switchTab: function (tabId) {
-
-				if (tabId == BlankTab.ui.body.id) {
-					if (BlankTab.onShow)
-						BlankTab.onShow(CurrentApplication);
-				}
-				else if (tabId == ImportTab.ui.body.id) {
-					if (ImportTab.onShow)
-						ImportTab.onShow(CurrentApplication);
-				}
-
-			}
-
-		}
-
-		// 
-		// Define our external interface methods:
-		// 
-		this.applicationLoad = _logic.applicationLoad;
-		this.show = _logic.show;
-
-	}
-
-}
+      //
+      // Define our external interface methods:
+      //
+      this.applicationLoad = _logic.applicationLoad;
+      this.show = _logic.show;
+   }
+};

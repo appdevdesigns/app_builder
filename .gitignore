@@ -37,6 +37,8 @@ node_modules
 # ignore any visual studio code files
 .vscode
 
+# appbuilder_class_core project
+assets/opstools/AppBuilder/classes/core/*
 
 # Compiled JS
 assets/opstools/AppBuilder/test/bin/test_app_builder.js

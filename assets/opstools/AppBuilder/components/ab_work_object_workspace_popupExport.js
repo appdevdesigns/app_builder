@@ -5,181 +5,185 @@
  *
  */
 
+const ABComponent = require("../classes/platform/ABComponent");
 
-export default class ABWorkObjectPopupExport extends OP.Component {
+module.exports = class ABWorkObjectPopupExport extends ABComponent {
+   constructor(App, idBase) {
+      idBase = idBase || "ab_work_object_workspace_popupExport";
 
-	constructor(App, idBase) {
+      super(App, idBase);
+      var L = this.Label;
 
-		idBase = idBase || 'ab_work_object_workspace_popupExport';
+      var labels = {
+         common: App.labels,
+         component: {}
+      };
 
-		super(App, idBase);
-		var L = this.Label;
+      // internal list of Webix IDs to reference our UI components.
+      var ids = {
+         popupExport: this.unique(idBase + "_popupExport"),
+         list: this.unique(idBase + "_popupExport_list")
+      };
 
-		var labels = {
-			common: App.labels,
-			component: {
-			}
-		};
+      // webix UI definition:
+      this.ui = {
+         view: "popup",
+         id: ids.popupExport,
+         width: 160,
+         height: 180,
+         select: false,
+         hidden: true,
+         body: {
+            id: ids.list,
+            view: "list",
+            data: [
+               { name: "CSV", icon: "file-excel-o" },
+               { name: "Excel", icon: "file-excel-o" },
+               { name: "PDF", icon: "file-pdf-o" },
+               { name: "PNG", icon: "file-image-o" }
+            ],
+            template:
+               "<div><i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #name#</div>",
+            on: {
+               onItemClick: function(id, e, node) {
+                  var component = this.getItem(id);
 
-		// internal list of Webix IDs to reference our UI components.
-		var ids = {
-			popupExport: this.unique(idBase + '_popupExport'),
-			list: this.unique(idBase + '_popupExport_list'),
-		};
+                  _logic.export(component.name);
+               }
+            }
+         }
+      };
 
+      var _currentObject = null,
+         _grid = null,
+         _filename,
+         _hiddenFields = [];
 
-		// webix UI definition:
-		this.ui = {
-			view: "popup",
-			id: ids.popupExport,
-			width: 160,
-			height: 180,
-			select: false,
-			hidden: true,
-			body: {
-				id: ids.list,
-				view: 'list',
-				data: [
-					{ name: "CSV", icon: "file-excel-o" },
-					{ name: "Excel", icon: "file-excel-o" },
-					{ name: "PDF", icon: "file-pdf-o" },
-					{ name: "PNG", icon: "file-image-o" }
-				],
-				template: "<div><i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #name#</div>",
-				on: {
-					onItemClick: function (id, e, node) {
-						var component = this.getItem(id);
+      // for setting up UI
+      this.init = (options) => {
+         // register callbacks:
+         for (var c in _logic.callbacks) {
+            _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+         }
 
-						_logic.export(component.name);
-					}
-				}
-			}
-		};
+         webix.ui(this.ui);
+      };
 
-		var _currentObject = null,
-			_grid = null,
-			_filename,
-			_hiddenFields = [];
+      // internal business logic
+      var _logic = (this._logic = {
+         objectLoad: function(object) {
+            _currentObject = object;
+         },
 
-		// for setting up UI
-		this.init = (options) => {
-			// register callbacks:
-			for (var c in _logic.callbacks) {
-				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-			}
+         /**
+          * @method setHiddenFields
+          * @param {array} fields - an array of string
+          */
+         setHiddenFields: function(fields) {
+            _hiddenFields = fields || [];
+         },
 
-			webix.ui(this.ui);
-		};
+         setFilename: function(filename) {
+            _filename = filename;
+         },
 
-		// internal business logic 
-		var _logic = this._logic = {
+         setGridComponent: function($grid) {
+            _grid = $grid;
+         },
 
-			objectLoad: function (object) {
-				_currentObject = object;
-			},
+         /**
+          * @function show()
+          *
+          * Show this component.
+          * @param {obj} $view  the webix.$view to hover the popup around.
+          */
+         show: function($view) {
+            $$(ids.popupExport).show($view);
+         },
 
-			/**
-			 * @method setHiddenFields
-			 * @param {array} fields - an array of string
-			 */
-			setHiddenFields: function (fields) {
-				_hiddenFields = fields || [];
-			},
+         export: (name) => {
+            let fnExport;
 
-			setFilename: function(filename) {
-				_filename = filename;
-			},
+            let columns = {};
 
-			setGridComponent: function($grid) {
-				_grid = $grid;
-			},
+            // template of report
+            if (_currentObject) {
+               _currentObject.fields().forEach((f) => {
+                  // hidden fields
+                  if (_hiddenFields.indexOf(f.columnName) > -1) return;
 
-			/**
-			 * @function show()
-			 *
-			 * Show this component.
-			 * @param {obj} $view  the webix.$view to hover the popup around.
-			 */
-			show: function ($view) {
-				$$(ids.popupExport).show($view);
-			},
+                  columns[f.columnName] = {
+                     template: (rowData) => {
+                        return f.format(rowData);
+                     }
+                  };
+               });
+            }
 
-			export: (name) => {
+            switch (name) {
+               case "CSV":
+                  webix.csv.delimiter.cols = ",";
 
-				let fnExport;
+                  fnExport = webix.toCSV(_grid, {
+                     filename:
+                        _filename ||
+                        (_currentObject ? _currentObject.label : null),
+                     columns: columns
+                  });
+                  break;
+               case "Excel":
+                  fnExport = webix.toExcel(_grid, {
+                     filename:
+                        _filename ||
+                        (_currentObject ? _currentObject.label : null),
+                     name:
+                        _filename ||
+                        (_currentObject ? _currentObject.label : null),
+                     columns: columns,
+                     filterHTML: true
+                  });
+                  break;
+               case "PDF":
+                  fnExport = webix.toPDF(_grid, {
+                     filename:
+                        _filename ||
+                        (_currentObject ? _currentObject.label : null),
+                     filterHTML: true
+                  });
+                  break;
+               case "PNG":
+                  fnExport = webix.toPNG(_grid, {
+                     filename:
+                        _filename ||
+                        (_currentObject ? _currentObject.label : null)
+                  });
+                  break;
+            }
 
-				let columns = {};
+            fnExport
+               .catch((err) => {
+                  OP.Error.log("System could not export " + name, {
+                     error: err
+                  });
+               })
+               .fail((err) => {
+                  OP.Error.log("System could not export " + name, {
+                     error: err
+                  });
+               })
+               .then(() => {
+                  $$(ids.popupExport).hide();
+               });
+         }
+      });
 
-				// template of report
-				if (_currentObject) {
-					_currentObject.fields().forEach(f => {
+      // Expose any globally accessible Actions:
+      this.actions({});
 
-						// hidden fields
-						if (_hiddenFields.indexOf(f.columnName) > -1)
-							return;
-
-						columns[f.columnName] = {
-							template: (rowData) => {
-								return f.format(rowData);
-							}
-						};
-
-					})
-				};
-
-				switch (name) {
-					case "CSV":
-
-						webix.csv.delimiter.cols = ",";
-
-						fnExport = webix.toCSV(_grid, {
-							filename: _filename || (_currentObject ? _currentObject.label : null),
-							columns: columns
-						});
-						break;
-					case "Excel":
-						fnExport = webix.toExcel(_grid, {
-							filename: _filename || (_currentObject ? _currentObject.label : null),
-							name: _filename || (_currentObject ? _currentObject.label : null),
-							columns: columns,
-							filterHTML: true
-						});
-						break;
-					case "PDF":
-						fnExport = webix.toPDF(_grid, {
-							filename: _filename || (_currentObject ? _currentObject.label : null),
-							filterHTML: true
-						});
-						break;
-					case "PNG":
-						fnExport = webix.toPNG(_grid, {
-							filename: _filename || (_currentObject ? _currentObject.label : null)
-						});
-						break;
-				}
-
-				fnExport
-					.catch(err => {
-						OP.Error.log("System could not export " + name, { error: err });
-					})
-					.fail((err) => {
-						OP.Error.log("System could not export " + name, { error: err });
-					})
-					.then(() => { $$(ids.popupExport).hide() });
-
-			}
-
-		};
-
-		// Expose any globally accessible Actions:
-		this.actions({
-		});
-
-		this.objectLoad = _logic.objectLoad;
-		this.setGridComponent = _logic.setGridComponent;
-		this.setFilename = _logic.setFilename;
-		this.setHiddenFields = _logic.setHiddenFields;
-		this.show = _logic.show;
-
-	}
-}
+      this.objectLoad = _logic.objectLoad;
+      this.setGridComponent = _logic.setGridComponent;
+      this.setFilename = _logic.setFilename;
+      this.setHiddenFields = _logic.setHiddenFields;
+      this.show = _logic.show;
+   }
+};

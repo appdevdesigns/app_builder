@@ -1,397 +1,392 @@
+const ABComponent = require("../classes/platform/ABComponent");
+const ABListNewDatacollection = require("./ab_work_dataview_list_newDataview");
+const ABListEditMenu = require("./ab_common_popupEditMenu");
 
-import ABListNewDataview from "./ab_work_dataview_list_newDataview"
-import ABListEditMenu from "./ab_common_popupEditMenu"
+module.exports = class AB_Work_Datacollection_List extends ABComponent {
+   constructor(App) {
+      super(App, "ab_work_dataview_list");
+      var L = this.Label;
 
-export default class AB_Work_Dataview_List extends OP.Component {
+      var labels = {
+         common: App.labels,
+         component: {
+            addNew: L("ab.datacollection.addNew", "*Add new data view"),
 
-	constructor(App) {
-		super(App, 'ab_work_dataview_list');
-		var L = this.Label;
+            confirmDeleteTitle: L(
+               "ab.datacollection.delete.title",
+               "*Delete data view"
+            ),
+            confirmDeleteMessage: L(
+               "ab.datacollection.delete.message",
+               "*Do you want to delete <b>{0}</b>?"
+            ),
+            title: L("ab.datacollection.list.title", "*Data Collections")
+         }
+      };
 
-		var labels = {
-			common: App.labels,
-			component: {
+      // internal list of Webix IDs to reference our UI components.
+      var ids = {
+         component: this.unique("component"),
 
-				addNew: L('ab.dataview.addNew', '*Add new data view'),
+         list: this.unique("editlist"),
+         buttonNew: this.unique("buttonNew")
+      };
 
-				confirmDeleteTitle: L('ab.dataview.delete.title', "*Delete data view"),
-				confirmDeleteMessage: L('ab.dataview.delete.message', "*Do you want to delete <b>{0}</b>?"),
-				title: L('ab.dataview.list.title', '*Data Collections'),
-			}
-		};
+      // There is a Popup for adding a new Data view:
+      var PopupNewDatacollectionComponent = new ABListNewDatacollection(App);
 
-		// internal list of Webix IDs to reference our UI components.
-		var ids = {
-			component: this.unique('component'),
+      // the popup edit list for each entry in the list.
+      var PopupEditObjectComponent = new ABListEditMenu(App);
 
-			list: this.unique('editlist'),
-			buttonNew: this.unique('buttonNew')
-		};
+      // Our webix UI definition:
+      this.ui = {
+         id: ids.component,
+         rows: [
+            {
+               view: App.custom.editunitlist.view, // "editunitlist"
+               id: ids.list,
+               width: App.config.columnWidthLarge,
+               select: true,
 
-		// There is a Popup for adding a new Data view:
-		var PopupNewDataviewComponent = new ABListNewDataview(App);
+               editaction: "custom",
+               editable: true,
+               editor: "text",
+               editValue: "label",
 
-		// the popup edit list for each entry in the list.
-		var PopupEditObjectComponent = new ABListEditMenu(App);
+               uniteBy: function(item) {
+                  return labels.component.title;
+               },
+               template: function(obj, common) {
+                  return _logic.templateListItem(obj, common);
+               },
+               type: {
+                  height: 35,
+                  headerHeight: 35,
+                  iconGear:
+                     "<div class='ab-object-list-edit'><span class='webix_icon fa fa-cog'></span></div>"
+               },
+               on: {
+                  onAfterSelect: function(id) {
+                     _logic.selectDatacollection(id);
+                  },
+                  onBeforeEditStop: function(state, editor) {
+                     _logic.onBeforeEditStop(state, editor);
+                  },
+                  onAfterEditStop: function(state, editor, ignoreUpdate) {
+                     _logic.onAfterEditStop(state, editor, ignoreUpdate);
+                  }
+               },
+               onClick: {
+                  "ab-object-list-edit": function(e, id, trg) {
+                     _logic.clickEditMenu(e, id, trg);
+                  }
+               }
+            },
+            {
+               view: "button",
+               css: "webix_primary",
+               id: ids.buttonNew,
+               value: labels.component.addNew,
+               type: "form",
+               click: function() {
+                  _logic.clickNewDatacollection(true); // pass true so it will select the new object after you created it
+               }
+            }
+         ]
+      };
 
-		// Our webix UI definition:
-		this.ui = {
-			id: ids.component,
-			rows: [
-				{
-					view: App.custom.editunitlist.view, // "editunitlist"
-					id: ids.list,
-					width: App.config.columnWidthLarge,
-					select: true,
+      var CurrentApplication = null;
+      var CurrentDatacollection = null;
+      var datacollectionList = null;
 
-					editaction: 'custom',
-					editable: true,
-					editor: "text",
-					editValue: "label",
+      let _initialized = false;
 
-					uniteBy: function (item) {
-						return labels.component.title;
-					},
-					template: function (obj, common) {
-						return _logic.templateListItem(obj, common);
-					},
-					type: {
-						height: 35,
-						headerHeight: 35,
-						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa fa-cog'></span></div>"
-					},
-					on: {
-						onAfterSelect: function (id) {
-							_logic.selectDataview(id);
-						},
-						onBeforeEditStop: function (state, editor) {
-							_logic.onBeforeEditStop(state, editor);
-						},
-						onAfterEditStop: function (state, editor, ignoreUpdate) {
-							_logic.onAfterEditStop(state, editor, ignoreUpdate);
-						}
-					},
-					onClick: {
-						"ab-object-list-edit": function (e, id, trg) {
-							_logic.clickEditMenu(e, id, trg);
-						}
-					}
-				},
-				{
-					view: 'button',
-					id: ids.buttonNew,
-					value: labels.component.addNew,
-					type: "form",
-					click: function () {
-						_logic.clickNewDataview(true); // pass true so it will select the new object after you created it
-					}
-				}
-			]
-		};
+      // Our init() function for setting up our UI
+      this.init = (options) => {
+         // register our callbacks:
+         for (var c in _logic.callbacks) {
+            _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+         }
 
-		var CurrentApplication = null;
-		var CurrentDataview = null;
-		var dataviewList = null;
+         if ($$(ids.component)) $$(ids.component).adjust();
 
-		let _initialized = false;
+         if ($$(ids.list)) {
+            webix.extend($$(ids.list), webix.ProgressBar);
+            $$(ids.list).adjust();
+         }
 
-		// Our init() function for setting up our UI
-		this.init = (options) => {
+         PopupNewDatacollectionComponent.init({
+            onDone: _logic.callbackNewDatacollection
+         });
 
-			// register our callbacks:
-			for (var c in _logic.callbacks) {
-				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-			}
+         PopupEditObjectComponent.init({
+            onClick: _logic.callbackDatacollectionEditorMenu,
+            hideCopy: true
+         });
 
-			if ($$(ids.component))
-				$$(ids.component).adjust();
+         // mark initialed
+         _initialized = true;
+      };
 
-			if ($$(ids.list)) {
-				webix.extend($$(ids.list), webix.ProgressBar);
-				$$(ids.list).adjust();
-			}
+      // our internal business logic
+      var _logic = (this._logic = {
+         callbacks: {
+            /**
+             * @function onChange
+             */
+            onChange: function() {}
+         },
 
-			PopupNewDataviewComponent.init({
-				onDone: _logic.callbackNewDataview
-			});
+         /**
+          * @function applicationLoad
+          *
+          * Initialize the Object List from the provided ABApplication
+          *
+          * If no ABApplication is provided, then show an empty form. (create operation)
+          *
+          * @param {ABApplication} application  	[optional] The current ABApplication
+          *										we are working with.
+          */
+         applicationLoad: function(application) {
+            _logic.listBusy();
 
-			PopupEditObjectComponent.init({
-				onClick: _logic.callbackDataviewEditorMenu,
-				hideCopy: true
-			});
+            CurrentApplication = application;
 
-			// mark initialed
-			_initialized = true;
+            // get a DataCollection of all our objects
+            datacollectionList = new webix.DataCollection({
+               data: application.datacollections()
+            });
+            datacollectionList.sort("label", "asc");
 
-		};
+            // clear our list and display our objects:
+            var List = $$(ids.list);
+            List.clearAll();
+            List.data.unsync();
+            List.data.sync(datacollectionList);
+            List.refresh();
+            List.unselectAll();
 
+            // hide progress loading cursor
+            _logic.listReady();
 
-		// our internal business logic
-		var _logic = this._logic = {
+            // prepare our Popup with the current Application
+            PopupNewDatacollectionComponent.applicationLoad(application);
+         },
 
-			callbacks: {
+         selectDatacollection: function(datacollectionId) {
+            CurrentDatacollection = $$(ids.list).getItem(datacollectionId);
 
-				/**
-				 * @function onChange
-				 */
-				onChange: function () { }
-			},
+            _logic.callbacks.onChange(CurrentDatacollection);
+         },
 
-
-			/**
-			 * @function applicationLoad
-			 *
-			 * Initialize the Object List from the provided ABApplication
-			 *
-			 * If no ABApplication is provided, then show an empty form. (create operation)
-			 *
-			 * @param {ABApplication} application  	[optional] The current ABApplication
-			 *										we are working with.
-			 */
-			applicationLoad: function (application) {
-				_logic.listBusy();
-
-				CurrentApplication = application;
-
-				// get a DataCollection of all our objects
-				dataviewList = new webix.DataCollection({
-					data: application.dataviews(),
-				});
-				dataviewList.sort("label", "asc");
-
-				// clear our list and display our objects:
-				var List = $$(ids.list);
-				List.clearAll();
-				List.data.unsync();
-				List.data.sync(dataviewList);
-				List.refresh();
-				List.unselectAll();
-
-				// hide progress loading cursor
-				_logic.listReady();
-
-				// prepare our Popup with the current Application
-				PopupNewDataviewComponent.applicationLoad(application);
-
-			},
-
-			selectDataview: function (dataviewId) {
-
-				CurrentDataview = $$(ids.list).getItem(dataviewId);
-
-				_logic.callbacks.onChange(CurrentDataview);
-
-			},
-
-			/**
-			 * @function templateListItem
-			 *
-			 * Defines the template for each row of our Data view list.
-			 *
-			 * @param {ABDataview} obj the current instance of ABDataview for the row.
-			 * @param {?} common the webix.common icon data structure
-			 * @return {string}
-			 */
-			templateListItem: function (dataview, common) {
-				return `<div class='ab-dataview-list-item'>
-					<i class="fa ${dataview.settings.isQuery ? "fa-filter" : "fa-database"}"></i>
-					${dataview.label || '??label??'}
+         /**
+          * @function templateListItem
+          *
+          * Defines the template for each row of our Data view list.
+          *
+          * @param {ABDatacollection} obj the current instance of ABDatacollection for the row.
+          * @param {?} common the webix.common icon data structure
+          * @return {string}
+          */
+         templateListItem: function(datacollection, common) {
+            return `<div class='ab-datacollection-list-item'>
+					<i class="fa ${
+                  datacollection.settings.isQuery ? "fa-filter" : "fa-database"
+               }"></i>
+					${datacollection.label || "??label??"}
 					${common.iconGear}
 					</div>`;
-			},
+         },
 
-			onBeforeEditStop: function (state, editor) {
+         onBeforeEditStop: function(state, editor) {
+            var selectedObject = $$(ids.list).getSelectedItem(false);
+            selectedObject.label = state.value;
 
-				var selectedObject = $$(ids.list).getSelectedItem(false);
-				selectedObject.label = state.value;
+            return true;
+         },
 
-				return true;
-			},
+         onAfterEditStop: function(state, editor, ignoreUpdate) {
+            if (state.value == state.old) return;
 
-			onAfterEditStop: function (state, editor, ignoreUpdate) {
+            _logic.listBusy();
 
-				if (state.value == state.old)
-					return;
+            var selectedObject = $$(ids.list).getSelectedItem(false);
+            selectedObject.label = state.value;
 
-				_logic.listBusy();
+            // Call server to rename
+            selectedObject
+               .save()
+               .catch(function() {
+                  _logic.listReady();
 
-				var selectedObject = $$(ids.list).getSelectedItem(false);
-				selectedObject.label = state.value;
+                  OP.Dialog.Alert({
+                     text: labels.common.renameErrorMessage.replace(
+                        "{0}",
+                        state.old
+                     )
+                  });
+               })
+               .then(function() {
+                  _logic.listReady();
 
-				// Call server to rename
-				selectedObject.save()
-					.catch(function () {
-						_logic.listReady();
+                  // TODO : should use message box
+                  OP.Dialog.Alert({
+                     text: labels.common.renameSuccessMessage.replace(
+                        "{0}",
+                        state.value
+                     )
+                  });
+               });
+         },
 
-						OP.Dialog.Alert({
-							text: labels.common.renameErrorMessage.replace("{0}", state.old)
-						});
+         /**
+          * @function clickNewDatacollection
+          *
+          * Manages initiating the transition to the new Object Popup window
+          */
+         clickNewDatacollection: function(selectNew, callback) {
+            // show the new popup
+            PopupNewDatacollectionComponent.show(selectNew, callback);
+         },
 
-					})
-					.then(function () {
-						_logic.listReady();
+         /**
+          * @function callbackNewDatacollection
+          *
+          * Once a New Data view was created in the Popup, follow up with it here.
+          */
+         callbackNewDatacollection: function(
+            err,
+            datacollection,
+            selectNew,
+            callback
+         ) {
+            if (err) {
+               OP.Error.log("Error creating New Datacollection", {
+                  error: err
+               });
+               return;
+            }
 
-						// TODO : should use message box
-						OP.Dialog.Alert({
-							text: labels.common.renameSuccessMessage.replace("{0}", state.value)
-						});
+            let datacollections = CurrentApplication.datacollections();
+            datacollectionList.parse(datacollections);
 
-					});
-			},
+            // if (objectList.exists(object.id))
+            // 	objectList.updateItem(object.id, object);
+            // else
+            // 	objectList.add(object);
 
-			/**
-			 * @function clickNewDataview
-			 *
-			 * Manages initiating the transition to the new Object Popup window
-			 */
-			clickNewDataview: function (selectNew, callback) {
-				// show the new popup
-				PopupNewDataviewComponent.show(selectNew, callback);
-			},
+            if (selectNew != null && selectNew == true) {
+               $$(ids.list).select(datacollection.id);
+            } else if (callback) {
+               callback();
+            }
+         },
 
-			/**
-			 * @function callbackNewDataview
-			 *
-			 * Once a New Data view was created in the Popup, follow up with it here.
-			 */
-			callbackNewDataview: function (err, dataview, selectNew, callback) {
+         clickEditMenu: function(e, id, trg) {
+            // Show menu
+            PopupEditObjectComponent.show(trg);
 
-				if (err) {
-					OP.Error.log('Error creating New Dataview', { error: err });
-					return;
-				}
+            return false;
+         },
 
-				let dataviews = CurrentApplication.dataviews();
-				dataviewList.parse(dataviews);
+         callbackDatacollectionEditorMenu: function(action) {
+            switch (action) {
+               case "rename":
+                  _logic.rename();
+                  break;
+               case "exclude":
+                  _logic.exclude();
+                  break;
+               case "delete":
+                  _logic.remove();
+                  break;
+            }
+         },
 
-				// if (objectList.exists(object.id))
-				// 	objectList.updateItem(object.id, object);
-				// else
-				// 	objectList.add(object);
+         exclude: function() {
+            var datacollectionId = $$(ids.list).getSelectedId(false);
 
-				if (selectNew != null && selectNew == true) {
-					$$(ids.list).select(dataview.id);
-				}
-				else if (callback) {
-					callback();
-				}
+            _logic.listBusy();
 
-			},
+            CurrentApplication.datacollectionExclude(datacollectionId).then(
+               () => {
+                  if (datacollectionList.exists(datacollectionId))
+                     datacollectionList.remove(datacollectionId);
 
-			clickEditMenu: function (e, id, trg) {
-				// Show menu
-				PopupEditObjectComponent.show(trg);
+                  _logic.listReady();
 
-				return false;
-			},
+                  // clear object workspace
+                  _logic.callbacks.onChange(null);
+               }
+            );
+         },
 
-			callbackDataviewEditorMenu: function (action) {
-				switch (action) {
-					case 'rename':
-						_logic.rename();
-						break;
-					case 'exclude':
-						_logic.exclude();
-						break;
-					case 'delete':
-						_logic.remove();
-						break;
-				}
-			},
+         rename: function() {
+            var datacollectionId = $$(ids.list).getSelectedId(false);
+            $$(ids.list).edit(datacollectionId);
+         },
 
-			exclude: function () {
-				var dataviewId = $$(ids.list).getSelectedId(false);
+         remove: function() {
+            var selectedDatacollection = $$(ids.list).getSelectedItem(false);
 
-				_logic.listBusy();
+            // verify they mean to do this:
+            OP.Dialog.Confirm({
+               title: labels.component.confirmDeleteTitle,
+               message: labels.component.confirmDeleteMessage.replace(
+                  "{0}",
+                  selectedDatacollection.label
+               ),
+               callback: (isOK) => {
+                  if (isOK) {
+                     _logic.listBusy();
 
-				CurrentApplication.dataviewExclude(dataviewId)
-					.then(() => {
+                     selectedDatacollection.destroy().then(() => {
+                        _logic.listReady();
 
-						if (dataviewList.exists(dataviewId))
-							dataviewList.remove(dataviewId);
+                        if (
+                           datacollectionList.exists(selectedDatacollection.id)
+                        )
+                           datacollectionList.remove(selectedDatacollection.id);
 
-						_logic.listReady();
+                        // refresh items list
+                        // _logic.callbackNewDatacollection();
 
-						// clear object workspace
-						_logic.callbacks.onChange(null);
-					});
+                        // clear object workspace
+                        _logic.callbacks.onChange(null);
+                     });
+                  }
+               }
+            });
+         },
 
-			},
+         listBusy: () => {
+            if ($$(ids.list) && $$(ids.list).showProgress)
+               $$(ids.list).showProgress({ type: "icon" });
+         },
 
-			rename: function () {
-				var dataviewId = $$(ids.list).getSelectedId(false);
-				$$(ids.list).edit(dataviewId);
-			},
+         listReady: () => {
+            if ($$(ids.list) && $$(ids.list).hideProgress)
+               $$(ids.list).hideProgress();
+         },
 
-			remove: function () {
+         listCount: () => {
+            if ($$(ids.list)) return $$(ids.list).count();
+         }
+      });
 
-				var selectedDataview = $$(ids.list).getSelectedItem(false);
+      // Expose any globally accessible Actions:
+      this.actions({
+         addNewDatacollection: function(selectNew, callback) {
+            _logic.clickNewDatacollection(selectNew, callback);
+         }
+      });
 
-				// verify they mean to do this:
-				OP.Dialog.Confirm({
-					title: labels.component.confirmDeleteTitle,
-					message: labels.component.confirmDeleteMessage.replace('{0}', selectedDataview.label),
-					callback: (isOK) => {
-
-						if (isOK) {
-							_logic.listBusy();
-
-							selectedDataview.destroy()
-								.then(() => {
-									_logic.listReady();
-
-									if (dataviewList.exists(selectedDataview.id))
-										dataviewList.remove(selectedDataview.id);
-
-									// refresh items list
-									// _logic.callbackNewDataview();
-
-									// clear object workspace
-									_logic.callbacks.onChange(null);
-								});
-
-						}
-					}
-				})
-			},
-
-			listBusy: () => {
-				if ($$(ids.list) &&
-					$$(ids.list).showProgress)
-					$$(ids.list).showProgress({ type: "icon" });
-			},
-
-			listReady: () => {
-				if ($$(ids.list) &&
-					$$(ids.list).hideProgress)
-					$$(ids.list).hideProgress();
-			},
-
-			listCount: () => {
-				if ($$(ids.list))
-					return $$(ids.list).count();
-			}
-
-		};
-
-		// Expose any globally accessible Actions:
-		this.actions({
-
-			addNewDataview: function (selectNew, callback) {
-				_logic.clickNewDataview(selectNew, callback);
-			}
-
-		})
-
-		// 
-		// Define our external interface methods:
-		// 
-		this.applicationLoad = _logic.applicationLoad;
-		this.busy = _logic.listBusy;
-		this.ready = _logic.listReady;
-		this.count = _logic.listCount;
-
-
-	}
-
-}
+      //
+      // Define our external interface methods:
+      //
+      this.applicationLoad = _logic.applicationLoad;
+      this.busy = _logic.listBusy;
+      this.ready = _logic.listReady;
+      this.count = _logic.listCount;
+   }
+};

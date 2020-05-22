@@ -1,169 +1,170 @@
-import AB from '../../../components/ab'
-import ABFieldEmail from "../../../classes/dataFields/ABFieldEmail"
+import AB from "../../../components/ab";
+import ABFieldEmail from "../../../classes/dataFields/ABFieldEmail";
 
-import sampleApp from "../../fixtures/ABApplication"
+import sampleApp from "../../fixtures/ABApplication";
 
 describe("ABFieldEmail unit tests", () => {
+   function L(key, altText) {
+      return AD.lang.label.getLabel(key) || altText;
+   }
 
-	function L(key, altText) {
-		return AD.lang.label.getLabel(key) || altText;
-	}
+   var sandbox;
 
-	var sandbox;
+   var ab;
+   var mockApp;
+   var mockObject;
 
-	var ab;
-	var mockApp;
-	var mockObject;
+   var target;
+   var targetComponent;
 
-	var target;
-	var targetComponent;
+   var webixCom;
 
-	var webixCom;
+   var columnName = "TEST_EMAIL_COLUMN";
 
-	var columnName = 'TEST_EMAIL_COLUMN';
+   before(() => {
+      ab = new AB();
 
-	before(() => {
-		ab = new AB();
+      mockApp = ab._app;
+      mockObject = sampleApp.objects()[0];
 
-		mockApp = ab._app;
-		mockObject = sampleApp.objects()[0];
+      target = new ABFieldEmail(
+         {
+            columnName: columnName,
+            settings: {}
+         },
+         mockObject
+      );
 
-		target = new ABFieldEmail({
-			columnName: columnName,
-			settings: {}
-		}, mockObject);
+      targetComponent = ABFieldEmail.propertiesComponent(mockApp);
 
-		targetComponent = ABFieldEmail.propertiesComponent(mockApp);
+      // render edit component
+      targetComponent.ui.container = "ab_test_div";
+      webixCom = new webix.ui(targetComponent.ui);
+   });
 
-		// render edit component
-		targetComponent.ui.container = "ab_test_div";
-		webixCom = new webix.ui(targetComponent.ui);
-	});
+   beforeEach(() => {
+      sandbox = sinon.sandbox.create();
+   });
 
-	beforeEach(() => {
-		sandbox = sinon.sandbox.create();
-	});
+   afterEach(() => {
+      sandbox.restore();
+   });
 
-	afterEach(() => {
-		sandbox.restore();
-	});
+   after(() => {
+      if (webixCom && webixCom.destructor) webixCom.destructor();
+   });
 
-	after(() => {
-		if (webixCom && webixCom.destructor)
-			webixCom.destructor();
-	});
+   /* Email field test cases */
+   describe("Email field test cases", () => {
+      it("should exist email field", () => {
+         assert.isDefined(target);
+      });
 
-	/* Email field test cases */
-	describe('Email field test cases', () => {
+      it("should have valid default value", () => {
+         let defaultValues = ABFieldEmail.defaults();
 
-		it('should exist email field', () => {
-			assert.isDefined(target);
-		});
+         let menuName = L("ab.dataField.email.menuName", "*Email");
+         let description = L(
+            "ab.dataField.email.description",
+            "*Email fields are used to store email addresses."
+         );
 
-		it('should have valid default value', () => {
-			let defaultValues = ABFieldEmail.defaults();
+         assert.equal("email", defaultValues.key);
+         assert.equal("envelope", defaultValues.icon);
+         assert.equal(menuName, defaultValues.menuName);
+         assert.equal(description, defaultValues.description);
+         assert.isTrue(defaultValues.supportRequire);
+      });
 
-			let menuName = L('ab.dataField.email.menuName', '*Email');
-			let description = L('ab.dataField.email.description', '*Email fields are used to store email addresses.');
+      it(".columnHeader: should return valid column config", () => {
+         var columnConfig = target.columnHeader();
 
-			assert.equal('email', defaultValues.key);
-			assert.equal('envelope', defaultValues.icon);
-			assert.equal(menuName, defaultValues.menuName);
-			assert.equal(description, defaultValues.description);
-			assert.isTrue(defaultValues.supportRequire);
-		});
+         assert.isUndefined(
+            columnConfig.template,
+            'should not have "template" editor'
+         );
+         assert.equal("text", columnConfig.editor);
+      });
 
-		it('.columnHeader: should return valid column config', () => {
-			var columnConfig = target.columnHeader();
+      it(".defaultValue: should set valid default value", () => {
+         var rowData = {};
 
-			assert.isUndefined(columnConfig.template, 'should not have "template" editor');
-			assert.equal('text', columnConfig.editor);
-		});
+         target.settings.default = "test@digiserve.com";
 
-		it('.defaultValue: should set valid default value', () => {
-			var rowData = {};
+         target.defaultValue(rowData);
 
-			target.settings.default = "test@digiserve.com";
+         assert.equal(target.settings.default, rowData[columnName]);
+      });
 
-			target.defaultValue(rowData);
+      it(".defaultValue: should not set default value", () => {
+         var rowData = {};
 
-			assert.equal(target.settings.default, rowData[columnName]);
-		});
+         delete target.settings.default;
 
-		it('.defaultValue: should not set default value', () => {
-			var rowData = {};
+         target.defaultValue(rowData);
 
-			delete target.settings.default;
+         assert.isUndefined(rowData[columnName]);
+      });
 
-			target.defaultValue(rowData);
+      it(".isValidData: should add error into validator", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-			assert.isUndefined(rowData[columnName]);
-		});
+         var rowData = {};
+         rowData[columnName] = "INVALID_EMAIL_FORMAT";
 
-		it('.isValidData: should add error into validator', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         target.isValidData(rowData, validator);
 
-			var rowData = {};
-			rowData[columnName] = "INVALID_EMAIL_FORMAT";
+         sandbox.assert.calledOnce(stubAddError);
+      });
 
-			target.isValidData(rowData, validator);
+      it(".isValidData: should not add error into validator", () => {
+         let validator = { addError: function() {} };
+         let stubAddError = sandbox
+            .stub(validator, "addError")
+            .callsFake(function() {});
 
-			sandbox.assert.calledOnce(stubAddError);
+         var rowData = {};
+         rowData[columnName] = "validEmail@digiserve.com";
 
-		});
+         target.isValidData(rowData, validator);
 
-		it('.isValidData: should not add error into validator', () => {
-			let validator = { addError: function () { } };
-			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
+         sandbox.assert.notCalled(stubAddError);
+      });
 
-			var rowData = {};
-			rowData[columnName] = "validEmail@digiserve.com";
+      it(".formComponent: should return form component { common, newInstance }", () => {
+         assert.isDefined(target.formComponent);
+         assert.isFunction(target.formComponent);
 
-			target.isValidData(rowData, validator);
+         let result = target.formComponent();
 
-			sandbox.assert.notCalled(stubAddError);
+         // common property
+         assert.isDefined(result.common);
+         assert.isFunction(result.common);
+         assert.equal("textbox", result.common().key);
+         assert.equal("single", result.common().settings.type);
 
-		});
+         // newInstance property
+         assert.isDefined(result.newInstance);
+         assert.isFunction(result.newInstance);
+      });
 
+      it(".detailComponent: should return detail component { common, newInstance }", () => {
+         assert.isDefined(target.detailComponent);
+         assert.isFunction(target.detailComponent);
 
-		it('.formComponent: should return form component { common, newInstance }', () => {
+         let result = target.detailComponent();
 
-			assert.isDefined(target.formComponent);
-			assert.isFunction(target.formComponent);
+         // common property
+         assert.isDefined(result.common);
+         assert.isFunction(result.common);
+         assert.equal("detailtext", result.common().key);
 
-			let result = target.formComponent();
-
-			// common property
-			assert.isDefined(result.common);
-			assert.isFunction(result.common);
-			assert.equal('textbox', result.common().key);
-			assert.equal('single', result.common().settings.type);
-
-			// newInstance property
-			assert.isDefined(result.newInstance);
-			assert.isFunction(result.newInstance);
-
-		});
-
-		it('.detailComponent: should return detail component { common, newInstance }', () => {
-
-			assert.isDefined(target.detailComponent);
-			assert.isFunction(target.detailComponent);
-
-			let result = target.detailComponent();
-
-			// common property
-			assert.isDefined(result.common);
-			assert.isFunction(result.common);
-			assert.equal('detailtext', result.common().key);
-
-			// newInstance property
-			assert.isDefined(result.newInstance);
-			assert.isFunction(result.newInstance);
-
-		});
-
-	});
-
+         // newInstance property
+         assert.isDefined(result.newInstance);
+         assert.isFunction(result.newInstance);
+      });
+   });
 });

@@ -1,937 +1,886 @@
-var path = require('path');
-var uuid = require('uuid/v4');
+var path = require("path");
+var uuid = require("uuid/v4");
 
-var ABGraphDB = require(path.join('..', 'services', 'ABGraphDB'));
-
+var ABGraphDB = require(path.join("..", "services", "ABGraphDB"));
 
 class ABModelBase {
+   constructor(attributes, options) {
+      options = options || {};
 
-	constructor(attributes, options) {
+      // uuid from ._key to .id
+      this.id = attributes._key;
 
-		options = options || {};
+      // ignore default properties of ArangoDB
+      let ignoreProps = ["_key", "_id", "_rev", "_from", "_to"];
 
-		// uuid from ._key to .id
-		this.id = attributes._key;
+      // copy attributes
+      attributes = attributes || {};
+      for (let key in attributes) {
+         if (ignoreProps.indexOf(key) > -1 && !options.includeDefault) continue;
 
-		// ignore default properties of ArangoDB
-		let ignoreProps = ['_key', '_id', '_rev', '_from', '_to'];
+         this[key] = attributes[key];
 
-		// copy attributes
-		attributes = attributes || {};
-		for (let key in attributes) {
+         // create model instances of relation list
+         let relation = this.constructor.relations[key];
+         if (relation) {
+            (this[key] || []).forEach((item, index) => {
+               this[key][index] = new ABModelBase(item);
+            });
+         }
+      }
+   }
 
-			if (ignoreProps.indexOf(key) > -1 &&
-				!options.includeDefault)
-				continue;
+   save() {
+      return this.constructor.upsert(this.id, this);
+   }
 
-			this[key] = attributes[key];
+   destroy() {
+      return this.constructor.remove(this.id);
+   }
 
-			// create model instances of relation list
-			let relation = this.constructor.relations[key];
-			if (relation) {
-				(this[key] || []).forEach((item, index) => {
-					this[key][index] = new ABModelBase(item);
-				});
-			}
+   relate(relation, linkId, values = {}) {
+      if (typeof relation == "string")
+         relation = this.constructor._getRelation(relation);
 
-		}
+      if (relation == null) {
+         ADCore.error.log(".relate: No relation found", { node: linkId });
+         return Promise.resolve();
+      }
 
-	}
+      let fromId =
+            relation.direction == ABModelBase.relateDirection.OUTBOUND
+               ? this.id
+               : linkId,
+         toId =
+            relation.direction == ABModelBase.relateDirection.OUTBOUND
+               ? linkId
+               : this.id;
 
-	save() {
-		return this.constructor.upsert(this.id, this);
-	}
+      return this.constructor.relate(relation, fromId, toId, values);
+   }
 
-	destroy() {
-		return this.constructor.remove(this.id);
-	}
+   unrelate(relation, linkId = null) {
+      if (typeof relation == "string")
+         relation = this.constructor._getRelation(relation);
 
-	relate(relation, linkId, values = {}) {
+      if (relation == null) {
+         ADCore.error.log(".unrelate: No relation found", { node: linkId });
+         return Promise.resolve();
+      }
 
-		if (typeof relation == 'string')
-			relation = this.constructor._getRelation(relation);
+      let fromId =
+            relation.direction == ABModelBase.relateDirection.OUTBOUND
+               ? this.id
+               : linkId,
+         toId =
+            relation.direction == ABModelBase.relateDirection.OUTBOUND
+               ? linkId
+               : this.id;
 
-		if (relation == null) {
-			ADCore.error.log('.relate: No relation found', { node: linkId });
-			return Promise.resolve();
-		}
+      return this.constructor.unrelate(relation, fromId, toId);
+   }
 
-		let fromId = (relation.direction == ABModelBase.relateDirection.OUTBOUND ? this.id : linkId),
-			toId = (relation.direction == ABModelBase.relateDirection.OUTBOUND ? linkId : this.id);
+   clearRelate(relation) {
+      if (typeof relation == "string")
+         relation = this.constructor._getRelation(relation);
 
-		return this.constructor.relate(relation, fromId, toId, values);
-	}
+      if (relation == null) {
+         ADCore.error.log(".clearRelate: No relation found", { node: this });
+         return Promise.resolve();
+      }
 
-	unrelate(relation, linkId = null) {
+      return this.constructor.clearRelate(relation, this.id);
+   }
 
-		if (typeof relation == 'string')
-			relation = this.constructor._getRelation(relation);
+   static get relations() {
+      return {
+         // relationName: {
+         // 	edgeName: "Name of edge collection",
+         // 	linkCollection: "Name of link collection",
+         // 	direction: Enum of this.relateDirection
+         // }
+      };
+   }
 
-		if (relation == null) {
-			ADCore.error.log('.unrelate: No relation found', { node: linkId });
-			return Promise.resolve();
-		}
+   // Lifecycle
+   static beforeCreate(recordToCreate) {
+      return Promise.resolve();
+   }
+   static afterCreate(newlyCreatedRecord) {
+      return Promise.resolve();
+   }
+   static beforeUpdate(valuesToSet) {
+      return Promise.resolve();
+   }
+   static afterUpdate(updatedRecord) {
+      return Promise.resolve();
+   }
+   static beforeDestroy(id) {
+      return Promise.resolve();
+   }
+   static afterDestroy(destroyedRecord) {
+      return Promise.resolve();
+   }
 
-		let fromId = (relation.direction == ABModelBase.relateDirection.OUTBOUND ? this.id : linkId),
-			toId = (relation.direction == ABModelBase.relateDirection.OUTBOUND ? linkId : this.id);
+   static query(aqlCommand, returnArray = true, returnPlain = false) {
+      return (
+         Promise.resolve()
 
-		return this.constructor.unrelate(relation, fromId, toId);
-	}
+            // Execute AQL command
+            .then(() => {
+               return new Promise((next, err) => {
+                  let db = ABGraphDB.database();
 
-	clearRelate(relation) {
+                  db.query(aqlCommand)
+                     .catch(err)
+                     .then((cursor) => {
+                        // pass result
+                        if (cursor && cursor.all) {
+                           cursor
+                              .all()
+                              .catch(err)
+                              .then((rows) => {
+                                 next(rows);
+                              });
+                        } else {
+                           next(null);
+                        }
+                     });
+               });
+            })
 
-		if (typeof relation == 'string')
-			relation = this.constructor._getRelation(relation);
+            // Return result
+            .then((rows) => {
+               return new Promise((next, err) => {
+                  // return an Array
+                  if (returnArray) {
+                     // Convert to model
+                     let result = (rows || []).map((r) => {
+                        if (returnPlain) return r;
+                        else return new this(r);
+                     });
+                     next(result);
+                  }
+                  // return a Object
+                  else {
+                     let result = (rows || [])[0];
+                     if (result) {
+                        if (returnPlain) next(result);
+                        else next(new this(result));
+                     } else next(null);
+                  }
+               });
+            })
+      );
+   }
 
-		if (relation == null) {
-			ADCore.error.log('.clearRelate: No relation found', { node: this });
-			return Promise.resolve();
-		}
+   /**
+    * @method find
+    *
+    * @param {Object} options - {
+    * 								where: {},		// https://sailsjs.com/documentation/concepts/models-and-orm/query-language
+    * 								relations: [],	// List of relation name
+    * 								select: [],		// List of property name
+    * 								skip: 0,
+    * 								limit: 20,
+    * 								sort: []		// [{ firstName: 'ASC'}, { lastName: 'DESC'}]
+    * 							}
+    *
+    * @return {Promise}
+    */
+   static find(options = {}) {
+      if (options.where == null) options.where = {};
 
-		return this.constructor.clearRelate(relation, this.id);
+      if (options.relations == null) options.relations = [];
 
-	}
+      if (options.select == null) options.select = [];
 
-	static get relations() {
+      if (options.sort == null) options.sort = [];
 
-		return {
-			// relationName: {
-			// 	edgeName: "Name of edge collection",
-			// 	linkCollection: "Name of link collection",
-			// 	direction: Enum of this.relateDirection
-			// }
-		};
-	}
+      let aqlFilters = this._aqlFilter(options.where);
+      let aqlSort = this._aqlSort(options.sort);
+      let aqlPagination = this._aqlPagination(options.skip, options.limit);
+      let aqlRelations = this._aqlRelations(options.relations);
+      let aqlReturn = this._aqlSelects(options.select);
 
-	// Lifecycle
-	static beforeCreate(recordToCreate) { return Promise.resolve(); }
-	static afterCreate(newlyCreatedRecord) { return Promise.resolve(); }
-	static beforeUpdate(valuesToSet) { return Promise.resolve(); }
-	static afterUpdate(updatedRecord) { return Promise.resolve(); }
-	static beforeDestroy(id) { return Promise.resolve(); }
-	static afterDestroy(destroyedRecord) { return Promise.resolve(); }
-
-
-	static query(aqlCommand, returnArray = true) {
-
-		return Promise.resolve()
-
-			// Execute AQL command
-			.then(() => {
-
-				return new Promise((next, err) => {
-
-					let db = ABGraphDB.database();
-
-					db.query(aqlCommand)
-						.catch(err)
-						.then(cursor => {
-
-							// pass result
-							if (cursor && cursor.all) {
-								cursor.all()
-									.catch(err)
-									.then(rows => {
-										next(rows);
-									});
-							}
-							else {
-								next(null);
-							}
-
-						});
-
-				});
-
-			})
-
-			// Return result
-			.then(rows => {
-
-				return new Promise((next, err) => {
-
-					// return an Array
-					if (returnArray) {
-
-						// Convert to model
-						let result = (rows || []).map(r => new this(r));
-						next(result);
-
-					}
-					// return a Object
-					else {
-						let result = (rows || [])[0];
-						if (result)
-							next(new this(result));
-						else
-							next(null);
-					}
-
-
-				});
-
-			});
-
-	}
-
-	/**
-	 * @method find
-	 * 
-	 * @param {Object} options - {
-	 * 								where: {},		// https://sailsjs.com/documentation/concepts/models-and-orm/query-language
-	 * 								relations: [],	// List of relation name
-	 * 								select: [],		// List of property name
-	 * 								skip: 0,
-	 * 								limit: 20,
-	 * 								sort: []		// [{ firstName: 'ASC'}, { lastName: 'DESC'}]
-	 * 							}
-	 * 
-	 * @return {Promise}
-	 */
-	static find(options = {}) {
-
-		if (options.where == null)
-			options.where = {};
-
-		if (options.relations == null)
-			options.relations = [];
-
-		if (options.select == null)
-			options.select = [];
-
-		if (options.sort == null)
-			options.sort = [];
-
-		let aqlFilters = this._aqlFilter(options.where);
-		let aqlSort = this._aqlSort(options.sort);
-		let aqlPagination = this._aqlPagination(options.skip, options.limit);
-		let aqlRelations = this._aqlRelations(options.relations);
-		let aqlReturn = this._aqlSelects(options.select);
-
-		return this.query(`
+      return this.query(`
 						FOR row IN ${this.collectionName}
 						${aqlFilters}
 						${aqlSort}
 						${aqlPagination}
 						RETURN MERGE(${aqlReturn}, ${aqlRelations})
 					`);
+   }
 
-	}
+   /**
+    * @method findOne
+    *
+    * @param {uuid} id
+    * @param {Object} options - {
+    * 								relations: [],	// List of relation name
+    * 								select: []		// List of property name
+    * 							}
+    *
+    * @return {Promise}
+    */
+   static findOne(id, options = {}) {
+      if (options.relations == null) options.relations = [];
 
-	/**
-	 * @method findOne
-	 * 
-	 * @param {uuid} id
-	 * @param {Object} options - {
-	 * 								relations: [],	// List of relation name
-	 * 								select: []		// List of property name
-	 * 							}
-	 * 
-	 * @return {Promise}
-	 */
-	static findOne(id, options = {}) {
+      if (options.select == null) options.select = [];
 
-		if (options.relations == null)
-			options.relations = [];
+      let aqlRelations = this._aqlRelations(options.relations);
+      let aqlReturn = this._aqlSelects(options.select);
 
-		if (options.select == null)
-			options.select = [];
-
-		let aqlRelations = this._aqlRelations(options.relations);
-		let aqlReturn = this._aqlSelects(options.select);
-
-		return this.query(`
+      return this.query(
+         `
 						FOR row IN ${this.collectionName}
 						FILTER row._key == '${id}'
 						LIMIT 1
 						RETURN MERGE(${aqlReturn}, ${aqlRelations})
-					`, false);
+					`,
+         false
+      );
+   }
 
-	}
+   /**
+    * @method findWithRelation
+    *
+    * @param {String|Object} relation
+    * @param {uuid} linkId
+    * @param {Object} options - {
+    * 								where: {},		// https://sailsjs.com/documentation/concepts/models-and-orm/query-language
+    * 								relations: [],	// List of relation name
+    * 								select: []		// List of property name
+    * 								skip: 0,
+    * 								limit: 20,
+    * 								sort: []		// [{ firstName: 'ASC'}, { lastName: 'DESC'}]
+    * 							}
+    *
+    * @return {Object} - A document
+    */
+   static findWithRelation(relation, linkId, options = {}) {
+      if (options.where == null) options.where = {};
 
-	/**
-	 * @method findWithRelation
-	 * 
-	 * @param {String|Object} relation
-	 * @param {uuid} linkId 
-	 * @param {Object} options - {
-	 * 								where: {},		// https://sailsjs.com/documentation/concepts/models-and-orm/query-language
-	 * 								relations: [],	// List of relation name
-	 * 								select: []		// List of property name
-	 * 								skip: 0,
-	 * 								limit: 20,
-	 * 								sort: []		// [{ firstName: 'ASC'}, { lastName: 'DESC'}]
-	 * 							}
-	 *
-	 * @return {Object} - A document
-	 */
-	static findWithRelation(relation, linkId, options = {}) {
+      if (options.relations == null) options.relations = [];
 
-		if (options.where == null)
-			options.where = {};
+      if (options.select == null) options.select = [];
 
-		if (options.relations == null)
-			options.relations = [];
+      if (options.sort == null) options.sort = [];
 
-		if (options.select == null)
-			options.select = [];
+      if (typeof relation == "string") relation = this._getRelation(relation);
 
-		if (options.sort == null)
-			options.sort = [];
+      linkId = this._getId(linkId, relation.linkCollection);
 
-		if (typeof relation == 'string')
-			relation = this._getRelation(relation);
+      let aqlFilters = this._aqlFilter(options.where);
+      let aqlSort = this._aqlSort(options.sort);
+      let aqlPagination = this._aqlPagination(options.skip, options.limit);
+      let aqlRelations = this._aqlRelations(options.relations);
+      let aqlReturn = this._aqlSelects(options.select);
 
-		linkId = this._getId(linkId, relation.linkCollection);
-
-		let aqlFilters = this._aqlFilter(options.where);
-		let aqlSort = this._aqlSort(options.sort);
-		let aqlPagination = this._aqlPagination(options.skip, options.limit);
-		let aqlRelations = this._aqlRelations(options.relations);
-		let aqlReturn = this._aqlSelects(options.select);
-
-		return this.query(`
+      return this.query(`
 						FOR row IN ${this.collectionName}
 						FOR join in ${relation.edgeName}
-						FILTER join.${relation.direction == this.relateDirection.OUTBOUND ? "_from" : "_to"} == row._id
-						&& join.${relation.direction == this.relateDirection.OUTBOUND ? "_to" : "_from"} == '${linkId}'
+						FILTER join.${
+                     relation.direction == this.relateDirection.OUTBOUND
+                        ? "_from"
+                        : "_to"
+                  } == row._id
+						&& join.${
+                     relation.direction == this.relateDirection.OUTBOUND
+                        ? "_to"
+                        : "_from"
+                  } == '${linkId}'
 						${aqlFilters}
 						${aqlSort}
 						${aqlPagination}
 						RETURN MERGE(${aqlReturn}, ${aqlRelations})
 					`);
+   }
 
-	}
+   /**
+    * @function insert
+    *
+    * @param {Object} values
+    * @return {Promise} - return a new row
+    */
+   static insert(values) {
+      if (values._key == null) values._key = uuid();
 
-	/**
-	 * @function insert
-	 * 
-	 * @param {Object} values 
-	 * @return {Promise} - return a new row
-	 */
-	static insert(values) {
+      values = new this(values || {}, {
+         includeDefault: true
+      });
 
-		if (values._key == null)
-			values._key = uuid();
+      let newlyCreatedRecord;
 
-		values = new this(values || {}, {
-			includeDefault: true
-		});
+      return (
+         Promise.resolve()
 
-		let newlyCreatedRecord;
+            // Before create
+            .then(() => this.beforeCreate(values))
 
-		return Promise.resolve()
+            // Creating
+            .then(() => {
+               return new Promise((next, err) => {
+                  values = JSON.stringify(values);
 
-			// Before create
-			.then(() => this.beforeCreate(values))
-
-			// Creating
-			.then(() => {
-
-				return new Promise((next, err) => {
-
-					values = JSON.stringify(values);
-
-					this.query(`
+                  this.query(
+                     `
 								INSERT ${values} INTO ${this.collectionName}
 								RETURN NEW
-							`, false)
-						.catch(err)
-						.then(doc => {
-							newlyCreatedRecord = doc;
-							next();
-						});
+							`,
+                     false
+                  )
+                     .catch(err)
+                     .then((doc) => {
+                        newlyCreatedRecord = doc;
+                        next();
+                     });
+               });
+            })
 
-				});
+            // After create
+            .then(() => this.afterCreate(newlyCreatedRecord))
 
-			})
+            // Return result
+            .then(() => Promise.resolve(newlyCreatedRecord))
+      );
+   }
 
-			// After create
-			.then(() => this.afterCreate(newlyCreatedRecord))
+   /**
+    * @function update
+    *
+    * @param {string} id
+    * @param {Object} updates
+    * @param {boolean} replace - mark to replace whole json
+    * @return {Promise} - return a row is updated
+    */
+   static update(id, updates, replace = false) {
+      updates = new this(updates || {});
 
-			// Return result
-			.then(() => Promise.resolve(newlyCreatedRecord));
+      let updatedRecord;
 
-	}
+      return (
+         Promise.resolve()
 
-	/**
-	 * @function update
-	 * 
-	 * @param {string} id 
-	 * @param {Object} updates 
-	 * @param {boolean} replace - mark to replace whole json
-	 * @return {Promise} - return a row is updated
-	 */
-	static update(id, updates, replace = false) {
+            // Before update
+            .then(() => this.beforeUpdate(updates))
 
-		updates = new this(updates || {});
+            // Updating
+            .then(() => {
+               return new Promise((next, err) => {
+                  updates = JSON.stringify(updates);
 
-		let updatedRecord;
+                  let action = replace ? "REPLACE" : "UPDATE";
 
-		return Promise.resolve()
+                  this.query(
+                     `FOR row IN ${this.collectionName} ` +
+                        `FILTER row._key == '${id}' ` +
+                        `${action} row WITH ${updates} IN ${this.collectionName} ` +
+                        `RETURN NEW`,
+                     false
+                  )
+                     .catch(err)
+                     .then((doc) => {
+                        updatedRecord = doc;
+                        next();
+                     });
+               });
+            })
 
-			// Before update
-			.then(() => this.beforeUpdate(updates))
+            // After update
+            .then(() => this.afterUpdate(updatedRecord))
 
-			// Updating
-			.then(() => {
+            // Return result
+            .then(() => Promise.resolve(updatedRecord))
+      );
+   }
 
-				return new Promise((next, err) => {
+   /**
+    * @function upsert
+    *
+    * @param {string} id
+    * @param {Object} updates
+    * @return {Promise} - return a row is created or updated
+    */
+   static upsert(id, updates) {
+      let addNew = updates.id == null,
+         updatedRecord;
 
-					updates = JSON.stringify(updates);
+      if (addNew) updates._key = uuid();
+      else updates._key = updates.id;
 
-					let action = replace ? "REPLACE" : "UPDATE";
+      updates = new this(updates || {}, {
+         includeDefault: true
+      });
 
-					this.query(
-						`FOR row IN ${this.collectionName} ` +
-						`FILTER row._key == '${id}' ` +
-						`${action} row WITH ${updates} IN ${this.collectionName} ` +
-						`RETURN NEW`
-						, false)
-						.catch(err)
-						.then(doc => {
-							updatedRecord = doc;
-							next();
-						});
+      return (
+         Promise.resolve()
 
-				});
+            // Before create/update
+            .then(() =>
+               addNew ? this.beforeCreate(updates) : this.beforeUpdate(updates)
+            )
 
-			})
+            // Creating/Updating
+            .then(() => {
+               return new Promise((next, err) => {
+                  updates = JSON.stringify(updates);
 
-			// After update
-			.then(() => this.afterUpdate(updatedRecord))
+                  this.query(
+                     `UPSERT { _key: '${id}' } ` +
+                        `INSERT ${updates} ` +
+                        // `UPDATE ${updates} ` +
+                        `REPLACE ${updates} ` +
+                        `IN ${this.collectionName} ` +
+                        `RETURN NEW`,
+                     false
+                  )
+                     // RETURN { doc: NEW, type: OLD ? 'insert': 'update' }
+                     .catch(err)
+                     .then((doc) => {
+                        updatedRecord = doc;
+                        next();
+                     });
+               });
+            })
 
-			// Return result
-			.then(() => Promise.resolve(updatedRecord));
+            // After create/update
+            .then(() =>
+               addNew
+                  ? this.afterCreate(updatedRecord)
+                  : this.afterUpdate(updatedRecord)
+            )
 
-	}
+            // Return result
+            .then(() => Promise.resolve(updatedRecord))
+      );
+   }
 
-	/**
-	 * @function upsert
-	 * 
-	 * @param {string} id 
-	 * @param {Object} updates 
-	 * @return {Promise} - return a row is created or updated
-	 */
-	static upsert(id, updates) {
+   // static updateSubArray() {
 
-		let addNew = updates.id == null,
-			updatedRecord;
+   // 	updates = new this(updates || {});
 
-		if (addNew)
-			updates._key = uuid();
+   // 	let updatedRecord;
 
-		updates = new this(updates || {}, {
-			includeDefault: true
-		});
+   // 	return Promise.resolve()
 
-		return Promise.resolve()
+   // 		// Before update
+   // 		.then(() => this.beforeUpdate(updates))
 
-			// Before create/update
-			.then(() => addNew ? this.beforeCreate(updates) : this.beforeUpdate(updates))
+   // 		// Updating
+   // 		.then(() => {
 
-			// Creating/Updating
-			.then(() => {
+   // 			return new Promise((next, err) => {
 
-				return new Promise((next, err) => {
+   // 				updates = JSON.stringify(updates);
 
-					updates = JSON.stringify(updates);
+   // 				this.query(
+   // 					`FOR row IN ${this.collectionName} ` +
+   // 					`FILTER row._key == '${rowId}'` +
 
-					this.query(
-						`UPSERT { _key: '${id}' } ` +
-						`INSERT ${updates} ` +
-						// `UPDATE ${updates} ` +
-						`REPLACE ${updates} ` +
-						`IN ${this.collectionName} ` +
-						`RETURN NEW`
-						, false)
-						// RETURN { doc: NEW, type: OLD ? 'insert': 'update' }
-						.catch(err)
-						.then(doc => {
-							updatedRecord = doc;
-							next();
-						});
+   // 					`LET alteredList = (` +
+   // 					`	FOR sub IN row.${arrayName}` +
+   // 					`	LET newItem = (sub.id == '${subId}' ? MERGE(sub, ${updates}) : sub)` +
+   // 					`	RETURN newItem` +
+   // 					`)` +
 
-				});
+   // 					`UPDATE row WITH { ${arrayName}: alteredList } IN ${this.collectionName}`
+   // 					, false)
+   // 					.catch(err)
+   // 					.then(doc => {
+   // 						updatedRecord = doc;
+   // 						next();
+   // 					});
 
-			})
+   // 			});
 
-			// After create/update
-			.then(() => addNew ? this.afterCreate(updatedRecord) : this.afterUpdate(updatedRecord))
+   // 		})
 
-			// Return result
-			.then(() => Promise.resolve(updatedRecord));
+   // 		// After update
+   // 		.then(() => this.afterUpdate(updatedRecord))
 
+   // 		// Return result
+   // 		.then(() => Promise.resolve(updatedRecord));
 
-	}
+   // }
 
-	// static updateSubArray() {
+   /**
+    * @function remove
+    *
+    * @param {string} id
+    * @return {Promise} - return a removed row
+    */
+   static remove(id) {
+      let destroyedRecord;
 
-	// 	updates = new this(updates || {});
+      return (
+         Promise.resolve()
 
-	// 	let updatedRecord;
+            // Before remove
+            .then(() => this.beforeDestroy(id))
 
-	// 	return Promise.resolve()
-
-	// 		// Before update
-	// 		.then(() => this.beforeUpdate(updates))
-
-	// 		// Updating
-	// 		.then(() => {
-
-	// 			return new Promise((next, err) => {
-
-	// 				updates = JSON.stringify(updates);
-
-	// 				this.query(
-	// 					`FOR row IN ${this.collectionName} ` +
-	// 					`FILTER row._key == '${rowId}'` +
-						
-	// 					`LET alteredList = (` +
-	// 					`	FOR sub IN row.${arrayName}` +
-	// 					`	LET newItem = (sub.id == '${subId}' ? MERGE(sub, ${updates}) : sub)` +
-	// 					`	RETURN newItem` +
-	// 					`)` +
-						
-	// 					`UPDATE row WITH { ${arrayName}: alteredList } IN ${this.collectionName}`
-	// 					, false)
-	// 					.catch(err)
-	// 					.then(doc => {
-	// 						updatedRecord = doc;
-	// 						next();
-	// 					});
-
-	// 			});
-
-	// 		})
-
-	// 		// After update
-	// 		.then(() => this.afterUpdate(updatedRecord))
-
-	// 		// Return result
-	// 		.then(() => Promise.resolve(updatedRecord));
-
-	// }
-
-	/**
-	 * @function remove
-	 * 
-	 * @param {string} id 
-	 * @return {Promise} - return a removed row
-	 */
-	static remove(id) {
-
-		let destroyedRecord;
-
-		return Promise.resolve()
-
-			// Before remove
-			.then(() => this.beforeDestroy(id))
-
-			// Removing
-			.then(() => {
-
-				return new Promise((next, err) => {
-
-					this.query(`
+            // Removing
+            .then(() => {
+               return new Promise((next, err) => {
+                  this.query(
+                     `
 							FOR row IN ${this.collectionName}
 							FILTER row._key == '${id}'
 							REMOVE row IN ${this.collectionName}
 							RETURN OLD
-						`, false)
-						.catch(err)
-						.then(doc => {
-							destroyedRecord = doc;
-							next();
-						});
+						`,
+                     false
+                  )
+                     .catch(err)
+                     .then((doc) => {
+                        destroyedRecord = doc;
+                        next();
+                     });
+               });
+            })
 
-				});
+            // Clear relations
+            .then(() => {
+               if (destroyedRecord == null) return Promise.resolve();
 
-			})
+               let tasks = [];
 
-			// Clear relations
-			.then(() => {
+               for (let key in this.relations) {
+                  let rel = this.relations[key];
 
-				if (destroyedRecord == null)
-					return Promise.resolve();
+                  tasks.push(this.clearRelate(rel, destroyedRecord.id));
+               }
 
-				let tasks = [];
+               return Promise.all(tasks);
+            })
 
-				for (let key in this.relations) {
+            // After remove
+            .then(() => this.afterDestroy(destroyedRecord))
 
-					let rel = this.relations[key];
+            // Return result
+            .then(() => Promise.resolve(destroyedRecord))
+      );
+   }
 
-					tasks.push(this.clearRelate(rel, destroyedRecord.id));
-				}
+   static get relateDirection() {
+      return {
+         INBOUND: "INBOUND",
+         OUTBOUND: "OUTBOUND"
+      };
+   }
 
-				return Promise.all(tasks);
+   /**
+    * @function relate
+    *
+    * @param {Object} relation - Relation settings
+    * @param {string} fromId - _key of node
+    * @param {string} toId - _key of node
+    * @return {Promise}
+    */
+   static relate(relation, fromId, toId, values = {}) {
+      // Get _id of documents
+      if (relation.direction == this.relateDirection.OUTBOUND) {
+         fromId = this._getId(fromId);
+         toId = this._getId(toId, relation.linkCollection);
+      } else {
+         fromId = this._getId(fromId, relation.linkCollection);
+         toId = this._getId(toId);
+      }
 
-			})
+      values._from = fromId;
+      values._to = toId;
 
-			// After remove
-			.then(() => this.afterDestroy(destroyedRecord))
+      values = JSON.stringify(values);
 
-			// Return result
-			.then(() => Promise.resolve(destroyedRecord));
-
-	}
-
-	static get relateDirection() {
-		return {
-			INBOUND: "INBOUND",
-			OUTBOUND: "OUTBOUND"
-		}
-	}
-
-	/**
-	 * @function relate
-	 * 
-	 * @param {Object} relation - Relation settings
-	 * @param {string} fromId - _key of node
-	 * @param {string} toId - _key of node
-	 * @return {Promise}
-	 */
-	static relate(relation, fromId, toId, values = {}) {
-
-		// Get _id of documents
-		if (relation.direction == this.relateDirection.OUTBOUND) {
-			fromId = this._getId(fromId);
-			toId = this._getId(toId, relation.linkCollection);
-		}
-		else {
-			fromId = this._getId(fromId, relation.linkCollection);
-			toId = this._getId(toId);
-		}
-
-		values._from = fromId;
-		values._to = toId;
-
-		values = JSON.stringify(values);
-
-		return this.query(`
+      return this.query(`
 						UPSERT ${values}
 						INSERT ${values}
 						UPDATE ${values}
 						IN ${relation.edgeName}
 					`);
+   }
 
-	}
+   /**
+    * @function unrelate
+    *
+    * @param {Object} relation - Relation settings
+    * @param {string} fromId - _key of node
+    * @param {string} toId - _key of node
+    * @return {Promise}
+    */
+   static unrelate(relation, fromId = null, toId = null) {
+      // Should define either values
+      if (!fromId && !toId) return Promise.resolve();
 
-	/**
-	 * @function unrelate
-	 * 
-	 * @param {Object} relation - Relation settings
-	 * @param {string} fromId - _key of node
-	 * @param {string} toId - _key of node
-	 * @return {Promise}
-	 */
-	static unrelate(relation, fromId = null, toId = null) {
+      // Get _id of documents
+      if (relation.direction == this.relateDirection.OUTBOUND) {
+         if (fromId) fromId = this._getId(fromId);
 
-		// Should define either values
-		if (!fromId && !toId)
-			return Promise.resolve();
+         if (toId) toId = this._getId(toId, relation.linkCollection);
+      } else {
+         if (fromId) fromId = this._getId(fromId, relation.linkCollection);
 
-		// Get _id of documents
-		if (relation.direction == this.relateDirection.OUTBOUND) {
-			if (fromId)
-				fromId = this._getId(fromId);
+         if (toId) toId = this._getId(toId);
+      }
 
-			if (toId)
-				toId = this._getId(toId, relation.linkCollection);
-		}
-		else {
-			if (fromId)
-				fromId = this._getId(fromId, relation.linkCollection);
+      let condition = "";
+      if (fromId && toId) {
+         condition = `row._from == '${fromId}' AND row._to == '${toId}'`;
+      } else if (fromId) {
+         condition = `row._from == '${fromId}'`;
+      } else if (toId) {
+         condition = `row._to == '${toId}'`;
+      }
 
-			if (toId)
-				toId = this._getId(toId);
-		}
-
-		let condition = "";
-		if (fromId && toId) {
-			condition = `row._from == '${fromId}' AND row._to == '${toId}'`;
-		}
-		else if (fromId) {
-			condition = `row._from == '${fromId}'`;
-		}
-		else if (toId) {
-			condition = `row._to == '${toId}'`;
-		}
-
-		return this.query(`
+      return this.query(`
 						FOR row IN ${relation.edgeName}
 						FILTER ${condition}
 						REMOVE row IN ${relation.edgeName}
 					`);
+   }
 
-	}
+   /**
+    * @function clearRelate
+    *
+    * @param {Object} relation - Relation settings
+    * @param {string} key - _key of node
+    * @return {Promise}
+    */
+   static clearRelate(relation, key) {
+      let id = this._getId(key);
 
-	/**
-	 * @function clearRelate
-	 * 
-	 * @param {Object} relation - Relation settings
-	 * @param {string} key - _key of node
-	 * @return {Promise}
-	 */
-	static clearRelate(relation, key) {
-
-		let id = this._getId(key);
-
-		return this.query(`
+      return this.query(`
 						FOR row IN ${relation.edgeName}
 						FILTER row._from == '${id}'
 						OR row._to == '${id}'
 						REMOVE row IN ${relation.edgeName}
 					`);
+   }
 
-	}
+   static collection() {
+      let db = ABGraphDB.database();
 
-	static collection() {
+      return db.collection(this.collectionName);
+   }
 
-		let db = ABGraphDB.database();
+   /** Private methods */
+   /**
+    * @method _aqlSelects
+    *
+    * @param {Array} select - Array of property name (string)
+    *
+    * @return {string} - AQL select syntax
+    */
+   static _aqlSelects(select = []) {
+      if (select && select.length > 0) {
+         let result = {};
 
-		return db.collection(this.collectionName);
+         select.forEach((propName) => {
+            // json.translations
+            if (propName.indexOf(".") > -1) {
+               let parentName = propName.split(".")[0];
+               let attrName = propName.split(".")[1];
+               result[parentName] = result[parentName] || {};
+               result[parentName][attrName] = `row.${propName}`;
+            } else {
+               result[propName] = `row.${propName}`;
+            }
+         });
 
-	}
+         // { name: row.name, age: row.age }
+         return JSON.stringify(result).replace(/"/g, "");
+      } else {
+         return "row";
+      }
+   }
 
+   /**
+    * @method _aqlRelations
+    *
+    * @param {Array} relations - Array of relation name (string)
+    *
+    * @return {string} - AQL command
+    */
+   static _aqlRelations(relations = []) {
+      let result = {};
 
-	/** Private methods */
-	/**
-	 * @method _aqlSelects
-	 * 
-	 * @param {Array} select - Array of property name (string)
-	 * 
-	 * @return {string} - AQL select syntax
-	 */
-	static _aqlSelects(select = []) {
+      relations.forEach((relationName) => {
+         let r = this.relations[relationName];
+         if (r == null) return;
 
-		if (select && select.length > 0) {
+         // https://www.arangodb.com/docs/stable/aql/tutorial-traversal.html
+         // result[relationName] = `(FOR sub IN 1..1 ${r.direction} row ${r.edgeName} RETURN sub)`;
 
-			let result = {};
+         // https://www.arangodb.com/docs/stable/aql/examples-join.html
+         // NOTE: use join mechanism to get values in edge collection
+         result[relationName] =
+            `(FOR link IN ${r.edgeName} ` +
+            `FILTER link.${
+               r.direction == this.relateDirection.OUTBOUND ? "_from" : "_to"
+            } == row._id ` +
+            `FOR sub IN ${r.linkCollection} ` +
+            `FILTER sub._id == link.${
+               r.direction == this.relateDirection.OUTBOUND ? "_to" : "_from"
+            } ` +
+            `RETURN MERGE(link, sub))`;
+      });
 
-			select.forEach(propName => {
+      let aql = JSON.stringify(result)
+         .replace(/"\(/g, "(")
+         .replace(/\)"/g, ")");
 
-				// json.translations
-				if (propName.indexOf('.') > -1) {
-					let parentName = propName.split('.')[0];
-					let attrName = propName.split('.')[1];
-					result[parentName] = result[parentName] || {};
-					result[parentName][attrName] = `row.${propName}`;
-				}
-				else {
-					result[propName] = `row.${propName}`;
-				}
+      return aql;
+   }
 
-			});
+   /**
+    * @method _aqlFilter
+    *
+    * @param {Object} where - define parameters as same as https://sailsjs.com/documentation/concepts/models-and-orm/query-language
+    *
+    * @return {string} - AQL FILTER clause
+    */
+   static _aqlFilter(where = {}) {
+      let filters = [];
 
-			// { name: row.name, age: row.age }
-			return JSON.stringify(result).replace(/"/g, "");
-		}
-		else {
-			return "row";
-		}
+      Object.keys(where).forEach((prop) => {
+         let whereClause = where[prop];
+         if (whereClause == null) return;
 
-	}
+         try {
+            whereClause = JSON.parse(whereClause);
+         } catch (err) {}
 
-	/**
-	 * @method _aqlRelations
-	 * 
-	 * @param {Array} relations - Array of relation name (string)
-	 * 
-	 * @return {string} - AQL command
-	 */
-	static _aqlRelations(relations = []) {
+         // { 'id': "guid" }
+         if (typeof whereClause == "string") {
+            // if there are comma, then should be IN condition to an array.
+            if (whereClause.indexOf(",") > -1) {
+               let val = (whereClause || "").split(",");
+               filters.push(
+                  `FILTER row.${prop} IN [${(val || []).map((v) => `'${v}'`)}]`
+               );
+            } else if (whereClause == "isnull") {
+               filters.push(`FILTER row.${prop} IN [null, false, 0]`);
+            } else if (whereClause == "isnotnull") {
+               filters.push(`FILTER row.${prop} NOT IN [null, false, 0]`);
+            } else {
+               filters.push(`FILTER row.${prop} == '${whereClause}'`);
+            }
+         }
+         // { 'age': { ">": 30 } }
+         else {
+            Object.keys(whereClause).forEach((operate) => {
+               let val = whereClause[operate];
+               if (val == null) return;
 
-		let result = {};
+               switch (operate) {
+                  case "<":
+                  case "<=":
+                  case ">":
+                  case ">=":
+                  case "!=":
+                     filters.push(`FILTER row.${prop} ${operate} '${val}'`);
+                     break;
+                  case "nin":
+                     if (typeof val == "string") val = (val || "").split(",");
 
-		relations.forEach(relationName => {
+                     filters.push(
+                        `FILTER row.${prop} NOT IN [${(val || []).map(
+                           (v) => `'${v}'`
+                        )}]`
+                     );
+                     break;
+                  case "in":
+                     if (typeof val == "string") val = (val || "").split(",");
 
-			let r = this.relations[relationName];
-			if (r == null) return;
+                     filters.push(
+                        `FILTER row.${prop} IN [${(val || []).map(
+                           (v) => `'${v}'`
+                        )}]`
+                     );
+                     break;
+                  case "contains":
+                     filters.push(`FILTER CONTAINS(row.${prop}, '${val}')`);
+                     break;
+                  case "startsWith":
+                     filters.push(`FILTER LIKE(row.${prop}, '${val}%', true)`);
+                     break;
+                  case "endsWith":
+                     filters.push(`FILTER LIKE(row.${prop}, '%${val}', true)`);
+                     break;
+               }
+            });
+         }
+      });
 
-			// https://www.arangodb.com/docs/stable/aql/tutorial-traversal.html
-			// result[relationName] = `(FOR sub IN 1..1 ${r.direction} row ${r.edgeName} RETURN sub)`;
+      return filters.join(" ");
+   }
 
-			// https://www.arangodb.com/docs/stable/aql/examples-join.html
-			// NOTE: use join mechanism to get values in edge collection
-			result[relationName] =
-				`(FOR link IN ${r.edgeName} ` +
-				`FILTER link.${r.direction == this.relateDirection.OUTBOUND ? "_from" : "_to"} == row._id ` +
+   /**
+    * @method _aqlSort
+    *
+    * @param {Array} sorts - [{ firstName: 'ASC'}, { lastName: 'DESC'}]
+    *
+    * @return {string} - AQL SORT clause
+    */
+   static _aqlSort(sorts = []) {
+      let sortClauses = [];
 
-				`FOR sub IN ${r.linkCollection} ` +
-				`FILTER sub._id == link.${r.direction == this.relateDirection.OUTBOUND ? "_to" : "_from"} ` +
+      sorts.forEach((sort) => {
+         Object.keys(sort || {}).forEach((prop) => {
+            let direction = sort[prop]; // 'asc' || 'desc'
+            if (direction == "desc") direction = "DESC";
+            else direction = "ASC";
 
-				`RETURN MERGE(link, sub))`;
+            sortClauses.push(`row.${prop} ${direction}`);
+         });
+      });
 
-		});
+      // SORT row.firstName ASC, row.lastName DESC
+      if (sortClauses.length > 0) return `SORT ${sortClauses.join(", ")}`;
+      else return "";
+   }
 
-		let aql = JSON.stringify(result)
-			.replace(/"\(/g, "(")
-			.replace(/\)"/g, ")");
+   /**
+    * @method _aqlPagination
+    *
+    * @param {number} offset
+    * @param {number} count
+    *
+    * @return {string} - AQL LIMIT clause
+    */
+   static _aqlPagination(offset, count) {
+      if (offset != null && count != null) {
+         return `LIMIT ${offset} ${count}`;
+      } else if (count != null) {
+         return `LIMIT ${count}`;
+      } else {
+         return "";
+      }
+   }
 
-		return aql;
+   /**
+    * @method _getRelation
+    *
+    * @param {string} relationName - Name of relation
+    *
+    * @return {Object} - Relation
+    */
+   static _getRelation(relationName) {
+      return this.relations[relationName];
+   }
 
-	}
-
-	/**
-	 * @method _aqlFilter
-	 	 * 
-	 * @param {Object} where - define parameters as same as https://sailsjs.com/documentation/concepts/models-and-orm/query-language
-	 * 
-	 * @return {string} - AQL FILTER clause
-	 */
-	static _aqlFilter(where = {}) {
-
-		let filters = [];
-
-		Object.keys(where).forEach(prop => {
-
-			let whereClause = where[prop];
-			if (whereClause == null) return;
-
-			try {
-				whereClause = JSON.parse(whereClause);
-			}
-			catch (err) { }
-
-			// { 'id': "guid" }
-			if (typeof whereClause == 'string') {
-
-				// if there are comma, then should be IN condition to an array.
-				if (whereClause.indexOf(',') > -1) {
-					let val = (whereClause || "").split(',');
-					filters.push(`FILTER row.${prop} IN [${(val || []).map(v => `'${v}'`)}]`);
-				}
-				else {
-					filters.push(`FILTER row.${prop} == '${whereClause}'`);
-				}
-
-			}
-			// { 'age': { ">": 30 } }
-			else {
-				Object.keys(whereClause).forEach(operate => {
-
-					let val = whereClause[operate];
-					if (val == null) return;
-
-					switch (operate) {
-						case '<':
-						case '<=':
-						case '>':
-						case '>=':
-						case '!=':
-							filters.push(`FILTER row.${prop} ${operate} '${val}'`);
-							break;
-						case 'nin':
-							val = (val || "").split(',');
-							filters.push(`FILTER row.${prop} NOT IN [${(val || []).map(v => `'${v}'`)}]`);
-							break;
-						case 'in':
-
-							if (typeof val == 'string')
-								val = (val || "").split(',');
-
-							filters.push(`FILTER row.${prop} IN [${(val || []).map(v => `'${v}'`)}]`);
-							break;
-						case 'contains':
-							filters.push(`FILTER CONTAINS(row.${prop}, '${val}')`);
-							break;
-						case 'startsWith':
-							filters.push(`FILTER LIKE(row.${prop}, '${val}%', true)`);
-							break;
-						case 'endsWith':
-							filters.push(`FILTER LIKE(row.${prop}, '%${val}', true)`);
-							break;
-					}
-				});
-			}
-
-		});
-
-		return filters.join(' ');
-
-	}
-
-
-	/**
-	 * @method _aqlSort
-	 	 * 
-	 * @param {Array} sorts - [{ firstName: 'ASC'}, { lastName: 'DESC'}]
-	 * 
-	 * @return {string} - AQL SORT clause
-	 */
-	static _aqlSort(sorts = []) {
-
-		let sortClauses = [];
-
-		sorts.forEach(sort => {
-
-			Object.keys(sort || {}).forEach(prop => {
-
-				let direction = sort[prop]; // 'asc' || 'desc'
-				if (direction == 'desc')
-					direction = "DESC";
-				else
-					direction = "ASC";
-
-				sortClauses.push(`row.${prop} ${direction}`);
-
-			});
-		});
-
-		// SORT row.firstName ASC, row.lastName DESC
-		if (sortClauses.length > 0)
-			return `SORT ${sortClauses.join(', ')}`;
-		else
-			return "";
-	}
-
-	/**
-	 * @method _aqlPagination
-	 * 
-	 * @param {number} offset
-	 * @param {number} count
-	 * 
-	 * @return {string} - AQL LIMIT clause
-	 */
-	static _aqlPagination(offset, count) {
-
-		if (offset != null && count != null) {
-			return `LIMIT ${offset} ${count}`;
-		}
-		else if (count != null) {
-			return `LIMIT ${count}`;
-		}
-		else {
-			return "";
-		}
-	}
-
-
-	/**
-	 * @method _getRelation
-	 * 
-	 * @param {string} relationName - Name of relation
-	 * 
-	 * @return {Object} - Relation
-	 */
-	static _getRelation(relationName) {
-		return this.relations[relationName];
-	}
-
-	/**
-	 * @method _getId
-	 * return _id format of ArangoDB
-	 * 
-	 * @param {string} key - key of a document
-	 * @param {string} collectionName - [optional]
-	 * 
-	 * @return {string} - return _id format
-	 */
-	static _getId(key, collectionName = this.collectionName) {
-		return `${collectionName}/${key}`;
-	}
-
+   /**
+    * @method _getId
+    * return _id format of ArangoDB
+    *
+    * @param {string} key - key of a document
+    * @param {string} collectionName - [optional]
+    *
+    * @return {string} - return _id format
+    */
+   static _getId(key, collectionName = this.collectionName) {
+      return `${collectionName}/${key}`;
+   }
 }
 
 module.exports = ABModelBase;

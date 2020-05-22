@@ -4,121 +4,106 @@
  *
  */
 
-import AB_Work_Dataview_List from "./ab_work_dataview_list"
-import AB_Work_Dataview_Workspace from "./ab_work_dataview_workspace"
+const ABComponent = require("../classes/platform/ABComponent");
+const AB_Work_Datacollection_List = require("./ab_work_dataview_list");
+const AB_Work_Datacollection_Workspace = require("./ab_work_dataview_workspace");
 
-export default class AB_Work_Dataview extends OP.Component {
+module.exports = class AB_Work_Datacollection extends ABComponent {
+   constructor(App) {
+      super(App, "ab_work_dataview");
 
-	constructor(App) {
-		super(App, 'ab_work_dataview');
+      let DatacollectionList = new AB_Work_Datacollection_List(App);
+      let DatacollectionWorkspace = new AB_Work_Datacollection_Workspace(App);
 
-		let DataviewList = new AB_Work_Dataview_List(App);
-		let DataviewWorkspace = new AB_Work_Dataview_Workspace(App);
+      let CurrentApplication;
 
-		let CurrentApplication;
+      // internal list of Webix IDs to reference our UI components.
+      let ids = {
+         component: this.unique("component")
+      };
 
-		// internal list of Webix IDs to reference our UI components.
-		let ids = {
-			component: this.unique('component'),
-		}
+      // Our webix UI definition:
+      this.ui = {
+         id: ids.component,
+         type: "space",
+         cols: [
+            DatacollectionList.ui,
+            { view: "resizer", width: 11 },
+            DatacollectionWorkspace.ui
+         ]
+      };
 
-		// Our webix UI definition:
-		this.ui = {
-			id: ids.component,
-			type: "space",
-			cols: [
-				DataviewList.ui,
-				{ view: "resizer", width: 11 },
-				DataviewWorkspace.ui
-			]
-		};
+      // Our init() function for setting up our UI
+      this.init = function() {
+         DatacollectionWorkspace.init();
+         DatacollectionList.init({
+            onChange: _logic.callbackSelectDatacollection
+         });
+      };
 
-		// Our init() function for setting up our UI
-		this.init = function () {
+      // our internal business logic
+      var _logic = {
+         /**
+          * @function applicationLoad
+          *
+          * Initialize the Object Workspace with the given ABApplication.
+          *
+          * @param {ABApplication} application
+          */
+         applicationLoad: function(application) {
+            CurrentApplication = application;
 
-			DataviewWorkspace.init();
-			DataviewList.init({
-				onChange: _logic.callbackSelectDataview
-			});
+            DatacollectionWorkspace.clearWorkspace();
+            DatacollectionList.applicationLoad(application);
+            DatacollectionWorkspace.applicationLoad(application);
+         },
 
-		}
+         /**
+          * @function show()
+          *
+          * Show this component.
+          */
+         show: function() {
+            $$(ids.component).show();
 
-		// our internal business logic
-		var _logic = {
+            DatacollectionList.busy();
 
+            let tasks = [];
 
-			/**
-			 * @function applicationLoad
-			 *
-			 * Initialize the Object Workspace with the given ABApplication.
-			 *
-			 * @param {ABApplication} application
-			 */
-			applicationLoad: function (application) {
+            if (CurrentApplication) {
+               // Load objects
+               tasks.push(CurrentApplication.objectLoad());
 
-				CurrentApplication = application;
+               // Load queries
+               tasks.push(CurrentApplication.queryLoad());
 
-				DataviewWorkspace.clearWorkspace();
-				DataviewList.applicationLoad(application);
-				DataviewWorkspace.applicationLoad(application);
-			},
+               // Load data views
+               if (
+                  !CurrentApplication.loadedDatacollection ||
+                  DatacollectionList.count() < 1
+               )
+                  tasks.push(CurrentApplication.datacollectionLoad());
+            }
 
+            Promise.all(tasks).then(() => {
+               DatacollectionWorkspace.applicationLoad(CurrentApplication);
+               DatacollectionList.applicationLoad(CurrentApplication);
+               DatacollectionList.ready();
+            });
+         },
 
-			/**
-			 * @function show()
-			 *
-			 * Show this component.
-			 */
-			show: function () {
+         callbackSelectDatacollection: function(datacollection) {
+            if (datacollection == null)
+               DatacollectionWorkspace.clearWorkspace();
+            else DatacollectionWorkspace.populateWorkspace(datacollection);
+         }
+      };
+      this._logic = _logic;
 
-				$$(ids.component).show();
-
-				DataviewList.busy();
-
-				let tasks = [];
-
-				if (CurrentApplication) {
-
-					// Load objects
-					tasks.push(CurrentApplication.objectLoad());
-
-					// Load queries
-					tasks.push(CurrentApplication.queryLoad());
-
-					// Load data views
-					if (!CurrentApplication.loadedDataview || DataviewList.count() < 1)
-						tasks.push(CurrentApplication.dataviewLoad());
-				}
-
-				Promise.all(tasks)
-					.then(() => {
-
-						DataviewWorkspace.applicationLoad(CurrentApplication);
-						DataviewList.applicationLoad(CurrentApplication);
-						DataviewList.ready();
-
-					});
-
-			},
-
-			callbackSelectDataview: function (dataview) {
-
-				if (dataview == null)
-					DataviewWorkspace.clearWorkspace();
-				else
-					DataviewWorkspace.populateWorkspace(dataview);
-			}
-
-		}
-		this._logic = _logic;
-
-
-
-		// 
-		// Define our external interface methods:
-		// 
-		this.applicationLoad = _logic.applicationLoad;
-		this.show = _logic.show;
-
-	}
-}
+      //
+      // Define our external interface methods:
+      //
+      this.applicationLoad = _logic.applicationLoad;
+      this.show = _logic.show;
+   }
+};

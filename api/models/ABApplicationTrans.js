@@ -6,24 +6,17 @@
  */
 
 module.exports = {
+   tableName: "appbuilder_application_trans",
 
-  tableName: 'appbuilder_application_trans',
+   // connection: 'appdev_default',
 
+   attributes: {
+      abapplication: { model: "ABApplication" },
 
-  // connection: 'appdev_default',
+      label: { type: "string" },
 
+      description: { type: "text" },
 
-
-  attributes: {
-
-    abapplication: { model: 'ABApplication' },
-
-    label: { type: 'string' },
-
-    description: { type: 'text' },
-
-    language_code: { type: 'string' }
-  }
-
+      language_code: { type: "string" }
+   }
 };
-

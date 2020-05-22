@@ -1,109 +1,99 @@
-
 // import 'OP';
 // import '../../../../../assets/js/webix/webix'
 
+const AB = require("./components/ab");
 
-import AB from './components/ab'
+AD.Control.OpsTool.extend("BuildApp", {
+   init: function(element, options) {
+      var self = this;
 
+      options = AD.defaults(
+         {
+            templateDOM: "/opstools/BuildApp/views/BuildApp/BuildApp.ejs",
+            resize_notification: "BuildApp.resize",
+            tool: null // the parent opsPortal Tool() object
+         },
+         options
+      );
+      self.options = options;
 
-AD.Control.OpsTool.extend('BuildApp', {
+      // Call parent init
+      self._super(element, options);
 
-	init: function (element, options) {
-		var self = this;
+      self.data = {};
 
-		options = AD.defaults({
-			templateDOM: '/opstools/BuildApp/views/BuildApp/BuildApp.ejs',
-			resize_notification: 'BuildApp.resize',
-			tool: null   // the parent opsPortal Tool() object
-		}, options);
-		self.options = options;
+      self.webixUiId = {
+         loadingScreen: "ab-loading-screen",
+         syncButton: "ab-sync-button"
+      };
 
-		// Call parent init
-		self._super(element, options);
+      self.initDOM(function() {
+         self.initWebixUI();
+      });
+   },
 
-		self.data = {};
+   initDOM: function(cb) {
+      var _this = this;
 
-		self.webixUiId = {
-			loadingScreen: 'ab-loading-screen',
-			syncButton: 'ab-sync-button'
-		};
+      can.view(this.options.templateDOM, {}, function(fragment) {
+         _this.element.html(fragment);
 
-		self.initDOM(function(){
-			self.initWebixUI();
-		});
+         // _this.element.find(".ab-app-list").show();
+         // _this.element.find(".ab-app-workspace").hide();
 
+         cb();
+      });
+   },
 
-	},
+   initWebixUI: function() {
+      // get the AppBuilder (AB) Webix Component
+      // var AppBuilder = OP.Component['ab']();
+      var AppBuilder = new AB();
+      var ui = AppBuilder.ui;
 
+      // tell the AppBuilder where to attach
+      ui.container = "ab-main-container";
 
-	initDOM: function (cb) {
-		var _this = this;
+      // instantiate the UI first
+      this.AppBuilder = webix.ui(ui);
 
-		can.view(this.options.templateDOM, {}, function(fragment){
-			_this.element.html(fragment);
+      // then perform the init()
+      AppBuilder.init();
+   },
 
-			// _this.element.find(".ab-app-list").show();
-			// _this.element.find(".ab-app-workspace").hide();
+   resize: function(height) {
+      var self = this;
 
-			cb();
-		});
-	},
+      height = height.height || height;
 
+      var appListDom = $(self.element);
 
-	initWebixUI: function () {
+      if (appListDom) {
+         var width = appListDom.parent().css("width");
+         if (width) {
+            width = parseInt(width.replace("px", ""));
+         }
+         appListDom.width(width);
 
-		// get the AppBuilder (AB) Webix Component
-		// var AppBuilder = OP.Component['ab']();
-		var AppBuilder = new AB();
-		var ui = AppBuilder.ui;
+         // Removed this because the 140 pixels was causing the list to not scroll to the bottom of the page
+         // var computedHeight = height - 140;
 
-		// tell the AppBuilder where to attach
-		ui.container = 'ab-main-container'
+         var computedHeight = height;
+         // console.log("computed height: " + computedHeight);
+         var mh = parseInt(appListDom.css("min-height").replace("px", ""));
+         // console.log("min-height: " + mh);
+         if (mh < computedHeight) {
+            appListDom.height(computedHeight);
+            $("#ab-main-container").height(computedHeight);
+         } else {
+            appListDom.height(mh);
+            $("#ab-main-container").height(mh);
+         }
 
-		// instantiate the UI first
-		this.AppBuilder = webix.ui(ui);
-
-		// then perform the init()
-		AppBuilder.init();
-
-	},
-
-
-	resize: function (height) {
-		var self = this;
-
-		height = height.height || height;
-
-		var appListDom = $(self.element);
-
-		if (appListDom) {
-			var width = appListDom.parent().css('width');
-			if (width) {
-				width = parseInt(width.replace('px', ''));
-			}
-			appListDom.width(width);
-
-			// Removed this because the 140 pixels was causing the list to not scroll to the bottom of the page
-			// var computedHeight = height - 140;
-
-			var computedHeight = height;
-			// console.log("computed height: " + computedHeight);
-			var mh = parseInt(appListDom.css('min-height').replace('px', ''));
-			// console.log("min-height: " + mh);
-			if (mh < computedHeight) {
-				appListDom.height(computedHeight);
-				$('#ab-main-container').height(computedHeight);
-			} else {
-				appListDom.height(mh);
-				$('#ab-main-container').height(mh);
-			}
-
-			if (this.AppBuilder) {
-				// this.AppBuilder.define('height', height - 140);
-				this.AppBuilder.adjust();
-			}
-
-		}
-	}
-
+         if (this.AppBuilder) {
+            // this.AppBuilder.define('height', height - 140);
+            this.AppBuilder.adjust();
+         }
+      }
+   }
 });

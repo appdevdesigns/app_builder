@@ -1,46 +1,52 @@
 var __ObjectPool = {};
 
 module.exports = {
+   /**
+    * @function cache
+    *
+    * @param {ABClassObject} object
+    */
+   cache: function(object) {
+      if (object == null) return;
 
-	/**
-	 * @function cache
-	 * 
-	 * @param {ABClassObject} object 
-	 */
-	cache: function (object) {
+      __ObjectPool[object.id] = object;
+   },
 
-		if (object == null)
-			return;
+   /**
+    * @function get
+    *
+    * @param {uuid} id
+    *
+    * @return {ABClassObject}
+    */
+   get: function(id) {
+      return __ObjectPool[id] || null;
+   },
 
-		__ObjectPool[object.id] = object;
+   /**
+    * @function remove
+    *
+    * @param {uuid} id
+    */
+   remove: function(id) {
+      if (id == null) return;
 
-	},
+      delete __ObjectPool[id];
+   },
 
-	/**
-	 * @function get
-	 * 
-	 * @param {uuid} id 
-	 * 
-	 * @return {ABClassObject}
-	 */
-	get: function (id) {
+   /**
+    * @function list
+    *
+    * @param {function} filter
+    */
+   list: function(filter = () => true) {
+      let result = [];
 
-		return __ObjectPool[id] || null;
+      for (let key in __ObjectPool || {}) {
+         let obj = __ObjectPool[key];
+         if (filter(obj)) result.push(obj);
+      }
 
-	},
-
-	/**
-	 * @function remove
-	 * 
-	 * @param {uuid} id 
-	 */
-	remove: function (id) {
-
-		if (id == null)
-			return;
-
-		delete __ObjectPool[id];
-
-	}
-
-}
+      return result;
+   }
+};

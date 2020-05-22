@@ -1,162 +1,151 @@
-var _ = require('lodash');
-var path = require('path');
+var _ = require("lodash");
+var path = require("path");
 
-var ABModelBase = require('./ABModelBase');
-var ABClassApplication = require(path.join('..', 'classes', 'ABClassApplication'));
+var ABModelBase = require("./ABModelBase");
+var ABClassApplication = require(path.join(
+   "..",
+   "classes",
+   "platform",
+   "ABApplication"
+));
 
 class ABApplication extends ABModelBase {
+   static get collectionName() {
+      return "application";
+   }
 
-	static get collectionName() {
-		return "application";
-	}
+   static get relations() {
+      return {
+         objects: {
+            edgeName: "applicationObject",
+            linkCollection: "object",
+            direction: this.relateDirection.OUTBOUND
+         },
 
-	static get relations() {
+         queries: {
+            edgeName: "applicationQuery",
+            linkCollection: "query",
+            direction: this.relateDirection.OUTBOUND
+         },
 
-		return {
-			objects: {
-				edgeName: "applicationObject",
-				linkCollection: "object",
-				direction: this.relateDirection.OUTBOUND
-			},
+         dataviews: {
+            edgeName: "applicationDataview",
+            linkCollection: "dataview",
+            direction: this.relateDirection.OUTBOUND
+         },
 
-			queries: {
-				edgeName: "applicationQuery",
-				linkCollection: "query",
-				direction: this.relateDirection.OUTBOUND
-			},
+         roles: {
+            edgeName: "applicationRole",
+            linkCollection: "role",
+            direction: this.relateDirection.OUTBOUND
+         }
+      };
+   }
 
-			dataviews: {
-				edgeName: "applicationDataview",
-				linkCollection: "dataview",
-				direction: this.relateDirection.OUTBOUND
-			}
+   static beforeCreate(values) {
+      if (values.name) values.name = values.name.replace(/ /g, "_");
 
-		};
+      return Promise.resolve();
+   }
 
-	}
+   static beforeUpdate(values) {
+      if (values.name) values.name = values.name.replace(/ /g, "_");
 
-	static beforeCreate(values) {
-		if (values.name)
-			values.name = values.name.replace(/ /g, '_');
+      return Promise.resolve();
+   }
 
-		return Promise.resolve();
-	}
+   static afterCreate(newRecord) {
+      // if we have a proper ABApplication.id given:
+      if (newRecord && newRecord.id) {
+         sails.log.info(
+            "ABApplication:afterCreate() triggering registerNavBarArea(" +
+               newRecord.id +
+               ")"
+         );
+         AppBuilder.registerNavBarArea(newRecord.id);
+      }
 
-	static beforeUpdate(values) {
-		if (values.name)
-			values.name = values.name.replace(/ /g, '_');
+      // don't wait around:
+      return Promise.resolve();
+   }
 
-		return Promise.resolve();
-	}
+   static afterUpdate(updatedRecord) {
+      if (updatedRecord && updatedRecord.id) {
+         sails.log.info(
+            "ABApplication:afterUpdate() triggering updateNavBarArea(" +
+               updatedRecord.id +
+               ")"
+         );
+         AppBuilder.updateNavBarArea(updatedRecord.id);
+      }
 
-	static afterCreate(newRecord) {
+      return Promise.resolve();
+   }
 
-		// if we have a proper ABApplication.id given:
-		if (newRecord && newRecord.id) {
+   static beforeDestroy(id) {
+      return (
+         Promise.resolve()
 
-			sails.log.info('ABApplication:afterCreate() triggering registerNavBarArea(' + newRecord.id + ')');
-			AppBuilder.registerNavBarArea(newRecord.id);
-		}
+            // Pull application model
+            .then(() => {
+               return new Promise((next, err) => {
+                  this.findOne(id)
+                     .catch(err)
+                     .then(next);
+               });
+            })
 
-		// don't wait around:
-		return Promise.resolve();
-	}
+            // Remove application's permissions
+            .then((app) => {
+               return new Promise((next, err) => {
+                  var actionKeys = [app.actionKeyName()];
 
-	static afterUpdate(updatedRecord) {
+                  Permissions.action.destroyKeys(actionKeys).then((data) => {
+                     next(app);
+                  }, err);
+               });
+            })
 
-		if (updatedRecord && updatedRecord.id) {
+            // Remove navigation area
+            .then((app) => {
+               return new Promise((next, err) => {
+                  OPSPortal.NavBar.Area.remove(app.areaKey()).then(() => {
+                     next();
+                  }, err);
+               });
+            })
+      );
+   }
 
-			sails.log.info('ABApplication:afterUpdate() triggering updateNavBarArea(' + updatedRecord.id + ')');
-			AppBuilder.updateNavBarArea(updatedRecord.id)
-		}
+   areaKey() {
+      return _.kebabCase(`ab-${this.name}`);
+   }
 
-		return Promise.resolve();
-	}
+   actionKeyName() {
+      return `opstools.${this.validAppName()}.view`;
+   }
 
-	static beforeDestroy(id) {
+   toABClass() {
+      let app = this.toValidJsonFormat();
 
-		return Promise.resolve()
+      return new ABClassApplication(app);
+   }
 
-			// Pull application model
-			.then(() => {
+   toValidJsonFormat() {
+      this.json.objects = this.objects || [];
+      this.json.queries = this.queries || [];
+      this.json.dataviews = this.dataviews || [];
 
-				return new Promise((next, err) => {
+      delete this.objects;
+      delete this.queries;
+      delete this.dataviews;
 
-					this.findOne(id)
-						.catch(err)
-						.then(next);
+      return this;
+   }
 
-				});
-
-			})
-
-			// Remove application's permissions
-			.then(app => {
-
-				return new Promise((next, err) => {
-
-					var actionKeys = [app.actionKeyName()];
-
-					Permissions.action.destroyKeys(actionKeys)
-						.then((data) => {
-							next(app);
-						}, err);
-
-				});
-
-			})
-
-			// Remove navigation area
-			.then(app => {
-
-				return new Promise((next, err) => {
-
-					OPSPortal.NavBar.Area.remove(app.areaKey())
-						.then(() => {
-							next();
-						}, err);
-
-				});
-
-			});
-
-	}
-
-
-	areaKey() {
-		return _.kebabCase(`ab-${this.name}`);
-	}
-
-	actionKeyName() {
-		return `opstools.${this.validAppName()}.view`
-	}
-
-	toABClass() {
-
-		let app = this.toValidJsonFormat();
-
-		return new ABClassApplication(app);
-
-	}
-
-	toValidJsonFormat() {
-
-		this.json.objects = (this.objects || []);
-		this.json.queries = (this.queries || []);
-		this.json.dataviews = (this.dataviews || []);
-
-		delete this.objects;
-		delete this.queries;
-		delete this.dataviews;
-
-		return this;
-
-	}
-
-	validAppName() {
-		return AppBuilder.rules.toApplicationNameFormat(this.name);
-	}
-
+   validAppName() {
+      return AppBuilder.rules.toApplicationNameFormat(this.name);
+   }
 }
 
 module.exports = ABApplication;

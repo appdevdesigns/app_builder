@@ -1,166 +1,199 @@
-
 // // Import our Custom Components here:
-import CustomComponentManager from '../webix_custom_components/customComponentManager'
+import CustomComponentManager from "../webix_custom_components/customComponentManager";
 
+var EventEmitter = require("events").EventEmitter;
 
-var EventEmitter = require('events').EventEmitter;
- 
 export default class UIComponent extends EventEmitter {
+   /**
+    * @param {object} App
+    *      ?what is this?
+    * @param {string} idBase
+    *      Identifier for this component
+    */
+   constructor(App, idBase) {
+      super();
 
-    
-    /**
-     * @param {object} App 
-     *      ?what is this?
-     * @param {string} idBase
-     *      Identifier for this component
-     */
-	constructor(App, idBase) {
-		super();
-		
-		var L = this.Label;
+      var L = this.Label;
 
-		if (!App) {
-			App = {
+      if (!App) {
+         App = {
+            uuid: webix.uid(),
 
-				uuid: webix.uid(),
+            /*
+             * actions:
+             * a hash of exposed application methods that are shared among our
+             * components, so one component can invoke an action that updates
+             * another component.
+             */
+            actions: {},
 
-				/*
-				 * actions:
-				 * a hash of exposed application methods that are shared among our
-				 * components, so one component can invoke an action that updates
-				 * another component.
-				 */
-				actions:{
+            /*
+             * config
+             * webix configuration settings for our current browser
+             */
+            config: OP.Config.config(),
 
-				},
+            /*
+             * custom
+             * a collection of custom components for this App Instance.
+             */
+            custom: {},
 
+            /*
+             * Icons
+             * this will provide you with the list of avaialbe font awesome 4.7.0 icons to use in interface building
+             */
+            icons: OP.Icons.icons,
 
-				/*
-				 * config
-				 * webix configuration settings for our current browser
-				 */
-				config:OP.Config.config(),
+            Label: L,
 
-				/*
-				 * custom
-				 * a collection of custom components for this App Instance.
-				 */
-				custom:{
+            /*
+             * labels
+             * a collection of labels that are common for the Application.
+             */
+            labels: {
+               add: L("ab.common.add", "*Add"),
+               create: L("ab.common.create", "*Create"),
+               delete: L("ab.common.delete", "*Delete"),
+               edit: L("ab.common.edit", "*Edit"),
+               export: L("ab.common.export", "*Export"),
+               formName: L("ab.common.form.name", "*Name"),
+               import: L("ab.common.import", "*Import"),
+               rename: L("ab.common.rename", "*Rename"),
+               ok: L("ab.common.ok", "*Ok"),
 
-				},
-                
-                /*
-                 * Icons
-                 * this will provide you with the list of avaialbe font awesome 4.7.0 icons to use in interface building
-                 */
-                icons: OP.Icons.icons,
+               cancel: L("ab.common.cancel", "*Cancel"),
+               save: L("ab.common.save", "*Save"),
 
+               yes: L("ab.common.yes", "*Yes"),
+               no: L("ab.common.no", "*No"),
 
-				Label: L,
+               none: L("ab.common.none", "*None"),
+               close: L("ab.common.close", "*Close"),
 
+               default: L("ab.common.default", "*Default"),
+               defaultPlaceholder: L(
+                  "ab.common.defaultPlaceholder",
+                  "*Enter default value"
+               ),
 
-				/*
-				 * labels
-				 * a collection of labels that are common for the Application.
-				 */
-				labels:{
-					add: L('ab.common.add', "*Add"),
-					create:   L('ab.common.create', "*Create"),
-					"delete": L('ab.common.delete', "*Delete"),
-					edit: 	  L('ab.common.edit', "*Edit"),
-					"export": L('ab.common.export', "*Export"),
-					formName: L('ab.common.form.name', "*Name"),
-					"import": L('ab.common.import', "*Import"),
-					rename:   L('ab.common.rename', "*Rename"),
-					ok: 	  L('ab.common.ok', "*Ok"),
+               disable: L("ab.common.disable", "*Disable"),
 
-					cancel:   L('ab.common.cancel', "*Cancel"),
-					save: 	  L('ab.common.save', "*Save"),
+               required: L("ab.common.required", "*Required"),
+               unique: L("ab.common.unique", "*Unique"),
 
-					yes: 	  L('ab.common.yes', "*Yes"),
-					no: 	  L('ab.common.no', "*No"),
+               invalidMessage: {
+                  required: L(
+                     "ab.common.invalid_message.required",
+                     "*This field is required"
+                  )
+               },
 
-					none: 	  L('ab.common.none', "*None"),
-					close: 	  L('ab.common.close', "*Close"),
+               createErrorMessage: L(
+                  "ab.common.create.error",
+                  "*System could not create <b>{0}</b>."
+               ),
+               createSuccessMessage: L(
+                  "ab.common.create.success",
+                  "*<b>{0}</b> is created."
+               ),
 
-					default: L('ab.common.default', '*Default'),
-					defaultPlaceholder: L('ab.common.defaultPlaceholder', '*Enter default value'),
+               updateErrorMessage: L(
+                  "ab.common.update.error",
+                  "*System could not update <b>{0}</b>."
+               ),
+               updateSucessMessage: L(
+                  "ab.common.update.success",
+                  "*<b>{0}</b> is updated."
+               ),
 
-					disable: L('ab.common.disable', '*Disable'),
+               deleteErrorMessage: L(
+                  "ab.common.delete.error",
+                  "*System could not delete <b>{0}</b>."
+               ),
+               deleteSuccessMessage: L(
+                  "ab.common.delete.success",
+                  "*<b>{0}</b> is deleted."
+               ),
 
-					required: L('ab.common.required', '*Required'),
-					unique: L('ab.common.unique', '*Unique'),
+               renameErrorMessage: L(
+                  "ab.common.rename.error",
+                  "*System could not rename <b>{0}</b>."
+               ),
+               renameSuccessMessage: L(
+                  "ab.common.rename.success",
+                  "*<b>{0}</b> is renamed."
+               ),
 
-					invalidMessage: {
-						required: 	  L('ab.common.invalid_message.required', "*This field is required"),
-					},
+               // Data Field  common Property labels:
+               dataFieldHeaderLabel: L(
+                  "ab.dataField.common.headerLabel",
+                  "*Section Title"
+               ),
+               dataFieldHeaderLabelPlaceholder: L(
+                  "ab.dataField.common.headerLabelPlaceholder",
+                  "*Section Name"
+               ),
 
-					createErrorMessage:   L('ab.common.create.error', "*System could not create <b>{0}</b>."),
-					createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
+               dataFieldLabel: L("ab.dataField.common.fieldLabel", "*Label"),
+               dataFieldLabelPlaceholder: L(
+                  "ab.dataField.common.fieldLabelPlaceholder",
+                  "*Label"
+               ),
 
-					updateErrorMessage:  L('ab.common.update.error', "*System could not update <b>{0}</b>."),
-					updateSucessMessage: L('ab.common.update.success', "*<b>{0}</b> is updated."),
+               dataFieldColumnName: L(
+                  "ab.dataField.common.columnName",
+                  "*Field Name"
+               ),
+               dataFieldColumnNamePlaceholder: L(
+                  "ab.dataField.common.columnNamePlaceholder",
+                  "*Database field name"
+               ),
 
-					deleteErrorMessage:   L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
-					deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
+               dataFieldShowIcon: L(
+                  "ab.dataField.common.showIcon",
+                  "*show icon?"
+               ),
 
-					renameErrorMessage: L('ab.common.rename.error', "*System could not rename <b>{0}</b>."),
-					renameSuccessMessage: L('ab.common.rename.success', "*<b>{0}</b> is renamed."),
+               componentDropZone: L(
+                  "ab.common.componentDropZone",
+                  "*add widgets here"
+               )
+            },
 
+            /*
+             * unique()
+             * A function that returns a globally unique Key.
+             * @param {string} key   The key to modify and return.
+             * @return {string}
+             */
+            unique: function(key) {
+               return key + this.uuid;
+            }
+         };
+      }
 
-					// Data Field  common Property labels:
-					dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Section Title'),
-					dataFieldHeaderLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Section Name'),
+      var componentManager = new CustomComponentManager();
+      componentManager.initComponents(App);
 
-					dataFieldLabel: L('ab.dataField.common.fieldLabel', '*Label'),
-					dataFieldLabelPlaceholder: L('ab.dataField.common.fieldLabelPlaceholder', '*Label'),
+      this.App = App;
 
-					dataFieldColumnName: L('ab.dataField.common.columnName', '*Field Name'),
-					dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Database field name'),
+      this.idBase = idBase || "?idbase?";
+   }
 
-					dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?'),
-					
-					componentDropZone: L('ab.common.componentDropZone', '*add widgets here')
-				},
+   actions(_actions) {
+      if (_actions) {
+         for (var a in _actions) {
+            this.App.actions[a] = _actions[a];
+         }
+      }
+   }
 
-				/*
-				 * unique()
-				 * A function that returns a globally unique Key.
-				 * @param {string} key   The key to modify and return.
-				 * @return {string}
-				 */
-				unique: function(key) { return key+this.uuid; },
+   Label(key, altText) {
+      return AD.lang.label.getLabel(key) || altText;
+   }
 
-			}
-		}
-
-		var componentManager = new CustomComponentManager();
-		componentManager.initComponents(App);
-
-
-		this.App = App;
-
-		this.idBase = idBase || '?idbase?';
-	}
-
-
-	actions(_actions) {
-		if (_actions){
-			for(var a in _actions) {
-				this.App.actions[a] = _actions[a];
-			}
-		}
-	}
-
-
-	Label(key, altText) {
-		return AD.lang.label.getLabel(key) || altText;
-	}
-
-
-	unique(key) {
-		return this.App.unique(this.idBase + '_' + key);
-	}
-
-
+   unique(key) {
+      return this.App.unique(this.idBase + "_" + key);
+   }
 }

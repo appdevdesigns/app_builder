@@ -1,4 +1,3 @@
-
 /*
  * AB
  *
@@ -10,8 +9,10 @@
 
 // import '../OP/OP'
 
-import AB_Choose from './ab_choose'
-import AB_Work from './ab_work'
+const ABComponent = require("../classes/platform/ABComponent");
+const AB_Choose = require("./ab_choose");
+const AB_Work = require("./ab_work");
+const AB_Admin = require("./ab_admin");
 
 // // Import our Custom Components here:
 // import ActiveList from '../webix_custom_components/activelist'
@@ -22,166 +23,140 @@ import AB_Work from './ab_work'
 // import FocusableTemplate from '../webix_custom_components/focusableTemplate'
 // import SavableLayout from '../webix_custom_components/savablelayout'
 
-import style from "../AppBuilder.css"
+require("../AppBuilder.css");
 
-export default class AB extends OP.Component {    //('ab', function(App) {
+module.exports = class AB extends ABComponent {
+   //('ab', function(App) {
 
+   constructor(App) {
+      super(App, "ab");
 
-	constructor(App) {
-		super(App, 'ab');
+      App = this.App;
+      var L = this.Label;
 
-		App = this.App;
-		var L = this.Label;
+      // // setup the common labels for our AppBuilder Application.
+      // App.labels = {
+      // 	add: L('ab.common.add', "*Add"),
+      // 	create:   L('ab.common.create', "*Create"),
+      // 	"delete": L('ab.common.delete', "*Delete"),
+      // 	edit: 	  L('ab.common.edit', "*Edit"),
+      // 	"export": L('ab.common.export', "*Export"),
+      // 	formName: L('ab.common.form.name', "*Name"),
+      // 	"import": L('ab.common.import', "*Import"),
+      // 	rename:   L('ab.common.rename', "*Rename"),
+      // 	ok: 	  L('ab.common.ok', "*Ok"),
 
+      // 	cancel:   L('ab.common.cancel', "*Cancel"),
+      // 	save: 	  L('ab.common.save', "*Save"),
 
-		// // setup the common labels for our AppBuilder Application.
-		// App.labels = {
-		// 	add: L('ab.common.add', "*Add"),
-		// 	create:   L('ab.common.create', "*Create"),
-		// 	"delete": L('ab.common.delete', "*Delete"),
-		// 	edit: 	  L('ab.common.edit', "*Edit"),
-		// 	"export": L('ab.common.export', "*Export"),
-		// 	formName: L('ab.common.form.name', "*Name"),
-		// 	"import": L('ab.common.import', "*Import"),
-		// 	rename:   L('ab.common.rename', "*Rename"),
-		// 	ok: 	  L('ab.common.ok', "*Ok"),
+      // 	yes: 	  L('ab.common.yes', "*Yes"),
+      // 	no: 	  L('ab.common.no', "*No"),
 
-		// 	cancel:   L('ab.common.cancel', "*Cancel"),
-		// 	save: 	  L('ab.common.save', "*Save"),
+      // 	none: 	  L('ab.common.none', "*None"),
 
-		// 	yes: 	  L('ab.common.yes', "*Yes"),
-		// 	no: 	  L('ab.common.no', "*No"),
+      // 	createErrorMessage:   L('ab.common.create.error', "*System could not create <b>{0}</b>."),
+      // 	createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
 
-		// 	none: 	  L('ab.common.none', "*None"),
+      // 	updateErrorMessage:  L('ab.common.update.error', "*System could not update <b>{0}</b>."),
+      // 	updateSucessMessage: L('ab.common.update.success', "*<b>{0}</b> is updated."),
 
-		// 	createErrorMessage:   L('ab.common.create.error', "*System could not create <b>{0}</b>."),
-		// 	createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
+      // 	deleteErrorMessage:   L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
+      // 	deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
 
-		// 	updateErrorMessage:  L('ab.common.update.error', "*System could not update <b>{0}</b>."),
-		// 	updateSucessMessage: L('ab.common.update.success', "*<b>{0}</b> is updated."),
+      // 	renameErrorMessage: L('ab.common.rename.error', "*System could not rename <b>{0}</b>."),
+      // 	renameSuccessMessage: L('ab.common.rename.success', "*<b>{0}</b> is renamed."),
 
-		// 	deleteErrorMessage:   L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
-		// 	deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
+      // 	// Data Field  common Property labels:
+      // 	dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Section Title'),
+      // 	dataFieldHeaderLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Section Name'),
 
-		// 	renameErrorMessage: L('ab.common.rename.error', "*System could not rename <b>{0}</b>."),
-		// 	renameSuccessMessage: L('ab.common.rename.success', "*<b>{0}</b> is renamed."),
+      // 	dataFieldLabel: L('ab.dataField.common.fieldLabel', '*Label'),
+      // 	dataFieldLabelPlaceholder: L('ab.dataField.common.fieldLabelPlaceholder', '*Label'),
 
+      // 	dataFieldColumnName: L('ab.dataField.common.columnName', '*Field Name'),
+      // 	dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Database field name'),
 
-		// 	// Data Field  common Property labels:
-		// 	dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Section Title'),
-		// 	dataFieldHeaderLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Section Name'),
+      // 	dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?'),
 
-		// 	dataFieldLabel: L('ab.dataField.common.fieldLabel', '*Label'),
-		// 	dataFieldLabelPlaceholder: L('ab.dataField.common.fieldLabelPlaceholder', '*Label'),
+      // 	componentDropZone: L('ab.common.componentDropZone', '*add widgets here')
+      // }
 
-		// 	dataFieldColumnName: L('ab.dataField.common.columnName', '*Field Name'),
-		// 	dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Database field name'),
+      // // make instances of our Custom Components:
+      // new ActiveList(App, 'activelist');	// ->  App.custom.activelist  now exists
+      // new DateTimePicker(App, 'datetimepicker'); // ->  App.custom.datetimepicker  now exists
+      // new EditList(App, 'editlist');	// ->  App.custom.editlist  now exists
+      // new EditTree(App, 'edittree');	// ->  App.custom.edittree  now exists
+      // new EditUnitList(App, 'editunitlist');	// ->  App.custom.editunitlist  now exists
+      // new FocusableTemplate(App, 'focusabletemplate');	// ->  App.custom.focusableTemplate  now exists
+      // new SavableLayout(App, 'savablelayout');	// ->  App.custom.savablelayout  now exists
 
-		// 	dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?'),
-			
-		// 	componentDropZone: L('ab.common.componentDropZone', '*add widgets here')
-		// }
+      var ids = {
+         component: this.unique("root")
+      };
 
+      // Define the external components used in this Component:
+      var AppChooser = new AB_Choose(App);
+      var AppWorkspace = new AB_Work(App);
+      var AppAdmin = new AB_Admin(App);
 
-		// // make instances of our Custom Components:
-		// new ActiveList(App, 'activelist');	// ->  App.custom.activelist  now exists
-		// new DateTimePicker(App, 'datetimepicker'); // ->  App.custom.datetimepicker  now exists
-		// new EditList(App, 'editlist');	// ->  App.custom.editlist  now exists
-		// new EditTree(App, 'edittree');	// ->  App.custom.edittree  now exists
-		// new EditUnitList(App, 'editunitlist');	// ->  App.custom.editunitlist  now exists
-		// new FocusableTemplate(App, 'focusabletemplate');	// ->  App.custom.focusableTemplate  now exists
-		// new SavableLayout(App, 'savablelayout');	// ->  App.custom.savablelayout  now exists
+      // This component's UI definition:
+      // Application multi-views
+      this.ui = {
+         id: ids.component,
+         view: "multiview",
+         borderless: true,
+         animate: false,
+         // height : 800,
+         rows: [AppChooser.ui, AppWorkspace.ui, AppAdmin.ui]
+      };
 
+      this.init = () => {
+         AppChooser.init();
+         AppWorkspace.init();
+         AppAdmin.init();
 
-		var ids = {
-			component:this.unique('root')
-		}
+         // start off only showing the App Chooser:
+         App.actions.transitionApplicationChooser();
 
+         // perform an initial resize adjustment
+         $$(ids.component).adjust();
 
-		// Define the external components used in this Component:
-		var AppChooser = new AB_Choose(App);
-		var AppWorkspace = new AB_Work(App);
+         if (this.__areaShowEvent == null)
+            this.__areaShowEvent = AD.comm.hub.subscribe(
+               "opsportal.area.show",
+               (message, data) => {
+                  _logic.changeArea(data.area);
+               }
+            );
 
+         // Check if this is active area
+         _logic.changeArea();
+      };
 
-		// This component's UI definition:
-		// Application multi-views
-		this.ui = {
-			id: ids.component,
-			view:"multiview",
-			borderless:true,
-			animate: false,
-// height : 800,
-			rows:[
-				AppChooser.ui,
-				AppWorkspace.ui
-			]
-		};
+      var _logic = (this._logic = {
+         changeArea: (areaKey) => {
+            // Get current area key
+            if (areaKey == null) {
+               let currAreaElem = document.querySelector(
+                  "#op-list-menu > .op-container.active"
+               );
+               if (!currAreaElem) return;
 
+               areaKey = currAreaElem.getAttribute("area");
+            }
 
-		this.init = () => {
+            if (areaKey == "app-builder") {
+               // It will load application data at first time here.
+               AppChooser.show();
+            }
+         }
+      });
 
-			AppChooser.init();
-			AppWorkspace.init();
+      this.actions({});
 
-			// start off only showing the App Chooser:
-			App.actions.transitionApplicationChooser();
-
-			// perform an initial resize adjustment
-			$$(ids.component).adjust();
-
-			if (this.__areaShowEvent == null)
-				this.__areaShowEvent = AD.comm.hub.subscribe('opsportal.area.show', (message, data) => {
-
-					_logic.changeArea(data.area);
-
-				});
-
-
-			// Check if this is active area
-			_logic.changeArea();
-
-		};
-
-		var _logic = this._logic = {
-
-			changeArea: (areaKey) => {
-
-				// Get current area key
-				if (areaKey == null) {
-
-					let currAreaElem = document.querySelector('#op-list-menu > .op-container.active');
-					if (!currAreaElem) return;
-					
-					areaKey = currAreaElem.getAttribute("area");
-				}
-
-
-				if (areaKey == "app-builder") {
-					// It will load application data at first time here.
-					AppChooser.show();
-				}
-
-			}
-
-		}
-
-
-
-		this.actions({
-
-		})
-
-
-		this._app = App;  // for unit testing.
-
-	}
-
+      this._app = App; // for unit testing.
+   }
 };
-
-
-
-
-
 
 //// REFACTORING TODOs:
 // TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
