@@ -255,6 +255,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
          popup: App.unique(idBase + "_popup"),
 
          form: App.unique(idBase + "_form"),
+         uploader: App.unique(idBase + "_uploader"),
          uploadFileList: App.unique(idBase + "_uploadList"),
          separatedBy: App.unique(idBase + "_separatedBy"),
          headerOnFirstLine: App.unique(idBase + "_headerOnFirstLine"),
@@ -336,6 +337,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             {
                rows: [
                   {
+                     id: ids.uploader,
                      view: "uploader",
                      name: "csvFile",
                      value: labels.component.selectCsvFile,
@@ -496,6 +498,9 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             if ($popup) $popup.show();
 
             _logic.formClear();
+
+            // open file dialog to upload
+            $$(ids.uploader).fileDialog();
          },
 
          hide: () => {
