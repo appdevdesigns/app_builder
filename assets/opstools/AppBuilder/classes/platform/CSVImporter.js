@@ -34,6 +34,8 @@ module.exports = class CSVImporter {
     * @return {boolean}
     */
    validateFile(fileInfo) {
+      if (!fileInfo || !fileInfo.file || !fileInfo.file.type) return false;
+
       // validate file type
       let extensionType = fileInfo.file.type.toLowerCase();
       if (

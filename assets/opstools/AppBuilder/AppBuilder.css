@@ -1030,3 +1030,12 @@ label {
 .webix_qb_buttons button {
    height: auto;
 }
+.ab-csv-importer .row-pass {
+	background-color: #b4e8b6;
+}
+.ab-csv-importer .row-fail {
+	background-color: #e4b0ad;
+}
+.ab-csv-importer .row-warn {
+	background-color: #f9d59f;
+}
