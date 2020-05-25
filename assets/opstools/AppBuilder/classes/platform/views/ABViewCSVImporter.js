@@ -556,6 +556,9 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                case "in-progress":
                   template = "<span class='fa fa-refresh'></span>";
                   break;
+               case "invalid":
+                  template = "<span class='fa fa-exclamation-triangle'></span>";
+                  break;
                case "done":
                   template = "<span class='fa fa-check'></span>";
                   break;
@@ -917,6 +920,18 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   console.error(errMessage);
                };
 
+               let itemInvalid = (itemId) => {
+                  let $datatable = $$(ids.datatable);
+                  if ($datatable) {
+                     // set "fail" status
+                     $$(ids.datatable).updateItem(itemId, {
+                        _status: "invalid"
+                     });
+                     $datatable.addRowCss(itemId, "row-warn");
+                  }
+                  increaseProgressing();
+               };
+
                let itemPass = (itemId) => {
                   let $datatable = $$(ids.datatable);
                   if ($datatable) {
@@ -934,6 +949,14 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      new Promise((next, err) => {
                         // set "in-progress" status
                         $$(ids.datatable).showItem(data.id);
+
+                        // validate data
+                        let validator = _currentObject.isValidData(newRowData);
+                        let isValid = validator.pass();
+                        if (!isValid) {
+                           itemInvalid(data.id);
+                           return next();
+                        }
 
                         // Add row data
                         objModel
