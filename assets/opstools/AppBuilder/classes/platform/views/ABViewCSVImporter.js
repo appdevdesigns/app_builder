@@ -423,7 +423,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                id: ids.datatable,
                view: "datatable",
                css: "ab-csv-importer",
-               width: 500,
+               width: 650,
                columns: []
             }
          ]
