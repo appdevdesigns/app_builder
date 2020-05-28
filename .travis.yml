@@ -7,6 +7,7 @@ git:
     clone: false
 
 before_script:
+    - docker swarm init
     - git clone https://github.com/echu888/travis-appbuilder.git
     - cd travis-appbuilder
     - npm install
