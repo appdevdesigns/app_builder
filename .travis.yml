@@ -11,7 +11,7 @@ services:
 git:
     clone: false
 
-before_script:
+before_install:
     - git clone https://github.com/echu888/travis-appbuilder.git
     - cd travis-appbuilder
     - npm install
@@ -19,4 +19,6 @@ before_script:
     - scripts/installer.sh
 
 script:
+    - pwd
+    - echo $HOME
     - npm run test
