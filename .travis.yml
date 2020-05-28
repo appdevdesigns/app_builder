@@ -15,11 +15,14 @@ before_install:
     - docker swarm init
     - git clone https://github.com/echu888/travis-appbuilder.git
     - cd travis-appbuilder
-
-install:
     - scripts/installer.sh
 
 script:
     - echo $HOME
     - pwd
-    - npm run test
+    - docker -v
+    - docker ps -a
+    - docker network ls 
+    - npm run pretest
+    - npm run headless
+    - npm run posttest
