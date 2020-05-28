@@ -12,13 +12,14 @@ git:
     clone: false
 
 before_install:
+    - docker swarm init
     - git clone https://github.com/echu888/travis-appbuilder.git
     - cd travis-appbuilder
-    - npm install
-    - docker swarm init
+
+install:
     - scripts/installer.sh
 
 script:
-    - pwd
     - echo $HOME
+    - pwd
     - npm run test
