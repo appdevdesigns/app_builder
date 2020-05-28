@@ -18,12 +18,13 @@ before_install:
     - scripts/installer.sh
 
 script:
-    - echo $HOME
-    - pwd
-    - docker -v
-    - docker ps -a
-    - docker network ls 
-    - npm run pretest
-    - npx wait-on http-get://127.0.0.1:1337/site/login
-    - npm run headless
-    - npm run posttest
+    - npm run test
+    #- echo $HOME
+    #- pwd
+    #- docker -v
+    #- docker ps -a
+    #- docker network ls 
+    #- npm run pretest
+    #- npx wait-on http-get://127.0.0.1:1337/site/login
+    #- npm run headless
+    #- npm run posttest
