@@ -753,10 +753,11 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     *
     * @param {ABView} view
     * @param {Boolean} includeSubViews
+    * @param {Boolean} ignoreUiUpdate
     *
     * @return {Promise}
     */
-   viewSave(view, includeSubViews = false) {
+   viewSave(view, includeSubViews = false, updateUi = true) {
       // var isIncluded = (this.pages(function (p) { return p.id == page.id }).length > 0);
       // if (!isIncluded) {
       // 	this._pages.push(page);
@@ -773,7 +774,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
             // Trigger a update event to the live display page
             let rootPage = view.pageRoot();
-            if (rootPage) {
+            if (rootPage && updateUi) {
                AD.comm.hub.publish("ab.interface.update", {
                   rootPageId: rootPage.id
                });

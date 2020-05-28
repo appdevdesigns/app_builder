@@ -1053,7 +1053,7 @@ label {
 .ab_amp .webix_accordionitem.collapsed .webix_accordionitem_button { transform: rotate(-90deg); }
 .ab_amp .webix_accordionitem_header { background-color: #1CA1C1 !important }
 .ab_amp .webix_accordionitem_header.collapsed { background-color: white !important }
-.ab_amp .webix_danger_inverse button { border: 1px solid #ff4938; color: #ff4938 }
+.ab_amp .webix_danger_inverse button { border: 1px solid #ff4938; color: #ff4938; background: white; }
 .ab_amp .webix_danger_inverse .webix_icon_btn { color: #ff4938 }
 .ab_amp .webix_danger_inverse:hover button { background-color: #ff4938; color: #fff }
 .ab_amp .webix_danger_inverse:hover .webix_icon_btn { color: #fff }
