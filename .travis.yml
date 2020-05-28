@@ -8,7 +8,6 @@ git:
 
 before_script:
     - git clone https://github.com/echu888/travis-appbuilder.git
-    - git checkout develop
     - cd travis-appbuilder
     - npm install
     - scripts/installer.sh
