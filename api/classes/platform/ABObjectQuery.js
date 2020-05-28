@@ -21,7 +21,7 @@ module.exports = class ABClassQuery extends ABClassObject {
          else this._objects[obj.alias] = new ABClassObject(obj, application);
       });
 
-      this.viewName = attributes.viewName;
+      this.viewName = attributes.viewName || "";
       // knex does not like .(dot) in table and column names
       // https://github.com/knex/knex/issues/2762
       this.viewName = this.viewName.replace(/[^a-zA-Z0-9_ ]/gi, "");
