@@ -816,11 +816,13 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
                // reformat data to display
                (matchFields || []).forEach((f) => {
+                  let data = row[f.columnIndex - 1];
+
                   if (f.field.key == "connectObject") {
-                     rowValue[f.columnIndex] = row[f.columnIndex];
+                     rowValue[f.columnIndex] = data;
                   } else {
                      let dataValue = {};
-                     dataValue[f.field.columnName] = row[f.columnIndex];
+                     dataValue[f.field.columnName] = data;
                      rowValue[f.columnIndex] = f.field.format(dataValue); // array to object
                   }
                });
@@ -869,7 +871,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                if (!_currentObject) return;
 
                // webix .options list disallow value 0
-               let colIndex = $selector.getValue() - 1;
+               let colIndex = $selector.getValue();
 
                let field = _currentObject.fields(
                   (f) => f.id == $selector.config.fieldId
