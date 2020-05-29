@@ -627,7 +627,17 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             let csvColumnList = [];
             let fieldList = [];
             if (_currentObject) {
-               fieldList = _currentObject.fields() || [];
+               fieldList =
+                  _currentObject.fields((f) => {
+                     // filter editable fields
+                     let formComp = f.formComponent();
+                     if (!formComp) return true;
+
+                     let formConfig = formComp.common();
+                     if (!formConfig) return true;
+
+                     return formConfig.key != "fieldreadonly";
+                  }) || [];
             }
             // check first line be header columns
             if ($$(ids.headerOnFirstLine).getValue()) {
