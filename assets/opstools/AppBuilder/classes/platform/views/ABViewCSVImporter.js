@@ -743,7 +743,10 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             if (!$columnOption) return;
 
             let $optionPanel = $columnOption.getParentView();
-            let $linkFieldOption = $optionPanel.getChildViews()[1];
+            let $linkFieldOption = $optionPanel.queryView(
+               { abName: "columnLinkData" },
+               "all"
+            )[0];
             if (!$linkFieldOption) return;
 
             if ($columnOption.getValue() == "none") {
