@@ -951,13 +951,30 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                console.error(errMessage);
             };
 
-            let itemInvalid = (itemId) => {
+            let itemInvalid = (itemId, errors = []) => {
                let $datatable = $$(ids.datatable);
                if ($datatable) {
                   // set "fail" status
                   $$(ids.datatable).updateItem(itemId, {
                      _status: "invalid"
                   });
+
+                  // mark which column are invalid
+                  errors.forEach((err) => {
+                     if (!err || !err.name) return;
+                     let fieldInfo = matchFields.filter(
+                        (f) => f.field && f.field.columnName == err.name
+                     )[0];
+                     if (fieldInfo) {
+                        $datatable.addCellCss(
+                           itemId,
+                           fieldInfo.columnIndex,
+                           "cell-invalid"
+                        );
+                     }
+                  });
+
+                  // highlight the row
                   $datatable.addRowCss(itemId, "row-warn");
                }
                increaseProgressing();
@@ -1005,8 +1022,21 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                }
 
                matchFields.forEach((f) => {
-                  if (f.field.key == "connectObject") return;
-                  newRowData[f.field.columnName] = data[f.columnIndex];
+                  if (!f.field || !f.field || !f.field.key) return;
+
+                  switch (f.field.key) {
+                     case "connectObject":
+                        // skip
+                        break;
+                     case "number":
+                        newRowData[f.field.columnName] = (
+                           data[f.columnIndex] || ""
+                        ).replace(/[^0-9.]/gi, "");
+                        break;
+                     default:
+                        newRowData[f.field.columnName] = data[f.columnIndex];
+                        break;
+                  }
                });
 
                let isValid = false;
@@ -1029,7 +1059,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                  );
                                  isValid = validator.pass();
                                  if (!isValid) {
-                                    itemInvalid(data.id);
+                                    itemInvalid(data.id, validator.errors);
                                  }
 
                                  next();

@@ -1039,3 +1039,6 @@ label {
 .ab-csv-importer .row-warn {
 	background-color: #f9d59f;
 }
+.ab-csv-importer .cell-invalid {
+	background-color: #e9ab4d;
+}
