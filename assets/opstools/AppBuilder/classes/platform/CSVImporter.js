@@ -79,7 +79,7 @@ module.exports = class CSVImporter {
                let dataCols = [];
                if (separatedBy == ",") {
                   // https://stackoverflow.com/questions/11456850/split-a-string-by-commas-but-ignore-commas-within-double-quotes-using-javascript#answer-11457952
-                  dataCols = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                  dataCols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
                } else {
                   dataCols = row.split(separatedBy);
                }
