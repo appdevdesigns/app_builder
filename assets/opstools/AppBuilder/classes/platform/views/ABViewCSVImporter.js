@@ -423,7 +423,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                id: ids.datatable,
                view: "datatable",
                css: "ab-csv-importer",
-               width: 500,
+               width: 650,
                columns: []
             }
          ]
@@ -627,7 +627,17 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             let csvColumnList = [];
             let fieldList = [];
             if (_currentObject) {
-               fieldList = _currentObject.fields() || [];
+               fieldList =
+                  _currentObject.fields((f) => {
+                     // filter editable fields
+                     let formComp = f.formComponent();
+                     if (!formComp) return true;
+
+                     let formConfig = formComp.common();
+                     if (!formConfig) return true;
+
+                     return formConfig.key != "fieldreadonly";
+                  }) || [];
             }
             // check first line be header columns
             if ($$(ids.headerOnFirstLine).getValue()) {
@@ -743,7 +753,10 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             if (!$columnOption) return;
 
             let $optionPanel = $columnOption.getParentView();
-            let $linkFieldOption = $optionPanel.getChildViews()[1];
+            let $linkFieldOption = $optionPanel.queryView(
+               { abName: "columnLinkData" },
+               "all"
+            )[0];
             if (!$linkFieldOption) return;
 
             if ($columnOption.getValue() == "none") {
@@ -803,11 +816,13 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
                // reformat data to display
                (matchFields || []).forEach((f) => {
+                  let data = row[f.columnIndex - 1];
+
                   if (f.field.key == "connectObject") {
-                     rowValue[f.columnIndex] = row[f.columnIndex];
+                     rowValue[f.columnIndex] = data;
                   } else {
                      let dataValue = {};
-                     dataValue[f.field.columnName] = row[f.columnIndex];
+                     dataValue[f.field.columnName] = data;
                      rowValue[f.columnIndex] = f.field.format(dataValue); // array to object
                   }
                });
@@ -856,7 +871,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                if (!_currentObject) return;
 
                // webix .options list disallow value 0
-               let colIndex = $selector.getValue() - 1;
+               let colIndex = $selector.getValue();
 
                let field = _currentObject.fields(
                   (f) => f.id == $selector.config.fieldId
@@ -948,13 +963,30 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                console.error(errMessage);
             };
 
-            let itemInvalid = (itemId) => {
+            let itemInvalid = (itemId, errors = []) => {
                let $datatable = $$(ids.datatable);
                if ($datatable) {
                   // set "fail" status
                   $$(ids.datatable).updateItem(itemId, {
                      _status: "invalid"
                   });
+
+                  // mark which column are invalid
+                  errors.forEach((err) => {
+                     if (!err || !err.name) return;
+                     let fieldInfo = matchFields.filter(
+                        (f) => f.field && f.field.columnName == err.name
+                     )[0];
+                     if (fieldInfo) {
+                        $datatable.addCellCss(
+                           itemId,
+                           fieldInfo.columnIndex,
+                           "cell-invalid"
+                        );
+                     }
+                  });
+
+                  // highlight the row
                   $datatable.addRowCss(itemId, "row-warn");
                }
                increaseProgressing();
@@ -1002,8 +1034,21 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                }
 
                matchFields.forEach((f) => {
-                  if (f.field.key == "connectObject") return;
-                  newRowData[f.field.columnName] = data[f.columnIndex];
+                  if (!f.field || !f.field || !f.field.key) return;
+
+                  switch (f.field.key) {
+                     case "connectObject":
+                        // skip
+                        break;
+                     case "number":
+                        newRowData[f.field.columnName] = (
+                           data[f.columnIndex] || ""
+                        ).replace(/[^0-9.]/gi, "");
+                        break;
+                     default:
+                        newRowData[f.field.columnName] = data[f.columnIndex];
+                        break;
+                  }
                });
 
                let isValid = false;
@@ -1026,7 +1071,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                  );
                                  isValid = validator.pass();
                                  if (!isValid) {
-                                    itemInvalid(data.id);
+                                    itemInvalid(data.id, validator.errors);
                                  }
 
                                  next();

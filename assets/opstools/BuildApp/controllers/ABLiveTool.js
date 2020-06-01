@@ -13,6 +13,9 @@ steal(
                      init: function(element, options) {
                         var self = this;
 
+                        if (!webix.env.touch && webix.env.scrollSize)
+                           webix.CustomScroll.init();
+
                         options = AD.defaults(
                            {
                               app: -1,
