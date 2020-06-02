@@ -217,6 +217,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
                                     },
                                     {
                                        id: ids.buttonSort,
+                                       css: "webix_primary",
                                        view: "button",
                                        name: "buttonSort",
                                        label: L(
