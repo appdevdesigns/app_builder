@@ -19,6 +19,10 @@ class OPUser {
 }
 
 export default {
+   id: function() {
+      return this.user().id;
+   },
+
    init: function() {
       if (!this.__user) this.__user = new OPUser();
    },

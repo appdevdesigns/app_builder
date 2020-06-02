@@ -430,7 +430,8 @@ module.exports = class ABViewPage extends ABViewPageCore {
       };
 
       var _init = (options) => {
-         comp.init(options);
+         var accessLevel = this.getUserAccess();
+         comp.init(options, accessLevel);
       };
 
       return {

@@ -17,6 +17,9 @@ const ABProcess = require("./ABProcess");
 
 var _AllApplications = [];
 
+var _AllUserRoles = [];
+// an array of {id:, lable:} of the ABRoles the current User has assigned
+
 var dfdReady = null;
 
 function L(key, altText) {
@@ -307,6 +310,14 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
    cloneDeep(value) {
       return _.cloneDeep(value);
+   }
+
+   userRoles(roles) {
+      if (roles) {
+         _AllUserRoles = roles;
+         return;
+      }
+      return _AllUserRoles;
    }
 
    /// ABApplication data methods

@@ -64,7 +64,6 @@ steal(
 
                         self.initDOM();
                         self.initModels();
-                        self.initAMP();
 
                         self.__events = {};
 
@@ -448,6 +447,17 @@ steal(
                               webix.ui.tree
                            );
                         });
+
+                        // buld the tree views for already defined role access levels
+                        if (self.rootPage.application.isAccessManaged) {
+                           // Build the access level tree for Roles
+                           var roles = Object.keys(self.rootPage.accessLevels);
+                           roles.forEach((role) => {
+                              self.buildAccessAccordion(role);
+                           });
+                        }
+
+                        $(`#ampButton_${self.containerDomID}`).show();
                      },
 
                      buildAccessAccordion: function(role) {
@@ -839,7 +849,7 @@ steal(
                               </div>
                            </div>
                            <div style="display: none;" id="ampTree_${this.containerDomID}"></div>
-                           <div class="amp" onclick="$$('accessManager_${this.containerDomID}').show();">
+                           <div style="display: none;" id="ampButton_${this.containerDomID}" class="amp" onclick="$$('accessManager_${this.containerDomID}').show();">
                               <i class="fa fa-fw fa-unlock fa-2x fa-inverse"></i>
                               <i class="fa fa-fw fa-lock fa-2x fa-inverse"></i>
                               Access Management
@@ -869,6 +879,43 @@ steal(
 
                         self.initEvents(self.rootPage);
 
+                        var shouldInitAMP = false;
+                        if (
+                           parseInt(
+                              self.rootPage.application.accessManagers.useRole
+                           ) == 1
+                        ) {
+                           self.rootPage.application
+                              .userRoles()
+                              .forEach((role) => {
+                                 if (
+                                    self.rootPage.application.accessManagers.role.indexOf(
+                                       role.id
+                                    ) > -1
+                                 ) {
+                                    shouldInitAMP = true;
+                                 }
+                              });
+                        }
+                        if (
+                           !shouldInitAMP &&
+                           parseInt(
+                              self.rootPage.application.accessManagers
+                                 .useAccount
+                           ) == 1
+                        ) {
+                           if (
+                              self.rootPage.application.accessManagers.account.indexOf(
+                                 OP.User.id() + ""
+                              ) > -1
+                           ) {
+                              shouldInitAMP = true;
+                           }
+                        }
+                        if (shouldInitAMP) {
+                           self.initAMP();
+                        }
+
                         webix.ready(function() {
                            self.showPage();
 
@@ -879,29 +926,78 @@ steal(
                      initRoles: function() {
                         var self = this;
 
-                        var __Roles = [];
+                        return new Promise((resolve, reject) => {
+                           var __Roles = [];
+                           var __UserRoles = [];
 
-                        self.rootPage.application.class.ABRole.find()
-                           .then((list) => {
-                              // make sure they are all translated.
-                              list.forEach(function(l) {
-                                 // self.translate(l, l, ["name"]);
-                                 __Roles.push({
-                                    id: l.uuid,
-                                    value: l.name
-                                 });
-                              });
-                              self.roles = __Roles;
-                              self.initPage();
-                           })
-                           .catch((err) => {
-                              AD.error.log(
-                                 "ABProcessParticipantCore: Error loading Roles",
-                                 {
-                                    error: err
+                           async.series(
+                              [
+                                 function(next) {
+                                    self.rootPage.application.class.ABRole.find()
+                                       .then((list) => {
+                                          list.forEach(function(l) {
+                                             __Roles.push({
+                                                id: l.uuid,
+                                                value: l.name
+                                             });
+                                          });
+                                          self.roles = __Roles;
+                                          next();
+                                       })
+                                       .catch((err) => {
+                                          AD.error.log(
+                                             "ABLiveTool: Error loading Roles",
+                                             {
+                                                error: err
+                                             }
+                                          );
+                                          next(err);
+                                       });
+                                 },
+                                 function(next) {
+                                    if (
+                                       self.rootPage.application.userRoles()
+                                          .length
+                                    ) {
+                                       next();
+                                       return;
+                                    }
+                                    self.rootPage.application.class.ABRole.rolesOfUser(
+                                       window.OP.User.username()
+                                    )
+                                       .then((list) => {
+                                          list.forEach(function(l) {
+                                             __UserRoles.push({
+                                                id: l.id,
+                                                label: l.label
+                                             });
+                                          });
+                                          self.rootPage.application.userRoles(
+                                             __UserRoles
+                                          );
+                                          next();
+                                       })
+                                       .catch((err) => {
+                                          AD.error.log(
+                                             "ABProcessParticipantCore: Error loading Roles",
+                                             {
+                                                error: err
+                                             }
+                                          );
+                                          next(err);
+                                       });
+                                 },
+                                 function(next) {
+                                    self.initPage();
+                                    next();
                                  }
-                              );
-                           });
+                              ],
+                              function(err) {
+                                 if (err) reject(err);
+                                 else resolve();
+                              }
+                           );
+                        });
                      },
 
                      menuChange: function(areaKey, toolKey) {
@@ -1047,7 +1143,14 @@ steal(
                               function(next) {
                                  if (self.rootPage == null) return next();
 
-                                 self.initRoles();
+                                 self
+                                    .initRoles()
+                                    .then(() => {
+                                       next();
+                                    })
+                                    .catch((err) => {
+                                       next(err);
+                                    });
                                  //self.initPage(); moved this inside self.initRoles() to fire after roles are loaded
 
                                  // let areaKey = 'ab-' + self.data.application.name.trim();
@@ -1071,7 +1174,7 @@ steal(
                                  // 	}
                                  // }
 
-                                 next();
+                                 // next();
                               },
 
                               // Hide loading spinners
@@ -1140,13 +1243,14 @@ steal(
                         var component = page.component(self.App);
                         var ui = component.ui;
 
-                        if (isRootPage && page.application.isAccessManaged) {
-                           // Build the access level tree for Roles
-                           var roles = Object.keys(page.accessLevels);
-                           roles.forEach((role) => {
-                              self.buildAccessAccordion(role);
-                           });
-                        }
+                        // this may need to move to initPage()
+                        // if (isRootPage && page.application.isAccessManaged) {
+                        //    // Build the access level tree for Roles
+                        //    var roles = Object.keys(page.accessLevels);
+                        //    roles.forEach((role) => {
+                        //       self.buildAccessAccordion(role);
+                        //    });
+                        // }
 
                         // Keep the page component
                         self.pageComponents[page.id] = component;

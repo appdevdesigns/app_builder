@@ -611,6 +611,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
     * @return {obj} UI component
     */
    component(App) {
+      var comp = super.component(App);
       // get a UI component for each of our child views
       this._viewComponents = [];
       this.views().forEach((v) => {
@@ -958,7 +959,9 @@ module.exports = class ABViewTab extends ABViewTabCore {
                   );
                }
 
-               v.component.init();
+               // for tabs we need to look at the view's accessLevels
+               var accessLevel = v.view.getUserAccess();
+               v.component.init(null, accessLevel);
 
                // done
                setTimeout(() => {
