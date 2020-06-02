@@ -1028,8 +1028,11 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                // Set parent's data collection cursor
                if (objectLink && linkConnectFields.length && linkValueId) {
                   linkConnectFields.forEach((f) => {
+                     let linkColName = f.indexField
+                        ? f.indexField.columnName
+                        : objectLink.PK();
                      newRowData[f.columnName] = {};
-                     newRowData[f.columnName][objectLink.PK()] = linkValueId;
+                     newRowData[f.columnName][linkColName] = linkValueId;
                   });
                }
 
@@ -1121,7 +1124,10 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                              .catch((errMessage) => go())
                                              .then((list) => {
                                                 if (list && list.data[0]) {
-                                                   let linkIdKey = connectField.object.PK();
+                                                   let linkIdKey = connectField.indexField
+                                                      ? connectField.indexField
+                                                           .columnName
+                                                      : connectField.object.PK();
                                                    newRowData[
                                                       connectField.columnName
                                                    ] = {};
