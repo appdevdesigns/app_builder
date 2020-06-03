@@ -137,7 +137,10 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                   .then(() => {
                      resolve();
                   })
-                  .catch(reject);
+                  .catch((error) => {
+                     this.log(instance, error.toString());
+                     reject(error);
+                  });
             })
             .catch((error) => {
                this.log(
@@ -178,20 +181,29 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             accountID,
             rcID,
             journalEntry
-         ).then(() => {
-            // set JE.status = Complete
-            journalEntry[fieldJEStatus.columnName] = this.fieldJEStatusComplete;
+         )
+            .then(() => {
+               // set JE.status = Complete
+               journalEntry[
+                  fieldJEStatus.columnName
+               ] = this.fieldJEStatusComplete;
 
-            var updateValue = {};
-            updateValue[fieldJEStatus.columnName] = this.fieldJEStatusComplete;
-            jeObject
-               .modelAPI()
-               .update(journalEntry[jeObject.PK()], updateValue)
-               .then(() => {
-                  resolve();
-               })
-               .catch(reject);
-         });
+               var updateValue = {};
+               updateValue[
+                  fieldJEStatus.columnName
+               ] = this.fieldJEStatusComplete;
+               jeObject
+                  .modelAPI()
+                  .update(journalEntry[jeObject.PK()], updateValue)
+                  .then(() => {
+                     resolve();
+                  })
+                  .catch(reject);
+            })
+            .catch((error) => {
+               console.error(error);
+               reject(error);
+            });
       });
    }
 
