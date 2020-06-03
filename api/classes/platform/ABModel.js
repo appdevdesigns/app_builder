@@ -87,23 +87,35 @@ module.exports = class ABModel extends ABModelCore {
       //		 should we populate the connected fields of the entries
       //		 returned?
       cond = cond || {};
+      var defaultCond = {
+         // where: cond,
+         sort: [], // No Sorts
+         offset: 0, // no offset
+         limit: 0, // no limit
+         populate: false // don't populate the data
+      };
       if (!cond.where) {
          // if we don't seem to have an EXPANDED format, see if we can
          // figure it out:
-         var newCond = {
-            where: cond,
-            sort: [], // No Sorts
-            offset: 0, // no offset
-            limit: 0, // no limit
-            populate: false // don't populate the data
-         };
+
          conditionFields.forEach((f) => {
             if (!_.isUndefined(cond[f])) {
-               newCond[f] = cond[f];
+               defaultCond[f] = cond[f];
+               delete cond[f];
             }
          });
 
-         cond = newCond;
+         // store the rest as our .where cond
+         defaultCond.where = cond;
+
+         cond = defaultCond;
+      } else {
+         // make sure cond has our defaults set:
+         conditionFields.forEach((f) => {
+            if (_.isUndefined(cond[f])) {
+               cond[f] = defaultCond[f];
+            }
+         });
       }
 
       // conditionDefaults is optional.  Some system tasks wont provide this.
