@@ -2377,6 +2377,12 @@ msgstr "Custom"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.csvImporter
+msgid "CSV Importer"
+msgstr "CSV Importer"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.detail
 msgid "Detail"
 msgstr "Detail"

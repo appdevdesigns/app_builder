@@ -1,5 +1,6 @@
 const ABProcessTaskServiceCore = require("../../../core/process/tasks/ABProcessTaskServiceCore.js");
 
+const AccountingBatchProcessing = require("./ABProcessTaskServiceAccountingBatchProcessing.js");
 const ABProcessTaskServiceQuery = require("./ABProcessTaskServiceQuery.js");
 
 function L(key, altText) {
@@ -32,6 +33,16 @@ module.exports = class ABProcessTaskService extends ABProcessTaskServiceCore {
          elements: [
             {
                view: "button",
+               label: L(
+                  "ab.process.task.service.accountingBatch",
+                  "*Accounting: Process Batch"
+               ),
+               click: () => {
+                  this.switchTo("accountingBatch", id);
+               }
+            },
+            {
+               view: "button",
                label: L("ab.process.task.service.query", "*Query Task"),
                click: () => {
                   this.switchTo("query", id);
@@ -62,6 +73,14 @@ module.exports = class ABProcessTaskService extends ABProcessTaskServiceCore {
       // create an instance of the desired child
       var child = null;
       switch (classType) {
+         case "accountingBatch":
+            child = new AccountingBatchProcessing(
+               myValues,
+               this.process,
+               this.application
+            );
+            break;
+
          case "query":
             child = new ABProcessTaskServiceQuery(
                myValues,

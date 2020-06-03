@@ -672,7 +672,8 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                   break;
                case "datetime":
                   state.value = state.value.getTime();
-                  state.old = state.old.getTime();
+                  if (state && state.old && state.old.getTime)
+                     state.old = state.old.getTime();
                   break;
                default:
                // code block
