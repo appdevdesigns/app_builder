@@ -13,10 +13,12 @@ module.exports = {
    globals: {
       "_": "readonly",
       "AB": "readonly",
+      "AD": "readonly",
       "cordova" : "readonly",
       "Countly" : "readonly",
       "Framework7": "readonly",
       "OP": "readonly",
+      "webix": "readonly",
       "$$": "readonly"
    },
 

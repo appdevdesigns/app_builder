@@ -8,6 +8,53 @@ var __ModelPool = {}; // reuse any previously created Model connections
 
 module.exports = class ABModel extends ABModelCore {
    /**
+    * @method create
+    * performs an update operation
+    * @param {string} id
+    *    the primary key for this update operation.
+    * @param {obj} values
+    *    A hash of the new values for this entry.
+    * @return {Promise} resolved with the result of the find()
+    */
+   create(values) {
+      return new Promise((resolve, reject) => {
+         // get a Knex Query Object
+         let query = this.modelKnex().query();
+
+         var PK = this.object.PK();
+
+         // update our value
+         query
+            .insert(values)
+            .catch(reject)
+            .then((returnVals) => {
+               // make sure we get a fully updated value for
+               // the return value
+               this.findAll({
+                  where: {
+                     glue: "and",
+                     rules: [
+                        {
+                           key: PK,
+                           rule: "equals",
+                           value: returnVals[PK]
+                        }
+                     ]
+                  },
+                  offset: 0,
+                  limit: 1,
+                  populate: true
+               })
+                  .then((rows) => {
+                     // this returns an [] so pull 1st value:
+                     resolve(rows[0]);
+                  })
+                  .catch(reject);
+            });
+      });
+   }
+
+   /**
     * @method findAll
     * performs a data find with the provided condition.
     * @param {obj} cond
@@ -130,6 +177,96 @@ module.exports = class ABModel extends ABModelCore {
                   .catch(reject);
             });
       });
+   }
+
+   /**
+    * @method relate()
+    * connect an object to another object via it's defined relation.
+    *
+    * this operation is ADDITIVE. It only appends additional relations.
+    *
+    * @param {string} id
+    *       the uuid of this object that is relating to these values
+    * @param {string} field
+    *       a reference to the object.fields() that we are connecting to
+    *       can be either .uuid or .columnName
+    * @param {array} values
+    *       one or more values to create a connection to.
+    *       these can be either .uuid values, or full {obj} values.
+    * @return {Promise}
+    */
+   relate(id, fieldRef, value) {
+      function errorReturn(message) {
+         var error = new Error(message);
+         return Promise.reject(error);
+      }
+      if (typeof id == undefined)
+         return errorReturn("ABModel.relate(): missing id");
+      if (typeof fieldRef == undefined)
+         return errorReturn("ABModel.relate(): missing id");
+      if (typeof value == undefined)
+         return errorReturn("ABModel.relate(): missing value");
+
+      var abField = this.object.fields(
+         (f) => f.id == fieldRef || f.columnName == fieldRef
+      )[0];
+      if (!abField)
+         return errorReturn(
+            "ABModel.relate(): unknown field reference[" + fieldRef + "]"
+         );
+
+      var dl = abField.datasourceLink;
+      if (!dl)
+         return errorReturn(
+            `ABModel.relate(): provided field[${fieldRef}] could not resolve its object`
+         );
+      var fieldPK = dl.PK();
+
+      // which is correct?
+      // var relationName = abField.relationName();
+      let relationName = AppBuilder.rules.toFieldRelationFormat(
+         abField.columnName
+      );
+
+      // now parse the provided value param and create an array of
+      // primaryKey entries for our abField:
+      var useableValues = [];
+      if (!Array.isArray(value)) value = [value];
+      value.forEach((v) => {
+         if (typeof v == "object") {
+            var val = v[fieldPK];
+            if (val) {
+               useableValues.push(val);
+            }
+            // Q: is !val an error, or a possible null that can't
+            // Q: should I kill things here and report an error?
+         } else {
+            useableValues.push(v);
+         }
+      });
+
+      return new Promise((resolve, reject) => {
+         this.modelKnex()
+            .query()
+            .findById(id)
+            .then((objInstance) => {
+               return objInstance
+                  .$relatedQuery(relationName)
+                  .relate(useableValues);
+            })
+            .then(resolve)
+            .catch(reject);
+      });
+      // let objInstance = this.modelKnex()
+      //    .query()
+      //    .findById(id);
+      // return objInstance.$relatedQuery(relationName).relate(useableValues);
+
+      // let query = this.modelKnex().query();
+      // return query
+      //    .relatedQuery(relationName)
+      //    .for(id)
+      //    .relate(useableValues);
    }
 
    modelDefaultFields() {
@@ -875,7 +1012,7 @@ module.exports = class ABModel extends ABModelCore {
             relationNames.push("translations");
          }
 
-         if (relationNames.length > 0) console.log(relationNames);
+         // if (relationNames.length > 0) console.log(relationNames);
          query.eager(`[${relationNames.join(", ")}]`, {
             // if the linked object's PK is uuid, then exclude .id
             unselectId: (builder) => {

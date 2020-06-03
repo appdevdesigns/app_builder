@@ -217,6 +217,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
                                     },
                                     {
                                        id: ids.buttonSort,
+                                       css: "webix_primary",
                                        view: "button",
                                        name: "buttonSort",
                                        label: L(
@@ -403,7 +404,13 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
 
             $$(ids.dataSource).refresh();
 
-            this.FilterComponent.applicationLoad(this._application);
+            if (this.FilterComponent) {
+               this.FilterComponent.applicationLoad(this._application);
+            } else {
+               console.error(
+                  ".applicationLoad() called before .initPopupEditors"
+               );
+            }
 
             this._logic.listBusy();
 
