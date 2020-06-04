@@ -911,7 +911,8 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                   } else if (
                      !isEditable &&
                      !detailsPage.length &&
-                     editPage.length
+                     editPage.length &&
+                     this.config.accessLevel == 2
                   ) {
                      _logic.changePage(dv, item, editPage);
                      toggleTab(editTab, this);
