@@ -43,10 +43,9 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       (processDataFields || []).forEach((row) => {
          processValues.push({ id: row.key, value: row.label });
       });
-      debugger;
 
       var objectList = this.application.objects().map((o) => {
-         return { id: o.id, value: o.name, object: o };
+         return { id: o.id, value: o.label || o.name, object: o };
       });
       objectList.unshift({
          id: 0,
