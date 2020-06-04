@@ -959,41 +959,44 @@ steal(
 
                         self.initEvents(self.rootPage);
 
-                        var shouldInitAMP = false;
-                        if (
-                           parseInt(
-                              self.rootPage.application.accessManagers.useRole
-                           ) == 1
-                        ) {
-                           self.rootPage.application
-                              .userRoles()
-                              .forEach((role) => {
-                                 if (
-                                    self.rootPage.application.accessManagers.role.indexOf(
-                                       role.id
-                                    ) > -1
-                                 ) {
-                                    shouldInitAMP = true;
-                                 }
-                              });
-                        }
-                        if (
-                           !shouldInitAMP &&
-                           parseInt(
-                              self.rootPage.application.accessManagers
-                                 .useAccount
-                           ) == 1
-                        ) {
+                        if (self.rootPage.application.isAccessManaged) {
+                           var shouldInitAMP = false;
                            if (
-                              self.rootPage.application.accessManagers.account.indexOf(
-                                 OP.User.id() + ""
-                              ) > -1
+                              parseInt(
+                                 self.rootPage.application.accessManagers
+                                    .useRole
+                              ) == 1
                            ) {
-                              shouldInitAMP = true;
+                              self.rootPage.application
+                                 .userRoles()
+                                 .forEach((role) => {
+                                    if (
+                                       self.rootPage.application.accessManagers.role.indexOf(
+                                          role.id
+                                       ) > -1
+                                    ) {
+                                       shouldInitAMP = true;
+                                    }
+                                 });
                            }
-                        }
-                        if (shouldInitAMP) {
-                           self.initAMP();
+                           if (
+                              !shouldInitAMP &&
+                              parseInt(
+                                 self.rootPage.application.accessManagers
+                                    .useAccount
+                              ) == 1
+                           ) {
+                              if (
+                                 self.rootPage.application.accessManagers.account.indexOf(
+                                    OP.User.id() + ""
+                                 ) > -1
+                              ) {
+                                 shouldInitAMP = true;
+                              }
+                           }
+                           if (shouldInitAMP) {
+                              self.initAMP();
+                           }
                         }
 
                         webix.ready(function() {
@@ -1223,14 +1226,20 @@ steal(
                               function(next) {
                                  if (self.rootPage == null) return next();
 
-                                 self
-                                    .initRoles()
-                                    .then(() => {
-                                       next();
-                                    })
-                                    .catch((err) => {
-                                       next(err);
-                                    });
+                                 if (
+                                    self.rootPage.application.isAccessManaged
+                                 ) {
+                                    self
+                                       .initRoles()
+                                       .then(() => {
+                                          next();
+                                       })
+                                       .catch((err) => {
+                                          next(err);
+                                       });
+                                 } else {
+                                    self.initPage();
+                                 }
                                  //self.initPage(); moved this inside self.initRoles() to fire after roles are loaded
 
                                  // let areaKey = 'ab-' + self.data.application.name.trim();
