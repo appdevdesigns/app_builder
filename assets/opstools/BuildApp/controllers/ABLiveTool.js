@@ -348,12 +348,78 @@ steal(
                            view: "scrollview",
                            css: "lightgray ab_amp",
                            body: {
-                              view: "accordion",
-                              id: "amp_accordion_" + self.containerDomID,
-                              roles: [],
-                              collapsed: true,
-                              css: "webix_dark",
-                              rows: []
+                              rows: [
+                                 {
+                                    view: "accordion",
+                                    id: "amp_accordion_" + self.containerDomID,
+                                    roles: [],
+                                    hidden: true,
+                                    collapsed: true,
+                                    css: "webix_dark",
+                                    rows: []
+                                 },
+                                 {
+                                    id:
+                                       "amp_accordion_noSelection_" +
+                                       self.containerDomID,
+                                    rows: [
+                                       {},
+                                       {
+                                          view: "label",
+                                          align: "center",
+                                          height: 200,
+                                          label:
+                                             "<div style='display: block; font-size: 180px; background-color: #666; color: transparent; text-shadow: 0px 1px 1px rgba(255,255,255,0.5); -webkit-background-clip: text; -moz-background-clip: text; background-clip: text;' class='fa fa-lock'></div>"
+                                       },
+                                       {
+                                          view: "label",
+                                          align: "center",
+                                          label: "Add a role to control access."
+                                       },
+                                       {
+                                          cols: [
+                                             {},
+                                             {
+                                                view: "button",
+                                                label: "Add Role",
+                                                type: "form",
+                                                css: "webix_primary",
+                                                autowidth: true,
+                                                click: function() {
+                                                   webix
+                                                      .ui(newRolePopup)
+                                                      .show();
+
+                                                   var roles = self.roles.filter(
+                                                      (f) => {
+                                                         return (
+                                                            $$(
+                                                               "amp_accordion_" +
+                                                                  self.containerDomID
+                                                            ).config.roles.indexOf(
+                                                               f.id
+                                                            ) == -1
+                                                         );
+                                                      }
+                                                   );
+
+                                                   $$(
+                                                      "role_popup_options_" +
+                                                         self.containerDomID
+                                                   ).define("options", roles);
+                                                   $$(
+                                                      "role_popup_options_" +
+                                                         self.containerDomID
+                                                   ).refresh();
+                                                }
+                                             },
+                                             {}
+                                          ]
+                                       },
+                                       {}
+                                    ]
+                                 }
+                              ]
                            }
                         };
 
@@ -380,6 +446,13 @@ steal(
                                           $$(a).collapse();
                                        }
                                        index++;
+                                       $$(
+                                          "amp_accordion_" + self.containerDomID
+                                       ).show();
+                                       $$(
+                                          "amp_accordion_noSelection_" +
+                                             self.containerDomID
+                                       ).hide();
                                     });
                               }
                            },
@@ -774,6 +847,10 @@ steal(
                            newAccordionItem,
                            -1
                         );
+                        $$("amp_accordion_" + self.containerDomID).show();
+                        $$(
+                           "amp_accordion_noSelection_" + self.containerDomID
+                        ).hide();
 
                         $$(
                            "linetree_" + self.containerDomID + "_" + role
@@ -982,7 +1059,7 @@ steal(
                                        })
                                        .catch((err) => {
                                           AD.error.log(
-                                             "ABProcessParticipantCore: Error loading Roles",
+                                             "ABLiveTool: Error loading roles of user",
                                              {
                                                 error: err
                                              }

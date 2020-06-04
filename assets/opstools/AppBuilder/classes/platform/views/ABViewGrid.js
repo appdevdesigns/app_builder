@@ -742,11 +742,14 @@ module.exports = class ABViewGrid extends ABViewGridCore {
          idBase + "_gridlinkpage"
       );
 
-      let _init = () => {
+      let _init = (options, accessLevel) => {
          if (this.settings.dataviewID != "") {
-            DataTable.init({
-               onCheckboxChecked: _logic.callbackCheckboxChecked
-            });
+            DataTable.init(
+               {
+                  onCheckboxChecked: _logic.callbackCheckboxChecked
+               },
+               accessLevel
+            );
 
             PopupMassUpdateComponent.init({
                // onSave:_logic.callbackAddFields			// be notified of something...who knows...
@@ -920,6 +923,12 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                // });
 
                $$(DataTable.ui.id).adjust();
+            }
+
+            // Adjust grid based off Access Level of parent view
+            if (accessLevel < 2) {
+               $$(ids.buttonMassUpdate).hide();
+               $$(ids.buttonDeleteSelected).hide();
             }
          }
       };

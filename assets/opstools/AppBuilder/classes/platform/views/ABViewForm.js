@@ -753,7 +753,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
       };
 
       // make sure each of our child views get .init() called
-      var _init = (options) => {
+      var _init = (options, accessLevel) => {
          // register our callbacks:
          if (options) {
             for (var c in _logic.callbacks) {
@@ -761,11 +761,15 @@ module.exports = class ABViewForm extends ABViewFormCore {
             }
          }
 
-         component.init(options);
+         component.init(options, accessLevel);
 
          var Form = $$(ids.component);
          if (Form) {
             webix.extend(Form, webix.ProgressBar);
+         }
+
+         if (accessLevel < 2) {
+            Form.disable();
          }
 
          // bind a data collection to form component

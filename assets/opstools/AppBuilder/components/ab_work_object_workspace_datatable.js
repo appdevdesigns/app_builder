@@ -317,7 +317,12 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
       }
 
       // Our init() function for setting up our UI
-      this.init = (options) => {
+      this.init = (options, accessLevel) => {
+         if (!accessLevel) {
+            // if no access level is passed we are going to not change anything
+            accessLevel = 2;
+         }
+
          // WORKAROUND : Where should we define this ??
          // For include PDF.js
          webix.codebase = "";
@@ -342,6 +347,11 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
          webix.extend(DataTable, webix.ProgressBar);
 
+         DataTable.config.accessLevel = accessLevel;
+         if (accessLevel < 2) {
+            DataTable.define("editable", false);
+         }
+
          let customDisplays = (data) => {
             if (!CurrentObject || !DataTable.data) return;
 
@@ -362,12 +372,16 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                index++;
             });
 
+            var editable = settings.isEditable;
+            if (DataTable.config.accessLevel < 2) {
+               editable = false;
+            }
             CurrentObject.customDisplays(
                data,
                App,
                DataTable,
                displayRecords,
-               settings.isEditable
+               editable
             );
          };
 
@@ -605,10 +619,15 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
          onAfterColumnDrop: function(sourceId, targetId, event) {
             CurrentObject.fieldReorder(sourceId, targetId)
                .then(() => {
+                  var DataTable = $$(ids.component);
                   // reset each column after a drop so we do not have multiple fillspace and minWidth settings
+                  var editiable = settings.isEditable;
+                  if (DataTable.config.accessLevel < 2) {
+                     editiable = false;
+                  }
                   var columnHeaders = CurrentObject.columnHeaders(
                      true,
-                     settings.isEditable
+                     editiable
                   );
                   columnHeaders.forEach(function(col) {
                      if (col.id == sourceId && col.fillspace == true) {
@@ -619,7 +638,6 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
                   _logic.callbacks.onColumnOrderChange(CurrentObject);
                   // freeze columns:
-                  var DataTable = $$(ids.component);
                   let frozenColumnID =
                      settings.frozenColumnID != null
                         ? settings.frozenColumnID
@@ -1067,15 +1085,21 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             if (!CurrentObject) return;
 
             var DataTable = $$(ids.component);
+            var accessLevel = DataTable.config.accessLevel;
             DataTable.define("leftSplit", 0);
             DataTable.define("rightSplit", 0);
             // DataTable.clearAll();
+
+            var editable = settings.isEditable;
+            if (DataTable.config.accessLevel < 2) {
+               editable = false;
+            }
 
             //// update DataTable structure:
             // get column list from our CurrentObject
             var columnHeaders = CurrentObject.columnHeaders(
                true,
-               settings.isEditable,
+               editable,
                settings.summaryColumns,
                settings.countColumns,
                settings.hiddenFields
@@ -1234,7 +1258,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                });
             }
 
-            if (settings.massUpdate) {
+            if (settings.massUpdate && accessLevel == 2) {
                columnHeaders.unshift({
                   id: "appbuilder_select_item",
                   header: { content: "masterCheckbox", contentId: "mch" },
@@ -1259,7 +1283,11 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                });
                columnSplitRight++;
             }
-            if (settings.editView != null && !settings.hideButtons) {
+            if (
+               settings.editView != null &&
+               !settings.hideButtons &&
+               accessLevel == 2
+            ) {
                columnHeaders.push({
                   id: "appbuilder_view_edit",
                   header: "",
@@ -1269,7 +1297,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                });
                columnSplitRight++;
             }
-            if (settings.allowDelete) {
+            if (settings.allowDelete && accessLevel == 2) {
                columnHeaders.push({
                   id: "appbuilder_trash",
                   header: "",

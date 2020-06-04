@@ -1074,6 +1074,7 @@ div.amp {
    white-space: nowrap;
    overflow: hidden;
    height: 32px;
+   z-index: 100;
 }
 div.amp:hover {
    width: 210px !important;
