@@ -236,7 +236,7 @@ module.exports = class AB_Work_Interface_Workspace_Editor_Layout extends ABCompo
             // editorComponent.ui.id = ids.editArea;
             // webix.ui(editorComponent.ui, $$(ids.editArea));
             $$(ids.editArea).addView(editorComponent.ui);
-            editorComponent.init();
+            editorComponent.init(null, 2);
 
             if (editorComponent.onShow) editorComponent.onShow();
 
