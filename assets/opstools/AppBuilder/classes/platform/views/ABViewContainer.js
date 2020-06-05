@@ -118,7 +118,7 @@ module.exports = class ABViewContainer extends ABViewContainerCore {
             });
 
             // initial sub-component
-            component.init();
+            component.init(null, 2); // when in editor allow full access
          });
 
          // listen onChange event
