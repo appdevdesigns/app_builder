@@ -1060,7 +1060,7 @@ label {
 div.amp {
    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
    background: rgb(28, 161, 193, 0.4);
-   padding: 5px 0;
+   /* padding: 5px 0; */
    display: inline-block;
    right: 0;
    top: 75px;
@@ -1075,27 +1075,32 @@ div.amp {
    overflow: hidden;
    height: 32px;
    z-index: 100;
+   display: flex;
+}
+div.amp div {
+   padding: 5px 10px;
+}
+div.amp div:first-child {
+   background: rgba(255,255,255,0.2);
+   border-right: 1px solid rgba(255,255,255,0.4);
+   padding: 5px 10px;
 }
 div.amp:hover {
-   width: 210px !important;
+   width: 212px !important;
    cursor: pointer;
    background: rgb(28, 161, 193) !important;
 }
-div.amp:hover .fa-unlock {
+div.amp:hover .fa-unlock-alt {
    display: inline-block !important;
-   margin-right: -5px;
 }
 div.amp:hover .fa-lock {
    display: none !important;
 }
-div.amp .fa-unlock, div.amp .fa-lock {
-   vertical-align: middle;
-   transform: scale(0.6, 0.6);
-   display: inline-block;
-   margin-top: -6px;
-   margin-right: 0;
+div.amp .fa-unlock-alt, div.amp .fa-lock {
+   transform: scale(1.25, 1.25);
+   text-shadow: 0px -1px 0px rgba(0,0,0,0.2);
 }
-div.amp .fa-unlock {
+div.amp .fa-unlock-alt {
    display: none;
 }
 .ampWindow .webix_toolbar.webix_dark {

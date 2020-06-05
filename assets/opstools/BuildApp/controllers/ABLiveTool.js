@@ -369,7 +369,7 @@ steal(
                                           align: "center",
                                           height: 200,
                                           label:
-                                             "<div style='display: block; font-size: 180px; background-color: #666; color: transparent; text-shadow: 0px 1px 1px rgba(255,255,255,0.5); -webkit-background-clip: text; -moz-background-clip: text; background-clip: text;' class='fa fa-lock'></div>"
+                                             "<div style='display: block; font-size: 180px; background-color: #666; color: transparent; text-shadow: 0px 1px 1px rgba(255,255,255,0.5); -webkit-background-clip: text; -moz-background-clip: text; background-clip: text;' class='fa fa-unlock-alt'></div>"
                                        },
                                        {
                                           view: "label",
@@ -462,18 +462,19 @@ steal(
                               css: "webix_dark",
                               cols: [
                                  {
-                                    width: 17
+                                    width: 15
                                  },
                                  {
                                     id: "taskTitle",
                                     view: "label",
-                                    label: "Access Manager"
+                                    label: "Access Manager",
+                                    autowidth: true
                                  },
+                                 {},
                                  {
                                     view: "button",
-                                    type: "icon",
-                                    icon: "fa fa-plus",
                                     label: "Add Role",
+                                    width: 100,
                                     css: "webix_primary",
                                     click: () => {
                                        webix.ui(newRolePopup).show();
@@ -930,9 +931,13 @@ steal(
                            </div>
                            <div style="display: none;" id="ampTree_${this.containerDomID}"></div>
                            <div style="display: none;" id="ampButton_${this.containerDomID}" class="amp" onclick="$$('accessManager_${this.containerDomID}').show();">
-                              <i class="fa fa-fw fa-unlock fa-2x fa-inverse"></i>
-                              <i class="fa fa-fw fa-lock fa-2x fa-inverse"></i>
-                              Access Management
+                              <div>
+                                <i class="fa fa-fw fa-unlock-alt fa-inverse"></i>
+                                <i class="fa fa-fw fa-lock fa-inverse"></i>
+                              </div>
+                              <div>
+                                Access Management
+                              </div>
                            </div>`
                         );
 
