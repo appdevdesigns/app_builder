@@ -11,9 +11,9 @@ services:
 git:
     clone: false
 
-#branches:
-#   only:
-#   - develop
+branches:
+   only:
+   - develop
 
 before_install:
     - docker swarm init
