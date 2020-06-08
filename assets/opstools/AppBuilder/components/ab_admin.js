@@ -66,21 +66,22 @@ module.exports = class ABChoose extends ABComponent {
                cols: [
                   {
                      id: ids.list,
-                     view: "list",
-                     template: '<span class="fa #icon#"></span> #value#',
+                     view: "sidebar",
+                     width: 160,
+                     css: "webix_dark",
+                     // template: '<span class="fa #icon#"></span> #value#',
                      data: [
                         {
                            id: AppRole.ui.id,
-                           icon: "fa-user-md",
+                           icon: "fa fa-user-md",
                            value: "Roles"
                         },
                         {
                            id: AppUser.ui.id,
-                           icon: "fa-users",
+                           icon: "fa fa-users",
                            value: "Users"
                         }
                      ],
-                     width: 120,
                      select: true,
                      scroll: false,
                      on: {

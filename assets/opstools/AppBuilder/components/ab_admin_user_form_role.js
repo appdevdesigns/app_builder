@@ -25,6 +25,7 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
                   "ab.admin.userRole",
                   "*Roles"
                )}`,
+               css: "webix_dark",
                type: "header"
             },
             {
@@ -60,20 +61,14 @@ module.exports = class AB_Work_Admin_User_Form_Role extends ABComponent {
                }
             },
             {
-               cols: [
-                  { fillspace: true },
-                  {
-                     view: "button",
-                     css: "webix_primary",
-                     type: "icon",
-                     icon: "fa fa-plus",
-                     label: "Add a role",
-                     width: 150,
-                     click: () => {
-                        RoleAdd.show();
-                     }
-                  }
-               ]
+               view: "button",
+               css: "webix_primary",
+               type: "icon",
+               icon: "fa fa-plus",
+               label: "Add a role",
+               click: () => {
+                  RoleAdd.show();
+               }
             }
          ]
       };

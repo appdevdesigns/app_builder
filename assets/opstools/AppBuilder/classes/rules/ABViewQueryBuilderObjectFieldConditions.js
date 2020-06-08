@@ -262,7 +262,8 @@ module.exports = class ABViewQueryBuilderObjectFieldConditions {
          "number",
          "date",
          "email",
-         "formula"
+         "formula",
+         "calculate"
       ];
 
       var currFields = [];
@@ -280,7 +281,7 @@ module.exports = class ABViewQueryBuilderObjectFieldConditions {
                // { id:'name_first', value:'xxx', type:'string' }
 
                let type = f.key;
-               if (f.key == "formula") type = "number";
+               if (f.key == "formula" || f.key == "calculate") type = "number";
                else if (f.key == "LongText") type = "string";
 
                currFields.push({
@@ -365,3 +366,4 @@ module.exports = class ABViewQueryBuilderObjectFieldConditions {
    // 	return settings;
    // }
 };
+
