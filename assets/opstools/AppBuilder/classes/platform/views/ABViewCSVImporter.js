@@ -264,6 +264,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
          search: App.unique(idBase + "_search"),
          datatable: App.unique(idBase + "_datatable"),
 
+         statusMessage: App.unique(idBase + "_statusMessage"),
          progressBar: App.unique(idBase + "_progressBar"),
 
          importButton: App.unique(idBase + "_importButton")
@@ -451,6 +452,12 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      cols: [_uiConfig, _uiRecordsView]
                   },
                   {
+                     id: ids.statusMessage,
+                     view: "label",
+                     align: "right",
+                     hidden: true
+                  },
+                  {
                      id: ids.progressBar,
                      height: 20
                   },
@@ -525,6 +532,9 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             $$(ids.search).setValue("");
             $$(ids.uploadFileList).clearAll();
             $$(ids.datatable).clearAll();
+
+            $$(ids.statusMessage).setValue("");
+            $$(ids.statusMessage).hide();
          },
 
          search: (searchText) => {
@@ -847,6 +857,43 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             if ($datatable.hideProgress) $datatable.hideProgress();
          },
 
+         refreshRemainingTimeText(startUpdateTime, total, index) {
+            // Calculate remaining time
+            let spentTime = new Date() - startUpdateTime;
+
+            let remainTime = spentTime * (total - index);
+
+            let result = "";
+
+            // Convert milliseconds to a readable string
+            let days = (remainTime / 86400000).toFixed(0);
+            let hours = (remainTime / 3600000).toFixed(0);
+            let minutes = (remainTime / 60000).toFixed(0);
+            let seconds = (remainTime / 1000).toFixed(0);
+
+            if (seconds < 1) result = "";
+            else if (seconds < 30) result = `Less than 30 seconds`;
+            else if (seconds < 60)
+               result = `Approximately ${seconds} second${
+                  seconds > 1 ? "s" : ""
+               }`;
+            else if (minutes == 1)
+               result = `Approximately 1 minute ${seconds - 60} seconds`;
+            else if (minutes < 60) result = `Approximately ${minutes} minutes`;
+            else if (hours < 24)
+               result = `Approximately ${hours} hour${hours > 1 ? "s" : ""}`;
+            else result = `Approximately ${days} day${days > 1 ? "s" : ""}`;
+
+            if (result) {
+               result = `${result} remaining`;
+               $$(ids.statusMessage).show();
+               $$(ids.statusMessage).setValue(result);
+            } else {
+               $$(ids.statusMessage).setValue("");
+               $$(ids.statusMessage).hide();
+            }
+         },
+
          /**
           * @method getMatchFields
           *
@@ -1056,13 +1103,17 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
                let isValid = false;
 
-               tasks.push(() => {
+               let startUpdateTime;
+
+               tasks.push((indexTask) => {
                   return (
                      Promise.resolve()
                         // validate data
                         .then(
                            () =>
                               new Promise((next, err) => {
+                                 startUpdateTime = new Date();
+
                                  // scroll to the item
                                  $$(ids.datatable).showItem(data.id);
                                  $$(ids.datatable).updateItem(data.id, {
@@ -1182,6 +1233,13 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                  this.doRecordRules(newRowData)
                                     .then(() => {
                                        itemPass(data.id);
+
+                                       _logic.refreshRemainingTimeText(
+                                          startUpdateTime,
+                                          tasks.length,
+                                          indexTask
+                                       );
+
                                        next();
                                     })
                                     .catch((errMessage) => {
@@ -1196,8 +1254,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
             // action sequentially
             return tasks
-               .reduce((promiseChain, currTask) => {
-                  return promiseChain.then(currTask);
+               .reduce((promiseChain, currTask, idx) => {
+                  return promiseChain.then(() => currTask(idx));
                }, Promise.resolve())
                .then(() => {
                   // _logic.formClear();
@@ -1206,6 +1264,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   // Hide loading cursor
                   $$(ids.form).hideProgress();
                   $$(ids.progressBar).hideProgress();
+                  $$(ids.statusMessage).setValue("");
+                  $$(ids.statusMessage).hide();
 
                   // _logic.hide();
 

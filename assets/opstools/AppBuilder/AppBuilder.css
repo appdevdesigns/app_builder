@@ -246,9 +246,9 @@ label {
 	line-height: 32px;
 }
 .webix_tree_checkbox {
-	margin: 0 5px 0 0;
-	height: 20px;
-	width: 20px;
+	margin: 5px 6px 0 0 !important;
+	height: 14px;
+	width: 14px;
 }
 .ab-menu-left .webix_scroll_cont {
 	text-align: left;
