@@ -19,7 +19,6 @@ module.exports = class AB_Work_Admin_Role_Form extends ABComponent {
       this.ui = {
          id: ids.form,
          view: "form",
-         // padding: 24,
          elementsConfig: { labelAlign: "right", labelWidth: 100 },
          rows: [
             {

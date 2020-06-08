@@ -31,12 +31,13 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
       // Our webix UI definition:
       this.ui = {
          id: ids.component,
-         type: "space",
-         borderless: true,
+         // type: "space",
+         // borderless: true,
          rows: [
             {
                view: "toolbar",
                id: "myToolbar",
+               css: "webix_dark",
                cols: [
                   {
                      view: "label",
@@ -100,28 +101,14 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
                }
             },
             {
-               cols: [
-                  { fillspace: true },
-                  // {
-                  // 	view: 'button',
-                  // 	type: "icon",
-                  // 	icon: "fa fa-download",
-                  // 	label: "Import role",
-                  // 	click: () => {
-                  // 		RoleImport.show();
-                  // 	}
-                  // },
-                  {
-                     view: "button",
-                     css: "webix_transparent",
-                     type: "icon",
-                     icon: "fa fa-plus",
-                     label: "Create new role",
-                     click: () => {
-                        _logic.createNewRole();
-                     }
-                  }
-               ]
+               view: "button",
+               css: "webix_primary",
+               type: "icon",
+               icon: "fa fa-plus",
+               label: "Create new role",
+               click: () => {
+                  _logic.createNewRole();
+               }
             }
          ]
       };

@@ -46,10 +46,11 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
             {
                id: ids.tabview,
                view: "tabview",
+               css: "transparentBG",
                cells: [
                   {
                      header:
-                        "<span class='webix_icon fa fa-user-md'></span> Info",
+                        "<span class='fa fa-lg fa-fw fa-user-md'></span> Info",
                      body: {
                         id: ids.info,
                         borderless: true,
@@ -58,16 +59,19 @@ module.exports = class AB_Work_Admin_Role extends ABComponent {
                   },
                   {
                      header:
-                        "<span class='webix_icon fa fa-street-view'></span> Scopes",
+                        "<span class='fa fa-lg fa-fw fa-street-view'></span> Scopes",
                      body: uiScope
                   },
                   {
                      header:
-                        "<span class='webix_icon fa fa-users'></span> Users",
+                        "<span class='fa fa-lg fa-fw fa-users'></span> Users",
                      body: uiUser
                   }
                ],
                tabbar: {
+                  height: 60,
+                  type: "bottom",
+                  css: "webix_dark",
                   on: {
                      onAfterTabClick: (id) => {
                         switch (id) {
