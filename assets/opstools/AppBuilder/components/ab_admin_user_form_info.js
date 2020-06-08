@@ -20,6 +20,7 @@ module.exports = class AB_Work_Admin_User_Form_Info extends ABComponent {
                   "ab.admin.userInfo",
                   "*User Info"
                )}`,
+               css: "webix_dark",
                type: "header"
             },
             {
@@ -93,7 +94,8 @@ module.exports = class AB_Work_Admin_User_Form_Info extends ABComponent {
                            }
                         }
                      ]
-                  }
+                  },
+                  {}
                ]
             }
          ]

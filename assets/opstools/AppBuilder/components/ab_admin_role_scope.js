@@ -104,11 +104,9 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
             },
             {
                cols: [
-                  { fillspace: true },
                   {
                      id: ids.importScope,
                      view: "button",
-                     css: "webix_transparent",
                      type: "icon",
                      icon: "fa fa-download",
                      label: "Import scope",
@@ -119,7 +117,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
                   {
                      id: ids.createScope,
                      view: "button",
-                     css: "webix_transparent",
+                     css: "webix_primary",
                      type: "icon",
                      icon: "fa fa-plus",
                      label: "Create new scope",

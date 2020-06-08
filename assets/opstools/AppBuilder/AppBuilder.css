@@ -1042,3 +1042,6 @@ label {
 .ab-csv-importer .cell-invalid {
 	background-color: #e9ab4d;
 }
+.transparentBG .webix_el_tabbar+.webix_multiview {
+   background: transparent !important;
+}
