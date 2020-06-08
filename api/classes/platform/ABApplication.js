@@ -33,6 +33,11 @@ const ABProcessTaskManager = require(path.join(
    "ABProcessTaskManager"
 ));
 
+var __AllQueries = {
+   /* ABQuery.id : ABObjectQuery */
+};
+// {obj} : a hash of all ABObjectQueriess in our system.
+
 module.exports = class ABClassApplication extends ABApplicationCore {
    constructor(attributes) {
       super(attributes);
@@ -166,6 +171,16 @@ module.exports = class ABClassApplication extends ABApplicationCore {
       return null;
    }
 
+   queriesAll() {
+      return ABDefinition.allQueries().map((d) => {
+         return __AllQueries[d.id] ? __AllQueries[d.id] : this.queryNew(d);
+      });
+   }
+
+   queriesClear() {
+      __AllQueries = {};
+   }
+
    /**
     * @method queryNew()
     *
@@ -175,7 +190,9 @@ module.exports = class ABClassApplication extends ABApplicationCore {
     * @return {ABClassQuery}
     */
    queryNew(values) {
-      return new ABClassQuery(values, this);
+      var q = new ABClassQuery(values, this);
+      __AllQueries[q.id] = q;
+      return q;
    }
 
    /**

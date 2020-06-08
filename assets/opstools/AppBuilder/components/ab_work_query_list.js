@@ -532,7 +532,7 @@ module.exports = class AB_Work_Query_List extends ABComponent {
             queryList.clearAll();
 
             if (CurrentApplication)
-               queryList.parse(CurrentApplication.queries());
+               queryList.parse(CurrentApplication.queriesIncluded());
 
             queryList.sort("label", "asc");
 

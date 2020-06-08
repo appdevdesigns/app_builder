@@ -353,6 +353,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
          } else {
             _AllApplications.add(this, 0);
          }
+         return this;
       });
    }
 
@@ -390,10 +391,10 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     *
     * @return {Promise}
     */
-   updateInfo() {
-      debugger;
-      return this.save();
-      /*
+   // updateInfo() {
+   //    debugger;
+   //    return this.save();
+   /*
       var values = this.toObj();
       values.json = values.json || {};
       values.json.translations = values.json.translations || [];
@@ -403,7 +404,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
          translations: values.json.translations
       });
       */
-   }
+   // }
 
    /// ABApplication Permission methods
 

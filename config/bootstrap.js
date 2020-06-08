@@ -208,6 +208,11 @@ function cacheABClassObjects(next) {
       new ABObject(o.json, genApp);
    });
 
+   // once the objects are created, then recreate the Queries that were
+   // initially created without ABObjects in place.
+   genApp.queriesClear();
+   genApp.queriesAll();
+
    next();
 }
 
@@ -528,7 +533,9 @@ function addSDCObjectLifecycleBeforeCreate(next) {
                if (!emailRows || emailRows.length == 0) {
                   bailError(
                      "E_NOTFOUND",
-                     `Provided email was not found. [${createParams["New Coach Email"]}]`
+                     `Provided email was not found. [${
+                        createParams["New Coach Email"]
+                     }]`
                   );
                   return;
                }

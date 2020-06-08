@@ -55,6 +55,8 @@ module.exports = {
          result.push(__ObjectPool[id]);
       }
 
+      // prevent case where an invalid object might be stored in
+      // __ObjectPool[id]
       return result.filter((o) => o && filter(o));
    }
 };

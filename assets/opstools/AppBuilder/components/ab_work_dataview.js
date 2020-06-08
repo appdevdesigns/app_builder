@@ -71,11 +71,14 @@ module.exports = class AB_Work_Datacollection extends ABComponent {
             let tasks = [];
 
             if (CurrentApplication) {
+               // Johnny: these should no longer be necessary with the current ABDefinition
+               // approach:
+
                // Load objects
-               tasks.push(CurrentApplication.objectLoad());
+               // tasks.push(CurrentApplication.objectLoad());
 
                // Load queries
-               tasks.push(CurrentApplication.queryLoad());
+               // tasks.push(CurrentApplication.queryLoad());
 
                // Load data views
                if (

@@ -265,7 +265,7 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
             delete component.___AD.onDataRequestEvent;
 
          if (component.___AD.onDcLoadData) {
-            this.off("loadData", component.___AD.onDcLoadData);
+            this.removeListener("loadData", component.___AD.onDcLoadData);
             delete component.___AD.onDcLoadData;
          }
       }

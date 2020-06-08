@@ -90,6 +90,10 @@ module.exports = class ABDefinition extends ABDefinitionCore {
       return ABDefinitionModel.definitions(fn);
    }
 
+   static allQueries(fn = () => true) {
+      return ABDefinitionModel.definitions((d) => d.type == "query").filter(fn);
+   }
+
    //
    // Instance Methods
    //

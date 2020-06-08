@@ -356,22 +356,11 @@ module.exports = class ABChoose extends ABComponent {
                         Application.role = app_role.id;
                      else Application.role = null;
 
-                     // Update label / description
-                     if (Application.id) {
-                        Application.updateInfo()
-                           .then(function() {
-                              next();
-                           })
-                           .catch(next);
-                     }
-                     // Create new
-                     else {
-                        Application.save()
-                           .then(function() {
-                              next();
-                           })
-                           .catch(next);
-                     }
+                     Application.save()
+                        .then(function() {
+                           next();
+                        })
+                        .catch(next);
                   }
                ],
                function(err) {

@@ -30,7 +30,7 @@ var defaultValues = ABFieldConnectCore.defaultValues();
 
 function populateSelect(populate, callback) {
    var options = [];
-   ABFieldConnectComponent.CurrentApplication.objects().forEach((o) => {
+   ABFieldConnectComponent.CurrentApplication.objectsIncluded().forEach((o) => {
       options.push({ id: o.id, value: o.label });
    });
 
@@ -150,7 +150,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
                   ],
                   on: {
                      onChange: (newValue, oldValue) => {
-                        ABFieldConnectComponent.logic.selectLinkType(newValue, oldValue);
+                        ABFieldConnectComponent.logic.selectLinkType(
+                           newValue,
+                           oldValue
+                        );
                      }
                   }
                },
@@ -198,7 +201,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
                   ],
                   on: {
                      onChange: (newV, oldV) => {
-                        ABFieldConnectComponent.logic.selectLinkViaType(newV, oldV);
+                        ABFieldConnectComponent.logic.selectLinkViaType(
+                           newV,
+                           oldV
+                        );
                      }
                   }
                },
@@ -559,14 +565,20 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
             // NOTE: our .migrateXXX() routines expect the object to currently exist
             // in the DB before we perform the DB operations.  So we need to
             // .migrateDrop()  before we actually .objectDestroy() this.
-            this.migrateDrop()
-               .then(() => {
-                  // NOTE : prevent recursive remove connected fields
-                  // - remove this field from JSON
-                  this.object._fields = this.object.fields((f) => {
-                     return f.id != this.id;
-                  });
-               })
+            // this.migrateDrop()
+            //    // .then(() => {
+            //    //    // NOTE : prevent recursive remove connected fields
+            //    //    // - remove this field from JSON
+            //    //    this.object._fields = this.object.fields((f) => {
+            //    //       return f.id != this.id;
+            //    //    });
+            //    // })
+            //    .then(() => {
+            //       // Save JSON of the object
+            //       return this.object.fieldRemove(this);
+            //    })
+            super
+               .destroy()
                .then(() => {
                   var application = this.object.application;
 
@@ -582,10 +594,6 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 
                   // destroy linked field
                   return linkField.destroy();
-               })
-               .then(() => {
-                  // Save JSON of the object
-                  return this.object.fieldRemove(this);
                })
                .then(resolve)
                .catch(reject);

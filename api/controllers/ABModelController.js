@@ -654,7 +654,7 @@ module.exports = {
                var attr = errorResponse.invalidAttributes;
 
                // if error from object.isValidData(createParams)
-               if (validationErrors.length > 0) {
+               if (validationErrors && validationErrors.length > 0) {
                   validationErrors.forEach((e) => {
                      attr[e.name] = attr[e.name] || [];
                      attr[e.name].push(e);

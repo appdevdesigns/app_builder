@@ -325,7 +325,7 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                         var linkColumnName = _currentObject.name + rand;
 
                         linkCol = linkObject.fieldNew({
-                           id: OP.Util.uuid(),
+                           // id: OP.Util.uuid(),
 
                            key: field.key,
 
@@ -347,7 +347,7 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                         });
 
                         // Update link column id to source column
-                        field.settings.linkColumn = linkCol.id;
+                        // field.settings.linkColumn = linkCol.id;
                      }
                   } else {
                      // NOTE: update label before .toObj for .unTranslate to .translations
@@ -403,39 +403,46 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                            // TODO workaround : update link column id
                            if (linkCol != null) {
                               linkCol.settings.linkColumn = field.id;
-                              linkCol.save().then(() => {
-                                 // when add new link fields, then run create migrate fields here
-                                 if (!_editField) {
-                                    Promise.resolve()
-                                       .then(() => {
-                                          return new Promise((next, err) => {
-                                             field
-                                                .migrateCreate()
-                                                .catch(err)
-                                                .then(() => next());
-                                          });
-                                       })
-                                       .then(() => {
-                                          return new Promise((next, err) => {
-                                             linkCol
-                                                .migrateCreate()
-                                                .catch(err)
-                                                .then(() => next());
-                                          });
-                                       })
-                                       .then(() => {
-                                          return new Promise((next, err) => {
-                                             refreshModels();
-                                             finishUpdateField();
+                              linkCol
+                                 .save()
+                                 .then(() => {
+                                    // now linkCol has an .id, so update our field:
+                                    field.settings.linkColumn = linkCol.id;
+                                    return field.save();
+                                 })
+                                 .then(() => {
+                                    // when add new link fields, then run create migrate fields here
+                                    if (!_editField) {
+                                       Promise.resolve()
+                                          .then(() => {
+                                             return new Promise((next, err) => {
+                                                field
+                                                   .migrateCreate()
+                                                   .catch(err)
+                                                   .then(() => next());
+                                             });
+                                          })
+                                          .then(() => {
+                                             return new Promise((next, err) => {
+                                                linkCol
+                                                   .migrateCreate()
+                                                   .catch(err)
+                                                   .then(() => next());
+                                             });
+                                          })
+                                          .then(() => {
+                                             return new Promise((next, err) => {
+                                                refreshModels();
+                                                finishUpdateField();
 
-                                             next();
+                                                next();
+                                             });
                                           });
-                                       });
-                                 } else {
-                                    refreshModels();
-                                    finishUpdateField();
-                                 }
-                              });
+                                    } else {
+                                       refreshModels();
+                                       finishUpdateField();
+                                    }
+                                 });
                            } else {
                               finishUpdateField();
                            }
