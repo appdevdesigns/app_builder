@@ -1106,7 +1106,7 @@ div.amp .fa-unlock-alt {
 .ampWindow .webix_toolbar.webix_dark {
    background: #444 !important;
 }
-.accessLevel-0::before {
+/* .accessLevel-0::before {
    content: "";
    width: 100%;
    height: 100%;
@@ -1129,7 +1129,7 @@ div.amp .fa-unlock-alt {
    background: rgba(76, 175, 80, 0.4);
    display: block;
    position: absolute;
-}
+} */
 .ab-csv-importer .row-pass {
 	background-color: #b4e8b6;
 }
