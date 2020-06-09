@@ -39,33 +39,33 @@ module.exports = class ABViewRuleActionFormSubmitRuleWebsite extends ABViewRuleA
       });
    }
 
-   conditionFields() {
-      var fieldTypes = ["string", "number", "date"];
+   // conditionFields() {
+   //    var fieldTypes = ["string", "number", "date", "formula", "calculate"];
 
-      var currFields = [];
+   //    var currFields = [];
 
-      if (this.currentObject) {
-         this.currentObject.fields().forEach((f) => {
-            if (fieldTypes.indexOf(f.key) != -1) {
-               // NOTE: the .id value must match the obj[.id]  in the data set
-               // so if your object data looks like:
-               // 	{
-               //		name_first:'Neo',
-               //		name_last: 'The One'
-               //  },
-               // then the ids should be:
-               // { id:'name_first', value:'xxx', type:'string' }
-               currFields.push({
-                  id: f.columnName,
-                  value: f.label,
-                  type: f.key
-               });
-            }
-         });
-      }
+   //    if (this.currentObject) {
+   //       this.currentObject.fields().forEach((f) => {
+   //          if (fieldTypes.indexOf(f.key) != -1) {
+   //             // NOTE: the .id value must match the obj[.id]  in the data set
+   //             // so if your object data looks like:
+   //             // 	{
+   //             //		name_first:'Neo',
+   //             //		name_last: 'The One'
+   //             //  },
+   //             // then the ids should be:
+   //             // { id:'name_first', value:'xxx', type:'string' }
+   //             currFields.push({
+   //                id: f.columnName,
+   //                value: f.label,
+   //                type: f.key
+   //             });
+   //          }
+   //       });
+   //    }
 
-      return currFields;
-   }
+   //    return currFields;
+   // }
 
    // valueDisplayComponent
    // Return an ABView to display our values form.

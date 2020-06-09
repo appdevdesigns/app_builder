@@ -149,7 +149,7 @@ module.exports = class ABViewRuleAction {
    //					    { id:"bdate",   value:"Birth Date", type:"date" }
    //					]
    conditionFields() {
-      var fieldTypes = ["string", "number", "date", "formula"];
+      var fieldTypes = ["string", "number", "date", "formula", "calculate"];
 
       var currFields = [];
 
@@ -272,3 +272,4 @@ module.exports = class ABViewRuleAction {
       // 	- ABViewRuleActionFormRecordRuleUpdateConnected
    }
 };
+

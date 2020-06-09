@@ -327,10 +327,47 @@ module.exports = class ABViewRule {
          this.objectQB.cleanRules(QBCondition[0], QBCondition[1], false);
       }
 
+      let query = QBCondition[0] || {},
+         fields = QBCondition[1] || [];
+
+      let convertToNumber = (text = "") => {
+         return parseFloat(text.replace(/[^0-9.]/g, ""));
+      };
+
+      // Fix string data in number type
+      // NOTE: "1000" > "99" = false    >_<!
+      fields
+         .filter(
+            (f) =>
+               f.type == "number" ||
+               f.type == "calculate" ||
+               f.type == "formula"
+         )
+         .forEach((f) => {
+            try {
+               // filter conditions
+               if (query && query.rules && Array.isArray(query.rules)) {
+                  query.rules.forEach((r) => {
+                     if (r.key != f.id) return;
+
+                     r.value = convertToNumber(r.value);
+                  });
+               }
+
+               // row data
+               if (
+                  options.data[f.id] &&
+                  typeof options.data[f.id] === "string"
+               ) {
+                  options.data[f.id] = convertToNumber(options.data[f.id]);
+               }
+            } catch (e) {}
+         });
+
       // hiddenQB.setValue(QBCondition);
       hiddenQB.setValue({
-         query: QBCondition[0] || {},
-         fields: QBCondition[1] || []
+         query: query,
+         fields: fields
       });
 
       var QBHelper = hiddenQB.getFilterHelper();
