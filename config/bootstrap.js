@@ -743,6 +743,62 @@ function loadDefinitionCallbacks(next) {
       // we update our ABObjectCache
       new ABObject(def, ABSystemObject.getApplication());
 
+      sails.log("object.afterUpdate(): new Object definitions:", def);
+
+      // make sure all Async operations are complete before calling
+      // our CB()
+      Promise.all(pending)
+         .then(() => {
+            cb();
+         })
+         .catch((err) => {
+            sails.log.error("object.afterUpdate :: Error:", err);
+            cb(err);
+         });
+   });
+
+   // ABField.afterUpdate Lifcycle
+   ABModelLifecycle.register("field.afterUpdate", (values, cb) => {
+      var def = values.json;
+      if (typeof def == "string") {
+         try {
+            def = JSON.parse(def);
+         } catch (e) {}
+      }
+      var pending = [];
+      // track any Async operations.
+
+      // figure out which object is referencing this field
+      var relatedObj = null;
+      var allObjs = ABObjectCache.list();
+      for (var i = 0; i < allObjs.length; i++) {
+         var obj = allObjs[i];
+         var field = obj.fields((f) => f.id == def.id)[0];
+         if (field) {
+            relatedObj = obj;
+            break;
+         }
+      }
+
+      // then re-create the object
+      if (relatedObj) {
+         sails.log("field.afterUpdate(): refreshing obj:", relatedObj.label);
+         var objDef = ABDefinitionModel.definitionForID(relatedObj.id);
+         if (objDef) {
+            new ABObject(objDef, ABSystemObject.getApplication());
+         } else {
+            sails.error(
+               "field.afterUpdate(): unable to pull definition for related object : ",
+               relatedObj.id
+            );
+         }
+      } else {
+         sails.log(
+            "field.afterUpdate(): unable to find ABObject for updated field:",
+            def.id
+         );
+      }
+
       // make sure all Async operations are complete before calling
       // our CB()
       Promise.all(pending)
