@@ -71,7 +71,13 @@ module.exports = class ABDefinition extends ABDefinitionCore {
     * @return {obj}   the updated value of the ABDefinition entry from the server.
     */
    static definition(id) {
-      return ABDefinitionModel.definitionForID(id);
+      var def = ABDefinitionModel.definitionForID(id);
+      if (typeof def == "string") {
+         try {
+            def = JSON.parse(def);
+         } catch (e) {}
+      }
+      return def;
    }
 
    /**

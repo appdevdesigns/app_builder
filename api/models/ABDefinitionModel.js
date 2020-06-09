@@ -86,6 +86,12 @@ module.exports = {
       // Cache in .constructor of ABClassObject
       // newRecord.toABClass();
 
+      // make sure our stored Definitions have .json as an {obj}
+      if (typeof newRecord.json == "string") {
+         try {
+            newRecord.json = JSON.parse(newRecord.json);
+         } catch (e) {}
+      }
       __AllDefinitions[newRecord.id] = newRecord;
       cb();
    },
@@ -93,6 +99,13 @@ module.exports = {
    afterUpdate: function(updatedRecord, cb) {
       // Cache in .constructor of ABClassObject
       // updatedRecord.toABClass();
+
+      // make sure our stored Definitions have .json as an {obj}
+      if (typeof updatedRecord.json == "string") {
+         try {
+            updatedRecord.json = JSON.parse(updatedRecord.json);
+         } catch (e) {}
+      }
       __AllDefinitions[updatedRecord.id] = updatedRecord;
 
       ABModelLifecycle.process(
