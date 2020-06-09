@@ -403,7 +403,7 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                            // TODO workaround : update link column id
                            if (linkCol != null) {
                               linkCol.settings.linkColumn = field.id;
-                              linkCol
+                              return linkCol
                                  .save()
                                  .then(() => {
                                     // now linkCol has an .id, so update our field:
@@ -413,7 +413,7 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                                  .then(() => {
                                     // when add new link fields, then run create migrate fields here
                                     if (!_editField) {
-                                       Promise.resolve()
+                                       return Promise.resolve()
                                           .then(() => {
                                              return new Promise((next, err) => {
                                                 field
@@ -431,12 +431,12 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                                              });
                                           })
                                           .then(() => {
-                                             return new Promise((next, err) => {
-                                                refreshModels();
-                                                finishUpdateField();
+                                             // return new Promise((next, err) => {
+                                             refreshModels();
+                                             finishUpdateField();
 
-                                                next();
-                                             });
+                                             //    next();
+                                             // });
                                           });
                                     } else {
                                        refreshModels();
@@ -448,12 +448,33 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                            }
                         })
                         .catch((err) => {
-                           OP.Validation.isFormValidationError(
-                              err,
-                              $$(editor.ui.id)
-                           );
-                           $$(ids.buttonSave).enable();
-                           $$(ids.component).hideProgress();
+                           if (
+                              OP.Validation.isFormValidationError(
+                                 err,
+                                 $$(editor.ui.id)
+                              )
+                           ) {
+                              // for validation errors, keep things in place
+                              // and let the user fix the data:
+                              $$(ids.buttonSave).enable();
+                              $$(ids.component).hideProgress();
+                           } else {
+                              var errMsg = err.toString();
+                              if (err.message) {
+                                 errMsg = err.message;
+                              }
+                              webix.alert({
+                                 title: "Error saving fields.",
+                                 ok: "tell appdev",
+                                 text: errMsg,
+                                 type: "alert-error"
+                              });
+
+                              // Q: if not validation error, do we
+                              // then field.destroy() ? and let them try again?
+                              // $$(ids.buttonSave).enable();
+                              // $$(ids.component).hideProgress();
+                           }
                         });
                   }
                } else {
