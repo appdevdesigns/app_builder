@@ -863,13 +863,17 @@ module.exports = class ABViewTab extends ABViewTabCore {
          changeTab: (tabViewId) => {
             // switch tab view
             _logic.toggleParent(this.parent);
-            if (!$$(tabViewId).isVisible()) {
-               var showIt = setInterval(function() {
-                  if (!$$(tabViewId).isVisible()) {
-                     clearInterval(showIt);
-                  }
-                  $$(tabViewId).show(false, false);
-               }, 200);
+            if (this.settings.stackTabs) {
+               if (!$$(tabViewId).isVisible()) {
+                  var showIt = setInterval(function() {
+                     if ($$(tabViewId).isVisible()) {
+                        clearInterval(showIt);
+                     }
+                     $$(tabViewId).show(false, false);
+                  }, 200);
+               }
+            } else {
+               $$(ids.component).setValue(tabViewId);
             }
          },
 

@@ -1492,6 +1492,13 @@ steal(
                         if ($$(activePageDomId) && $$(activePageDomId).hide)
                            $$(activePageDomId).hide();
 
+                        if (
+                           pageId &&
+                           self.activePageId &&
+                           pageId == self.activePageId
+                        ) {
+                           return false;
+                        }
                         self.previousPageId = self.activePageId;
                         self.activePageId = pageId;
 
