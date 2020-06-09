@@ -143,6 +143,16 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          let linkKnex = ABMigration.connection(linkObject.connName);
 
          let linkTableName = linkObject.dbTableName(true);
+         let linkField = this.fieldLink;
+         if (!linkField) {
+            // !!! This is an internal Error that is our fault:
+            var missingFieldLink = new Error(
+               `MigrateCreate():Unable to find linked field for object[${this.object.label}]->field[${this.label}][${this.id}]`
+            );
+            missingFieldLink.field = this.toObj();
+            reject(missingFieldLink);
+            return;
+         }
          // TODO : should check duplicate column
          let linkColumnName = this.fieldLink.columnName;
 
