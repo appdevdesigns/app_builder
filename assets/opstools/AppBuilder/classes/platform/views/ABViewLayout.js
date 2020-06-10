@@ -210,18 +210,17 @@ module.exports = class ABViewLayout extends ABViewLayoutCore {
 
       this.views().forEach((v) => {
          this.viewComponents[v.id] = v.component(App, idPrefix);
-
          _ui.cols.push(this.viewComponents[v.id].ui);
       });
 
       // make sure each of our child views get .init() called
-      var _init = (options) => {
+      var _init = (options, accessLevel) => {
          this.views().forEach((v) => {
             var component = this.viewComponents[v.id];
 
             // initial sub-component
             if (component && component.init) {
-               component.init();
+               component.init(options, accessLevel);
             }
          });
       };

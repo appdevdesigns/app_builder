@@ -760,7 +760,15 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                   var tab = tabView.parent;
                   if (!tab) return;
 
-                  tab.emit("changeTab", tabView.id);
+                  toggleParent(tab);
+                  if (!$$(tabView.id) || !$$(tabView.id).isVisible()) {
+                     var showIt = setInterval(function() {
+                        if ($$(tabView.id) && $$(tabView.id).isVisible()) {
+                           clearInterval(showIt);
+                        }
+                        tab.emit("changeTab", tabView.id);
+                     }, 200);
+                  }
                }
                // switch page
                else {
@@ -881,6 +889,14 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                this.AddPagesToView(Menu, this.settings.pages);
             }
          }
+      };
+
+      var toggleParent = (element) => {
+         if (!element.parent) return false;
+         var parentElem = element.parent;
+         if (!parentElem.parent) return false;
+         parentElem.parent.emit("changeTab", parentElem.id);
+         toggleParent(parentElem.parent);
       };
 
       return {

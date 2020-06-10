@@ -7,6 +7,7 @@
 
 const ABComponent = require("../classes/platform/ABComponent");
 const ABApplication = require("../classes/platform/ABApplication");
+const ABProcessParticipant = require("../classes/platform/process/ABProcessParticipant.js");
 
 module.exports = class ABChoose extends ABComponent {
    // .extend(idBase, function(App) {
@@ -46,6 +47,10 @@ module.exports = class ABChoose extends ABComponent {
                "ab.application.form.headerPermission",
                "*Who can use this app?"
             ),
+            managerHeader: L(
+               "ab.application.form.managerHeader",
+               "*Who can manage page/tab access for this app?"
+            ),
             createNewRole: L(
                "ab.application.form.createNewRoleButton",
                "*Create new role"
@@ -62,6 +67,10 @@ module.exports = class ABChoose extends ABComponent {
             limitName: L(
                "ab.application.limitName",
                "*Name must be less than or equal to 20"
+            ),
+            enableAccessManagement: L(
+               "ab.application.enableAccessManagement",
+               "*Enable Page/Tab Access Management"
             )
          }
       };
@@ -73,8 +82,15 @@ module.exports = class ABChoose extends ABComponent {
          appFormPermissionList: this.unique("permission"),
          appFormCreateRoleButton: this.unique("createRole"),
 
-         saveButton: this.unique("buttonSave")
+         saveButton: this.unique("buttonSave"),
+         accessManager: this.unique("accessManager"),
+         accessManagerToolbar: this.unique("accessManagerToolbar")
       };
+
+      var accessManagerUI = ABProcessParticipant.selectManagersUi(
+         "application_amp_",
+         {}
+      );
 
       this.ui = {
          id: ids.component,
@@ -147,28 +163,26 @@ module.exports = class ABChoose extends ABComponent {
                            name: "isAdminApp",
                            view: "checkbox",
                            labelRight: labels.component.formAdminApp,
-                           labelWidth: 100
+                           labelWidth: 0
                         },
                         { height: App.config.smallSpacer },
                         {
                            view: "toolbar",
-                           css: "ab-toolbar-submenu",
+                           css: "ab-toolbar-submenu webix_dark",
                            cols: [
                               {
                                  template: labels.component.permissionHeader,
                                  type: "header",
                                  borderless: true
                               },
+                              {},
                               {
-                                 view: "toggle",
+                                 view: "checkbox",
                                  id: ids.appFormCreateRoleButton,
-                                 type: "icon",
                                  align: "right",
-                                 autowidth: true,
-                                 css: "ab-standard-button",
-                                 offIcon: "fa fa-square-o",
-                                 onIcon: "fa fa-check-square-o",
-                                 label: labels.component.createNewRole,
+                                 labelRight: labels.component.createNewRole,
+                                 labelWidth: 0,
+                                 width: 150,
                                  on: {
                                     onItemClick: function(id, e) {
                                        _logic.createRoleButtonClick();
@@ -200,6 +214,61 @@ module.exports = class ABChoose extends ABComponent {
                                  _logic.permissionClick(id, e, node);
                               }
                            }
+                        },
+                        { height: App.config.smallSpacer },
+                        {
+                           name: "isAccessManaged",
+                           view: "checkbox",
+                           labelRight: labels.component.enableAccessManagement,
+                           labelWidth: 0,
+                           on: {
+                              onChange: function(newv, oldv) {
+                                 if (newv) {
+                                    $$(ids.accessManager).show();
+                                    $$(ids.accessManagerToolbar).show();
+                                 } else {
+                                    $$(ids.accessManager).hide();
+                                    $$(ids.accessManagerToolbar).hide();
+                                 }
+                              },
+                              onItemClick: function(id, e) {
+                                 var enabled = $$(id).getValue();
+                                 if (enabled) {
+                                    $$(ids.accessManager).show();
+                                    $$(ids.accessManagerToolbar).show();
+                                 } else {
+                                    $$(ids.accessManager).hide();
+                                    $$(ids.accessManagerToolbar).hide();
+                                 }
+                              }
+                           }
+                        },
+                        { height: App.config.smallSpacer },
+                        {
+                           view: "toolbar",
+                           id: ids.accessManagerToolbar,
+                           css: "ab-toolbar-submenu webix_dark",
+                           hidden:
+                              parseInt(this.accessManagement) == 1
+                                 ? false
+                                 : true,
+                           cols: [
+                              {
+                                 template: labels.component.managerHeader,
+                                 type: "header",
+                                 borderless: true
+                              },
+                              {}
+                           ]
+                        },
+                        {
+                           id: ids.accessManager,
+                           rows: [accessManagerUI],
+                           paddingY: 10,
+                           hidden:
+                              parseInt(this.accessManagement) == 1
+                                 ? false
+                                 : true
                         },
                         { height: App.config.smallSpacer },
                         {
@@ -243,7 +312,12 @@ module.exports = class ABChoose extends ABComponent {
          ]
       };
 
-      const FormFields = ["label", "description", "isAdminApp"];
+      const FormFields = [
+         "label",
+         "description",
+         "isAdminApp",
+         "isAccessManaged"
+      ];
 
       let Application;
 
@@ -266,7 +340,9 @@ module.exports = class ABChoose extends ABComponent {
                name: values.label,
                label: values.label,
                description: values.description,
-               isAdminApp: values.isAdminApp
+               isAdminApp: values.isAdminApp,
+               isAccessManaged: values.isAccessManaged,
+               accessManagers: values.accessManagers
             };
 
             async.waterfall(
@@ -335,6 +411,9 @@ module.exports = class ABChoose extends ABComponent {
           */
          applicationUpdate: function(Application) {
             var values = _logic.formValues();
+            var accessManagers = ABProcessParticipant.stashUsersUi(
+               "application_amp_"
+            );
 
             async.waterfall(
                [
@@ -351,6 +430,8 @@ module.exports = class ABChoose extends ABComponent {
                      Application.label = values.label;
                      Application.description = values.description;
                      Application.isAdminApp = values.isAdminApp;
+                     Application.isAccessManaged = values.isAccessManaged;
+                     Application.accessManagers = accessManagers;
 
                      if (app_role && app_role.id)
                         Application.role = app_role.id;
@@ -493,6 +574,14 @@ module.exports = class ABChoose extends ABComponent {
                      Form.elements[f].setValue(Application[f]);
                   }
                });
+               var accessManagerUIPop = ABProcessParticipant.selectManagersUi(
+                  "application_amp_",
+                  Application.accessManagers || {}
+               );
+               $$(ids.accessManager).removeView(
+                  $$(ids.accessManager).getChildViews()[0]
+               );
+               $$(ids.accessManager).addView(accessManagerUIPop, 0);
             }
 
             // _logic.permissionPopulate(Application);
@@ -517,6 +606,14 @@ module.exports = class ABChoose extends ABComponent {
 
             $$(ids.form).clear();
             $$(ids.form).clearValidation();
+            var accessManagerUIReset = ABProcessParticipant.selectManagersUi(
+               "application_amp_",
+               {}
+            );
+            $$(ids.accessManager).removeView(
+               $$(ids.accessManager).getChildViews()[0]
+            );
+            $$(ids.accessManager).addView(accessManagerUIReset, 0);
             // $$(self.webixUiids.appFormPermissionList).clearValidation();
             // $$(self.webixUiids.appFormPermissionList).clearAll();
             // $$(self.webixUiids.appFormCreateRoleButton).setValue(0);

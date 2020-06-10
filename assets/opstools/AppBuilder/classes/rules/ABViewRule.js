@@ -337,7 +337,12 @@ module.exports = class ABViewRule {
       // Fix string data in number type
       // NOTE: "1000" > "99" = false    >_<!
       fields
-         .filter((f) => f.type == "number" || f.type == "calculate" || f.type == "formula")
+         .filter(
+            (f) =>
+               f.type == "number" ||
+               f.type == "calculate" ||
+               f.type == "formula"
+         )
          .forEach((f) => {
             try {
                // filter conditions
@@ -427,4 +432,3 @@ module.exports = class ABViewRule {
       }
    }
 };
-

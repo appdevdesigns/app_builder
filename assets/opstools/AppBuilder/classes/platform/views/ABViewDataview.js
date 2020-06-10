@@ -241,6 +241,7 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
          var detailsPage = this.settings.detailsPage;
          var editTab = this.settings.editTab;
          var detailsTab = this.settings.detailsTab;
+         var accessLevel = this.parent.getUserAccess();
 
          let baseCom = super.component(App, this.id);
          baseCom.onShow();
@@ -379,7 +380,7 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
          rows.forEach((row) => {
             let detailCom = _.cloneDeep(super.component(App, row.id));
 
-            detailCom.init();
+            detailCom.init(null, accessLevel);
             detailCom.logic.displayData(row);
          });
 

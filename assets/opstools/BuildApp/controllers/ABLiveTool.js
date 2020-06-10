@@ -48,7 +48,10 @@ steal(
                         );
 
                         self.debounceResize = false;
-                        self.resizeValues = { height: 0, width: 0 };
+                        self.resizeValues = {
+                           height: 0,
+                           width: 0
+                        };
 
                         self.App = new OP.Component(
                            null,
@@ -124,21 +127,833 @@ steal(
                         }
                      },
 
+                     initAMP: function() {
+                        var self = this;
+                        // This is also defined in assets/opstools/AppBuilder/classes/core/views/ABViewCore.js
+                        // In the furture we can remove from this location when App Builder is not dependant on OpsPortal
+                        self.accessLevels = [
+                           {
+                              id: "0",
+                              value: "No Access"
+                           },
+                           {
+                              id: "1",
+                              value: "Read Only"
+                           },
+                           {
+                              id: "2",
+                              value: "Full Access"
+                           }
+                        ];
+
+                        var newRolePopup = {
+                           view: "popup",
+                           id: "role_popup_" + self.containerDomID,
+                           position: "center",
+                           height: 250,
+                           width: 350,
+                           modal: true,
+                           body: {
+                              rows: [
+                                 {
+                                    view: "toolbar",
+                                    id: "myToolbar",
+                                    css: "webix_dark",
+                                    cols: [
+                                       {
+                                          view: "label",
+                                          label: "Add Role",
+                                          align: "center"
+                                       }
+                                    ]
+                                 },
+                                 {
+                                    view: "form",
+                                    elements: [
+                                       /* We are not managing users yet so take this out
+                                       {
+                                         view: "text",
+                                         label: "Create new",
+                                         labelWidth: 90
+                                       },
+                                       {
+                                         view: "label",
+                                         label: "- or -",
+                                         align: "center"
+                                       },*/
+                                       {
+                                          view: "combo",
+                                          label: "",
+                                          id:
+                                             "role_popup_options_" +
+                                             self.containerDomID,
+                                          placeholder: "Choose role",
+                                          options: []
+                                       },
+                                       {
+                                          cols: [
+                                             {
+                                                view: "button",
+                                                value: "Cancel",
+                                                click: () => {
+                                                   $$(
+                                                      "role_popup_" +
+                                                         self.containerDomID
+                                                   ).hide();
+                                                }
+                                             },
+                                             {
+                                                view: "button",
+                                                value: "Add",
+                                                id:
+                                                   "role_popup_options_add_" +
+                                                   self.containerDomID,
+                                                css: "webix_primary",
+                                                click: () => {
+                                                   var role = $$(
+                                                      "role_popup_options_" +
+                                                         self.containerDomID
+                                                   ).getValue();
+                                                   if (
+                                                      $$(
+                                                         "amp_accordionitem_" +
+                                                            self.containerDomID +
+                                                            "_" +
+                                                            role
+                                                      )
+                                                   ) {
+                                                      $$(
+                                                         "amp_accordionitem_" +
+                                                            self.containerDomID +
+                                                            "_" +
+                                                            role
+                                                      ).show();
+                                                      $$(
+                                                         "amp_accordion_" +
+                                                            self.containerDomID
+                                                      ).config.roles.push(role);
+                                                   } else {
+                                                      self.buildAccessAccordion(
+                                                         role
+                                                      );
+                                                   }
+                                                   $$(
+                                                      "role_popup_" +
+                                                         self.containerDomID
+                                                   ).hide();
+                                                }
+                                             }
+                                          ]
+                                       }
+                                    ]
+                                 }
+                              ]
+                           }
+                        };
+
+                        /* This is the sample UI for managing users we decided not to implement this yet
+                        var manageUsersPopup = {
+                           view: "popup",
+                           id: "user_popup_" + this.containerDomID,
+                           position: "center",
+                           height: 250,
+                           width: 350,
+                           modal: true,
+                           body: {
+                              rows: [
+                                 {
+                                    view: "toolbar",
+                                    id: "myToolbar",
+                                    css: "webix_dark",
+                                    cols: [
+                                       {
+                                          view: "label",
+                                          label: "Manage Users",
+                                          align: "center"
+                                       }
+                                    ]
+                                 },
+                                 {
+                                    view: "form",
+                                    elements: [
+                                       {
+                                          view: "multiselect",
+                                          label: "Participant",
+                                          labelWidth: 100,
+                                          options: [
+                                             {
+                                                id: 1,
+                                                value: "Alex Brown"
+                                             },
+                                             {
+                                                id: 2,
+                                                value: "Dan Simons"
+                                             },
+                                             {
+                                                id: 3,
+                                                value: "Gron Alanski"
+                                             },
+                                             {
+                                                id: 4,
+                                                value: "Dan Alanski"
+                                             }
+                                          ],
+                                          value: "1,4"
+                                       },
+                                       {
+                                          cols: [
+                                             {
+                                                view: "button",
+                                                value: "Cancel",
+                                                click: () => {
+                                                   $$(
+                                                      "user_popup_" +
+                                                         this.containerDomID
+                                                   ).hide();
+                                                }
+                                             },
+                                             {
+                                                view: "button",
+                                                value: "Save",
+                                                css: "webix_primary",
+                                                click: () => {
+                                                   $$(
+                                                      "user_popup_" +
+                                                         this.containerDomID
+                                                   ).hide();
+                                                }
+                                             }
+                                          ]
+                                       }
+                                    ]
+                                 }
+                              ]
+                           }
+                        };
+                        */
+
+                        /*
+                        var treeAccordionItem = {
+                           view: "accordionitem",
+                           header: "Bookkeeper",
+                           body: {
+                              type: "clean",
+                              rows: [tree1, manageUsers]
+                           },
+                           height: 430
+                        };
+                        */
+
+                        var accessLevelManager = {
+                           view: "scrollview",
+                           css: "lightgray ab_amp",
+                           body: {
+                              rows: [
+                                 {
+                                    view: "accordion",
+                                    id: "amp_accordion_" + self.containerDomID,
+                                    roles: [],
+                                    hidden: true,
+                                    collapsed: true,
+                                    css: "webix_dark",
+                                    rows: []
+                                 },
+                                 {
+                                    id:
+                                       "amp_accordion_noSelection_" +
+                                       self.containerDomID,
+                                    rows: [
+                                       {},
+                                       {
+                                          view: "label",
+                                          align: "center",
+                                          height: 200,
+                                          label:
+                                             "<div style='display: block; font-size: 180px; background-color: #666; color: transparent; text-shadow: 0px 1px 1px rgba(255,255,255,0.5); -webkit-background-clip: text; -moz-background-clip: text; background-clip: text;' class='fa fa-unlock-alt'></div>"
+                                       },
+                                       {
+                                          view: "label",
+                                          align: "center",
+                                          label: "Add a role to control access."
+                                       },
+                                       {
+                                          cols: [
+                                             {},
+                                             {
+                                                view: "button",
+                                                label: "Add Role",
+                                                type: "form",
+                                                css: "webix_primary",
+                                                autowidth: true,
+                                                click: function() {
+                                                   webix
+                                                      .ui(newRolePopup)
+                                                      .show();
+
+                                                   var roles = self.roles.filter(
+                                                      (f) => {
+                                                         return (
+                                                            $$(
+                                                               "amp_accordion_" +
+                                                                  self.containerDomID
+                                                            ).config.roles.indexOf(
+                                                               f.id
+                                                            ) == -1
+                                                         );
+                                                      }
+                                                   );
+
+                                                   $$(
+                                                      "role_popup_options_" +
+                                                         self.containerDomID
+                                                   ).define("options", roles);
+                                                   $$(
+                                                      "role_popup_options_" +
+                                                         self.containerDomID
+                                                   ).refresh();
+                                                }
+                                             },
+                                             {}
+                                          ]
+                                       },
+                                       {}
+                                    ]
+                                 }
+                              ]
+                           }
+                        };
+
+                        webix.ui({
+                           view: "window",
+                           css: "ampWindow",
+                           id: "accessManager_" + self.containerDomID,
+                           position: function(state) {
+                              state.left = state.maxWidth - 350; // fixed values
+                              state.top = 0;
+                              state.width = 350; // relative values
+                              state.height = state.maxHeight;
+                           },
+                           on: {
+                              onShow: () => {
+                                 // collapse all the accordion items but the top one
+                                 var index = 0;
+                                 $$("amp_accordion_" + self.containerDomID)
+                                    .getChildViews()
+                                    .forEach((a) => {
+                                       if (index == 0) {
+                                          $$(a).expand();
+                                       } else {
+                                          $$(a).collapse();
+                                       }
+                                       index++;
+                                       $$(
+                                          "amp_accordion_" + self.containerDomID
+                                       ).show();
+                                       $$(
+                                          "amp_accordion_noSelection_" +
+                                             self.containerDomID
+                                       ).hide();
+                                    });
+                              }
+                           },
+                           //modal: true,
+                           head: {
+                              view: "toolbar",
+                              css: "webix_dark",
+                              cols: [
+                                 {
+                                    width: 15
+                                 },
+                                 {
+                                    id: "taskTitle",
+                                    view: "label",
+                                    label: "Access Manager",
+                                    autowidth: true
+                                 },
+                                 {},
+                                 {
+                                    view: "button",
+                                    label: "Add Role",
+                                    width: 100,
+                                    css: "webix_primary",
+                                    click: () => {
+                                       webix.ui(newRolePopup).show();
+
+                                       var roles = self.roles.filter((f) => {
+                                          return (
+                                             $$(
+                                                "amp_accordion_" +
+                                                   self.containerDomID
+                                             ).config.roles.indexOf(f.id) == -1
+                                          );
+                                       });
+
+                                       $$(
+                                          "role_popup_options_" +
+                                             self.containerDomID
+                                       ).define("options", roles);
+                                       $$(
+                                          "role_popup_options_" +
+                                             self.containerDomID
+                                       ).refresh();
+                                    }
+                                 },
+                                 {
+                                    view: "button",
+                                    width: 35,
+                                    css: "webix_transparent",
+                                    type: "icon",
+                                    icon: "nomargin fa fa-times",
+                                    click: () => {
+                                       $$(
+                                          "accessManager_" + self.containerDomID
+                                       ).hide();
+                                    }
+                                 }
+                              ]
+                           },
+                           body: accessLevelManager
+                        });
+
+                        webix.ready(function() {
+                           webix.protoUI(
+                              {
+                                 name: "edittree"
+                              },
+                              webix.EditAbility,
+                              webix.ui.tree
+                           );
+                        });
+
+                        // buld the tree views for already defined role access levels
+                        if (self.rootPage.application.isAccessManaged) {
+                           // Build the access level tree for Roles
+                           var roles = Object.keys(self.rootPage.accessLevels);
+                           roles.forEach((role) => {
+                              self.buildAccessAccordion(role);
+                           });
+                        }
+
+                        $(`#ampButton_${self.containerDomID}`).show();
+                     },
+
+                     buildAccessAccordion: function(role) {
+                        var self = this;
+
+                        var manageUsers = {
+                           rows: [
+                              {
+                                 height: 10
+                              },
+                              {
+                                 cols: [
+                                    {
+                                       width: 10
+                                    },
+                                    {
+                                       view: "button",
+                                       type: "icon",
+                                       icon: "fa fa-trash",
+                                       css: "webix_danger_inverse",
+                                       label: "Remove",
+                                       click: function() {
+                                          webix
+                                             .confirm("Remove role from app?")
+                                             .then(function(result) {
+                                                var tree = $$(
+                                                   "linetree_" +
+                                                      self.containerDomID +
+                                                      "_" +
+                                                      role
+                                                );
+                                                var branch = tree.getItem(
+                                                   self.rootPage.id
+                                                );
+                                                branch.access = "0";
+                                                var view = self.rootPage.application.views(
+                                                   (v) => {
+                                                      return (
+                                                         v.id ==
+                                                         self.rootPage.id
+                                                      );
+                                                   }
+                                                )[0];
+                                                view
+                                                   .updateAccessLevels(
+                                                      tree.config.role,
+                                                      "0"
+                                                   )
+                                                   .then((res) => {
+                                                      console.log(
+                                                         `Role: ${tree.config.role} set to Access Level: 0 on view: ${view.id}`
+                                                      );
+                                                      tree.updateItem(
+                                                         self.rootPage.id,
+                                                         branch
+                                                      );
+                                                   });
+                                                $$(
+                                                   "amp_accordionitem_" +
+                                                      self.containerDomID +
+                                                      "_" +
+                                                      role
+                                                ).hide();
+                                                var itemToRemove = $$(
+                                                   "amp_accordion_" +
+                                                      self.containerDomID
+                                                ).config.roles.indexOf(role);
+                                                if (itemToRemove > -1) {
+                                                   $$(
+                                                      "amp_accordion_" +
+                                                         self.containerDomID
+                                                   ).config.roles.splice(
+                                                      itemToRemove,
+                                                      1
+                                                   );
+                                                }
+                                             })
+                                             .fail(function() {
+                                                //canceled
+                                             });
+                                       }
+                                    },
+                                    {
+                                       width: 10
+                                    }
+                                    /* We are not managing users yet
+                                    {
+                                      view: "button",
+                                      type: "icon",
+                                      icon: "fa fa-cog",
+                                      css: "webix_primary",
+                                      label: "Manage Users",
+                                      click: function() {
+                                        webix.ui(manageUsersPopup).show();
+                                      }
+                                    }
+                                    */
+                                 ]
+                              },
+                              {
+                                 height: 10
+                              }
+                           ]
+                        };
+
+                        $$(
+                           "amp_accordion_" + self.containerDomID
+                        ).config.roles.push(role);
+
+                        var toggleParent = (element) => {
+                           if (!element.parent) return false;
+                           var parentElem = element.parent;
+                           if (!parentElem.parent) return false;
+                           parentElem.parent.emit("changeTab", parentElem.id);
+                           toggleParent(parentElem.parent);
+                        };
+
+                        var tree = {
+                           id: "linetree_" + self.containerDomID + "_" + role,
+                           view: "edittree",
+                           type: "lineTree",
+                           editable: true,
+                           role: role,
+                           editor: "combo",
+                           editValue: "access",
+                           threeState: true,
+                           template: (obj, common) => {
+                              var treeOptions = $$(
+                                 "linetree_" + self.containerDomID + "_" + role
+                              ).config.options;
+                              var option = treeOptions.find(
+                                 (o) => o.id === obj.access
+                              );
+                              var color = "#ff4938";
+                              var icon = "lock";
+                              if (option.id == "0") {
+                                 color = "#ff4938";
+                                 icon = "lock";
+                              } else if (option.id == "1") {
+                                 color = "#FFAB00";
+                                 icon = "eye";
+                              } else if (option.id == "2") {
+                                 color = "#00C853";
+                                 icon = "pencil";
+                              }
+                              return (
+                                 `
+                                <span class="accessLevel">
+                                  <span class="fa-stack">
+                                    <i style="color: ${color};" class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-${icon} fa-stack-1x fa-inverse"></i>
+                                  </span>` +
+                                 common.icon(obj, common) +
+                                 `<span>${obj.label}</span>
+                                     <i class="externalLink fa fa-external-link"></i>
+                                   </span>`
+                              );
+                           },
+                           options: self.accessLevels,
+                           data: self.getAccessLevelTree(self.rootPage, role),
+                           onClick: {
+                              externalLink: (event, branch, target) => {
+                                 var item = $$(
+                                    "linetree_" +
+                                       self.containerDomID +
+                                       "_" +
+                                       role
+                                 ).getItem(branch);
+                                 if (item.type == "tab") {
+                                    self.showPage(item.pageId);
+
+                                    var tabView = self.rootPage.application.views(
+                                       (v) => v.id == item.id
+                                    )[0];
+                                    if (!tabView) return false;
+
+                                    var tab = tabView.parent;
+                                    if (!tab) return false;
+
+                                    toggleParent(tab);
+                                    if (
+                                       !$$(tabView.id) ||
+                                       !$$(tabView.id).isVisible()
+                                    ) {
+                                       var showIt = setInterval(function() {
+                                          if (
+                                             $$(tabView.id) &&
+                                             $$(tabView.id).isVisible()
+                                          ) {
+                                             clearInterval(showIt);
+                                          }
+                                          tab.emit("changeTab", tabView.id);
+                                       }, 200);
+                                    }
+                                 }
+                                 // switch page
+                                 else {
+                                    self.showPage(item.id);
+                                 }
+
+                                 return false;
+                              }
+                           },
+                           on: {
+                              onAfterEditStop: (
+                                 state,
+                                 editor,
+                                 ignoreUpdate
+                              ) => {
+                                 if (state.old == state.value) return false;
+                                 var tree = $$(
+                                    "linetree_" +
+                                       self.containerDomID +
+                                       "_" +
+                                       role
+                                 );
+                                 var view = self.rootPage.application.views(
+                                    (v) => {
+                                       return v.id == editor.id;
+                                    }
+                                 )[0];
+                                 view
+                                    .updateAccessLevels(
+                                       tree.config.role,
+                                       state.value
+                                    )
+                                    .then((res) => {
+                                       console.log(
+                                          `Role: ${tree.config.role} set to Access Level: ${state.value} on view: ${view.id}`
+                                       );
+                                    });
+                              },
+                              onDataUpdate: (id, data, old) => {
+                                 var tree = $$(
+                                    "linetree_" +
+                                       self.containerDomID +
+                                       "_" +
+                                       role
+                                 );
+                                 if (data.access == "0") {
+                                    tree.blockEvent();
+                                    tree.data.eachSubItem(id, (child) => {
+                                       var childData = tree.getItem(child.id);
+                                       if (childData.access != data.access) {
+                                          childData.access = data.access;
+                                          var view = self.rootPage.application.views(
+                                             (v) => {
+                                                return v.id == child.id;
+                                             }
+                                          )[0];
+                                          view
+                                             .updateAccessLevels(
+                                                tree.config.role,
+                                                data.access
+                                             )
+                                             .then((res) => {
+                                                console.log(
+                                                   `Role: ${tree.config.role} set to Access Level: ${data.access} on view: ${view.id}`
+                                                );
+                                                tree.updateItem(
+                                                   child.id,
+                                                   childData
+                                                );
+                                             });
+                                       }
+                                    });
+                                    tree.unblockEvent();
+                                 } else {
+                                    var parentBranch = tree.getParentId(id);
+                                    var parentData = tree.getItem(parentBranch);
+                                    if (parentData) {
+                                       if (parentData.access == "0") {
+                                          parentData.access = "1";
+                                          var view = self.rootPage.application.views(
+                                             (v) => {
+                                                return v.id == parentBranch;
+                                             }
+                                          )[0];
+                                          view
+                                             .updateAccessLevels(
+                                                tree.config.role,
+                                                parentData.access
+                                             )
+                                             .then((res) => {
+                                                console.log(
+                                                   `Role: ${tree.config.role} set to Access Level: ${parentData.access} on view: ${view.id}`
+                                                );
+                                                tree.updateItem(
+                                                   parentBranch,
+                                                   parentData
+                                                );
+                                             });
+                                       }
+                                    }
+                                 }
+                              }
+                           }
+                        };
+
+                        var newAccordionItem = {
+                           view: "accordionitem",
+                           id:
+                              "amp_accordionitem_" +
+                              self.containerDomID +
+                              "_" +
+                              role,
+                           header: () => {
+                              if (!self.roles) {
+                                 return role;
+                              } else {
+                                 var header = self.roles.find((r) => {
+                                    return r.id === role;
+                                 });
+                                 return header.value;
+                              }
+                           },
+                           collapsed: true,
+                           body: {
+                              type: "clean",
+                              rows: [tree, manageUsers]
+                           },
+                           height: 430
+                        };
+
+                        $$("amp_accordion_" + self.containerDomID).addView(
+                           newAccordionItem,
+                           -1
+                        );
+                        $$("amp_accordion_" + self.containerDomID).show();
+                        $$(
+                           "amp_accordion_noSelection_" + self.containerDomID
+                        ).hide();
+
+                        $$(
+                           "linetree_" + self.containerDomID + "_" + role
+                        ).openAll();
+                     },
+
+                     getAccessLevelTree: function(rootPage, role) {
+                        // this so it looks right/indented in a tree view:
+                        var tree = new webix.TreeCollection();
+
+                        /**
+                         * @method addPage
+                         *
+                         * @param {ABView} page
+                         * @param {integer} index
+                         * @param {uuid} parentId
+                         */
+                        var addPage = (page, index, parentId, type) => {
+                           // add to tree collection
+                           var accessLevel = "0";
+                           if (role) {
+                              accessLevel = page.accessLevels[role] || "0";
+                           }
+                           var branch = {
+                              id: page.id,
+                              access: accessLevel,
+                              label: page.label,
+                              pageId: parentId,
+                              type: type
+                           };
+                           tree.add(branch, index, parentId);
+
+                           // stop at detail views
+                           if (page.defaults.key == "detail") {
+                              return;
+                           }
+
+                           var subPages = page.pages ? page.pages() : [];
+                           subPages.forEach((childPage, childIndex) => {
+                              addPage(childPage, childIndex, page.id, "page");
+                           });
+
+                           // add tabs
+                           page
+                              .views((v) => v.defaults.key == "tab")
+                              .forEach((tab, tabIndex) => {
+                                 // tab views
+                                 tab.views().forEach(
+                                    (tabView, tabViewIndex) => {
+                                       // tab items will be below sub-page items
+                                       var tIndex =
+                                          subPages.length +
+                                          tabIndex +
+                                          tabViewIndex;
+                                       addPage(tabView, tIndex, page.id, "tab");
+                                    }
+                                 );
+                              });
+                        };
+                        rootPage.application.pages().forEach((p, index) => {
+                           addPage(p, index, null, "page");
+                        });
+
+                        return tree;
+                     },
+
                      initDOM: function() {
                         // console.log('... creating ABLiveTool <div> ');
-
                         var css =
                            "background-color: #fff !important; font-size: 30px; line-height: 80px; padding-top: 160px; text-align: center; width: 100%;";
 
                         this.element.html(
-                           '<div id="#domID#">'.replace(
-                              /#domID#/g,
-                              this.containerDomID
-                           ) +
-                              '<div style="' +
-                              css +
-                              '" class="ab-loading"><i class="fa fa-refresh fa-spin fa-3x fa-fw"></i><br/>Loading&#8230;' +
-                              "</div></div>"
+                           `<div id="${this.containerDomID}">
+                              <div style="${css}" class="ab-loading">
+                                 <i class="fa fa-refresh fa-spin fa-3x fa-fw"></i><br/>Loading&#8230;
+                              </div>
+                           </div>
+                           <div style="display: none;" id="ampTree_${this.containerDomID}"></div>
+                           <div style="display: none;" id="ampButton_${this.containerDomID}" class="amp" onclick="$$('accessManager_${this.containerDomID}').show();">
+                              <div>
+                                <i class="fa fa-fw fa-unlock-alt fa-inverse"></i>
+                                <i class="fa fa-fw fa-lock fa-inverse"></i>
+                              </div>
+                              <div>
+                                Access Management
+                              </div>
+                           </div>`
                         );
 
                         // this.element.html(
@@ -164,10 +979,127 @@ steal(
 
                         self.initEvents(self.rootPage);
 
+                        if (self.rootPage.application.isAccessManaged) {
+                           var shouldInitAMP = false;
+                           if (
+                              parseInt(
+                                 self.rootPage.application.accessManagers
+                                    .useRole
+                              ) == 1
+                           ) {
+                              self.rootPage.application
+                                 .userRoles()
+                                 .forEach((role) => {
+                                    if (
+                                       self.rootPage.application.accessManagers.role.indexOf(
+                                          role.id
+                                       ) > -1
+                                    ) {
+                                       shouldInitAMP = true;
+                                    }
+                                 });
+                           }
+                           if (
+                              !shouldInitAMP &&
+                              parseInt(
+                                 self.rootPage.application.accessManagers
+                                    .useAccount
+                              ) == 1
+                           ) {
+                              if (
+                                 self.rootPage.application.accessManagers.account.indexOf(
+                                    OP.User.id() + ""
+                                 ) > -1
+                              ) {
+                                 shouldInitAMP = true;
+                              }
+                           }
+                           if (shouldInitAMP) {
+                              self.initAMP();
+                           }
+                        }
+
                         webix.ready(function() {
                            self.showPage();
 
                            self.resize(self.height || 600);
+                        });
+                     },
+
+                     initRoles: function() {
+                        var self = this;
+
+                        return new Promise((resolve, reject) => {
+                           var __Roles = [];
+                           var __UserRoles = [];
+
+                           async.series(
+                              [
+                                 function(next) {
+                                    self.rootPage.application.class.ABRole.find()
+                                       .then((list) => {
+                                          list.forEach(function(l) {
+                                             __Roles.push({
+                                                id: l.uuid,
+                                                value: l.name
+                                             });
+                                          });
+                                          self.roles = __Roles;
+                                          next();
+                                       })
+                                       .catch((err) => {
+                                          AD.error.log(
+                                             "ABLiveTool: Error loading Roles",
+                                             {
+                                                error: err
+                                             }
+                                          );
+                                          next(err);
+                                       });
+                                 },
+                                 function(next) {
+                                    if (
+                                       self.rootPage.application.userRoles()
+                                          .length
+                                    ) {
+                                       next();
+                                       return;
+                                    }
+                                    self.rootPage.application.class.ABRole.rolesOfUser(
+                                       window.OP.User.username()
+                                    )
+                                       .then((list) => {
+                                          list.forEach(function(l) {
+                                             __UserRoles.push({
+                                                id: l.id,
+                                                label: l.label
+                                             });
+                                          });
+                                          self.rootPage.application.userRoles(
+                                             __UserRoles
+                                          );
+                                          next();
+                                       })
+                                       .catch((err) => {
+                                          AD.error.log(
+                                             "ABLiveTool: Error loading roles of user",
+                                             {
+                                                error: err
+                                             }
+                                          );
+                                          next(err);
+                                       });
+                                 },
+                                 function(next) {
+                                    self.initPage();
+                                    next();
+                                 }
+                              ],
+                              function(err) {
+                                 if (err) reject(err);
+                                 else resolve();
+                              }
+                           );
                         });
                      },
 
@@ -314,7 +1246,21 @@ steal(
                               function(next) {
                                  if (self.rootPage == null) return next();
 
-                                 self.initPage();
+                                 if (
+                                    self.rootPage.application.isAccessManaged
+                                 ) {
+                                    self
+                                       .initRoles()
+                                       .then(() => {
+                                          next();
+                                       })
+                                       .catch((err) => {
+                                          next(err);
+                                       });
+                                 } else {
+                                    self.initPage();
+                                 }
+                                 //self.initPage(); moved this inside self.initRoles() to fire after roles are loaded
 
                                  // let areaKey = 'ab-' + self.data.application.name.trim();
                                  // areaKey = areaKey.toLowerCase().replace(/[^a-z0-9]/gi, '');
@@ -337,7 +1283,7 @@ steal(
                                  // 	}
                                  // }
 
-                                 next();
+                                 // next();
                               },
 
                               // Hide loading spinners
@@ -396,15 +1342,24 @@ steal(
                         });
 
                         // Render the root page
-                        self.renderPage(self.rootPage);
+                        self.renderPage(self.rootPage, true);
                      },
 
-                     renderPage: function(page) {
+                     renderPage: function(page, isRootPage) {
                         var self = this,
                            pageDomId = this.getPageDomID(page.id);
 
                         var component = page.component(self.App);
                         var ui = component.ui;
+
+                        // this may need to move to initPage()
+                        // if (isRootPage && page.application.isAccessManaged) {
+                        //    // Build the access level tree for Roles
+                        //    var roles = Object.keys(page.accessLevels);
+                        //    roles.forEach((role) => {
+                        //       self.buildAccessAccordion(role);
+                        //    });
+                        // }
 
                         // Keep the page component
                         self.pageComponents[page.id] = component;
@@ -528,7 +1483,7 @@ steal(
                       *      Optional page. Default is to show
                       *      the root page.
                       */
-                     showPage: function(pageId) {
+                     showPage: function(pageId, viewId) {
                         var self = this;
 
                         // if pageId is not passed we will clear the peviousPageId so it won't load, this fixes a bug with the popup pages
@@ -552,6 +1507,13 @@ steal(
                         if ($$(activePageDomId) && $$(activePageDomId).hide)
                            $$(activePageDomId).hide();
 
+                        if (
+                           pageId &&
+                           self.activePageId &&
+                           pageId == self.activePageId
+                        ) {
+                           return false;
+                        }
                         self.previousPageId = self.activePageId;
                         self.activePageId = pageId;
 
@@ -587,6 +1549,9 @@ steal(
                                  element.style.display = "none";
                               }
                               self.pageComponents[pageId].onShow();
+                              if (viewId) {
+                                 $$(viewId).show();
+                              }
                            }
                         }, 60);
                      },
@@ -806,6 +1771,61 @@ steal(
 
                      hideUpdatingPopup: function() {
                         // document.remo
+                     },
+
+                     translate: function(
+                        obj,
+                        json,
+                        fields,
+                        languageCode = null
+                     ) {
+                        json = json || {};
+                        fields = fields || [];
+
+                        if (!json.translations) {
+                           json.translations = [];
+                        }
+
+                        if (typeof json.translations == "string") {
+                           json.translations = JSON.parse(json.translations);
+                        }
+
+                        var currLanguage =
+                           languageCode || AD.lang.currentLanguage;
+
+                        if (fields && fields.length > 0) {
+                           // [fix] if no matching translation is in our json.translations
+                           //     object, then just use the 1st one.
+                           var first = null; // the first translation entry encountered
+                           var found = false; // did we find a matching translation?
+
+                           json.translations.forEach(function(t) {
+                              if (!first) first = t;
+
+                              // find the translation for the current language code
+                              if (t.language_code == currLanguage) {
+                                 found = true;
+
+                                 // copy each field to the root object
+                                 fields.forEach(function(f) {
+                                    if (t[f] != null) obj[f] = t[f];
+
+                                    obj[f] = t[f] || ""; // default to '' if not found.
+                                 });
+                              }
+                           });
+
+                           // if !found, then use the 1st entry we did find.  prepend desired
+                           // [language_code] to each of the fields.
+                           if (!found && first) {
+                              // copy each field to the root object
+                              fields.forEach(function(f) {
+                                 if (first[f] != null && first[f] != "")
+                                    obj[f] = `[${currLanguage}]${first[f]}`;
+                                 else obj[f] = ""; // default to '' if not found.
+                              });
+                           }
+                        }
                      },
 
                      getPageDomID: function(pageId) {

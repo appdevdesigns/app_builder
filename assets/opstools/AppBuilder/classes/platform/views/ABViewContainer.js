@@ -118,7 +118,7 @@ module.exports = class ABViewContainer extends ABViewContainerCore {
             });
 
             // initial sub-component
-            component.init();
+            component.init(null, 2); // when in editor allow full access
          });
 
          // listen onChange event
@@ -659,13 +659,17 @@ module.exports = class ABViewContainer extends ABViewContainerCore {
       };
 
       // make sure each of our child views get .init() called
-      var _init = (options) => {
+      var _init = (options, parentAccessLevel = 0) => {
          // register our callbacks:
          if (options) {
             for (var c in _logic.callbacks) {
                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
             }
          }
+
+         // see access by CSS class
+         if ($$(ids.component))
+            $$(ids.component).define("css", "accessLevel-" + parentAccessLevel);
 
          // attach all the .UI views:
          for (var key in this.viewComponents) {
@@ -675,7 +679,11 @@ module.exports = class ABViewContainer extends ABViewContainerCore {
             var component = this.viewComponents[key];
 
             // Initial component along with options in case there are callbacks we need to listen for
-            component.init(options);
+            if (parentAccessLevel > 0) {
+               component.init(options, parentAccessLevel);
+            } else {
+               $$(component.ui.id).hide();
+            }
          }
       };
 

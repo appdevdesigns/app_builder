@@ -54,9 +54,9 @@ function loadUsers() {
 
 // #HACK: temporary implementation until we pull Roles into AppBuilder.
 if (!__Roles) {
-   __Roles = [{ id: 0, value: "Select Role" }];
    ABRole.find()
       .then((list) => {
+         __Roles = [];
          // make sure they are all translated.
          list.forEach(function(l) {
             // l.translate();
@@ -332,6 +332,80 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
    }
 
    /**
+    * selectUsersUi()
+    * A resuable fn to return the webix ui for a reusable Select User picker.
+    * @param {string} id
+    *        the webix $$(id) of the properties panel area.
+    */
+   static selectManagersUi(id, obj) {
+      var ids = ABProcessParticipant.propertyIDs(id);
+      return {
+         type: "form",
+         css: "no-margin",
+         rows: [
+            {
+               cols: [
+                  {
+                     view: "checkbox",
+                     id: ids.useRole,
+                     labelRight: "by Role",
+                     labelWidth: 0,
+                     width: 120,
+                     value: obj.useRole == "1" ? 1 : 0,
+                     click: function(id, event) {
+                        if ($$(id).getValue()) {
+                           $$(ids.role).enable();
+                        } else {
+                           $$(ids.role).disable();
+                        }
+                     }
+                  },
+                  {
+                     id: ids.role,
+                     view: "multicombo",
+                     value: obj.role ? obj.role : 0,
+                     disabled: obj.useRole == "1" ? false : true,
+                     suggest: __Roles || [{ id: 0, value: "??" }],
+                     placeholder: "Click or type to add role...",
+                     labelAlign: "left",
+                     stringResult: false /* returns data as an array of [id] */
+                  }
+               ]
+            },
+            {
+               cols: [
+                  {
+                     view: "checkbox",
+                     id: ids.useAccount,
+                     labelRight: "by Account",
+                     labelWidth: 0,
+                     width: 120,
+                     value: obj.useAccount == "1" ? 1 : 0,
+                     click: function(id, event) {
+                        if ($$(id).getValue()) {
+                           $$(ids.account).enable();
+                        } else {
+                           $$(ids.account).disable();
+                        }
+                     }
+                  },
+                  {
+                     id: ids.account,
+                     view: "multicombo",
+                     value: obj.account ? obj.account : 0,
+                     disabled: obj.useAccount == "1" ? false : true,
+                     suggest: __Users || [{ id: 0, value: "??" }],
+                     labelAlign: "left",
+                     placeholder: "Click or type to add user...",
+                     stringResult: false /* returns data as an array of [id] */
+                  }
+               ]
+            }
+         ]
+      };
+   }
+
+   /**
     * stashUsersUi()
     * A resuable fn to return the values from our static selectUsersUI().
     * @param {string} id
@@ -345,16 +419,20 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
          obj.useRole = $$(ids.useRole).getValue();
       }
 
-      if ($$(ids.role)) {
+      if ($$(ids.role) && obj.useRole) {
          obj.role = $$(ids.role).getValue();
+      } else {
+         obj.role = null;
       }
 
       if ($$(ids.useAccount)) {
          obj.useAccount = $$(ids.useAccount).getValue();
       }
 
-      if ($$(ids.account)) {
+      if ($$(ids.account) && obj.useAccount) {
          obj.account = $$(ids.account).getValue(/*{ options: true }*/);
+      } else {
+         obj.account = null;
       }
 
       return obj;

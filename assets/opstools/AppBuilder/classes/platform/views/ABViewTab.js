@@ -611,6 +611,7 @@ module.exports = class ABViewTab extends ABViewTabCore {
     * @return {obj} UI component
     */
    component(App) {
+      var comp = super.component(App);
       // get a UI component for each of our child views
       this._viewComponents = [];
       this.views().forEach((v) => {
@@ -653,11 +654,16 @@ module.exports = class ABViewTab extends ABViewTabCore {
       if (this._viewComponents.length > 0) {
          if (this.settings.stackTabs) {
             // define your menu items from the view components
-            var menuItems = this._viewComponents.map((v) => {
+            var menuItems = this.views((view) => {
+               var accessLevel = view.getUserAccess();
+               if (accessLevel > 0) {
+                  return view;
+               }
+            }).map((v) => {
                return {
-                  id: v.view.id + "_menu",
-                  value: v.view.label,
-                  icon: v.view.tabicon ? v.view.tabicon : ""
+                  id: v.id + "_menu",
+                  value: v.label,
+                  icon: v.tabicon ? v.tabicon : ""
                };
             });
 
@@ -738,7 +744,8 @@ module.exports = class ABViewTab extends ABViewTabCore {
                         // if the menu item is a regular menu item
                         // call the onShow with the view id to load the view
                         id = id.replace("_menu", "");
-                        _onShow(id);
+                        $$(id).show(false, false);
+                        // _onShow(id);
                      }
                   }
                }
@@ -759,7 +766,12 @@ module.exports = class ABViewTab extends ABViewTabCore {
                   };
 
                   return tabUi;
-               })
+               }),
+               on: {
+                  onViewChange: function(prevId, nextId) {
+                     _onShow(nextId);
+                  }
+               }
             };
 
             var columns = [sidebar, multiview];
@@ -790,9 +802,14 @@ module.exports = class ABViewTab extends ABViewTabCore {
                            }
                         }
                      },
-                     cells: this._viewComponents.map((v) => {
+                     cells: this.views((view) => {
+                        var accessLevel = view.getUserAccess();
+                        if (accessLevel > 0) {
+                           return view;
+                        }
+                     }).map((v) => {
                         var tabUi = {
-                           id: v.view.id,
+                           id: v.id,
                            // ui will be loaded when its tab is opened
                            view: "layout",
                            rows: []
@@ -800,25 +817,25 @@ module.exports = class ABViewTab extends ABViewTabCore {
 
                         var tabTemplate = "";
                         // tab icon
-                        if (v.view.tabicon) {
+                        if (v.tabicon) {
                            if (this.settings.iconOnTop) {
                               tabTemplate =
                                  "<div class='ab-tabIconContainer'><span class='fa fa-lg fa-fw fa-" +
-                                 v.view.tabicon +
+                                 v.tabicon +
                                  "'></span><br/>" +
-                                 v.view.label +
+                                 v.label +
                                  "</div>";
                            } else {
                               tabTemplate =
                                  "<span class='fa fa-lg fa-fw fa-" +
-                                 v.view.tabicon +
+                                 v.tabicon +
                                  "'></span> " +
-                                 v.view.label;
+                                 v.label;
                            }
                         }
                         // no icon
                         else {
-                           tabTemplate = v.view.label;
+                           tabTemplate = v.label;
                         }
 
                         return {
@@ -838,12 +855,39 @@ module.exports = class ABViewTab extends ABViewTabCore {
 
       var _logic = {
          changePage: (pageId) => {
+            $$(ids.component).blockEvent();
             this.changePage(pageId);
+            $$(ids.component).unblockEvent();
          },
 
          changeTab: (tabViewId) => {
             // switch tab view
-            $$(ids.component).setValue(tabViewId);
+            _logic.toggleParent(this.parent);
+            if (this.settings.stackTabs) {
+               if (!$$(tabViewId).isVisible()) {
+                  var showIt = setInterval(function() {
+                     if ($$(tabViewId).isVisible()) {
+                        clearInterval(showIt);
+                     }
+                     $$(tabViewId).show(false, false);
+                  }, 200);
+               }
+            } else {
+               $$(ids.component).setValue(tabViewId);
+            }
+         },
+
+         toggleParent: (view) => {
+            if (
+               (view.key == "tab" || view.key == "viewcontainer") &&
+               $$(view.id) &&
+               $$(view.id).show
+            ) {
+               $$(view.id).show(false, false);
+            }
+            if (view.parent) {
+               _logic.toggleParent(view.parent);
+            }
          }
       };
 
@@ -891,9 +935,20 @@ module.exports = class ABViewTab extends ABViewTabCore {
       var _onShow = (viewId) => {
          var parent = this;
 
+         var defaultViewIsSet = false;
          this._viewComponents.forEach((v, index) => {
             // set default view id
-            if (viewId == null && index == 0) viewId = v.view.id;
+            var currView = this.views((view) => {
+               return view.id == v.view.id;
+            });
+            var accessLevel = 0;
+            if (currView.length) {
+               accessLevel = currView[0].getUserAccess();
+            }
+            if (viewId == null && !defaultViewIsSet && accessLevel > 0) {
+               viewId = v.view.id;
+               defaultViewIsSet = true;
+            }
 
             // create view's component once
             if (v.component == null && v.view.id == viewId) {
@@ -929,7 +984,9 @@ module.exports = class ABViewTab extends ABViewTabCore {
                   );
                }
 
-               v.component.init();
+               // for tabs we need to look at the view's accessLevels
+               var accessLevel = v.view.getUserAccess();
+               v.component.init(null, accessLevel);
 
                // done
                setTimeout(() => {
