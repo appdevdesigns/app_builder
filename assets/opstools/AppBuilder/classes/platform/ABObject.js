@@ -249,7 +249,7 @@ module.exports = class ABObject extends ABObjectCore {
             this.application
                .queries((q) => q.objects((o) => o.id == this.id).length > 0)
                .forEach((q) => {
-                  q._objects = q.objects((o) => o.id != this.id);
+                  // q._objects = q.objects((o) => o.id != this.id);
 
                   q.disabled = true;
                });
@@ -285,13 +285,18 @@ module.exports = class ABObject extends ABObjectCore {
 
             // start with my fields:
             var fieldDrops = [];
-            var allFields = this.fields();
-            this._fields = []; // clear our field counter so we don't retrigger
-            // this.save() on each field.destroy();
 
-            allFields.forEach((f) => {
-               fieldDrops.push(f.destroy());
-            });
+            // Only ABObjects should attempt any fieldDrops.
+            // ABObjectQueries can safely skip this step:
+            if (this.type == "object") {
+               var allFields = this.fields();
+               this._fields = []; // clear our field counter so we don't retrigger
+               // this.save() on each field.destroy();
+
+               allFields.forEach((f) => {
+                  fieldDrops.push(f.destroy());
+               });
+            }
 
             return Promise.all(fieldDrops)
                .then(() => {
@@ -331,26 +336,21 @@ module.exports = class ABObject extends ABObjectCore {
          })
          .then(() => {
             return new Promise((resolve, reject) => {
-               // var isAdd = false;
-
-               // // if this is our initial save()
-               // if (!this.id) {
-               //     // this.id = OP.Util.uuid();	// setup default .id
-               //     this.label = this.label || this.name;
-               //     this.urlPath =
-               //         this.urlPath || this.application.name + "/" + this.name;
-               //     isAdd = true;
-               // }
-
-               this.application
-                  .objectInsert(this)
-                  .then(() => {
-                     resolve(this);
-                     // }
-                  })
-                  .catch(function(err) {
-                     reject(err);
-                  });
+               // make sure only ABObjects perform the .objectInsert()
+               // ABObjectQueries need to perform their own operation:
+               if (this.type == "object") {
+                  this.application
+                     .objectInsert(this)
+                     .then(() => {
+                        resolve(this);
+                        // }
+                     })
+                     .catch(function(err) {
+                        reject(err);
+                     });
+               } else {
+                  resolve(this);
+               }
             });
          })
          .then(() => {

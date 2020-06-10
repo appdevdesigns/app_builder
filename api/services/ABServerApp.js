@@ -113,5 +113,12 @@ module.exports = {
          }
       }
       return null;
+   },
+
+   queryNew: (def) => {
+      if (!GeneralApp) {
+         GeneralApp = ABSystemObject.getApplication();
+      }
+      return GeneralApp.queryNew(def);
    }
 };

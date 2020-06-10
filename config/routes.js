@@ -60,6 +60,7 @@ module.exports = {
       "app_builder/ABApplicationController.viewReorder",
 
    /* Queries */
+   /*
    "get /app_builder/application/:appID/query":
       "app_builder/ABQueryController.queryApplication",
 
@@ -74,6 +75,7 @@ module.exports = {
 
    "delete /app_builder/query/:queryID":
       "app_builder/ABQueryController.queryDestroy",
+   */
 
    "put /app_builder/application/:appID/query/:queryID":
       "app_builder/ABQueryController.importQuery",

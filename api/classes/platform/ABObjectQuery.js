@@ -836,6 +836,15 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
             // TODO: ignore calculated fields
             return;
 
+         // Transition to ABDefinitions:
+         // .importFields() added f.columnName = alias.columnName
+         // but this server side code doesn't seem to expect that:
+         // undo it here:
+         var parts = f.columnName.split(".");
+         if (parts.length > 1) {
+            f.columnName = parts[1];
+         }
+
          let obj = f.object;
 
          // Connect fields

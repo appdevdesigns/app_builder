@@ -970,7 +970,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    }
 
    /**
-    * @method querySave()
+    * @method queryInsert()
     *
     * persist the current ABObjectQuery in our list of ._queries.
     *

@@ -58,7 +58,9 @@ module.exports = class ABObjectQuery extends ABObjectQueryCore {
     * @return {Promise}
     */
    destroy() {
-      return this.application.queryDestroy(this);
+      return super.destroy().then(() => {
+         return this.application.queryRemove(this);
+      });
    }
 
    /**
@@ -71,7 +73,7 @@ module.exports = class ABObjectQuery extends ABObjectQueryCore {
     */
    save() {
       // var isAdd = false;
-
+      /*
       // if this is our initial save()
       if (!this.id) {
          // this.id = OP.Util.uuid();	// setup default .id
@@ -99,6 +101,14 @@ module.exports = class ABObjectQuery extends ABObjectQueryCore {
                reject(err);
             });
       });
+*/
+      return Promise.resolve()
+         .then(() => {
+            return super.save();
+         })
+         .then(() => {
+            return this.application.queryInsert(this);
+         });
    }
 
    /**

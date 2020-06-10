@@ -811,6 +811,69 @@ function loadDefinitionCallbacks(next) {
          });
    });
 
+   // ABObjectQuery.beforeCreate Lifecycle
+   var QueryDataValidations = ["query.beforeCreate", "query.beforeUpdate"];
+   QueryDataValidations.forEach((key) => {
+      ABModelLifecycle.register(key, (values, cb) => {
+         var def = values.json;
+         if (typeof def == "string") {
+            try {
+               def = JSON.parse(def);
+            } catch (e) {}
+         }
+         var pending = [];
+         // track any Async operations.
+
+         // Make sure .viewName is set:
+         if (!def.viewName || def.viewName == "") {
+            def.viewName = AppBuilder.rules.toObjectNameFormat(
+               "View_" + def.name
+            );
+         }
+
+         // make sure all Async operations are complete before calling
+         // our CB()
+         Promise.all(pending)
+            .then(() => {
+               cb();
+            })
+            .catch((err) => {
+               sails.log.error(`${key} :: Error:`, err);
+               cb(err);
+            });
+      });
+   });
+
+   // ABObjectQuery.afterCreate Lifecycle
+   var QueryMaintainance = ["query.afterCreate", "query.afterUpdate"];
+   QueryMaintainance.forEach((key) => {
+      ABModelLifecycle.register(key, (values, cb) => {
+         var def = values.json;
+         if (typeof def == "string") {
+            try {
+               def = JSON.parse(def);
+            } catch (e) {}
+         }
+         var pending = [];
+         // track any Async operations.
+
+         // perform a Migrate.create() to create/update the Query Table.
+         var qClass = ABSystemObject.getApplication().queryNew(def);
+         pending.push(ABMigration.createQuery(qClass));
+
+         // make sure all Async operations are complete before calling
+         // our CB()
+         Promise.all(pending)
+            .then(() => {
+               cb();
+            })
+            .catch((err) => {
+               sails.log.error("query.afterCreate :: Error:", err);
+               cb(err);
+            });
+      });
+   });
+
    next();
 }
 

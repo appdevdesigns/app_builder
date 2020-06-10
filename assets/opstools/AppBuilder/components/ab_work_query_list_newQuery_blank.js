@@ -124,7 +124,7 @@ module.exports = class AB_Work_Query_List_NewQuery_Blank extends ABComponent {
 
             // populate object list
             if ($$(ids.object)) {
-               let objectOpts = currentApp.objects().map((obj) => {
+               let objectOpts = currentApp.objectsIncluded().map((obj) => {
                   return {
                      id: obj.id,
                      value: obj.label
@@ -202,8 +202,20 @@ module.exports = class AB_Work_Query_List_NewQuery_Blank extends ABComponent {
                   _logic.callbacks.onDone(query);
                })
                .catch((err) => {
-                  saveButton.enable();
+                  // we gotta indicate there was a problem!
+                  console.error(err);
+                  var message = err.toString();
+                  if (err.message) {
+                     message = err.message;
+                  }
+                  webix.alert({
+                     title: "Error creating Query ",
+                     ok: "try again",
+                     text: message,
+                     type: "alert-error"
+                  });
 
+                  saveButton.enable();
                   _logic.callbacks.onDone(null);
                });
          }

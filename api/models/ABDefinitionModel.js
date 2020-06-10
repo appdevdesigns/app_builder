@@ -79,7 +79,7 @@ module.exports = {
    },
 
    beforeUpdate: function(values, cb) {
-      cb();
+      ABModelLifecycle.process(`${values.type}.beforeUpdate`, values, cb);
    },
 
    afterCreate: function(newRecord, cb) {
@@ -93,7 +93,8 @@ module.exports = {
          } catch (e) {}
       }
       __AllDefinitions[newRecord.id] = newRecord;
-      cb();
+
+      ABModelLifecycle.process(`${newRecord.type}.afterCreate`, newRecord, cb);
    },
 
    afterUpdate: function(updatedRecord, cb) {
