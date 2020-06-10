@@ -1,22 +1,22 @@
 /*
- * ABFieldDate
+ * ABFieldDateTime
  *
- * An ABFieldDate defines a Date field type.
+ * An ABFieldDateTime defines a Date & Time field type.
  *
  */
 const path = require("path");
 const moment = require("moment");
 
-const ABFieldDateCore = require(path.join(
+const ABFieldDateTimeCore = require(path.join(
    __dirname,
    "..",
    "..",
    "core",
    "dataFields",
-   "ABFieldDateCore.js"
+   "ABFieldDateTimeCore.js"
 ));
 
-module.exports = class ABFieldDate extends ABFieldDateCore {
+module.exports = class ABFieldDateTime extends ABFieldDateTimeCore {
    constructor(values, object) {
       super(values, object);
    }
@@ -27,11 +27,6 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
 
    isValid() {
       var errors = super.isValid();
-
-      // errors = OP.Form.validationError({
-      // 	name:'columnName',
-      // 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
-      // }, errors);
 
       return errors;
    }
@@ -56,7 +51,7 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
                   var currCol;
 
                   // Need to use date time type to support timezone
-                  currCol = t.date(this.columnName);
+                  currCol = t.dateTime(this.columnName);
 
                   // field is required (not null)
                   if (this.settings.required && this.settings.default) {
@@ -66,15 +61,9 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
                   }
 
                   // set default value
-                  if (
-                     this.settings.default &&
-                     moment(this.settings.default).isValid()
-                  ) {
-                     var defaultDate = AppBuilder.rules.toSQLDate(
-                        this.settings.default
-                     );
-
-                     currCol.defaultTo(defaultDate);
+                  let defaultValue = this.getDefaultValue();
+                  if (defaultValue) {
+                     currCol.defaultTo(defaultValue);
                   } else {
                      currCol.defaultTo(null);
                   }
@@ -100,20 +89,6 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
       return this.migrateCreate(knex);
    }
 
-   /**
-    * @function migrateDrop
-    * perform the necessary sql actions to drop this column from the DB table.
-    * @param {knex} knex the Knex connection.
-    */
-   // NOTE: ABField.migrateDrop() is pretty good for most cases.
-   // migrateDrop (knex) {
-   // 	return new Promise(
-   // 		(resolve, reject) => {
-   // 			// do your special drop operations here.
-   // 		}
-   // 	)
-   // }
-
    ///
    /// DB Model Services
    ///
@@ -135,7 +110,7 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
             anyOf: [
                {
                   type: "string",
-                  pattern: AppBuilder.rules.SQLDateRegExp
+                  pattern: AppBuilder.rules.SQLDateTimeRegExp
                },
                { type: "null" },
                {
@@ -157,34 +132,30 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
     * @return {obj} or undefined
     */
    requestParam(allParameters) {
-      var myParameter = super.requestParam(allParameters);
-      if (myParameter) {
-         if (!_.isUndefined(myParameter[this.columnName])) {
-            // not a valid date.
-            if (myParameter[this.columnName] == "") {
-               //// TODO:
-               // for now, just don't return the date.  But in the future decide what to do based upon our
-               // settings:
-               // if required -> return a default value? return null?
-               if (this.settings.required) {
-                  if (this.settings.defaultDateValue)
-                     myParameter[this.columnName] = new Date(
-                        this.settings.defaultDateValue
-                     );
-                  else delete myParameter[this.columnName];
-               }
-               // if !required -> just don't return a value like now?
-               else {
-                  myParameter[this.columnName] = null;
-               }
-            }
-            // convert to SQL date format
-            else if (moment(myParameter[this.columnName]).isValid()) {
-               myParameter[this.columnName] = AppBuilder.rules.toSQLDate(
-                  myParameter[this.columnName]
-               );
-            }
+      let myParameter = super.requestParam(allParameters);
+      if (!myParameter || !myParameter[this.columnName]) return;
+
+      // not a valid date.
+      if (myParameter[this.columnName] == "") {
+         //// TODO:
+         // for now, just don't return the date.  But in the future decide what to do based upon our
+         // settings:
+         // if required -> return a default value? return null?
+         if (this.settings.required) {
+            let defaultValue = this.getDefaultValue();
+            if (defaultValue) myParameter[this.columnName] = defaultValue;
+            else delete myParameter[this.columnName];
          }
+         // if !required -> just don't return a value like now?
+         else {
+            myParameter[this.columnName] = null;
+         }
+      }
+      // convert to SQL date format
+      else if (moment(myParameter[this.columnName]).isValid()) {
+         myParameter[this.columnName] = AppBuilder.rules.toSQLDateTime(
+            myParameter[this.columnName]
+         );
       }
 
       return myParameter;
@@ -207,6 +178,40 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
       // check null
       if (!data) return data;
 
-      return AppBuilder.rules.toSQLDate(data);
+      return AppBuilder.rules.toSQLDateTime(data);
+   }
+
+   getDefaultValue() {
+      if (!this.settings.defaultDateValue && this.settings.defaultTimeValue)
+         return null;
+
+      let result = moment().utc();
+
+      // Date
+      if (this.settings.defaultDateValue) {
+         let defaultDate = moment(this.settings.defaultDateValue);
+         if (defaultDate && defaultDate.isValid()) {
+            defaultDate = defaultDate.utc(); // Convert to UTC
+
+            // Set year, month, date
+            result.year(defaultDate.year());
+            result.month(defaultDate.month());
+            result.date(defaultDate.date());
+         }
+      }
+
+      // Time
+      if (this.settings.defaultTimeValue) {
+         let defaultTime = moment(this.settings.defaultTimeValue);
+         if (defaultTime && defaultTime.isValid()) {
+            defaultTime = defaultTime.utc(); // Convert to UTC
+
+            // Set hour, minutes
+            result.hour(defaultTime.hour());
+            result.minute(defaultTime.minute());
+         }
+      }
+
+      return AppBuilder.rules.toSQLDateTime(result);
    }
 };

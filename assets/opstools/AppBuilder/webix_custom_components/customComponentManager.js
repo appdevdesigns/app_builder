@@ -16,6 +16,7 @@ const FocusableTemplate = require("./focusableTemplate");
 const FormIOBuilder = require("./formioBuilder");
 const FormIOPreview = require("./formioPreview");
 const NumberText = require("./numbertext");
+const TimePicker = require("./timepicker");
 const TotalFooter = require("./totalfooter");
 const TreeSuggest = require("./treesuggest");
 // const SavableLayout = require('./savablelayout');
@@ -31,6 +32,7 @@ var componentList = [
    FormIOBuilder,
    FormIOPreview,
    NumberText,
+   TimePicker,
    TotalFooter,
    TreeSuggest
    // SavableLayout
