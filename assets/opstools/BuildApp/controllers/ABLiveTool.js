@@ -644,6 +644,14 @@ steal(
                            "amp_accordion_" + self.containerDomID
                         ).config.roles.push(role);
 
+                        var toggleParent = (element) => {
+                           if (!element.parent) return false;
+                           var parentElem = element.parent;
+                           if (!parentElem.parent) return false;
+                           parentElem.parent.emit("changeTab", parentElem.id);
+                           toggleParent(parentElem.parent);
+                        };
+
                         var tree = {
                            id: "linetree_" + self.containerDomID + "_" + role,
                            view: "edittree",
@@ -698,22 +706,29 @@ steal(
                                  if (item.type == "tab") {
                                     self.showPage(item.pageId);
 
-                                    var redirectPage = self.rootPage.application.pages(
-                                       (p) => p.id == item.pageId,
-                                       true
-                                    )[0];
-                                    if (!redirectPage) return false;
-
-                                    var tabView = redirectPage.views(
-                                       (v) => v.id == item.id,
-                                       true
+                                    var tabView = self.rootPage.application.views(
+                                       (v) => v.id == item.id
                                     )[0];
                                     if (!tabView) return false;
 
                                     var tab = tabView.parent;
                                     if (!tab) return false;
 
-                                    tab.emit("changeTab", tabView.id);
+                                    toggleParent(tab);
+                                    if (
+                                       !$$(tabView.id) ||
+                                       !$$(tabView.id).isVisible()
+                                    ) {
+                                       var showIt = setInterval(function() {
+                                          if (
+                                             $$(tabView.id) &&
+                                             $$(tabView.id).isVisible()
+                                          ) {
+                                             clearInterval(showIt);
+                                          }
+                                          tab.emit("changeTab", tabView.id);
+                                       }, 200);
+                                    }
                                  }
                                  // switch page
                                  else {
