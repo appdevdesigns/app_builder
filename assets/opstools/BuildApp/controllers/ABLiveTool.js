@@ -1504,8 +1504,11 @@ steal(
                         var activePageDomId = self.getPageDomID(
                            self.activePageId
                         );
-                        if ($$(activePageDomId) && $$(activePageDomId).hide)
+                        if ($$(activePageDomId) && $$(activePageDomId).hide) {
                            $$(activePageDomId).hide();
+                           // tell the UI that the previous page is the active page
+                           self.activePageId = self.previousPageId;
+                        }
 
                         if (
                            pageId &&
