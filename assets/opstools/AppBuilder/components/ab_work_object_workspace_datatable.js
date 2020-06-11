@@ -1237,7 +1237,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                // check if the previous datatable had rule popups and remove them
                if (dataTable.config.rulePops) {
                   dataTable.config.rulePops.forEach((popup) => {
-                     $$(popup).destructor();
+                     if ($$(popup)) $$(popup).destructor();
                   });
                }
                // remove any validation rules from the previous table
