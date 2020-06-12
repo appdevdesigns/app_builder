@@ -208,7 +208,16 @@ module.exports = class ABViewChartArea extends ABViewChartAreaCore {
                     "px;'>#label#</div>"
                   : ""
          },
-         // legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
+         legend:
+            this.settings.isLegend == true
+               ? {
+                    template:
+                       "<div style='font-size:" +
+                       this.settings.labelFontSize +
+                       "px;'>#label#</div>",
+                    values: [] // TODO : bug in webix 5.1.7
+                 }
+               : null,
          series: [
             {
                alpha: 0.7,

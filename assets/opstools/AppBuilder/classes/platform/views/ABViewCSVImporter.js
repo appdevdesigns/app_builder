@@ -322,9 +322,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                click: () => {
                   _logic.showPopup();
                }
-            },
-            {
-               fillspace: true
             }
          ]
       };
@@ -423,6 +420,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             {
                id: ids.datatable,
                view: "datatable",
+               editable: true,
+               editaction: "dblclick",
                css: "ab-csv-importer",
                width: 650,
                columns: []
@@ -573,6 +572,9 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   break;
                case "invalid":
                   template = "<span class='fa fa-exclamation-triangle'></span>";
+                  break;
+               case "valid":
+                  template = "<span class='fa fa-check'></span>";
                   break;
                case "done":
                   template = "<span class='fa fa-check'></span>";
@@ -812,6 +814,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                columns.push({
                   id: f.columnIndex,
                   header: f.field.label,
+                  editor: "text",
                   fillspace: true
                });
             });
@@ -1034,9 +1037,10 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   });
 
                   // highlight the row
+                  $datatable.removeRowCss(itemId, "row-pass");
                   $datatable.addRowCss(itemId, "row-warn");
                }
-               increaseProgressing();
+               // increaseProgressing();
             };
 
             let itemPass = (itemId) => {
@@ -1049,6 +1053,39 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   $datatable.addRowCss(itemId, "row-pass");
                }
                increaseProgressing();
+            };
+
+            let itemValid = (itemId) => {
+               let $datatable = $$(ids.datatable);
+               if ($datatable) {
+                  // mark all columns valid (just in case they were invalid before)
+                  matchFields.forEach((f) => {
+                     $datatable.removeCellCss(
+                        itemId,
+                        f.columnIndex,
+                        "cell-invalid"
+                     );
+                  });
+                  // highlight the row
+                  $datatable.removeRowCss(itemId, "row-warn");
+                  $datatable.addRowCss(itemId, "row-pass");
+               }
+            };
+
+            let uiCleanUp = () => {
+               // To Do anyUI updates
+               $$(ids.importButton).enable();
+
+               // Hide loading cursor
+               $$(ids.form).hideProgress();
+               $$(ids.progressBar).hideProgress();
+               $$(ids.statusMessage).setValue("");
+               $$(ids.statusMessage).hide();
+
+               // _logic.hide();
+
+               if (_logic.callbacks && _logic.callbacks.onDone)
+                  _logic.callbacks.onDone();
             };
 
             // Set parent's data collection cursor
@@ -1068,7 +1105,11 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                linkValueId = dcLink.getCursor().id;
             }
 
-            let tasks = [];
+            let allValid = true;
+            let validRows = [];
+            // Pre Check Validations of whole CSV import
+            // update row to green if valid
+            // update row to red if !valid
             (selectedRows || []).forEach((data, index) => {
                let newRowData = {};
 
@@ -1087,9 +1128,9 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   if (!f.field || !f.field || !f.field.key) return;
 
                   switch (f.field.key) {
-                     case "connectObject":
-                        // skip
-                        break;
+                     // case "connectObject":
+                     //    // skip
+                     //    break;
                      case "number":
                         newRowData[f.field.columnName] = (
                            data[f.columnIndex] || ""
@@ -1103,155 +1144,544 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
                let isValid = false;
 
-               let startUpdateTime;
+               let validator = _currentObject.isValidData(newRowData);
+               isValid = validator.pass();
 
-               tasks.push((indexTask) => {
-                  return (
-                     Promise.resolve()
-                        // validate data
-                        .then(
-                           () =>
-                              new Promise((next, err) => {
-                                 startUpdateTime = new Date();
-
-                                 // scroll to the item
-                                 $$(ids.datatable).showItem(data.id);
-                                 $$(ids.datatable).updateItem(data.id, {
-                                    _status: "in-progress"
-                                 });
-
-                                 let validator = _currentObject.isValidData(
-                                    newRowData
-                                 );
-                                 isValid = validator.pass();
-                                 if (!isValid) {
-                                    itemInvalid(data.id, validator.errors);
-                                 }
-
-                                 next();
-                              })
-                        )
-                        // pull .id of the link object
-                        .then(
-                           () =>
-                              new Promise((next, err) => {
-                                 if (!isValid) return next();
-
-                                 let searchTasks = [];
-                                 let connectedFields = matchFields.filter(
-                                    (f) =>
-                                       f &&
-                                       f.field &&
-                                       f.field.key == "connectObject" &&
-                                       f.searchField
-                                 );
-                                 (connectedFields || []).forEach((f) => {
-                                    let connectField = f.field;
-                                    let searchField = f.searchField;
-                                    let searchWord = data[f.columnIndex];
-
-                                    let connectObject =
-                                       connectField.datasourceLink;
-                                    if (!connectObject) return;
-
-                                    let connectModel = connectObject.model();
-                                    if (!connectModel) return;
-
-                                    searchTasks.push(
-                                       new Promise((go, bad) => {
-                                          connectModel
-                                             .findAll({
-                                                where: {
-                                                   glue: "and",
-                                                   rules: [
-                                                      {
-                                                         key: searchField.id,
-                                                         rule: "equals",
-                                                         value: searchWord
-                                                      }
-                                                   ]
-                                                }
-                                             })
-                                             .catch((errMessage) => go())
-                                             .then((list) => {
-                                                if (list && list.data[0]) {
-                                                   let linkIdKey = connectField.indexField
-                                                      ? connectField.indexField
-                                                           .columnName
-                                                      : connectField.object.PK();
-                                                   newRowData[
-                                                      connectField.columnName
-                                                   ] = {};
-                                                   newRowData[
-                                                      connectField.columnName
-                                                   ][linkIdKey] =
-                                                      list.data[0][linkIdKey];
-                                                }
-                                                go();
-                                             });
-                                       })
-                                    );
-                                 });
-
-                                 Promise.all(searchTasks)
-                                    .catch(err)
-                                    .then(() => next());
-                              })
-                        )
-
-                        // insert data
-                        .then(
-                           () =>
-                              new Promise((next, err) => {
-                                 if (!isValid) return next();
-
-                                 objModel
-                                    .create(newRowData)
-                                    .catch((errMessage) => {
-                                       itemFailed(data.id, errMessage);
-                                       next();
-                                    })
-                                    .then((insertedRow) => {
-                                       if (insertedRow) {
-                                          newRowData.id =
-                                             insertedRow.id || insertedRow.uuid;
-                                          next(true);
-                                       } else {
-                                          next(false);
-                                       }
-                                    });
-                              })
-                        )
-
-                        // process record rule
-                        .then(
-                           (isCreated) =>
-                              new Promise((next, err) => {
-                                 if (!isCreated || !isValid) return next();
-
-                                 // Process Record Rule
-                                 this.doRecordRules(newRowData)
-                                    .then(() => {
-                                       itemPass(data.id);
-
-                                       _logic.refreshRemainingTimeText(
-                                          startUpdateTime,
-                                          tasks.length,
-                                          indexTask
-                                       );
-
-                                       next();
-                                    })
-                                    .catch((errMessage) => {
-                                       itemFailed(data.id, errMessage);
-                                       next();
-                                    });
-                              })
-                        )
-                  );
-               });
+               if (isValid) {
+                  itemValid(data.id);
+                  validRows.push({ id: data.id, data: newRowData });
+               } else {
+                  allValid = false;
+                  itemInvalid(data.id, validator.errors);
+               }
             });
 
+            if (!allValid) {
+               // To Do anyUI updates
+               // $$(ids.importButton).enable();
+               //
+               // // Hide loading cursor
+               // $$(ids.form).hideProgress();
+               // $$(ids.progressBar).hideProgress();
+               // $$(ids.statusMessage).setValue("");
+               // $$(ids.statusMessage).hide();
+               //
+               // // _logic.hide();
+               //
+               // if (_logic.callbacks && _logic.callbacks.onDone)
+               //    _logic.callbacks.onDone();
+               uiCleanUp();
+
+               webix.alert({
+                  title: "Invalid Data",
+                  ok: "Okay",
+                  text:
+                     "One or more items failed validation. Doubleclick record to correct or uncheck record to exclude from import."
+               });
+
+               return Promise.resolve();
+            }
+
+            // if pass, then continue to process each row
+            // ?? : can we process in Parallel?
+            // ?? : implement hash Lookups for connected Fields
+            var hashLookups = {};
+            // {obj}  /*  { connectField.id : { 'searchWord' : "uuid"}}
+            // use this hash to reduce the # of lookups needed to fill in our
+            // connected entries
+
+            let connectedFields = matchFields.filter(
+               (f) =>
+                  f &&
+                  f.field &&
+                  f.field.key == "connectObject" &&
+                  f.searchField
+            );
+
+            let startUpdateTime = new Date();
+            var numDone = 0;
+            return Promise.resolve()
+               .then(() => {
+                  // forEach connectedFields in csv
+
+                  var allLookups = [];
+
+                  (connectedFields || []).forEach((f) => {
+                     let connectField = f.field;
+                     let searchField = f.searchField;
+                     // let searchWord = newRowData[f.columnIndex];
+
+                     let connectObject = connectField.datasourceLink;
+                     if (!connectObject) return;
+
+                     let connectModel = connectObject.model();
+                     if (!connectModel) return;
+
+                     let linkIdKey = connectField.indexField
+                        ? connectField.indexField.columnName
+                        : connectField.object.PK();
+
+                     // prepare default hash entry:
+                     hashLookups[connectField.id] = {};
+
+                     // load all values of connectedField entries
+
+                     allLookups.push(
+                        connectModel
+                           .findAll()
+                           .catch((errMessage) => {
+                              console.error(errMessage);
+                           })
+                           .then((list) => {
+                              if (list.data) {
+                                 list = list.data;
+                              }
+                              (list || []).forEach((row) => {
+                                 // store in hash[field.id] = { 'searchKey' : "uuid" }
+
+                                 hashLookups[connectField.id][
+                                    row[searchField.columnName]
+                                 ] = row[linkIdKey];
+                              });
+                           })
+                     );
+                  });
+
+                  return Promise.all(allLookups);
+               })
+               .then(() => {
+                  // forEach validRow
+                  validRows.forEach((data) => {
+                     let newRowData = data.data;
+
+                     // update the datagrid row to in-progress
+                     $$(ids.datatable).updateItem(data.id, {
+                        _status: "in-progress"
+                     });
+
+                     // forEach ConnectedField
+                     (connectedFields || []).forEach((f) => {
+                        // find newRowData[field.columnName] = { field.PK : hash[field.id][searchWord] }
+                        let connectField = f.field;
+                        let linkIdKey = connectField.indexField
+                           ? connectField.indexField.columnName
+                           : connectField.object.PK();
+                        var uuid =
+                           hashLookups[connectField.id][
+                              newRowData[connectField.columnName]
+                           ];
+
+                        if (!uuid) {
+                           itemInvalid(data.id, [
+                              { name: connectField.columnName }
+                           ]);
+                           allValid = false;
+                        }
+
+                        newRowData[connectField.columnName] = {};
+                        newRowData[connectField.columnName][linkIdKey] = uuid;
+                     });
+                  });
+               })
+               .then(() => {
+                  if (!allValid) {
+                     webix.alert({
+                        title: "Invalid Data",
+                        ok: "Okay",
+                        text:
+                           "One or more connected records referenced an unknown item."
+                     });
+
+                     return Promise.resolve();
+                  }
+                  // NOTE: Parallel exectuion of all these:
+                  var allSaves = [];
+
+                  validRows.forEach((data) => {
+                     let newRowData = data.data;
+
+                     allSaves.push(
+                        objModel
+                           .create(newRowData)
+                           .catch((errMessage) => {
+                              itemFailed(data.id, errMessage);
+                           })
+                           .then((insertedRow) => {
+                              if (insertedRow) {
+                                 newRowData.id =
+                                    insertedRow.id || insertedRow.uuid;
+                                 return true;
+                              }
+                              return false;
+                           })
+                           .then(
+                              (isCreated) =>
+                                 new Promise((next, err) => {
+                                    if (!isCreated) return next();
+
+                                    // Process Record Rule
+                                    this.doRecordRules(newRowData)
+                                       .then(() => {
+                                          itemPass(data.id);
+
+                                          _logic.refreshRemainingTimeText(
+                                             startUpdateTime,
+                                             validRows.length,
+                                             numDone++
+                                          );
+
+                                          next();
+                                       })
+                                       .catch((errMessage) => {
+                                          itemFailed(data.id, errMessage);
+                                          next();
+                                       });
+                                 })
+                           )
+                     );
+                  });
+
+                  return Promise.all(allSaves);
+               })
+               .then(() => {
+                  // resolve Successful UI
+                  // _logic.formClear();
+                  // $$(ids.importButton).enable();
+                  //
+                  // // Hide loading cursor
+                  // $$(ids.form).hideProgress();
+                  // $$(ids.progressBar).hideProgress();
+                  // $$(ids.statusMessage).setValue("");
+                  // $$(ids.statusMessage).hide();
+                  //
+                  // // _logic.hide();
+                  //
+                  // if (_logic.callbacks && _logic.callbacks.onDone)
+                  //    _logic.callbacks.onDone();
+
+                  uiCleanUp();
+               })
+               .catch((err) => {
+                  // resolve Error UI
+                  webix.alert({
+                     title: "Error Creating Records",
+                     ok: "Okay",
+                     text: "One or more records failed upon creation."
+                  });
+                  uiCleanUp();
+                  console.error(err);
+               });
+
+            // update the datagrid row to
+
+            // newRowData[connectField.columnName] = { connectField.PK : 'uuid'}
+
+            /*
+            let tasks = [];
+            if (allValid) {
+               (validRows || []).forEach((data, index) => {
+                  let newRowData = data.data;
+                  let startUpdateTime;
+
+                  tasks.push((indexTask) => {
+                     return (
+                        Promise.resolve()
+                           .then(
+                              () =>
+                                 new Promise((next, err) => {
+                                    startUpdateTime = new Date();
+
+                                    $$(ids.datatable).updateItem(data.id, {
+                                       _status: "in-progress"
+                                    });
+
+                                    let searchTasks = [];
+                                    let connectedFields = matchFields.filter(
+                                       (f) =>
+                                          f &&
+                                          f.field &&
+                                          f.field.key == "connectObject" &&
+                                          f.searchField
+                                    );
+                                    (connectedFields || []).forEach((f) => {
+                                       let connectField = f.field;
+                                       let searchField = f.searchField;
+                                       let searchWord =
+                                          newRowData[f.columnIndex];
+
+                                       let connectObject =
+                                          connectField.datasourceLink;
+                                       if (!connectObject) return;
+
+                                       let connectModel = connectObject.model();
+                                       if (!connectModel) return;
+
+                                       searchTasks.push(
+                                          new Promise((go, bad) => {
+                                             connectModel
+                                                .findAll({
+                                                   where: {
+                                                      glue: "and",
+                                                      rules: [
+                                                         {
+                                                            key: searchField.id,
+                                                            rule: "equals",
+                                                            value: searchWord
+                                                         }
+                                                      ]
+                                                   }
+                                                })
+                                                .catch((errMessage) => go())
+                                                .then((list) => {
+                                                   if (list && list.data[0]) {
+                                                      let linkIdKey = connectField.indexField
+                                                         ? connectField
+                                                              .indexField
+                                                              .columnName
+                                                         : connectField.object.PK();
+                                                      newRowData[
+                                                         connectField.columnName
+                                                      ] = {};
+                                                      // newRowData[connectField.columnName] = { connectField.PK : 'uuid'}
+                                                      newRowData[
+                                                         connectField.columnName
+                                                      ][linkIdKey] =
+                                                         list.data[0][
+                                                            linkIdKey
+                                                         ];
+                                                   }
+                                                   go();
+                                                });
+                                          })
+                                       );
+                                    });
+
+                                    Promise.all(searchTasks)
+                                       .catch(err)
+                                       .then(() => next());
+                                 })
+                           )
+
+                           // insert data
+                           .then(
+                              () =>
+                                 new Promise((next, err) => {
+                                    objModel
+                                       .create(newRowData)
+                                       .catch((errMessage) => {
+                                          itemFailed(data.id, errMessage);
+                                          next();
+                                       })
+                                       .then((insertedRow) => {
+                                          if (insertedRow) {
+                                             newRowData.id =
+                                                insertedRow.id ||
+                                                insertedRow.uuid;
+                                             next(true);
+                                          } else {
+                                             next(false);
+                                          }
+                                       });
+                                 })
+                           )
+
+                           // process record rule
+                           .then(
+                              (isCreated) =>
+                                 new Promise((next, err) => {
+                                    if (!isCreated) return next();
+
+                                    // Process Record Rule
+                                    this.doRecordRules(newRowData)
+                                       .then(() => {
+                                          itemPass(data.id);
+
+                                          _logic.refreshRemainingTimeText(
+                                             startUpdateTime,
+                                             tasks.length,
+                                             indexTask
+                                          );
+
+                                          next();
+                                       })
+                                       .catch((errMessage) => {
+                                          itemFailed(data.id, errMessage);
+                                          next();
+                                       });
+                                 })
+                           )
+                     );
+                  });
+               });
+            }
+            
+*/
+
+            // Working Example:
+            //
+            // let tasks = [];
+            // if (allValid) {
+            //    (validRows || []).forEach((data, index) => {
+            //       let newRowData = data.data;
+            //       let startUpdateTime;
+            //
+            //       tasks.push((indexTask) => {
+            //          return (
+            //             Promise.resolve()
+            //                .then(
+            //                   () =>
+            //                      new Promise((next, err) => {
+            //                         startUpdateTime = new Date();
+            //
+            //                         $$(ids.datatable).updateItem(data.id, {
+            //                            _status: "in-progress"
+            //                         });
+            //
+            //                         let searchTasks = [];
+            //                         let connectedFields = matchFields.filter(
+            //                            (f) =>
+            //                               f &&
+            //                               f.field &&
+            //                               f.field.key == "connectObject" &&
+            //                               f.searchField
+            //                         );
+            //                         (connectedFields || []).forEach((f) => {
+            //                            let connectField = f.field;
+            //                            let searchField = f.searchField;
+            //                            let searchWord =
+            //                               newRowData[f.columnIndex];
+            //
+            //                            let connectObject =
+            //                               connectField.datasourceLink;
+            //                            if (!connectObject) return;
+            //
+            //                            let connectModel = connectObject.model();
+            //                            if (!connectModel) return;
+            //
+            //                            searchTasks.push(
+            //                               new Promise((go, bad) => {
+            //                                  connectModel
+            //                                     .findAll({
+            //                                        where: {
+            //                                           glue: "and",
+            //                                           rules: [
+            //                                              {
+            //                                                 key: searchField.id,
+            //                                                 rule: "equals",
+            //                                                 value: searchWord
+            //                                              }
+            //                                           ]
+            //                                        }
+            //                                     })
+            //                                     .catch((errMessage) => go())
+            //                                     .then((list) => {
+            //                                        if (list && list.data[0]) {
+            //                                           let linkIdKey = connectField.indexField
+            //                                              ? connectField
+            //                                                   .indexField
+            //                                                   .columnName
+            //                                              : connectField.object.PK();
+            //                                           newRowData[
+            //                                              connectField.columnName
+            //                                           ] = {};
+            //                                           // newRowData[connectField.columnName] = { connectField.PK : 'uuid'}
+            //                                           newRowData[
+            //                                              connectField.columnName
+            //                                           ][linkIdKey] =
+            //                                              list.data[0][
+            //                                                 linkIdKey
+            //                                              ];
+            //                                        }
+            //                                        go();
+            //                                     });
+            //                               })
+            //                            );
+            //                         });
+            //
+            //                         Promise.all(searchTasks)
+            //                            .catch(err)
+            //                            .then(() => next());
+            //                      })
+            //                )
+            //
+            //                // insert data
+            //                .then(
+            //                   () =>
+            //                      new Promise((next, err) => {
+            //                         objModel
+            //                            .create(newRowData)
+            //                            .catch((errMessage) => {
+            //                               itemFailed(data.id, errMessage);
+            //                               next();
+            //                            })
+            //                            .then((insertedRow) => {
+            //                               if (insertedRow) {
+            //                                  newRowData.id =
+            //                                     insertedRow.id ||
+            //                                     insertedRow.uuid;
+            //                                  next(true);
+            //                               } else {
+            //                                  next(false);
+            //                               }
+            //                            });
+            //                      })
+            //                )
+            //
+            //                // process record rule
+            //                .then(
+            //                   (isCreated) =>
+            //                      new Promise((next, err) => {
+            //                         if (!isCreated) return next();
+            //
+            //                         // Process Record Rule
+            //                         this.doRecordRules(newRowData)
+            //                            .then(() => {
+            //                               itemPass(data.id);
+            //
+            //                               _logic.refreshRemainingTimeText(
+            //                                  startUpdateTime,
+            //                                  tasks.length,
+            //                                  indexTask
+            //                               );
+            //
+            //                               next();
+            //                            })
+            //                            .catch((errMessage) => {
+            //                               itemFailed(data.id, errMessage);
+            //                               next();
+            //                            });
+            //                      })
+            //                )
+            //          );
+            //       });
+            //    });
+            // }
+
+            // action Parallel
+            /*
+            var runningTasks = [];
+            tasks.forEach((task, indx) => {
+               runningTasks.push(task(indx));
+            });
+            return Promise.all(runningTasks).then(() => {
+               // _logic.formClear();
+               $$(ids.importButton).enable();
+
+               // Hide loading cursor
+               $$(ids.form).hideProgress();
+               $$(ids.progressBar).hideProgress();
+               $$(ids.statusMessage).setValue("");
+               $$(ids.statusMessage).hide();
+
+               // _logic.hide();
+
+               if (_logic.callbacks && _logic.callbacks.onDone)
+                  _logic.callbacks.onDone();
+
+               return Promise.resolve();
+            });
+            */
+            /*         
             // action sequentially
             return tasks
                .reduce((promiseChain, currTask, idx) => {
@@ -1274,6 +1704,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
                   return Promise.resolve();
                });
+   */
          }
       });
 
