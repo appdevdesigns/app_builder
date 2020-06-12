@@ -1145,3 +1145,6 @@ div.amp .fa-unlock-alt {
 .transparentBG .webix_el_tabbar+.webix_multiview {
    background: transparent !important;
 }
+.webix_hcell .fa {
+    opacity: 0.4;
+}
