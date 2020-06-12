@@ -3223,7 +3223,7 @@ module.exports = {
 
          ABApplication.find(cond)
             .then((list) => {
-               list.forEach((l) => {
+               (list || []).forEach((l) => {
                   var listMA = l.toABClass().mobileApps();
 
                   //// NOTE: at this point each listMA entry is an instance of ABMobileApp

@@ -39,6 +39,10 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
    do(instance) {
       return new Promise((resolve, reject) => {
          var myState = this.myState(instance);
+         this.balanceRecordsProcessed = {};
+         // { balanceRecord.id : balanceRecord.id }
+         // a hash of the balance records that were updated from this batch of
+         // journal entries.  This will be used at the end to perform the recalculations
 
          // get the current Batch Data from the process
          var currentProcessValues = this.hashProcessDataValues(instance);
@@ -81,72 +85,76 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             },
             populate: true
          };
-         batchObj
-            .modelAPI()
-            .findAll(cond)
-            .then((rows) => {
-               if (!rows || rows.length != 1) {
-                  var msg = `unable to find Batch data for batchID[${currentBatchID}]`;
-                  this.log(instance, msg);
-                  var error = new Error("AccountBatchProcessing.do(): " + msg);
-                  reject(error);
-                  return;
-               }
 
-               var batchEntry = rows[0];
-               var financialPeriod =
-                  batchEntry[fieldBatchFinancialPeriod.columnName];
-               var journalEntries =
-                  batchEntry[fieldBatchEntries.relationName()] || [];
+         //
+         // Main Work Chain
+         //
+         Promise.resolve()
+            .then(() => {
+               // prepare Account Lookup
+               // pull a list of all Accounts in system
+               var jeObject = this.application.objects(
+                  (o) => o.id == this.objectJE
+               )[0];
+               var fieldJEAccount = jeObject.fields(
+                  (f) => f.id == this.fieldJEAccount
+               )[0];
+               var accountObject = fieldJEAccount.datasourceLink;
 
-               // // Process Each Journal Entry Sequentially
-               // var processEntry = (cb) => {
-               //    if (journalEntries.length == 0) {
-               //       cb();
-               //    } else {
-               //       var je = journalEntries.shift();
-               //       this.processJournalEntry(je, financialPeriod)
-               //          .then(() => {
-               //             processEntry(cb);
-               //          })
-               //          .catch((error) => {
-               //             cb(error);
-               //          });
-               //    }
-               // };
-               // processEntry((err) => {
-               //    if (err) {
-               //       reject(err);
-               //       return;
-               //    }
+               return accountObject
+                  .modelAPI()
+                  .findAll({ where: {}, populate: true })
+                  .then((list) => {
+                     this.allAccountRecords = list;
+                  });
+            })
+            .then(() => {
+               return batchObj
+                  .modelAPI()
+                  .findAll(cond)
+                  .then((rows) => {
+                     if (!rows || rows.length != 1) {
+                        var msg = `unable to find Batch data for batchID[${currentBatchID}]`;
+                        this.log(instance, msg);
+                        var error = new Error(
+                           "AccountBatchProcessing.do(): " + msg
+                        );
+                        reject(error);
+                        return;
+                     }
 
-               //    this.stateCompleted(instance);
-               //    // pass true to indicate we are done
-               //    resolve(true);
-               // });
+                     var batchEntry = rows[0];
+                     var financialPeriod =
+                        batchEntry[fieldBatchFinancialPeriod.columnName];
+                     var journalEntries =
+                        batchEntry[fieldBatchEntries.relationName()] || [];
 
-               // for parallel operation:
-               var allEntries = [];
-               journalEntries.forEach((je) => {
-                  allEntries.push(
-                     this.processJournalEntry(je, financialPeriod)
-                  );
-               });
+                     // for parallel operation:
+                     var allEntries = [];
+                     journalEntries.forEach((je) => {
+                        allEntries.push(
+                           this.processJournalEntry(je, financialPeriod)
+                        );
+                     });
 
-               Promise.all(allEntries)
-                  .then(() => {
-                     resolve();
+                     return Promise.all(allEntries);
                   })
                   .catch((error) => {
+                     this.log(
+                        instance,
+                        `error finding Batch data for batchID[${currentBatchID}]`
+                     );
                      this.log(instance, error.toString());
                      reject(error);
                   });
             })
+            .then(() => {
+               return this.recalculateBalances();
+            })
+            .then(() => {
+               resolve();
+            })
             .catch((error) => {
-               this.log(
-                  instance,
-                  `error finding Batch data for batchID[${currentBatchID}]`
-               );
                this.log(instance, error.toString());
                reject(error);
             });
@@ -206,6 +214,10 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             });
       });
    }
+
+   // Get Account Entry
+   //    figure out which Account.category field ()
+   //
 
    processBalanceRecord(financialPeriodID, AccountID, RCID, journalEntry) {
       //         get BalanceRecord
@@ -280,7 +292,8 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                   }
 
                   var balValues = {
-                     uuid: uuid()
+                     uuid: uuid(),
+                     "Starting Balance": 0
                   };
                   balValues[
                      fieldBRFinancialPeriod.columnName
@@ -331,46 +344,50 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      fieldBREntries.columnName
                   );
 
+                  var brID = balanceRecord[brObject.PK()];
                   brObject
                      .modelAPI()
-                     .relate(
-                        balanceRecord[brObject.PK()],
-                        fieldBREntries.id,
+                     .relate(brID, fieldBREntries.id, journalEntry)
+                     .catch((err) => done(err))
+                     .then(() => {
+                        this.balanceRecordsProcessed[brID] = brID;
+                        done();
+                     });
+               },
+
+               (done) => {
+                  // find Account 3991
+                  var acct3991 = this.allAccountRecords.find(
+                     (a) => a["Acct Num"] == 3991
+                  );
+                  if (!acct3991) {
+                     done();
+                     return;
+                  }
+
+                  // if this account is ! Account3991
+                  if (AccountID == acct3991.uuid) {
+                     done();
+                     return;
+                  }
+
+                  // if this was a JE that was either an Income or Expnse Account
+                  var jeType = this.lookupAccountType(journalEntry);
+                  if (jeType == "income" || jeType == "expenses") {
+                     // perform another processBalanceRecord( with account3991)
+                     this.processBalanceRecord(
+                        financialPeriodID,
+                        acct3991.uuid,
+                        RCID,
                         journalEntry
                      )
-                     .catch((err) => reject(err))
-                     .then(() => {
-                        resolve();
-                     });
-
-                  // this one works!!!
-                  /*
-                  balanceRecord
-                     .$relatedQuery(relationName)
-                     .relate(journalEntry)
-                     .catch((err) => reject(err))
-                     .then(() => {
-                        resolve();
-                     });
-                     */
-                  // balanceRecord
-                  //    .$appendRelated(relationName, journalEntry)
-                  //    .$query()
-                  //    .patch()
-                  //    .then(() => {
-                  //       done();
-                  //    })
-                  //    .catch((error) => {
-                  //       done(error);
-                  //    });
-
-                  // brObject
-                  //    .modelAPI()
-                  //    .update(balanceRecord[brObject.PK()], balanceRecord)
-                  //    .then((updatedValues) => {
-                  //       done();
-                  //    })
-                  //    .catch((error) => {});
+                        .then(() => {
+                           done();
+                        })
+                        .catch(done);
+                  } else {
+                     done();
+                  }
                }
             ],
             (err) => {
@@ -382,5 +399,116 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             }
          );
       });
+   }
+
+   recalculateBalances() {
+      var allBalanceRecords = [];
+
+      var brObject = this.application.objects((o) => o.id == this.objectBR)[0];
+
+      return Promise.resolve()
+         .then(() => {
+            // pull fully populated Balance Records that were updated on this run
+
+            var allIDs = Object.keys(this.balanceRecordsProcessed);
+            var cond = {
+               where: {
+                  glue: "and",
+                  rules: [{ key: brObject.PK(), rule: "in", value: allIDs }]
+               },
+               populate: true
+            };
+            return brObject
+               .modelAPI()
+               .findAll(cond)
+               .then((list) => {
+                  allBalanceRecords = list;
+               });
+         })
+         .then(() => {})
+         .then(() => {
+            var allUpdates = [];
+
+            // for each balanceRecord
+            (allBalanceRecords || []).forEach((balanceRecord) => {
+               // runningBalance = startingBalance
+               // totalCredit, totalDebit = 0;
+               var runningBalance = balanceRecord["Starting Balance"];
+               var totalCredit = 0;
+               var totalDebit = 0;
+
+               // for each JournalEntry
+               var fieldJE = brObject.fields(
+                  (f) => f.id == this.fieldBREntries
+               )[0];
+               (fieldJE.pullRelationValues(balanceRecord) || []).forEach(
+                  (journalEntry) => {
+                     // lookup the Account type
+                     var accountType = this.lookupAccountType(journalEntry);
+                     switch (accountType) {
+                        // case: "asset" || "expense"
+                        case "assets":
+                        case "expenses":
+                           // runningBalance = runningBalance - JE.credit + JE.debit
+                           runningBalance +=
+                              journalEntry["Debit"] - journalEntry["Credit"];
+                           break;
+
+                        // case: Liabilities, Equity, Income
+                        case "liabilities":
+                        case "equity":
+                        case "income":
+                           // runningBalance = runningBalance - JE.debit + JE.credit
+                           runningBalance +=
+                              journalEntry["Credit"] - journalEntry["Debit"];
+                           break;
+                     }
+
+                     // totalCredit += JE.credit
+                     totalCredit += journalEntry["Credit"];
+
+                     // totalDebit += JE.debit
+                     totalDebit += journalEntry["Debit"];
+                  }
+               );
+
+               // update BalanceRecord
+               balanceRecord["Running Balance"] = runningBalance;
+               balanceRecord["Credit"] = totalCredit;
+               balanceRecord["Debit"] = totalDebit;
+
+               allUpdates.push(
+                  brObject
+                     .modelAPI()
+                     .update(balanceRecord[brObject.PK()], balanceRecord)
+               );
+            });
+
+            return Promise.all(allUpdates);
+         });
+   }
+
+   lookupAccountType(journalEntry) {
+      // find the Account
+      var type = "";
+      var jeObject = this.application.objects((o) => o.id == this.objectJE)[0];
+      var fieldJEAccount = jeObject.fields(
+         (f) => f.id == this.fieldJEAccount
+      )[0];
+
+      var accountObject = fieldJEAccount.datasourceLink;
+      var categoryOptions = accountObject
+         .fields((f) => f.columnName == "Category")[0]
+         .options();
+
+      var account = this.allAccountRecords.find(
+         (a) => a.uuid == journalEntry[fieldJEAccount.columnName]
+      );
+
+      var categoryOption = categoryOptions.find(
+         (o) => o.id == account["Category"]
+      );
+      type = categoryOption.text;
+      return type.toLowerCase();
    }
 };
