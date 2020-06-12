@@ -525,6 +525,7 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
       var application = view.application;
       var currentPage = view.pageParent();
       var parentPage = currentPage.pageParent();
+      var rootPage = view.pageRoot();
 
       /**
        * @method addPage
@@ -572,12 +573,7 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
       };
 
       application
-         .pages(
-            (p) =>
-               (parentPage && parentPage.id == p.id) ||
-               (currentPage && currentPage.id == p.id),
-            true
-         )
+         .pages((p) => rootPage && rootPage.id == p.id, true)
          .forEach((p, index) => {
             addPage(p, index);
          });
