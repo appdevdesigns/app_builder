@@ -981,9 +981,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   if (f.field.key == "connectObject") {
                      rowValue[f.columnIndex] = data;
                   } else {
-                     let dataValue = {};
-                     dataValue[f.field.columnName] = data;
-                     rowValue[f.columnIndex] = f.field.format(dataValue); // array to object
+                     rowValue[f.columnIndex] = data; // array to object
                   }
                });
 
