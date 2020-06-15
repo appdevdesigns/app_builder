@@ -1042,11 +1042,13 @@ console.error(err);
                      })
                      .catch((err) => {
                         resolvePendingTransaction();
+                        console.log(err);
                         res.AD.error(err);
                      });
                })
                .catch((err) => {
                   resolvePendingTransaction();
+                  console.log(err);
                   res.AD.error(err);
                });
          })
