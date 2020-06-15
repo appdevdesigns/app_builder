@@ -142,7 +142,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                   .catch((error) => {
                      this.log(
                         instance,
-                        `error finding Batch data for batchID[${currentBatchID}]`
+                        `error processing Batch data for batchID[${currentBatchID}]`
                      );
                      this.log(instance, error.toString());
                      reject(error);
@@ -183,6 +183,14 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
          }
 
          var accountID = journalEntry[fieldJEAccount.columnName];
+         if (!accountID) {
+            var missingAccountError = new Error(
+               `Journal Entry [${journalEntry.uuid}] is missing an Account`
+            );
+            reject(missingAccountError);
+            return;
+         }
+
          var rcID = journalEntry[fieldJERC.columnName];
          this.processBalanceRecord(
             financialPeriod,
@@ -241,6 +249,11 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
          )[0];
 
          var balanceRecord = null;
+
+         // find Account 3991
+         var acct3991 = this.allAccountRecords.find(
+            (a) => a["Acct Num"] == 3991
+         );
 
          async.series(
             [
@@ -356,10 +369,6 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                },
 
                (done) => {
-                  // find Account 3991
-                  var acct3991 = this.allAccountRecords.find(
-                     (a) => a["Acct Num"] == 3991
-                  );
                   if (!acct3991) {
                      done();
                      return;
@@ -443,6 +452,14 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                )[0];
                (fieldJE.pullRelationValues(balanceRecord) || []).forEach(
                   (journalEntry) => {
+                     // prevent working with data as a string or with NULL values
+                     journalEntry["Debit"] = parseFloat(
+                        journalEntry["Debit"] || 0
+                     );
+                     journalEntry["Credit"] = parseFloat(
+                        journalEntry["Credit"] || 0
+                     );
+
                      // lookup the Account type
                      var accountType = this.lookupAccountType(journalEntry);
                      switch (accountType) {
@@ -461,6 +478,10 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                            // runningBalance = runningBalance - JE.debit + JE.credit
                            runningBalance +=
                               journalEntry["Credit"] - journalEntry["Debit"];
+                           break;
+
+                        default:
+                           // Q: what to do if a JE didn't return an expected Account Type?
                            break;
                      }
 
@@ -504,6 +525,9 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       var account = this.allAccountRecords.find(
          (a) => a.uuid == journalEntry[fieldJEAccount.columnName]
       );
+      if (!account) {
+         return null;
+      }
 
       var categoryOption = categoryOptions.find(
          (o) => o.id == account["Category"]
