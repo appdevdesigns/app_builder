@@ -1259,7 +1259,7 @@ module.exports = class ABClassObject extends ABObjectCore {
                               if (
                                  !this.viewName && // NOTE: check if this object is a query, then it includes .translations already
                                  (orderField.object.isExternal ||
-                                    field.object.isImported)
+                                    orderField.object.isImported)
                               ) {
                                  let prefix = "";
                                  if (orderField.alias) {
