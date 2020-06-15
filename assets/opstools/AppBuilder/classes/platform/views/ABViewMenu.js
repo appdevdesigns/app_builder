@@ -757,14 +757,15 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                   if (!tab) return;
 
                   toggleParent(tab);
-                  if (!$$(tabView.id) || !$$(tabView.id).isVisible()) {
-                     var showIt = setInterval(function() {
-                        if ($$(tabView.id) && $$(tabView.id).isVisible()) {
-                           clearInterval(showIt);
-                        }
-                        tab.emit("changeTab", tabView.id);
-                     }, 200);
-                  }
+                  // if (!$$(tabView.id) || !$$(tabView.id).isVisible()) {
+                  let showIt = setInterval(function() {
+                     if ($$(tabView.id) && $$(tabView.id).isVisible()) {
+                        clearInterval(showIt);
+                        return;
+                     }
+                     tab.emit("changeTab", tabView.id);
+                  }, 100);
+                  // }
                }
                // switch page
                else {
