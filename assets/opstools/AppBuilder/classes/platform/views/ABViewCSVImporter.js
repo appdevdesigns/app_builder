@@ -5,6 +5,8 @@ const ABRecordRule = require("../../rules/ABViewRuleListFormRecordRules");
 
 const ABViewCSVImporterPropertyComponentDefaults = ABViewCSVImporterCore.defaultValues();
 
+var FilterComplex = require("../FilterComplex");
+
 let PopupRecordRule = null;
 
 function L(key, altText) {
@@ -267,7 +269,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
          statusMessage: App.unique(idBase + "_statusMessage"),
          progressBar: App.unique(idBase + "_progressBar"),
 
-         importButton: App.unique(idBase + "_importButton")
+         importButton: App.unique(idBase + "_importButton"),
+         rules: App.unique(idBase + "_datatable_rules")
       };
 
       let csvImporter = new CSVImporter(App);
@@ -404,6 +407,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
          ]
       };
 
+      var validationError = false;
+
       let _uiRecordsView = {
          rows: [
             {
@@ -411,8 +416,10 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                view: "search",
                value: "",
                label: "",
+               keyPressTimeout: 200,
                on: {
-                  onChange: (text) => {
+                  onTimedKeyPress: () => {
+                     let text = $$(ids.search).getValue();
                      _logic.search(text);
                   }
                }
@@ -424,7 +431,15 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                editaction: "dblclick",
                css: "ab-csv-importer",
                width: 650,
-               columns: []
+               columns: [],
+               on: {
+                  onValidationError: function(id, obj, details) {
+                     validationError = true;
+                  },
+                  onValidationSuccess: function() {
+                     validationError = false;
+                  }
+               }
             }
          ]
       };
@@ -551,7 +566,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   if (exists) return;
 
                   exists =
-                     (row[`data${f.columnIndex}`] || "")
+                     (row[`${f.columnIndex}`] || "")
                         .toString()
                         .toLowerCase()
                         .indexOf(searchText) > -1;
@@ -809,15 +824,147 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                width: 30
             });
 
+            var fieldValidations = [];
+            var rulePops = [];
             // populate columns
             (matchFields || []).forEach((f) => {
+               var validationRules = f.field.settings.validationRules;
+               // parse the rules because they were stored as a string
+               // check if rules are still a string...if so lets parse them
+               if (validationRules && typeof validationRules === "string") {
+                  validationRules = JSON.parse(validationRules);
+               }
+
+               if (validationRules && validationRules.length) {
+                  var validationUI = [];
+                  // there could be more than one so lets loop through and build the UI
+                  validationRules.forEach((rule) => {
+                     var Filter = new FilterComplex(
+                        App,
+                        f.field.id + "_" + webix.uid()
+                     );
+                     // add the new ui to an array so we can add them all at the same time
+                     validationUI.push(Filter.ui);
+                     // store the filter's info so we can assign values and settings after the ui is rendered
+                     fieldValidations.push({
+                        filter: Filter,
+                        view: Filter.ids.querybuilder,
+                        columnName: f.field.id,
+                        validationRules: rule.rules,
+                        invalidMessage: rule.invalidMessage,
+                        columnIndex: f.columnIndex
+                     });
+                  });
+                  // create a unique view id for popup
+                  var popUpId =
+                     ids.rules + "_" + f.field.id + "_" + webix.uid();
+                  // store the popup ids so we can remove the later
+                  rulePops.push(popUpId);
+                  // add the popup to the UI but don't show it
+                  webix.ui({
+                     view: "popup",
+                     css: "ab-rules-popup",
+                     id: popUpId,
+                     body: {
+                        rows: validationUI
+                     }
+                  });
+               }
+
+               var editor = "text";
+               switch (f.field.key) {
+                  case "number":
+                     editor = "number";
+                     break;
+                  case "datetime":
+                     editor = "datetime";
+                     break;
+                  default:
+                  // code block
+               }
                columns.push({
                   id: f.columnIndex,
                   header: f.field.label,
-                  editor: "text",
+                  editor: editor,
                   fillspace: true
                });
             });
+
+            if (fieldValidations.length) {
+               // we need to store the rules for use later so lets build a container array
+               var complexValidations = [];
+               fieldValidations.forEach((f) => {
+                  // init each ui to have the properties (app and fields) of the object we are editing
+                  f.filter.applicationLoad(App);
+                  f.filter.fieldsLoad(_currentObject.fields());
+                  // now we can set the value because the fields are properly initialized
+                  f.filter.setValue(f.validationRules);
+                  // if there are validation rules present we need to store them in a lookup hash
+                  // so multiple rules can be stored on a single field
+                  if (!Array.isArray(complexValidations[f.columnName]))
+                     complexValidations[f.columnName] = [];
+
+                  // now we can push the rules into the hash
+                  complexValidations[f.columnName].push({
+                     filters: $$(f.view).getFilterHelper(),
+                     values: $$(ids.datatable).getSelectedItem(),
+                     invalidMessage: f.invalidMessage,
+                     columnIndex: f.columnIndex
+                  });
+               });
+               var rules = {};
+               var dataTable = $$(ids.datatable);
+               // store the rules in a data param to be used later
+               dataTable.$view.complexValidations = complexValidations;
+               // use the lookup to build the validation rules
+               Object.keys(complexValidations).forEach(function(key) {
+                  rules[key] = function(value, data) {
+                     // default valid is true
+                     var isValid = true;
+                     var invalidMessage = "";
+                     var errors = [];
+                     dataTable.$view.complexValidations[key].forEach(
+                        (filter) => {
+                           let rowValue = {};
+                           // use helper funtion to check if valid
+                           // map the column names to the index numbers of data
+                           // reformat data to display
+                           (matchFields || []).forEach((f) => {
+                              let record = data[f.columnIndex];
+                              rowValue[f.field.columnName] = record;
+                           });
+                           var ruleValid = filter.filters(rowValue);
+                           // if invalid we need to tell the field
+                           if (ruleValid == false) {
+                              isValid = false;
+                              invalidMessage = filter.invalidMessage;
+                              webix.message({
+                                 type: "error",
+                                 text: invalidMessage
+                              });
+                           }
+                        }
+                     );
+                     return isValid;
+                  };
+               });
+               // define validation rules
+               dataTable.define("rules", rules);
+               // store the array of view ids on the webix object so we can get it later
+               dataTable.config.rulePops = rulePops;
+               dataTable.refresh();
+            } else {
+               var dataTable = $$(ids.datatable);
+               // check if the previous datatable had rule popups and remove them
+               if (dataTable.config.rulePops) {
+                  dataTable.config.rulePops.forEach((popup) => {
+                     if ($$(popup)) $$(popup).destructor();
+                  });
+               }
+               // remove any validation rules from the previous table
+               dataTable.define("rules", {});
+               dataTable.refresh();
+            }
 
             /** Prepare Data */
             let parsedData = [];
@@ -1003,10 +1150,10 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                let $datatable = $$(ids.datatable);
                if ($datatable) {
                   // set "fail" status
+                  $datatable.addRowCss(itemId, "row-fail");
                   $$(ids.datatable).updateItem(itemId, {
                      _status: "fail"
                   });
-                  $datatable.addRowCss(itemId, "row-fail");
                }
                increaseProgressing();
 
@@ -1021,24 +1168,20 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      _status: "invalid"
                   });
 
+                  $datatable.addRowCss(itemId, "webix_invalid");
+
                   // mark which column are invalid
                   errors.forEach((err) => {
                      if (!err || !err.name) return;
                      let fieldInfo = matchFields.filter(
                         (f) => f.field && f.field.columnName == err.name
                      )[0];
-                     if (fieldInfo) {
-                        $datatable.addCellCss(
-                           itemId,
-                           fieldInfo.columnIndex,
-                           "cell-invalid"
-                        );
-                     }
+                     // we also need to define an error message
+                     webix.message({
+                        type: "error",
+                        text: err.name + ": " + err.message
+                     });
                   });
-
-                  // highlight the row
-                  $datatable.removeRowCss(itemId, "row-pass");
-                  $datatable.addRowCss(itemId, "row-warn");
                }
                // increaseProgressing();
             };
@@ -1047,10 +1190,11 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                let $datatable = $$(ids.datatable);
                if ($datatable) {
                   // set "done" status
+                  $datatable.removeRowCss(itemId, "row-fail");
+                  $datatable.addRowCss(itemId, "row-pass");
                   $datatable.updateItem(itemId, {
                      _status: "done"
                   });
-                  $datatable.addRowCss(itemId, "row-pass");
                }
                increaseProgressing();
             };
@@ -1059,16 +1203,19 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                let $datatable = $$(ids.datatable);
                if ($datatable) {
                   // mark all columns valid (just in case they were invalid before)
-                  matchFields.forEach((f) => {
-                     $datatable.removeCellCss(
-                        itemId,
-                        f.columnIndex,
-                        "cell-invalid"
-                     );
-                  });
+                  // matchFields.forEach((f) => {
+                  //    $datatable.removeCellCss(
+                  //       itemId,
+                  //       f.columnIndex,
+                  //       "webix_invalid_cell"
+                  //    );
+                  // });
                   // highlight the row
-                  $datatable.removeRowCss(itemId, "row-warn");
-                  $datatable.addRowCss(itemId, "row-pass");
+                  $datatable.removeRowCss(itemId, "webix_invalid");
+                  $datatable.updateItem(itemId, {
+                     _status: ""
+                  });
+                  // $datatable.addRowCss(itemId, "row-pass");
                }
             };
 
@@ -1132,9 +1279,13 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      //    // skip
                      //    break;
                      case "number":
-                        newRowData[f.field.columnName] = (
-                           data[f.columnIndex] || ""
-                        ).replace(/[^0-9.]/gi, "");
+                        if (typeof data[f.columnIndex] != "number") {
+                           newRowData[f.field.columnName] = (
+                              data[f.columnIndex] || ""
+                           ).replace(/[^0-9.]/gi, "");
+                        } else {
+                           newRowData[f.field.columnName] = data[f.columnIndex];
+                        }
                         break;
                      default:
                         newRowData[f.field.columnName] = data[f.columnIndex];
@@ -1144,8 +1295,14 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
                let isValid = false;
 
+               // first check legacy and server side validation
                let validator = _currentObject.isValidData(newRowData);
                isValid = validator.pass();
+
+               if (isValid) {
+                  // now check complex field validation rules
+                  isValid = $$(ids.datatable).validate(data.id);
+               }
 
                if (isValid) {
                   itemValid(data.id);
@@ -1344,21 +1501,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   return Promise.all(allSaves);
                })
                .then(() => {
-                  // resolve Successful UI
-                  // _logic.formClear();
-                  // $$(ids.importButton).enable();
-                  //
-                  // // Hide loading cursor
-                  // $$(ids.form).hideProgress();
-                  // $$(ids.progressBar).hideProgress();
-                  // $$(ids.statusMessage).setValue("");
-                  // $$(ids.statusMessage).hide();
-                  //
-                  // // _logic.hide();
-                  //
-                  // if (_logic.callbacks && _logic.callbacks.onDone)
-                  //    _logic.callbacks.onDone();
-
                   uiCleanUp();
                })
                .catch((err) => {
@@ -1371,340 +1513,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   uiCleanUp();
                   console.error(err);
                });
-
-            // update the datagrid row to
-
-            // newRowData[connectField.columnName] = { connectField.PK : 'uuid'}
-
-            /*
-            let tasks = [];
-            if (allValid) {
-               (validRows || []).forEach((data, index) => {
-                  let newRowData = data.data;
-                  let startUpdateTime;
-
-                  tasks.push((indexTask) => {
-                     return (
-                        Promise.resolve()
-                           .then(
-                              () =>
-                                 new Promise((next, err) => {
-                                    startUpdateTime = new Date();
-
-                                    $$(ids.datatable).updateItem(data.id, {
-                                       _status: "in-progress"
-                                    });
-
-                                    let searchTasks = [];
-                                    let connectedFields = matchFields.filter(
-                                       (f) =>
-                                          f &&
-                                          f.field &&
-                                          f.field.key == "connectObject" &&
-                                          f.searchField
-                                    );
-                                    (connectedFields || []).forEach((f) => {
-                                       let connectField = f.field;
-                                       let searchField = f.searchField;
-                                       let searchWord =
-                                          newRowData[f.columnIndex];
-
-                                       let connectObject =
-                                          connectField.datasourceLink;
-                                       if (!connectObject) return;
-
-                                       let connectModel = connectObject.model();
-                                       if (!connectModel) return;
-
-                                       searchTasks.push(
-                                          new Promise((go, bad) => {
-                                             connectModel
-                                                .findAll({
-                                                   where: {
-                                                      glue: "and",
-                                                      rules: [
-                                                         {
-                                                            key: searchField.id,
-                                                            rule: "equals",
-                                                            value: searchWord
-                                                         }
-                                                      ]
-                                                   }
-                                                })
-                                                .catch((errMessage) => go())
-                                                .then((list) => {
-                                                   if (list && list.data[0]) {
-                                                      let linkIdKey = connectField.indexField
-                                                         ? connectField
-                                                              .indexField
-                                                              .columnName
-                                                         : connectField.object.PK();
-                                                      newRowData[
-                                                         connectField.columnName
-                                                      ] = {};
-                                                      // newRowData[connectField.columnName] = { connectField.PK : 'uuid'}
-                                                      newRowData[
-                                                         connectField.columnName
-                                                      ][linkIdKey] =
-                                                         list.data[0][
-                                                            linkIdKey
-                                                         ];
-                                                   }
-                                                   go();
-                                                });
-                                          })
-                                       );
-                                    });
-
-                                    Promise.all(searchTasks)
-                                       .catch(err)
-                                       .then(() => next());
-                                 })
-                           )
-
-                           // insert data
-                           .then(
-                              () =>
-                                 new Promise((next, err) => {
-                                    objModel
-                                       .create(newRowData)
-                                       .catch((errMessage) => {
-                                          itemFailed(data.id, errMessage);
-                                          next();
-                                       })
-                                       .then((insertedRow) => {
-                                          if (insertedRow) {
-                                             newRowData.id =
-                                                insertedRow.id ||
-                                                insertedRow.uuid;
-                                             next(true);
-                                          } else {
-                                             next(false);
-                                          }
-                                       });
-                                 })
-                           )
-
-                           // process record rule
-                           .then(
-                              (isCreated) =>
-                                 new Promise((next, err) => {
-                                    if (!isCreated) return next();
-
-                                    // Process Record Rule
-                                    this.doRecordRules(newRowData)
-                                       .then(() => {
-                                          itemPass(data.id);
-
-                                          _logic.refreshRemainingTimeText(
-                                             startUpdateTime,
-                                             tasks.length,
-                                             indexTask
-                                          );
-
-                                          next();
-                                       })
-                                       .catch((errMessage) => {
-                                          itemFailed(data.id, errMessage);
-                                          next();
-                                       });
-                                 })
-                           )
-                     );
-                  });
-               });
-            }
-            
-*/
-
-            // Working Example:
-            //
-            // let tasks = [];
-            // if (allValid) {
-            //    (validRows || []).forEach((data, index) => {
-            //       let newRowData = data.data;
-            //       let startUpdateTime;
-            //
-            //       tasks.push((indexTask) => {
-            //          return (
-            //             Promise.resolve()
-            //                .then(
-            //                   () =>
-            //                      new Promise((next, err) => {
-            //                         startUpdateTime = new Date();
-            //
-            //                         $$(ids.datatable).updateItem(data.id, {
-            //                            _status: "in-progress"
-            //                         });
-            //
-            //                         let searchTasks = [];
-            //                         let connectedFields = matchFields.filter(
-            //                            (f) =>
-            //                               f &&
-            //                               f.field &&
-            //                               f.field.key == "connectObject" &&
-            //                               f.searchField
-            //                         );
-            //                         (connectedFields || []).forEach((f) => {
-            //                            let connectField = f.field;
-            //                            let searchField = f.searchField;
-            //                            let searchWord =
-            //                               newRowData[f.columnIndex];
-            //
-            //                            let connectObject =
-            //                               connectField.datasourceLink;
-            //                            if (!connectObject) return;
-            //
-            //                            let connectModel = connectObject.model();
-            //                            if (!connectModel) return;
-            //
-            //                            searchTasks.push(
-            //                               new Promise((go, bad) => {
-            //                                  connectModel
-            //                                     .findAll({
-            //                                        where: {
-            //                                           glue: "and",
-            //                                           rules: [
-            //                                              {
-            //                                                 key: searchField.id,
-            //                                                 rule: "equals",
-            //                                                 value: searchWord
-            //                                              }
-            //                                           ]
-            //                                        }
-            //                                     })
-            //                                     .catch((errMessage) => go())
-            //                                     .then((list) => {
-            //                                        if (list && list.data[0]) {
-            //                                           let linkIdKey = connectField.indexField
-            //                                              ? connectField
-            //                                                   .indexField
-            //                                                   .columnName
-            //                                              : connectField.object.PK();
-            //                                           newRowData[
-            //                                              connectField.columnName
-            //                                           ] = {};
-            //                                           // newRowData[connectField.columnName] = { connectField.PK : 'uuid'}
-            //                                           newRowData[
-            //                                              connectField.columnName
-            //                                           ][linkIdKey] =
-            //                                              list.data[0][
-            //                                                 linkIdKey
-            //                                              ];
-            //                                        }
-            //                                        go();
-            //                                     });
-            //                               })
-            //                            );
-            //                         });
-            //
-            //                         Promise.all(searchTasks)
-            //                            .catch(err)
-            //                            .then(() => next());
-            //                      })
-            //                )
-            //
-            //                // insert data
-            //                .then(
-            //                   () =>
-            //                      new Promise((next, err) => {
-            //                         objModel
-            //                            .create(newRowData)
-            //                            .catch((errMessage) => {
-            //                               itemFailed(data.id, errMessage);
-            //                               next();
-            //                            })
-            //                            .then((insertedRow) => {
-            //                               if (insertedRow) {
-            //                                  newRowData.id =
-            //                                     insertedRow.id ||
-            //                                     insertedRow.uuid;
-            //                                  next(true);
-            //                               } else {
-            //                                  next(false);
-            //                               }
-            //                            });
-            //                      })
-            //                )
-            //
-            //                // process record rule
-            //                .then(
-            //                   (isCreated) =>
-            //                      new Promise((next, err) => {
-            //                         if (!isCreated) return next();
-            //
-            //                         // Process Record Rule
-            //                         this.doRecordRules(newRowData)
-            //                            .then(() => {
-            //                               itemPass(data.id);
-            //
-            //                               _logic.refreshRemainingTimeText(
-            //                                  startUpdateTime,
-            //                                  tasks.length,
-            //                                  indexTask
-            //                               );
-            //
-            //                               next();
-            //                            })
-            //                            .catch((errMessage) => {
-            //                               itemFailed(data.id, errMessage);
-            //                               next();
-            //                            });
-            //                      })
-            //                )
-            //          );
-            //       });
-            //    });
-            // }
-
-            // action Parallel
-            /*
-            var runningTasks = [];
-            tasks.forEach((task, indx) => {
-               runningTasks.push(task(indx));
-            });
-            return Promise.all(runningTasks).then(() => {
-               // _logic.formClear();
-               $$(ids.importButton).enable();
-
-               // Hide loading cursor
-               $$(ids.form).hideProgress();
-               $$(ids.progressBar).hideProgress();
-               $$(ids.statusMessage).setValue("");
-               $$(ids.statusMessage).hide();
-
-               // _logic.hide();
-
-               if (_logic.callbacks && _logic.callbacks.onDone)
-                  _logic.callbacks.onDone();
-
-               return Promise.resolve();
-            });
-            */
-            /*         
-            // action sequentially
-            return tasks
-               .reduce((promiseChain, currTask, idx) => {
-                  return promiseChain.then(() => currTask(idx));
-               }, Promise.resolve())
-               .then(() => {
-                  // _logic.formClear();
-                  $$(ids.importButton).enable();
-
-                  // Hide loading cursor
-                  $$(ids.form).hideProgress();
-                  $$(ids.progressBar).hideProgress();
-                  $$(ids.statusMessage).setValue("");
-                  $$(ids.statusMessage).hide();
-
-                  // _logic.hide();
-
-                  if (_logic.callbacks && _logic.callbacks.onDone)
-                     _logic.callbacks.onDone();
-
-                  return Promise.resolve();
-               });
-   */
          }
       });
 
