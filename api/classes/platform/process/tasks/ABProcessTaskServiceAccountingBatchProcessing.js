@@ -37,6 +37,44 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
     *                            false if task is still waiting
     */
    do(instance) {
+      // Setup references to the ABObject and Fields that we will use in our
+      // operations.
+      this.brObject = this.application.objects((o) => o.id == this.objectBR)[0];
+      this.brAccountField = this.brObject.fields(
+         (f) => f.id == this.fieldBRAccount
+      )[0];
+      this.brRCField = this.brObject.fields((f) => f.id == this.fieldBRRC)[0];
+      this.brFinancialPeriodField = this.brObject.fields(
+         (f) => f.id == this.fieldBRFinancialPeriod
+      )[0];
+      this.brEntriesField = this.brObject.fields(
+         (f) => f.id == this.fieldBREntries
+      )[0];
+
+      // Batch Object and related Fields
+      this.batchObj = this.application.objects(
+         (o) => o.id == this.objectBatch
+      )[0];
+      this.batchFinancialPeriodField = this.batchObj.fields(
+         (f) => f.id == this.fieldBatchFinancialPeriod
+      )[0];
+      this.batchEntriesField = this.batchObj.fields(
+         (f) => f.id == this.fieldBatchEntries
+      )[0];
+
+      // Journal Entry Object and Fields
+      this.jeObject = this.application.objects((o) => o.id == this.objectJE)[0];
+      this.jeAccountField = this.jeObject.fields(
+         (f) => f.id == this.fieldJEAccount
+      )[0];
+      this.jeStatusField = this.jeObject.fields(
+         (f) => f.id == this.fieldJEStatus
+      )[0];
+      this.jeRCField = this.jeObject.fields((f) => f.id == this.fieldJERC)[0];
+
+      // TODO: continue to refactor pulling the object and field refs to here
+      // and clean up the code.
+
       return new Promise((resolve, reject) => {
          var myState = this.myState(instance);
          this.balanceRecordsProcessed = {};
@@ -56,11 +94,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             return;
          }
 
-         // PUll the Batch Obj
-         var batchObj = this.application.objects(
-            (o) => o.id == this.objectBatch
-         )[0];
-         if (!batchObj) {
+         if (!this.batchObj) {
             var msg = `unable to find relevant Batch Object from our .objectBatch[${this.objectBatch}] configuration`;
             this.log(instance, msg);
             var error = new Error("AccountBatchProcessing.do(): " + msg);
@@ -68,19 +102,16 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             return;
          }
 
-         var fieldBatchFinancialPeriod = batchObj.fields(
-            (f) => f.id == this.fieldBatchFinancialPeriod
-         )[0];
-         var fieldBatchEntries = batchObj.fields(
-            (f) => f.id == this.fieldBatchEntries
-         )[0];
-
-         // Look up our Batch Value
+         // condition to look up our Batch Value
          var cond = {
             where: {
                glue: "and",
                rules: [
-                  { key: batchObj.PK(), rule: "equals", value: currentBatchID }
+                  {
+                     key: this.batchObj.PK(),
+                     rule: "equals",
+                     value: currentBatchID
+                  }
                ]
             },
             populate: true
@@ -93,13 +124,8 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             .then(() => {
                // prepare Account Lookup
                // pull a list of all Accounts in system
-               var jeObject = this.application.objects(
-                  (o) => o.id == this.objectJE
-               )[0];
-               var fieldJEAccount = jeObject.fields(
-                  (f) => f.id == this.fieldJEAccount
-               )[0];
-               var accountObject = fieldJEAccount.datasourceLink;
+
+               var accountObject = this.jeAccountField.datasourceLink;
 
                return accountObject
                   .modelAPI()
@@ -109,7 +135,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                   });
             })
             .then(() => {
-               return batchObj
+               return this.batchObj
                   .modelAPI()
                   .findAll(cond)
                   .then((rows) => {
@@ -125,9 +151,9 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
                      var batchEntry = rows[0];
                      var financialPeriod =
-                        batchEntry[fieldBatchFinancialPeriod.columnName];
+                        batchEntry[this.batchFinancialPeriodField.columnName];
                      var journalEntries =
-                        batchEntry[fieldBatchEntries.relationName()] || [];
+                        batchEntry[this.batchEntriesField.relationName()] || [];
 
                      // for parallel operation:
                      var allEntries = [];
@@ -152,7 +178,10 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                return this.recalculateBalances();
             })
             .then(() => {
-               resolve();
+               // finish out the Process Task:
+               this.stateCompleted(instance);
+               this.log(instance, "Batch Processed successfully");
+               resolve(true);
             })
             .catch((error) => {
                this.log(instance, error.toString());
@@ -163,26 +192,16 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
    processJournalEntry(journalEntry, financialPeriod) {
       return new Promise((resolve, reject) => {
-         var jeObject = this.application.objects(
-            (o) => o.id == this.objectJE
-         )[0];
-         var fieldJEStatus = jeObject.fields(
-            (f) => f.id == this.fieldJEStatus
-         )[0];
-         var fieldJEAccount = jeObject.fields(
-            (f) => f.id == this.fieldJEAccount
-         )[0];
-         var fieldJERC = jeObject.fields((f) => f.id == this.fieldJERC)[0];
-
-         //     if (JE.status == complete) this has already been done, so skip
+         // if (JE.status == complete) this has already been done, so skip
          if (
-            journalEntry[fieldJEStatus.columnName] == this.fieldJEStatusComplete
+            journalEntry[this.jeStatusField.columnName] ==
+            this.fieldJEStatusComplete
          ) {
             resolve();
             return;
          }
 
-         var accountID = journalEntry[fieldJEAccount.columnName];
+         var accountID = journalEntry[this.jeAccountField.columnName];
          if (!accountID) {
             var missingAccountError = new Error(
                `Journal Entry [${journalEntry.uuid}] is missing an Account`
@@ -191,7 +210,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             return;
          }
 
-         var rcID = journalEntry[fieldJERC.columnName];
+         var rcID = journalEntry[this.jeRCField.columnName];
          this.processBalanceRecord(
             financialPeriod,
             accountID,
@@ -201,16 +220,16 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             .then(() => {
                // set JE.status = Complete
                journalEntry[
-                  fieldJEStatus.columnName
+                  this.jeStatusField.columnName
                ] = this.fieldJEStatusComplete;
 
                var updateValue = {};
                updateValue[
-                  fieldJEStatus.columnName
+                  this.jeStatusField.columnName
                ] = this.fieldJEStatusComplete;
-               jeObject
+               this.jeObject
                   .modelAPI()
-                  .update(journalEntry[jeObject.PK()], updateValue)
+                  .update(journalEntry[this.jeObject.PK()], updateValue)
                   .then(() => {
                      resolve();
                   })
@@ -234,20 +253,6 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       //         add this JE to BalanceRecord.entries
 
       return new Promise((resolve, reject) => {
-         var brObject = this.application.objects(
-            (o) => o.id == this.objectBR
-         )[0];
-         var fieldBRAccount = brObject.fields(
-            (f) => f.id == this.fieldBRAccount
-         )[0];
-         var fieldBRRC = brObject.fields((f) => f.id == this.fieldBRRC)[0];
-         var fieldBRFinancialPeriod = brObject.fields(
-            (f) => f.id == this.fieldBRFinancialPeriod
-         )[0];
-         var fieldBREntries = brObject.fields(
-            (f) => f.id == this.fieldBREntries
-         )[0];
-
          var balanceRecord = null;
 
          // find Account 3991
@@ -260,31 +265,31 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                (done) => {
                   var balCond = { glue: "and", rules: [] };
                   balCond.rules.push({
-                     key: fieldBRFinancialPeriod.id,
+                     key: this.brFinancialPeriodField.id,
                      rule: "equals",
                      value: financialPeriodID
                   });
                   balCond.rules.push({
-                     key: fieldBRAccount.id,
+                     key: this.brAccountField.id,
                      rule: "equals",
                      value: AccountID
                   });
 
                   if (RCID) {
                      balCond.rules.push({
-                        key: fieldBRRC.id,
+                        key: this.brRCField.id,
                         rule: "equals",
                         value: RCID
                      });
                   } else {
                      balCond.rules.push({
-                        key: fieldBRRC.id,
+                        key: this.brRCField.id,
                         rule: "is_null",
                         value: null
                      });
                   }
                   // try to find existing BalanceRecord matching our balCond
-                  brObject
+                  this.brObject
                      .modelAPI()
                      .findAll({ where: balCond, populate: true })
                      .then((rows) => {
@@ -304,22 +309,16 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      return;
                   }
 
-                  var balValues = {
-                     uuid: uuid(),
-                     "Starting Balance": 0
-                  };
-                  balValues[
-                     fieldBRFinancialPeriod.columnName
-                  ] = financialPeriodID;
-                  balValues[fieldBRAccount.columnName] = AccountID;
-                  if (RCID) {
-                     balValues[fieldBRRC.columnName] = RCID;
-                  } else {
-                     balValues[fieldBRRC.columnName] = null;
-                  }
-                  brObject
-                     .modelAPI()
-                     .create(balValues)
+                  // #Race Condition: if N parallel requests 1st try to find the
+                  // balance entry and Don't, then we will get N parallel requests
+                  // to create a new one.
+                  // This routine will ensure only 1 unique Balance Record is created
+                  // and returned to all N requests.
+                  this.parallelSafeCreateBalance(
+                     financialPeriodID,
+                     AccountID,
+                     RCID
+                  )
                      .then((newEntry) => {
                         balanceRecord = newEntry;
                         done();
@@ -346,23 +345,14 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
                (done) => {
                   // update balanceRecord with new journalEntry value:
-                  // balanceRecord[fieldBREntries.columnName] =
-                  //    balanceRecord[fieldBREntries.columnName] || [];
-                  // balanceRecord[fieldBREntries.columnName].push(
-                  //    journalEntry.uuid
-                  // );
 
-                  // var relationName = fieldBREntries.relationName();
-                  let relationName = AppBuilder.rules.toFieldRelationFormat(
-                     fieldBREntries.columnName
-                  );
-
-                  var brID = balanceRecord[brObject.PK()];
-                  brObject
+                  var brID = balanceRecord[this.brObject.PK()];
+                  this.brObject
                      .modelAPI()
-                     .relate(brID, fieldBREntries.id, journalEntry)
+                     .relate(brID, this.brEntriesField.id, journalEntry)
                      .catch((err) => done(err))
                      .then(() => {
+                        // mark this balance record as having been processed.
                         this.balanceRecordsProcessed[brID] = brID;
                         done();
                      });
@@ -374,7 +364,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      return;
                   }
 
-                  // if this account is ! Account3991
+                  // if this account is Account3991 we don't need to do this again
                   if (AccountID == acct3991.uuid) {
                      done();
                      return;
@@ -410,33 +400,91 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       });
    }
 
+   /**
+    * @method parallelSafeCreateBalance()
+    * Ensure that multiple Balance Records for matching FPID, AID and RCID are
+    * not created.
+    * @param {string} financialPeriodID
+    *        The uuid of the Financial Period for this Balance Record
+    * @param {string} AccountID
+    *        The uuid of the Account for this Balance Record
+    * @param {string} RCID
+    *        the uuid of the RC for this Balance Record
+    * @return {Promise}
+    *        resolved() when the given balance record is created.
+    */
+   parallelSafeCreateBalance(financialPeriodID, AccountID, RCID) {
+      // if a create for this specific Balance Record is already In progress:
+      // return that Promise.
+      this.pendingCreates = this.pendingCreates || {};
+      var key = `${financialPeriodID}:${AccountID}${RCID ? ":" + RCID : ""}`;
+      if (!this.pendingCreates[key]) {
+         this.pendingCreates[key] = new Promise((resolve, reject) => {
+            var balValues = {
+               uuid: uuid(),
+               "Starting Balance": 0
+            };
+            balValues[
+               this.brFinancialPeriodField.columnName
+            ] = financialPeriodID;
+            balValues[this.brAccountField.columnName] = AccountID;
+            if (RCID) {
+               balValues[this.brRCField.columnName] = RCID;
+            } else {
+               balValues[this.brRCField.columnName] = null;
+            }
+            this.brObject
+               .modelAPI()
+               .create(balValues)
+               .then((newEntry) => {
+                  resolve(newEntry);
+               })
+               .catch((err) => {
+                  // TODO: need to pass in .instance so we can do a this.log()
+                  reject(err);
+               });
+         });
+      }
+      return this.pendingCreates[key];
+   }
+
+   /**
+    * @method recalculateBalances()
+    * For each balance Record that was modified, we will run a recalculation again.
+    * @return {Promise}
+    *        resolved() when ALL balance calculations are complete.
+    */
    recalculateBalances() {
       var allBalanceRecords = [];
-
-      var brObject = this.application.objects((o) => o.id == this.objectBR)[0];
+      // {array} allBalanceRecords
+      // keep track of all the balance records that were updated in the
+      // routine .processBalanceRecord() so we can recalculate them.
 
       return Promise.resolve()
          .then(() => {
             // pull fully populated Balance Records that were updated on this run
-
+            // pull the .ids from our hash
             var allIDs = Object.keys(this.balanceRecordsProcessed);
             var cond = {
                where: {
                   glue: "and",
-                  rules: [{ key: brObject.PK(), rule: "in", value: allIDs }]
+                  rules: [
+                     { key: this.brObject.PK(), rule: "in", value: allIDs }
+                  ]
                },
                populate: true
             };
-            return brObject
+            return this.brObject
                .modelAPI()
                .findAll(cond)
                .then((list) => {
                   allBalanceRecords = list;
                });
          })
-         .then(() => {})
          .then(() => {
             var allUpdates = [];
+            // {array} allUpdates
+            // an array of all the pending update promises
 
             // for each balanceRecord
             (allBalanceRecords || []).forEach((balanceRecord) => {
@@ -447,61 +495,59 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                var totalDebit = 0;
 
                // for each JournalEntry
-               var fieldJE = brObject.fields(
-                  (f) => f.id == this.fieldBREntries
-               )[0];
-               (fieldJE.pullRelationValues(balanceRecord) || []).forEach(
-                  (journalEntry) => {
-                     // prevent working with data as a string or with NULL values
-                     journalEntry["Debit"] = parseFloat(
-                        journalEntry["Debit"] || 0
-                     );
-                     journalEntry["Credit"] = parseFloat(
-                        journalEntry["Credit"] || 0
-                     );
+               (
+                  this.brEntriesField.pullRelationValues(balanceRecord) || []
+               ).forEach((journalEntry) => {
+                  // prevent working with data as a string or with NULL values
+                  journalEntry["Debit"] = parseFloat(
+                     journalEntry["Debit"] || 0
+                  );
+                  journalEntry["Credit"] = parseFloat(
+                     journalEntry["Credit"] || 0
+                  );
 
-                     // lookup the Account type
-                     var accountType = this.lookupAccountType(journalEntry);
-                     switch (accountType) {
-                        // case: "asset" || "expense"
-                        case "assets":
-                        case "expenses":
-                           // runningBalance = runningBalance - JE.credit + JE.debit
-                           runningBalance +=
-                              journalEntry["Debit"] - journalEntry["Credit"];
-                           break;
+                  // lookup the Account type
+                  var accountType = this.lookupAccountType(journalEntry);
+                  switch (accountType) {
+                     // case: "asset" || "expense"
+                     case "assets":
+                     case "expenses":
+                        // runningBalance = runningBalance - JE.credit + JE.debit
+                        runningBalance +=
+                           journalEntry["Debit"] - journalEntry["Credit"];
+                        break;
 
-                        // case: Liabilities, Equity, Income
-                        case "liabilities":
-                        case "equity":
-                        case "income":
-                           // runningBalance = runningBalance - JE.debit + JE.credit
-                           runningBalance +=
-                              journalEntry["Credit"] - journalEntry["Debit"];
-                           break;
+                     // case: Liabilities, Equity, Income
+                     case "liabilities":
+                     case "equity":
+                     case "income":
+                        // runningBalance = runningBalance - JE.debit + JE.credit
+                        runningBalance +=
+                           journalEntry["Credit"] - journalEntry["Debit"];
+                        break;
 
-                        default:
-                           // Q: what to do if a JE didn't return an expected Account Type?
-                           break;
-                     }
-
-                     // totalCredit += JE.credit
-                     totalCredit += journalEntry["Credit"];
-
-                     // totalDebit += JE.debit
-                     totalDebit += journalEntry["Debit"];
+                     default:
+                        // Q: what to do if a JE didn't return an expected Account Type?
+                        break;
                   }
-               );
+
+                  // totalCredit += JE.credit
+                  totalCredit += journalEntry["Credit"];
+
+                  // totalDebit += JE.debit
+                  totalDebit += journalEntry["Debit"];
+               });
 
                // update BalanceRecord
                balanceRecord["Running Balance"] = runningBalance;
                balanceRecord["Credit"] = totalCredit;
                balanceRecord["Debit"] = totalDebit;
 
+               // now perform the UPDATE
                allUpdates.push(
-                  brObject
+                  this.brObject
                      .modelAPI()
-                     .update(balanceRecord[brObject.PK()], balanceRecord)
+                     .update(balanceRecord[this.brObject.PK()], balanceRecord)
                );
             });
 
@@ -509,21 +555,25 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
          });
    }
 
+   /**
+    * @method lookupAccountType()
+    * return the Account category for a given JournalEntry instance.
+    * @param {JournalEntry} journalEntry
+    *        instance of a JournalEntry object.
+    * @return {string}
+    *        The text value of the Account.Categor field (all lowercase)
+    */
    lookupAccountType(journalEntry) {
-      // find the Account
+      // find the Account type
       var type = "";
-      var jeObject = this.application.objects((o) => o.id == this.objectJE)[0];
-      var fieldJEAccount = jeObject.fields(
-         (f) => f.id == this.fieldJEAccount
-      )[0];
 
-      var accountObject = fieldJEAccount.datasourceLink;
+      var accountObject = this.jeAccountField.datasourceLink;
       var categoryOptions = accountObject
          .fields((f) => f.columnName == "Category")[0]
          .options();
 
       var account = this.allAccountRecords.find(
-         (a) => a.uuid == journalEntry[fieldJEAccount.columnName]
+         (a) => a.uuid == journalEntry[this.jeAccountField.columnName]
       );
       if (!account) {
          return null;
