@@ -1515,11 +1515,15 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
                      allLookups.push(
                         connectModel
-                           .findAll()
+                           .findAll({
+                              where: {},
+                              populate: false
+                           })
                            .catch((errMessage) => {
                               console.error(errMessage);
                            })
                            .then((list) => {
+                              debugger;
                               if (list.data) {
                                  list = list.data;
                               }
