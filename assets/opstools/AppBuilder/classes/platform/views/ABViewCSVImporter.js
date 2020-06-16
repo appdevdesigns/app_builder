@@ -331,6 +331,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
       let _uiConfig = {
          view: "form",
+         type: "clean",
          id: ids.form,
          borderless: true,
          width: 400,
@@ -341,6 +342,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      id: ids.uploader,
                      view: "uploader",
                      name: "csvFile",
+                     css: "webix_primary",
                      value: labels.component.selectCsvFile,
                      accept: "text/csv",
                      multiple: false,
@@ -367,40 +369,51 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      }
                   },
                   {
-                     id: ids.separatedBy,
-                     view: "richselect",
-                     name: "separatedBy",
-                     label: labels.component.separatedBy,
-                     labelWidth: 140,
-                     options: csvImporter.getSeparateItems(),
-                     value: ",",
-                     on: {
-                        onChange: () => {
-                           _logic.loadCsvFile();
+                     padding: 10,
+                     rows: [
+                        {
+                           id: ids.separatedBy,
+                           view: "richselect",
+                           name: "separatedBy",
+                           label: labels.component.separatedBy,
+                           labelWidth: 140,
+                           options: csvImporter.getSeparateItems(),
+                           value: ",",
+                           on: {
+                              onChange: () => {
+                                 _logic.loadCsvFile();
+                              }
+                           }
+                        },
+                        {
+                           id: ids.headerOnFirstLine,
+                           view: "checkbox",
+                           name: "headerOnFirstLine",
+                           label: labels.component.headerFirstLine,
+                           labelWidth: 140,
+                           disabled: true,
+                           value: true,
+                           on: {
+                              onChange: (newVal, oldVal) => {
+                                 _logic.populateColumnList();
+                              }
+                           }
                         }
-                     }
+                     ]
                   },
                   {
-                     id: ids.headerOnFirstLine,
-                     view: "checkbox",
-                     name: "headerOnFirstLine",
-                     label: labels.component.headerFirstLine,
-                     labelWidth: 140,
-                     disabled: true,
-                     value: true,
-                     on: {
-                        onChange: (newVal, oldVal) => {
-                           _logic.populateColumnList();
+                     type: "space",
+                     rows: [
+                        {
+                           view: "scrollview",
+                           minHeight: 300,
+                           body: {
+                              padding: 10,
+                              id: ids.columnList,
+                              rows: []
+                           }
                         }
-                     }
-                  },
-                  {
-                     view: "scrollview",
-                     minHeight: 250,
-                     body: {
-                        id: ids.columnList,
-                        rows: []
-                     }
+                     ]
                   }
                ]
             }
@@ -412,33 +425,95 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
       let _uiRecordsView = {
          rows: [
             {
-               id: ids.search,
-               view: "search",
-               value: "",
-               label: "",
-               keyPressTimeout: 200,
-               on: {
-                  onTimedKeyPress: () => {
-                     let text = $$(ids.search).getValue();
-                     _logic.search(text);
-                  }
-               }
+               view: "toolbar",
+               css: "bg_gray",
+               cols: [
+                  { width: 5 },
+                  {
+                     id: ids.search,
+                     view: "search",
+                     value: "",
+                     label: "",
+                     placeholder: "Search records...",
+                     keyPressTimeout: 200,
+                     on: {
+                        onTimedKeyPress: () => {
+                           let text = $$(ids.search).getValue();
+                           _logic.search(text);
+                        }
+                     }
+                  },
+                  { width: 2 }
+               ]
             },
             {
                id: ids.datatable,
                view: "datatable",
+               tooltip: true,
+               resizeColumn: true,
                editable: true,
                editaction: "dblclick",
                css: "ab-csv-importer",
-               width: 650,
+               borderless: false,
+               tooltip: function(obj) {
+                  var tooltip = obj._errorMsg
+                     ? obj._errorMsg
+                     : "No validation errors";
+                  return tooltip;
+               },
+               minWidth: 650,
                columns: [],
                on: {
                   onValidationError: function(id, obj, details) {
+                     console.log(id, " validation error");
+                     $$(ids.datatable).blockEvent();
+                     var errors = "";
+                     Object.keys(details).forEach((key) => {
+                        this.$view.complexValidations[key].forEach((err) => {
+                           errors += err.invalidMessage + "</br>";
+                        });
+                     });
+                     $$(ids.datatable).updateItem(id, {
+                        _status: "invalid",
+                        _errorMsg: errors
+                     });
+                     $$(ids.datatable).unblockEvent();
                      validationError = true;
                   },
-                  onValidationSuccess: function() {
+                  onValidationSuccess: function(id, obj, details) {
+                     console.log("validation success");
+                     $$(ids.datatable).blockEvent();
+                     $$(ids.datatable).updateItem(id, {
+                        _status: "valid",
+                        _errorMsg: ""
+                     });
+                     $$(ids.datatable).unblockEvent();
                      validationError = false;
+                  },
+                  onCheck: function() {
+                     var selected = $$(ids.datatable).find({ _included: true });
+                     $$(ids.importButton).setValue(
+                        labels.component.import +
+                           " " +
+                           selected.length +
+                           " Records"
+                     );
                   }
+               }
+            },
+            {
+               id: ids.progressBar,
+               height: 6
+            },
+            {
+               view: "button",
+               name: "import",
+               id: ids.importButton,
+               value: labels.component.import,
+               css: "webix_primary",
+               disabled: true,
+               click: () => {
+                  _logic.import();
                }
             }
          ]
@@ -459,11 +534,40 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             position: "center",
             modal: true,
             resize: true,
-            head: L("ab.components.csvImporter", "*CSV Importer"),
+            head: {
+               view: "toolbar",
+               css: "webix_dark",
+               cols: [
+                  {},
+                  {
+                     view: "label",
+                     label: L("ab.components.csvImporter", "*CSV Importer"),
+                     autowidth: true
+                  },
+                  {},
+                  {
+                     view: "button",
+                     width: 35,
+                     css: "webix_transparent",
+                     type: "icon",
+                     icon: "nomargin fa fa-times",
+                     click: () => {
+                        _logic.hide();
+                     }
+                  }
+               ]
+            },
             body: {
+               type: "form",
                rows: [
                   {
-                     cols: [_uiConfig, _uiRecordsView]
+                     type: "line",
+                     cols: [
+                        _uiConfig,
+                        { width: 20 },
+                        _uiRecordsView,
+                        { width: 1 }
+                     ]
                   },
                   {
                      id: ids.statusMessage,
@@ -472,10 +576,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      hidden: true
                   },
                   {
-                     id: ids.progressBar,
-                     height: 20
-                  },
-                  {
+                     hidden: true,
                      margin: 5,
                      cols: [
                         { fillspace: true },
@@ -488,7 +589,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                            click: () => {
                               _logic.hide();
                            }
-                        },
+                        }
+                        /*,
                         {
                            view: "button",
                            name: "import",
@@ -501,7 +603,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                            click: () => {
                               _logic.import();
                            }
-                        }
+                        }*/
                      ]
                   }
                ]
@@ -538,7 +640,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             $$(ids.separatedBy).setValue(",");
 
             webix.ui([], $$(ids.columnList));
-            $$(ids.uploadFileList).clearAll();
 
             $$(ids.headerOnFirstLine).disable();
             $$(ids.importButton).disable();
@@ -626,6 +727,13 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
                $$(ids.headerOnFirstLine).enable();
                $$(ids.importButton).enable();
+               let length = _dataRows.length;
+               if ($$(ids.headerOnFirstLine).getValue()) {
+                  length = _dataRows.length - 1;
+               }
+               $$(ids.importButton).setValue(
+                  labels.component.import + " " + length + " Records"
+               );
 
                _logic.populateColumnList();
 
@@ -886,6 +994,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   id: f.columnIndex,
                   header: f.field.label,
                   editor: editor,
+                  minWidth: 150,
                   fillspace: true
                });
             });
@@ -921,8 +1030,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   rules[key] = function(value, data) {
                      // default valid is true
                      var isValid = true;
-                     var invalidMessage = "";
-                     var errors = [];
                      dataTable.$view.complexValidations[key].forEach(
                         (filter) => {
                            let rowValue = {};
@@ -937,11 +1044,10 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                            // if invalid we need to tell the field
                            if (ruleValid == false) {
                               isValid = false;
-                              invalidMessage = filter.invalidMessage;
-                              webix.message({
-                                 type: "error",
-                                 text: invalidMessage
-                              });
+                              // webix.message({
+                              //    type: "error",
+                              //    text: invalidMessage
+                              // });
                            }
                         }
                      );
@@ -997,6 +1103,10 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                parsedData = parsedData.slice(1);
             }
 
+            $$(ids.importButton).setValue(
+               labels.component.import + " " + parsedData.length + " Records"
+            );
+
             $datatable.refreshColumns(columns);
 
             $datatable.parse(parsedData);
@@ -1007,9 +1117,11 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
          refreshRemainingTimeText(startUpdateTime, total, index) {
             // Calculate remaining time
-            let spentTime = new Date() - startUpdateTime;
+            let spentTime = new Date() - startUpdateTime; // milliseconds that has passed since last completed record since start
 
-            let remainTime = spentTime * (total - index);
+            let averageRenderTime = spentTime / index; // average milliseconds per single render at this point
+
+            let remainTime = averageRenderTime * (total - index);
 
             let result = "";
 
@@ -1020,7 +1132,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             let seconds = (remainTime / 1000).toFixed(0);
 
             if (seconds < 1) result = "";
-            else if (seconds < 30) result = `Less than 30 seconds`;
             else if (seconds < 60)
                result = `Approximately ${seconds} second${
                   seconds > 1 ? "s" : ""
@@ -1034,11 +1145,13 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
             if (result) {
                result = `${result} remaining`;
-               $$(ids.statusMessage).show();
-               $$(ids.statusMessage).setValue(result);
+               // $$(ids.statusMessage).show();
+               $$(ids.importButton).setValue(result);
             } else {
-               $$(ids.statusMessage).setValue("");
-               $$(ids.statusMessage).hide();
+               var selected = $$(ids.datatable).find({ _included: true });
+               $$(ids.importButton).setValue(
+                  labels.component.import + " " + selected.length + " Records"
+               );
             }
          },
 
@@ -1123,7 +1236,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             // Show loading cursor
             $$(ids.form).showProgress({ type: "icon" });
             $$(ids.progressBar).showProgress({
-               type: "bottom",
+               type: "top",
                position: 0.0001
             });
 
@@ -1150,7 +1263,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   // set "fail" status
                   $datatable.addRowCss(itemId, "row-fail");
                   $$(ids.datatable).updateItem(itemId, {
-                     _status: "fail"
+                     _status: "fail",
+                     _errorMsg: errMessage
                   });
                }
                increaseProgressing();
@@ -1161,39 +1275,46 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             let itemInvalid = (itemId, errors = []) => {
                let $datatable = $$(ids.datatable);
                if ($datatable) {
-                  // set "fail" status
-                  $$(ids.datatable).updateItem(itemId, {
-                     _status: "invalid"
-                  });
-
-                  $datatable.addRowCss(itemId, "webix_invalid");
-
+                  // combine all error messages to display in tooltip
+                  let errorMsg = [];
                   // mark which column are invalid
                   errors.forEach((err) => {
                      if (!err || !err.name) return;
                      let fieldInfo = matchFields.filter(
                         (f) => f.field && f.field.columnName == err.name
                      )[0];
+                     errorMsg.push(err.name + ": " + err.message);
                      // we also need to define an error message
-                     webix.message({
-                        type: "error",
-                        text: err.name + ": " + err.message
-                     });
+                     // webix.message({
+                     //    type: "error",
+                     //    text: err.name + ": " + err.message
+                     // });
                   });
+                  // set "fail" status
+                  $$(ids.datatable).blockEvent();
+                  $$(ids.datatable).updateItem(itemId, {
+                     _status: "invalid",
+                     _errorMsg: errorMsg.join("</br>")
+                  });
+                  $datatable.addRowCss(itemId, "webix_invalid");
+                  $$(ids.datatable).unblockEvent();
                }
                // increaseProgressing();
             };
 
             let itemPass = (itemId) => {
                let $datatable = $$(ids.datatable);
+               $datatable.blockEvent();
                if ($datatable) {
                   // set "done" status
                   $datatable.removeRowCss(itemId, "row-fail");
                   $datatable.addRowCss(itemId, "row-pass");
                   $datatable.updateItem(itemId, {
-                     _status: "done"
+                     _status: "done",
+                     _errorMsg: ""
                   });
                }
+               $datatable.unblockEvent();
                increaseProgressing();
             };
 
@@ -1211,7 +1332,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   // highlight the row
                   $datatable.removeRowCss(itemId, "webix_invalid");
                   $datatable.updateItem(itemId, {
-                     _status: ""
+                     _status: "",
+                     _errorMsg: ""
                   });
                   // $datatable.addRowCss(itemId, "row-pass");
                }
@@ -1226,6 +1348,11 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                $$(ids.progressBar).hideProgress();
                $$(ids.statusMessage).setValue("");
                $$(ids.statusMessage).hide();
+
+               var selected = $$(ids.datatable).find({ _included: true });
+               $$(ids.importButton).setValue(
+                  labels.component.import + " " + selected.length + " Records"
+               );
 
                // _logic.hide();
 
@@ -1292,23 +1419,28 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                });
 
                let isValid = false;
+               let errorMsg = "";
 
                // first check legacy and server side validation
                let validator = _currentObject.isValidData(newRowData);
                isValid = validator.pass();
+               errorMsg = validator.errors;
 
                if (isValid) {
                   // now check complex field validation rules
                   isValid = $$(ids.datatable).validate(data.id);
+               } else {
+                  allValid = false;
+                  itemInvalid(data.id, errorMsg);
                }
-
+               $$(ids.datatable).blockEvent();
                if (isValid) {
                   itemValid(data.id);
                   validRows.push({ id: data.id, data: newRowData });
                } else {
                   allValid = false;
-                  itemInvalid(data.id, validator.errors);
                }
+               $$(ids.datatable).unblockEvent();
             });
 
             if (!allValid) {
@@ -1353,7 +1485,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   f.searchField
             );
 
-            let startUpdateTime = new Date();
+            let startUpdateTime;
             var numDone = 0;
             return Promise.resolve()
                .then(() => {
@@ -1406,12 +1538,14 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                })
                .then(() => {
                   // forEach validRow
+                  $$(ids.datatable).blockEvent();
                   validRows.forEach((data) => {
                      let newRowData = data.data;
 
                      // update the datagrid row to in-progress
                      $$(ids.datatable).updateItem(data.id, {
-                        _status: "in-progress"
+                        _status: "in-progress",
+                        _errorMsg: ""
                      });
 
                      // forEach ConnectedField
@@ -1437,6 +1571,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                         newRowData[connectField.columnName][linkIdKey] = uuid;
                      });
                   });
+                  $$(ids.datatable).unblockEvent();
                })
                .then(() => {
                   if (!allValid) {
@@ -1479,11 +1614,14 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                        .then(() => {
                                           itemPass(data.id);
 
-                                          _logic.refreshRemainingTimeText(
-                                             startUpdateTime,
-                                             validRows.length,
-                                             numDone++
-                                          );
+                                          numDone++;
+                                          if (numDone % 20 == 0) {
+                                             _logic.refreshRemainingTimeText(
+                                                startUpdateTime,
+                                                validRows.length,
+                                                numDone
+                                             );
+                                          }
 
                                           next();
                                        })
@@ -1496,9 +1634,12 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      );
                   });
 
+                  $$(ids.datatable).blockEvent();
+                  startUpdateTime = new Date();
                   return Promise.all(allSaves);
                })
                .then(() => {
+                  $$(ids.datatable).unblockEvent();
                   uiCleanUp();
                })
                .catch((err) => {
