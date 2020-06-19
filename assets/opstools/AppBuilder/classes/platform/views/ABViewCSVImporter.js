@@ -498,6 +498,18 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                            selected.length +
                            " Records"
                      );
+                     if (selected.length > 1000) {
+                        // we only allow 1000 record imports
+                        webix.alert({
+                           title: "Too many records",
+                           ok: "Okay",
+                           text:
+                              "Due to browser limitations we only allow imports of 1,000 records. Please upload a new CSV or deselect records to import."
+                        });
+                        $$(ids.importButton).disable();
+                     } else {
+                        $$(ids.importButton).enable();
+                     }
                   }
                }
             },
@@ -1111,6 +1123,19 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
             $datatable.parse(parsedData);
 
+            if (parsedData.length > 1000) {
+               // we only allow 1000 record imports
+               webix.alert({
+                  title: "Too many records",
+                  ok: "Okay",
+                  text:
+                     "Due to browser limitations we only allow imports of 1,000 records. Please upload a new CSV or deselect records to import."
+               });
+               $$(ids.importButton).disable();
+            } else {
+               $$(ids.importButton).enable();
+            }
+
             // hide loading cursor
             if ($datatable.hideProgress) $datatable.hideProgress();
          },
@@ -1433,7 +1458,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   allValid = false;
                   itemInvalid(data.id, errorMsg);
                }
-               $$(ids.datatable).blockEvent();
                if (isValid) {
                   itemValid(data.id);
                   validRows.push({ id: data.id, data: newRowData });
@@ -1523,7 +1547,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                               console.error(errMessage);
                            })
                            .then((list) => {
-                              debugger;
                               if (list.data) {
                                  list = list.data;
                               }
@@ -1638,13 +1661,59 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      );
                   });
 
+                  // we are going to store these promises in an array of arrays with 50 in each sub array
+                  var throttledSaves = [];
+                  var index = 0;
+                  while (allSaves.length) {
+                     throttledSaves[index] = allSaves.splice(0, 100);
+                     index++;
+                  }
+
+                  // execute the array of array of 100 promises one at at time
+                  function performThrottledSaves(
+                     currentPromises,
+                     remainingPromises
+                  ) {
+                     // execute the next 100
+                     return Promise.all(currentPromises)
+                        .then(() => {
+                           // when done get the next 100
+                           var next = remainingPromises.shift();
+                           // if there are any remaining in the group call performThrottledSaves
+                           if (remainingPromises.length) {
+                              return performThrottledSaves(
+                                 next,
+                                 remainingPromises
+                              );
+                           } else {
+                              // if the remainging group is empty just call Promise.all()
+                              return Promise.all(next)
+                                 .then(() => {
+                                    // you are done clean up th UI and listen to events again
+                                    $$(ids.datatable).unblockEvent();
+                                    uiCleanUp();
+                                    return Promise.resolve();
+                                 })
+                                 .catch((err) => {
+                                    // Handle errors here
+                                    return Promise.resolve(err);
+                                 });
+                           }
+                        })
+                        .catch((err) => {
+                           // Handle errors here
+                           return Promise.resolve(err);
+                        });
+                  }
+
+                  // now we are going to processes these new containers one at a time
                   $$(ids.datatable).blockEvent();
+                  // this is when the real work starts so lets begin our countdown timer now
                   startUpdateTime = new Date();
-                  return Promise.all(allSaves);
-               })
-               .then(() => {
-                  $$(ids.datatable).unblockEvent();
-                  uiCleanUp();
+                  // get the first group of Promises out of the collection
+                  var next = throttledSaves.shift();
+                  // execute our Promise iterator
+                  return performThrottledSaves(next, throttledSaves);
                })
                .catch((err) => {
                   // resolve Error UI
@@ -1653,6 +1722,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      ok: "Okay",
                      text: "One or more records failed upon creation."
                   });
+                  $$(ids.datatable).unblockEvent();
                   uiCleanUp();
                   console.error(err);
                });
