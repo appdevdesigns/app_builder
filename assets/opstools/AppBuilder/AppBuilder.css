@@ -1148,3 +1148,16 @@ div.amp .fa-unlock-alt {
 .webix_hcell .fa {
     opacity: 0.4;
 }
+.ab-widget-header .webix_template {
+   padding: 0 10px;
+}
+.ab-layout-header .webix_template {
+   padding: 0;
+   line-height: 30px;
+}
+.ab-widget-header .webix_template div {
+   line-height: 30px;
+}
+.ab-widget-header .webix_template div .fa, .ab-layout-header .fa {
+   vertical-align: middle;
+}

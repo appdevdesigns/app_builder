@@ -389,12 +389,12 @@ module.exports = class ABView extends ABViewCore {
       view.label = $$(ids.label).getValue();
    }
 
-   static propertyEditorSave(ids, view) {
+   static propertyEditorSave(ids, view, includeSubViews = false) {
       this.propertyEditorValues(ids, view);
 
       return new Promise((resolve, reject) => {
          view
-            .save()
+            .save(includeSubViews)
             .then(function() {
                // signal the current view has been updated.
                view.emit("properties.updated", view);
