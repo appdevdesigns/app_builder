@@ -635,6 +635,12 @@ module.exports = class ABModel extends ABModelCore {
                      )[0];
                      if (desiredOption) condition.value = desiredOption.id;
                   }
+
+                  // DATE (not DATETIME)
+                  else if (field.key == "date") {
+                     condition.key = `DATE(${condition.key})`;
+                     condition.value = `DATE("${condition.value}")`;
+                  }
                }
             }
 
@@ -708,7 +714,12 @@ module.exports = class ABModel extends ABModelCore {
             condition.rule = rule;
             // basic case:  simple conversion
             var operator = conversionHash[condition.rule];
-            var value = quoteMe(condition.value);
+            var value = condition.value;
+
+            // If a function, then ignore quote. like DATE('05-05-2020')
+            if (!RegExp("^[A-Z]+[(].*[)]$").test(value)) {
+               value = quoteMe(value);
+            }
 
             // special operation cases:
             switch (condition.rule) {

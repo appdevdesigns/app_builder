@@ -339,6 +339,14 @@ module.exports = class RowFilter extends RowFilterCore {
                         value: "less",
                         options: [
                            {
+                              value: labels.component.equalListCondition,
+                              id: "equals"
+                           },
+                           {
+                              value: labels.component.notEqualListCondition,
+                              id: "not_equal"
+                           },
+                           {
                               value: labels.component.beforeCondition,
                               id: "less"
                            },
@@ -476,6 +484,10 @@ module.exports = class RowFilter extends RowFilterCore {
                            {
                               value: labels.component.equalListCondition,
                               id: "equals"
+                           },
+                           {
+                              value: labels.component.notEqualListCondition,
+                              id: "not_equal"
                            }
                         ]
                            .concat(instance.queryFieldOptions)
@@ -1225,7 +1237,14 @@ module.exports = class RowFilter extends RowFilterCore {
 
                // Convert date format
                if (value instanceof Date) {
-                  value = value.toISOString();
+                  let dateField = this._Fields.filter(
+                     (f) => f.id == fieldId
+                  )[0];
+                  if (dateField) {
+                     value = dateField.exportValue(value);
+                  } else {
+                     value = value.toISOString();
+                  }
                }
 
                config_settings.rules.push({
