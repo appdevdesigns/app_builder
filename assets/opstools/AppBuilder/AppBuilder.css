@@ -1161,3 +1161,60 @@ div.amp .fa-unlock-alt {
 .ab-widget-header .webix_template div .fa, .ab-layout-header .fa {
    vertical-align: middle;
 }
+#offlinePrompt, #connectionPrompt {
+   line-height: 30px;
+   color: white;
+   background: #F44336;
+   font-size: 14px;
+   text-align: center;
+   transition: all 1s;
+   text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+   overflow: hidden;
+}
+#connectionPrompt {
+   background: #F44336;
+}
+#countdown {
+  height: 20px;
+  width: 20px;
+  text-align: center;
+  display: inline-block;
+  line-height: 20px;
+  position: relative;
+  bottom: 2px;
+  font-size: 9px;
+}
+
+#countdown-number {
+  color: white;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+}
+
+#countdown svg {
+  width: 20px;
+  height: 20px;
+  transform: rotateY(-180deg) rotateZ(-90deg);
+  position: absolute;
+  margin-left: -20px;
+}
+
+#countdown svg circle {
+  stroke-dasharray: 56px;
+  stroke-dashoffset: 0px;
+  stroke-linecap: round;
+  stroke-width: 2px;
+  stroke: white;
+  fill: none;
+  animation: countdown 30s linear infinite forwards;
+}
+
+@keyframes countdown {
+  from {
+    stroke-dashoffset: 0px;
+  }
+  to {
+    stroke-dashoffset: 56px;
+  }
+}
