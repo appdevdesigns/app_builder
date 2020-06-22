@@ -89,11 +89,6 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                      return next();
                   }
 
-                  // .Open has to be true
-                  if (!this.currentFP.Open) {
-                     return next();
-                  }
-
                   // Pull the .Start field for use to search the next FP
                   let startField = this.fpObject.fields(
                      (f) => f.id == this.fieldFPStart
