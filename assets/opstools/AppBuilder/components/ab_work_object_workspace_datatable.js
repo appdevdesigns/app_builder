@@ -168,7 +168,8 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
                      var editor = {
                         row: row,
-                        column: col
+                        column: col,
+                        config: null
                      };
                      _logic.onAfterEditStop(state, editor);
                   } else {
@@ -677,24 +678,26 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
             // if you don't edit an empty cell we just need to move on
             if (
-               (state.old == null && state.value == "") ||
-               (state.old == "" && state.value == "")
+               (state.old == null && state.value === "") ||
+               (state.old === "" && state.value === "")
             ) {
                DataTable.clearSelection();
                return false;
             }
 
-            switch (editor.config.editor) {
-               case "number":
-                  state.value = parseInt(state.value);
-                  break;
-               case "datetime":
-                  state.value = state.value.getTime();
-                  if (state && state.old && state.old.getTime)
-                     state.old = state.old.getTime();
-                  break;
-               default:
-               // code block
+            if (editor.config) {
+               switch (editor.config.editor) {
+                  case "number":
+                     state.value = parseInt(state.value);
+                     break;
+                  case "datetime":
+                     state.value = state.value.getTime();
+                     if (state && state.old && state.old.getTime)
+                        state.old = state.old.getTime();
+                     break;
+                  default:
+                  // code block
+               }
             }
 
             if (state.value != state.old) {
@@ -1237,7 +1240,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                // check if the previous datatable had rule popups and remove them
                if (dataTable.config.rulePops) {
                   dataTable.config.rulePops.forEach((popup) => {
-                     $$(popup).destructor();
+                     if ($$(popup)) $$(popup).destructor();
                   });
                }
                // remove any validation rules from the previous table

@@ -107,8 +107,13 @@ module.exports = class ABField extends ABFieldCore {
       }
 
       if (field.settings && field.settings.validationRules) {
-         var rules = JSON.parse(field.settings.validationRules);
-         rules.forEach((settings) => {
+         var rules = field.settings.validationRules;
+         if (typeof rules == "string") {
+            try {
+               rules = JSON.parse(rules);
+            } catch (e) {}
+         }
+         (rules || []).forEach((settings) => {
             field.addValidation(ids, settings);
          });
       }

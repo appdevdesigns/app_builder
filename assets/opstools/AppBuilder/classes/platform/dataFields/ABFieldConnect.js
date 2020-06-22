@@ -607,6 +607,40 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
    /// Working with Actual Object Values:
    ///
 
+   /**
+    * @method pullRelationValues
+    *
+    * On the Web client, we want our returned relation values to be
+    * ready for Webix objects that require a .text field.
+    *
+    * @param {*} row
+    * @return {array}
+    */
+   pullRelationValues(row) {
+      var selectedData = [];
+
+      var data = super.pullRelationValues(row);
+      var linkedObject = this.datasourceLink;
+
+      if (data && linkedObject) {
+         // if this select value is array
+         if (data.map) {
+            selectedData = data.map(function(d) {
+               // display label in format
+               if (d) d.text = d.text || linkedObject.displayData(d);
+
+               return d;
+            });
+         } else if (data.id) {
+            selectedData = data;
+            selectedData.text =
+               selectedData.text || linkedObject.displayData(selectedData);
+         }
+      }
+
+      return selectedData;
+   }
+
    // return the grid column header definition for this instance of ABFieldConnect
    columnHeader(options) {
       options = options || {};

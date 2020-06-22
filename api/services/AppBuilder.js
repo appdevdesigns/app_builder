@@ -3305,7 +3305,6 @@ module.exports = {
          }
 
          var list = ABApplication.applications();
-
          list.forEach((l) => {
             var listMA = l.mobileApps();
 

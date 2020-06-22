@@ -5,6 +5,8 @@ const ABRecordRule = require("../../rules/ABViewRuleListFormRecordRules");
 
 const ABViewCSVImporterPropertyComponentDefaults = ABViewCSVImporterCore.defaultValues();
 
+var FilterComplex = require("../FilterComplex");
+
 let PopupRecordRule = null;
 
 function L(key, altText) {
@@ -267,7 +269,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
          statusMessage: App.unique(idBase + "_statusMessage"),
          progressBar: App.unique(idBase + "_progressBar"),
 
-         importButton: App.unique(idBase + "_importButton")
+         importButton: App.unique(idBase + "_importButton"),
+         rules: App.unique(idBase + "_datatable_rules")
       };
 
       let csvImporter = new CSVImporter(App);
@@ -322,15 +325,13 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                click: () => {
                   _logic.showPopup();
                }
-            },
-            {
-               fillspace: true
             }
          ]
       };
 
       let _uiConfig = {
          view: "form",
+         type: "clean",
          id: ids.form,
          borderless: true,
          width: 400,
@@ -341,6 +342,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      id: ids.uploader,
                      view: "uploader",
                      name: "csvFile",
+                     css: "webix_primary",
                      value: labels.component.selectCsvFile,
                      accept: "text/csv",
                      multiple: false,
@@ -367,65 +369,164 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      }
                   },
                   {
-                     id: ids.separatedBy,
-                     view: "richselect",
-                     name: "separatedBy",
-                     label: labels.component.separatedBy,
-                     labelWidth: 140,
-                     options: csvImporter.getSeparateItems(),
-                     value: ",",
-                     on: {
-                        onChange: () => {
-                           _logic.loadCsvFile();
+                     padding: 10,
+                     rows: [
+                        {
+                           id: ids.separatedBy,
+                           view: "richselect",
+                           name: "separatedBy",
+                           label: labels.component.separatedBy,
+                           labelWidth: 140,
+                           options: csvImporter.getSeparateItems(),
+                           value: ",",
+                           on: {
+                              onChange: () => {
+                                 _logic.loadCsvFile();
+                              }
+                           }
+                        },
+                        {
+                           id: ids.headerOnFirstLine,
+                           view: "checkbox",
+                           name: "headerOnFirstLine",
+                           label: labels.component.headerFirstLine,
+                           labelWidth: 140,
+                           disabled: true,
+                           value: true,
+                           on: {
+                              onChange: (newVal, oldVal) => {
+                                 _logic.populateColumnList();
+                              }
+                           }
                         }
-                     }
+                     ]
                   },
                   {
-                     id: ids.headerOnFirstLine,
-                     view: "checkbox",
-                     name: "headerOnFirstLine",
-                     label: labels.component.headerFirstLine,
-                     labelWidth: 140,
-                     disabled: true,
-                     value: true,
-                     on: {
-                        onChange: (newVal, oldVal) => {
-                           _logic.populateColumnList();
+                     type: "space",
+                     rows: [
+                        {
+                           view: "scrollview",
+                           minHeight: 300,
+                           body: {
+                              padding: 10,
+                              id: ids.columnList,
+                              rows: []
+                           }
                         }
-                     }
-                  },
-                  {
-                     view: "scrollview",
-                     minHeight: 250,
-                     body: {
-                        id: ids.columnList,
-                        rows: []
-                     }
+                     ]
                   }
                ]
             }
          ]
       };
 
+      var validationError = false;
+
       let _uiRecordsView = {
          rows: [
             {
-               id: ids.search,
-               view: "search",
-               value: "",
-               label: "",
-               on: {
-                  onChange: (text) => {
-                     _logic.search(text);
-                  }
-               }
+               view: "toolbar",
+               css: "bg_gray",
+               cols: [
+                  { width: 5 },
+                  {
+                     id: ids.search,
+                     view: "search",
+                     value: "",
+                     label: "",
+                     placeholder: "Search records...",
+                     keyPressTimeout: 200,
+                     on: {
+                        onTimedKeyPress: () => {
+                           let text = $$(ids.search).getValue();
+                           _logic.search(text);
+                        }
+                     }
+                  },
+                  { width: 2 }
+               ]
             },
             {
                id: ids.datatable,
                view: "datatable",
+               tooltip: true,
+               resizeColumn: true,
+               editable: true,
+               editaction: "dblclick",
                css: "ab-csv-importer",
-               width: 650,
-               columns: []
+               borderless: false,
+               tooltip: function(obj) {
+                  var tooltip = obj._errorMsg
+                     ? obj._errorMsg
+                     : "No validation errors";
+                  return tooltip;
+               },
+               minWidth: 650,
+               columns: [],
+               on: {
+                  onValidationError: function(id, obj, details) {
+                     console.log(id, " validation error");
+                     $$(ids.datatable).blockEvent();
+                     var errors = "";
+                     Object.keys(details).forEach((key) => {
+                        this.$view.complexValidations[key].forEach((err) => {
+                           errors += err.invalidMessage + "</br>";
+                        });
+                     });
+                     $$(ids.datatable).updateItem(id, {
+                        _status: "invalid",
+                        _errorMsg: errors
+                     });
+                     $$(ids.datatable).unblockEvent();
+                     validationError = true;
+                  },
+                  onValidationSuccess: function(id, obj, details) {
+                     console.log("validation success");
+                     $$(ids.datatable).blockEvent();
+                     $$(ids.datatable).updateItem(id, {
+                        _status: "valid",
+                        _errorMsg: ""
+                     });
+                     $$(ids.datatable).unblockEvent();
+                     validationError = false;
+                  },
+                  onCheck: function() {
+                     var selected = $$(ids.datatable).find({ _included: true });
+                     $$(ids.importButton).setValue(
+                        labels.component.import +
+                           " " +
+                           selected.length +
+                           " Records"
+                     );
+                     if (selected.length > 1000) {
+                        // we only allow 1000 record imports
+                        webix.alert({
+                           title: "Too many records",
+                           ok: "Okay",
+                           text:
+                              "Due to browser limitations we only allow imports of 1,000 records. Please upload a new CSV or deselect records to import."
+                        });
+                        $$(ids.importButton).disable();
+                     } else {
+                        $$(ids.importButton).enable();
+                     }
+                  }
+               }
+            },
+            {
+               id: ids.progressBar,
+               height: 6
+            },
+            {
+               view: "button",
+               name: "import",
+               id: ids.importButton,
+               value: labels.component.import,
+               css: "webix_primary",
+               disabled: true,
+               click: () => {
+                  _logic.import();
+               }
             }
          ]
       };
@@ -445,11 +546,40 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             position: "center",
             modal: true,
             resize: true,
-            head: L("ab.components.csvImporter", "*CSV Importer"),
+            head: {
+               view: "toolbar",
+               css: "webix_dark",
+               cols: [
+                  {},
+                  {
+                     view: "label",
+                     label: L("ab.components.csvImporter", "*CSV Importer"),
+                     autowidth: true
+                  },
+                  {},
+                  {
+                     view: "button",
+                     width: 35,
+                     css: "webix_transparent",
+                     type: "icon",
+                     icon: "nomargin fa fa-times",
+                     click: () => {
+                        _logic.hide();
+                     }
+                  }
+               ]
+            },
             body: {
+               type: "form",
                rows: [
                   {
-                     cols: [_uiConfig, _uiRecordsView]
+                     type: "line",
+                     cols: [
+                        _uiConfig,
+                        { width: 20 },
+                        _uiRecordsView,
+                        { width: 1 }
+                     ]
                   },
                   {
                      id: ids.statusMessage,
@@ -458,10 +588,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      hidden: true
                   },
                   {
-                     id: ids.progressBar,
-                     height: 20
-                  },
-                  {
+                     hidden: true,
                      margin: 5,
                      cols: [
                         { fillspace: true },
@@ -474,7 +601,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                            click: () => {
                               _logic.hide();
                            }
-                        },
+                        }
+                        /*,
                         {
                            view: "button",
                            name: "import",
@@ -487,7 +615,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                            click: () => {
                               _logic.import();
                            }
-                        }
+                        }*/
                      ]
                   }
                ]
@@ -524,7 +652,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             $$(ids.separatedBy).setValue(",");
 
             webix.ui([], $$(ids.columnList));
-            $$(ids.uploadFileList).clearAll();
 
             $$(ids.headerOnFirstLine).disable();
             $$(ids.importButton).disable();
@@ -552,7 +679,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   if (exists) return;
 
                   exists =
-                     (row[`data${f.columnIndex}`] || "")
+                     (row[`${f.columnIndex}`] || "")
                         .toString()
                         .toLowerCase()
                         .indexOf(searchText) > -1;
@@ -573,6 +700,9 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   break;
                case "invalid":
                   template = "<span class='fa fa-exclamation-triangle'></span>";
+                  break;
+               case "valid":
+                  template = "<span class='fa fa-check'></span>";
                   break;
                case "done":
                   template = "<span class='fa fa-check'></span>";
@@ -609,6 +739,13 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
                $$(ids.headerOnFirstLine).enable();
                $$(ids.importButton).enable();
+               let length = _dataRows.length;
+               if ($$(ids.headerOnFirstLine).getValue()) {
+                  length = _dataRows.length - 1;
+               }
+               $$(ids.importButton).setValue(
+                  labels.component.import + " " + length + " Records"
+               );
 
                _logic.populateColumnList();
 
@@ -807,14 +944,145 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                width: 30
             });
 
+            var fieldValidations = [];
+            var rulePops = [];
             // populate columns
             (matchFields || []).forEach((f) => {
+               var validationRules = f.field.settings.validationRules;
+               // parse the rules because they were stored as a string
+               // check if rules are still a string...if so lets parse them
+               if (validationRules && typeof validationRules === "string") {
+                  validationRules = JSON.parse(validationRules);
+               }
+
+               if (validationRules && validationRules.length) {
+                  var validationUI = [];
+                  // there could be more than one so lets loop through and build the UI
+                  validationRules.forEach((rule) => {
+                     var Filter = new FilterComplex(
+                        App,
+                        f.field.id + "_" + webix.uid()
+                     );
+                     // add the new ui to an array so we can add them all at the same time
+                     validationUI.push(Filter.ui);
+                     // store the filter's info so we can assign values and settings after the ui is rendered
+                     fieldValidations.push({
+                        filter: Filter,
+                        view: Filter.ids.querybuilder,
+                        columnName: f.field.id,
+                        validationRules: rule.rules,
+                        invalidMessage: rule.invalidMessage,
+                        columnIndex: f.columnIndex
+                     });
+                  });
+                  // create a unique view id for popup
+                  var popUpId =
+                     ids.rules + "_" + f.field.id + "_" + webix.uid();
+                  // store the popup ids so we can remove the later
+                  rulePops.push(popUpId);
+                  // add the popup to the UI but don't show it
+                  webix.ui({
+                     view: "popup",
+                     css: "ab-rules-popup",
+                     id: popUpId,
+                     body: {
+                        rows: validationUI
+                     }
+                  });
+               }
+
+               var editor = "text";
+               switch (f.field.key) {
+                  case "number":
+                     editor = "number";
+                     break;
+                  case "datetime":
+                     editor = "datetime";
+                     break;
+                  default:
+                  // code block
+               }
                columns.push({
                   id: f.columnIndex,
                   header: f.field.label,
+                  editor: editor,
+                  minWidth: 150,
                   fillspace: true
                });
             });
+
+            if (fieldValidations.length) {
+               // we need to store the rules for use later so lets build a container array
+               var complexValidations = [];
+               fieldValidations.forEach((f) => {
+                  // init each ui to have the properties (app and fields) of the object we are editing
+                  f.filter.applicationLoad(App);
+                  f.filter.fieldsLoad(_currentObject.fields());
+                  // now we can set the value because the fields are properly initialized
+                  f.filter.setValue(f.validationRules);
+                  // if there are validation rules present we need to store them in a lookup hash
+                  // so multiple rules can be stored on a single field
+                  if (!Array.isArray(complexValidations[f.columnName]))
+                     complexValidations[f.columnName] = [];
+
+                  // now we can push the rules into the hash
+                  complexValidations[f.columnName].push({
+                     filters: $$(f.view).getFilterHelper(),
+                     values: $$(ids.datatable).getSelectedItem(),
+                     invalidMessage: f.invalidMessage,
+                     columnIndex: f.columnIndex
+                  });
+               });
+               var rules = {};
+               var dataTable = $$(ids.datatable);
+               // store the rules in a data param to be used later
+               dataTable.$view.complexValidations = complexValidations;
+               // use the lookup to build the validation rules
+               Object.keys(complexValidations).forEach(function(key) {
+                  rules[key] = function(value, data) {
+                     // default valid is true
+                     var isValid = true;
+                     dataTable.$view.complexValidations[key].forEach(
+                        (filter) => {
+                           let rowValue = {};
+                           // use helper funtion to check if valid
+                           // map the column names to the index numbers of data
+                           // reformat data to display
+                           (matchFields || []).forEach((f) => {
+                              let record = data[f.columnIndex];
+                              rowValue[f.field.columnName] = record;
+                           });
+                           var ruleValid = filter.filters(rowValue);
+                           // if invalid we need to tell the field
+                           if (ruleValid == false) {
+                              isValid = false;
+                              // webix.message({
+                              //    type: "error",
+                              //    text: invalidMessage
+                              // });
+                           }
+                        }
+                     );
+                     return isValid;
+                  };
+               });
+               // define validation rules
+               dataTable.define("rules", rules);
+               // store the array of view ids on the webix object so we can get it later
+               dataTable.config.rulePops = rulePops;
+               dataTable.refresh();
+            } else {
+               var dataTable = $$(ids.datatable);
+               // check if the previous datatable had rule popups and remove them
+               if (dataTable.config.rulePops) {
+                  dataTable.config.rulePops.forEach((popup) => {
+                     if ($$(popup)) $$(popup).destructor();
+                  });
+               }
+               // remove any validation rules from the previous table
+               dataTable.define("rules", {});
+               dataTable.refresh();
+            }
 
             /** Prepare Data */
             let parsedData = [];
@@ -831,9 +1099,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   if (f.field.key == "connectObject") {
                      rowValue[f.columnIndex] = data;
                   } else {
-                     let dataValue = {};
-                     dataValue[f.field.columnName] = data;
-                     rowValue[f.columnIndex] = f.field.format(dataValue); // array to object
+                     rowValue[f.columnIndex] = data; // array to object
                   }
                });
 
@@ -849,9 +1115,26 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                parsedData = parsedData.slice(1);
             }
 
+            $$(ids.importButton).setValue(
+               labels.component.import + " " + parsedData.length + " Records"
+            );
+
             $datatable.refreshColumns(columns);
 
             $datatable.parse(parsedData);
+
+            if (parsedData.length > 1000) {
+               // we only allow 1000 record imports
+               webix.alert({
+                  title: "Too many records",
+                  ok: "Okay",
+                  text:
+                     "Due to browser limitations we only allow imports of 1,000 records. Please upload a new CSV or deselect records to import."
+               });
+               $$(ids.importButton).disable();
+            } else {
+               $$(ids.importButton).enable();
+            }
 
             // hide loading cursor
             if ($datatable.hideProgress) $datatable.hideProgress();
@@ -859,9 +1142,11 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
          refreshRemainingTimeText(startUpdateTime, total, index) {
             // Calculate remaining time
-            let spentTime = new Date() - startUpdateTime;
+            let spentTime = new Date() - startUpdateTime; // milliseconds that has passed since last completed record since start
 
-            let remainTime = spentTime * (total - index);
+            let averageRenderTime = spentTime / index; // average milliseconds per single render at this point
+
+            let remainTime = averageRenderTime * (total - index);
 
             let result = "";
 
@@ -872,7 +1157,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             let seconds = (remainTime / 1000).toFixed(0);
 
             if (seconds < 1) result = "";
-            else if (seconds < 30) result = `Less than 30 seconds`;
             else if (seconds < 60)
                result = `Approximately ${seconds} second${
                   seconds > 1 ? "s" : ""
@@ -886,11 +1170,13 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
             if (result) {
                result = `${result} remaining`;
-               $$(ids.statusMessage).show();
-               $$(ids.statusMessage).setValue(result);
+               // $$(ids.statusMessage).show();
+               $$(ids.importButton).setValue(result);
             } else {
-               $$(ids.statusMessage).setValue("");
-               $$(ids.statusMessage).hide();
+               var selected = $$(ids.datatable).find({ _included: true });
+               $$(ids.importButton).setValue(
+                  labels.component.import + " " + selected.length + " Records"
+               );
             }
          },
 
@@ -975,7 +1261,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             // Show loading cursor
             $$(ids.form).showProgress({ type: "icon" });
             $$(ids.progressBar).showProgress({
-               type: "bottom",
+               type: "top",
                position: 0.0001
             });
 
@@ -1000,10 +1286,11 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                let $datatable = $$(ids.datatable);
                if ($datatable) {
                   // set "fail" status
-                  $$(ids.datatable).updateItem(itemId, {
-                     _status: "fail"
-                  });
                   $datatable.addRowCss(itemId, "row-fail");
+                  $$(ids.datatable).updateItem(itemId, {
+                     _status: "fail",
+                     _errorMsg: errMessage
+                  });
                }
                increaseProgressing();
 
@@ -1013,42 +1300,89 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             let itemInvalid = (itemId, errors = []) => {
                let $datatable = $$(ids.datatable);
                if ($datatable) {
-                  // set "fail" status
-                  $$(ids.datatable).updateItem(itemId, {
-                     _status: "invalid"
-                  });
-
+                  // combine all error messages to display in tooltip
+                  let errorMsg = [];
                   // mark which column are invalid
                   errors.forEach((err) => {
                      if (!err || !err.name) return;
                      let fieldInfo = matchFields.filter(
                         (f) => f.field && f.field.columnName == err.name
                      )[0];
-                     if (fieldInfo) {
-                        $datatable.addCellCss(
-                           itemId,
-                           fieldInfo.columnIndex,
-                           "cell-invalid"
-                        );
-                     }
+                     errorMsg.push(err.name + ": " + err.message);
+                     // we also need to define an error message
+                     // webix.message({
+                     //    type: "error",
+                     //    text: err.name + ": " + err.message
+                     // });
                   });
-
-                  // highlight the row
-                  $datatable.addRowCss(itemId, "row-warn");
+                  // set "fail" status
+                  $$(ids.datatable).blockEvent();
+                  $$(ids.datatable).updateItem(itemId, {
+                     _status: "invalid",
+                     _errorMsg: errorMsg.join("</br>")
+                  });
+                  $datatable.addRowCss(itemId, "webix_invalid");
+                  $$(ids.datatable).unblockEvent();
                }
-               increaseProgressing();
+               // increaseProgressing();
             };
 
             let itemPass = (itemId) => {
                let $datatable = $$(ids.datatable);
+               $datatable.blockEvent();
                if ($datatable) {
                   // set "done" status
-                  $datatable.updateItem(itemId, {
-                     _status: "done"
-                  });
+                  $datatable.removeRowCss(itemId, "row-fail");
                   $datatable.addRowCss(itemId, "row-pass");
+                  $datatable.updateItem(itemId, {
+                     _status: "done",
+                     _errorMsg: ""
+                  });
                }
+               $datatable.unblockEvent();
                increaseProgressing();
+            };
+
+            let itemValid = (itemId) => {
+               let $datatable = $$(ids.datatable);
+               if ($datatable) {
+                  // mark all columns valid (just in case they were invalid before)
+                  // matchFields.forEach((f) => {
+                  //    $datatable.removeCellCss(
+                  //       itemId,
+                  //       f.columnIndex,
+                  //       "webix_invalid_cell"
+                  //    );
+                  // });
+                  // highlight the row
+                  $datatable.removeRowCss(itemId, "webix_invalid");
+                  $datatable.updateItem(itemId, {
+                     _status: "",
+                     _errorMsg: ""
+                  });
+                  // $datatable.addRowCss(itemId, "row-pass");
+               }
+            };
+
+            let uiCleanUp = () => {
+               // To Do anyUI updates
+               $$(ids.importButton).enable();
+
+               // Hide loading cursor
+               $$(ids.form).hideProgress();
+               $$(ids.progressBar).hideProgress();
+               $$(ids.statusMessage).setValue("");
+               $$(ids.statusMessage).hide();
+
+               var selected = $$(ids.datatable).find({ _included: true });
+               $$(ids.importButton).setValue(
+                  labels.component.import + " " + selected.length + " Records"
+               );
+
+               // _logic.hide();
+
+               if (_logic.callbacks && _logic.callbacks.onDone)
+                  _logic.callbacks.onDone();
             };
 
             // Set parent's data collection cursor
@@ -1068,7 +1402,11 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                linkValueId = dcLink.getCursor().id;
             }
 
-            let tasks = [];
+            let allValid = true;
+            let validRows = [];
+            // Pre Check Validations of whole CSV import
+            // update row to green if valid
+            // update row to red if !valid
             (selectedRows || []).forEach((data, index) => {
                let newRowData = {};
 
@@ -1087,13 +1425,17 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   if (!f.field || !f.field || !f.field.key) return;
 
                   switch (f.field.key) {
-                     case "connectObject":
-                        // skip
-                        break;
+                     // case "connectObject":
+                     //    // skip
+                     //    break;
                      case "number":
-                        newRowData[f.field.columnName] = (
-                           data[f.columnIndex] || ""
-                        ).replace(/[^0-9.]/gi, "");
+                        if (typeof data[f.columnIndex] != "number") {
+                           newRowData[f.field.columnName] = (
+                              data[f.columnIndex] || ""
+                           ).replace(/[^0-9.]/gi, "");
+                        } else {
+                           newRowData[f.field.columnName] = data[f.columnIndex];
+                        }
                         break;
                      default:
                         newRowData[f.field.columnName] = data[f.columnIndex];
@@ -1102,177 +1444,287 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                });
 
                let isValid = false;
+               let errorMsg = "";
 
-               let startUpdateTime;
+               // first check legacy and server side validation
+               let validator = _currentObject.isValidData(newRowData);
+               isValid = validator.pass();
+               errorMsg = validator.errors;
 
-               tasks.push((indexTask) => {
-                  return (
-                     Promise.resolve()
-                        // validate data
-                        .then(
-                           () =>
-                              new Promise((next, err) => {
-                                 startUpdateTime = new Date();
-
-                                 // scroll to the item
-                                 $$(ids.datatable).showItem(data.id);
-                                 $$(ids.datatable).updateItem(data.id, {
-                                    _status: "in-progress"
-                                 });
-
-                                 let validator = _currentObject.isValidData(
-                                    newRowData
-                                 );
-                                 isValid = validator.pass();
-                                 if (!isValid) {
-                                    itemInvalid(data.id, validator.errors);
-                                 }
-
-                                 next();
-                              })
-                        )
-                        // pull .id of the link object
-                        .then(
-                           () =>
-                              new Promise((next, err) => {
-                                 if (!isValid) return next();
-
-                                 let searchTasks = [];
-                                 let connectedFields = matchFields.filter(
-                                    (f) =>
-                                       f &&
-                                       f.field &&
-                                       f.field.key == "connectObject" &&
-                                       f.searchField
-                                 );
-                                 (connectedFields || []).forEach((f) => {
-                                    let connectField = f.field;
-                                    let searchField = f.searchField;
-                                    let searchWord = data[f.columnIndex];
-
-                                    let connectObject =
-                                       connectField.datasourceLink;
-                                    if (!connectObject) return;
-
-                                    let connectModel = connectObject.model();
-                                    if (!connectModel) return;
-
-                                    searchTasks.push(
-                                       new Promise((go, bad) => {
-                                          connectModel
-                                             .findAll({
-                                                where: {
-                                                   glue: "and",
-                                                   rules: [
-                                                      {
-                                                         key: searchField.id,
-                                                         rule: "equals",
-                                                         value: searchWord
-                                                      }
-                                                   ]
-                                                }
-                                             })
-                                             .catch((errMessage) => go())
-                                             .then((list) => {
-                                                if (list && list.data[0]) {
-                                                   let linkIdKey = connectField.indexField
-                                                      ? connectField.indexField
-                                                           .columnName
-                                                      : connectField.object.PK();
-                                                   newRowData[
-                                                      connectField.columnName
-                                                   ] = {};
-                                                   newRowData[
-                                                      connectField.columnName
-                                                   ][linkIdKey] =
-                                                      list.data[0][linkIdKey];
-                                                }
-                                                go();
-                                             });
-                                       })
-                                    );
-                                 });
-
-                                 Promise.all(searchTasks)
-                                    .catch(err)
-                                    .then(() => next());
-                              })
-                        )
-
-                        // insert data
-                        .then(
-                           () =>
-                              new Promise((next, err) => {
-                                 if (!isValid) return next();
-
-                                 objModel
-                                    .create(newRowData)
-                                    .catch((errMessage) => {
-                                       itemFailed(data.id, errMessage);
-                                       next();
-                                    })
-                                    .then((insertedRow) => {
-                                       if (insertedRow) {
-                                          newRowData.id =
-                                             insertedRow.id || insertedRow.uuid;
-                                          next(true);
-                                       } else {
-                                          next(false);
-                                       }
-                                    });
-                              })
-                        )
-
-                        // process record rule
-                        .then(
-                           (isCreated) =>
-                              new Promise((next, err) => {
-                                 if (!isCreated || !isValid) return next();
-
-                                 // Process Record Rule
-                                 this.doRecordRules(newRowData)
-                                    .then(() => {
-                                       itemPass(data.id);
-
-                                       _logic.refreshRemainingTimeText(
-                                          startUpdateTime,
-                                          tasks.length,
-                                          indexTask
-                                       );
-
-                                       next();
-                                    })
-                                    .catch((errMessage) => {
-                                       itemFailed(data.id, errMessage);
-                                       next();
-                                    });
-                              })
-                        )
-                  );
-               });
+               if (isValid) {
+                  // now check complex field validation rules
+                  isValid = $$(ids.datatable).validate(data.id);
+               } else {
+                  allValid = false;
+                  itemInvalid(data.id, errorMsg);
+               }
+               if (isValid) {
+                  itemValid(data.id);
+                  validRows.push({ id: data.id, data: newRowData });
+               } else {
+                  allValid = false;
+               }
+               $$(ids.datatable).unblockEvent();
             });
 
-            // action sequentially
-            return tasks
-               .reduce((promiseChain, currTask, idx) => {
-                  return promiseChain.then(() => currTask(idx));
-               }, Promise.resolve())
+            if (!allValid) {
+               // To Do anyUI updates
+               // $$(ids.importButton).enable();
+               //
+               // // Hide loading cursor
+               // $$(ids.form).hideProgress();
+               // $$(ids.progressBar).hideProgress();
+               // $$(ids.statusMessage).setValue("");
+               // $$(ids.statusMessage).hide();
+               //
+               // // _logic.hide();
+               //
+               // if (_logic.callbacks && _logic.callbacks.onDone)
+               //    _logic.callbacks.onDone();
+               uiCleanUp();
+
+               webix.alert({
+                  title: "Invalid Data",
+                  ok: "Okay",
+                  text:
+                     "One or more items failed validation. Doubleclick record to correct or uncheck record to exclude from import."
+               });
+
+               return Promise.resolve();
+            }
+
+            // if pass, then continue to process each row
+            // ?? : can we process in Parallel?
+            // ?? : implement hash Lookups for connected Fields
+            var hashLookups = {};
+            // {obj}  /*  { connectField.id : { 'searchWord' : "uuid"}}
+            // use this hash to reduce the # of lookups needed to fill in our
+            // connected entries
+
+            let connectedFields = matchFields.filter(
+               (f) =>
+                  f &&
+                  f.field &&
+                  f.field.key == "connectObject" &&
+                  f.searchField
+            );
+
+            let startUpdateTime;
+            var numDone = 0;
+            return Promise.resolve()
                .then(() => {
-                  // _logic.formClear();
-                  $$(ids.importButton).enable();
+                  // forEach connectedFields in csv
 
-                  // Hide loading cursor
-                  $$(ids.form).hideProgress();
-                  $$(ids.progressBar).hideProgress();
-                  $$(ids.statusMessage).setValue("");
-                  $$(ids.statusMessage).hide();
+                  var allLookups = [];
 
-                  // _logic.hide();
+                  (connectedFields || []).forEach((f) => {
+                     let connectField = f.field;
+                     let searchField = f.searchField;
+                     // let searchWord = newRowData[f.columnIndex];
 
-                  if (_logic.callbacks && _logic.callbacks.onDone)
-                     _logic.callbacks.onDone();
+                     let connectObject = connectField.datasourceLink;
+                     if (!connectObject) return;
 
-                  return Promise.resolve();
+                     let connectModel = connectObject.model();
+                     if (!connectModel) return;
+
+                     let linkIdKey = connectField.indexField
+                        ? connectField.indexField.columnName
+                        : connectField.object.PK();
+
+                     // prepare default hash entry:
+                     hashLookups[connectField.id] = {};
+
+                     // load all values of connectedField entries
+
+                     allLookups.push(
+                        connectModel
+                           .findAll({
+                              where: {},
+                              populate: false
+                           })
+                           .catch((errMessage) => {
+                              console.error(errMessage);
+                           })
+                           .then((list) => {
+                              if (list.data) {
+                                 list = list.data;
+                              }
+                              (list || []).forEach((row) => {
+                                 // store in hash[field.id] = { 'searchKey' : "uuid" }
+
+                                 hashLookups[connectField.id][
+                                    row[searchField.columnName]
+                                 ] = row[linkIdKey];
+                              });
+                           })
+                     );
+                  });
+
+                  return Promise.all(allLookups);
+               })
+               .then(() => {
+                  // forEach validRow
+                  $$(ids.datatable).blockEvent();
+                  validRows.forEach((data) => {
+                     let newRowData = data.data;
+
+                     // update the datagrid row to in-progress
+                     $$(ids.datatable).updateItem(data.id, {
+                        _status: "in-progress",
+                        _errorMsg: ""
+                     });
+
+                     // forEach ConnectedField
+                     (connectedFields || []).forEach((f) => {
+                        // find newRowData[field.columnName] = { field.PK : hash[field.id][searchWord] }
+                        let connectField = f.field;
+                        let linkIdKey = connectField.indexField
+                           ? connectField.indexField.columnName
+                           : connectField.object.PK();
+                        var uuid =
+                           hashLookups[connectField.id][
+                              newRowData[connectField.columnName]
+                           ];
+
+                        if (!uuid) {
+                           itemInvalid(data.id, [
+                              { name: connectField.columnName }
+                           ]);
+                           allValid = false;
+                        }
+
+                        newRowData[connectField.columnName] = {};
+                        newRowData[connectField.columnName][linkIdKey] = uuid;
+                     });
+                  });
+                  $$(ids.datatable).unblockEvent();
+               })
+               .then(() => {
+                  if (!allValid) {
+                     webix.alert({
+                        title: "Invalid Data",
+                        ok: "Okay",
+                        text:
+                           "One or more connected records referenced an unknown item."
+                     });
+
+                     return Promise.resolve();
+                  }
+                  // NOTE: Parallel exectuion of all these:
+                  var allSaves = [];
+
+                  validRows.forEach((data) => {
+                     let newRowData = data.data;
+
+                     allSaves.push(
+                        objModel
+                           .create(newRowData)
+                           .catch((errMessage) => {
+                              itemFailed(data.id, errMessage);
+                           })
+                           .then((insertedRow) => {
+                              if (insertedRow) {
+                                 newRowData.id =
+                                    insertedRow.id || insertedRow.uuid;
+                                 return true;
+                              }
+                              return false;
+                           })
+                           .then(
+                              (isCreated) =>
+                                 new Promise((next, err) => {
+                                    if (!isCreated) return next();
+
+                                    // Process Record Rule
+                                    this.doRecordRules(newRowData)
+                                       .then(() => {
+                                          itemPass(data.id);
+
+                                          numDone++;
+                                          if (numDone % 20 == 0) {
+                                             _logic.refreshRemainingTimeText(
+                                                startUpdateTime,
+                                                validRows.length,
+                                                numDone
+                                             );
+                                          }
+
+                                          next();
+                                       })
+                                       .catch((errMessage) => {
+                                          itemFailed(data.id, errMessage);
+                                          next();
+                                       });
+                                 })
+                           )
+                     );
+                  });
+
+                  // we are going to store these promises in an array of arrays with 50 in each sub array
+                  var throttledSaves = [];
+                  var index = 0;
+                  while (allSaves.length) {
+                     throttledSaves[index] = allSaves.splice(0, 100);
+                     index++;
+                  }
+
+                  // execute the array of array of 100 promises one at at time
+                  function performThrottledSaves(
+                     currentPromises,
+                     remainingPromises
+                  ) {
+                     // execute the next 100
+                     return Promise.all(currentPromises)
+                        .then(() => {
+                           // when done get the next 100
+                           var next = remainingPromises.shift();
+                           // if there are any remaining in the group call performThrottledSaves
+                           if (remainingPromises.length) {
+                              return performThrottledSaves(
+                                 next,
+                                 remainingPromises
+                              );
+                           } else {
+                              // if the remainging group is empty just call Promise.all()
+                              return Promise.all(next)
+                                 .then(() => {
+                                    // you are done clean up th UI and listen to events again
+                                    $$(ids.datatable).unblockEvent();
+                                    uiCleanUp();
+                                    return Promise.resolve();
+                                 })
+                                 .catch((err) => {
+                                    // Handle errors here
+                                    return Promise.resolve(err);
+                                 });
+                           }
+                        })
+                        .catch((err) => {
+                           // Handle errors here
+                           return Promise.resolve(err);
+                        });
+                  }
+
+                  // now we are going to processes these new containers one at a time
+                  $$(ids.datatable).blockEvent();
+                  // this is when the real work starts so lets begin our countdown timer now
+                  startUpdateTime = new Date();
+                  // get the first group of Promises out of the collection
+                  var next = throttledSaves.shift();
+                  // execute our Promise iterator
+                  return performThrottledSaves(next, throttledSaves);
+               })
+               .catch((err) => {
+                  // resolve Error UI
+                  webix.alert({
+                     title: "Error Creating Records",
+                     ok: "Okay",
+                     text: "One or more records failed upon creation."
+                  });
+                  $$(ids.datatable).unblockEvent();
+                  uiCleanUp();
+                  console.error(err);
                });
          }
       });
