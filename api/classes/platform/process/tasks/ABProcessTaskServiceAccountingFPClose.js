@@ -269,19 +269,66 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                         Promise.all(tasks)
                            .catch(fail)
                            .then(() => {
-                              // Broadcast the create
-                              sails.sockets.broadcast(
-                                 this.fpObject.id,
-                                 "ab.datacollection.update",
-                                 {
-                                    objectId: this.fpObject.id,
-                                    data: this.nextFP
-                                 }
-                              );
                               next();
                            });
                      })
                )
+            )
+            // Set the next FP 'Status' field to 'Active'
+            .then(
+               () =>
+                  new Promise((next, fail) => {
+                     // make sure exists next FP
+                     if (this.nextFP == null) {
+                        this.log(instance, "Count not found next FP");
+                        return next();
+                     }
+
+                     if (this.fieldFPStatus == null) {
+                        this.log(
+                           instance,
+                           "FP status field does not be defined"
+                        );
+                        return next();
+                     }
+
+                     let fieldStatus = this.fpObject.fields(
+                        (f) => f.id == this.fieldFPStatus
+                     )[0];
+                     if (fieldStatus == null) {
+                        this.log(instance, "Could not found FP status field");
+                        return next();
+                     }
+
+                     if (this.fieldFPActive == null) {
+                        this.log(
+                           instance,
+                           "Active value option does not be defined"
+                        );
+                        return next();
+                     }
+
+                     let nextFpID = this.nextFP[this.fpObject.PK()];
+                     let values = {};
+                     values[fieldStatus.columnName] = this.fieldFPActive;
+
+                     this.fpObject
+                        .modelAPI()
+                        .update(nextFpID, values)
+                        .catch(fail)
+                        .then((updatedNextFP) => {
+                           // Broadcast the create
+                           sails.sockets.broadcast(
+                              this.fpObject.id,
+                              "ab.datacollection.update",
+                              {
+                                 objectId: this.fpObject.id,
+                                 data: updatedNextFP
+                              }
+                           );
+                           next();
+                        });
+                  })
             )
             // Final step
             .then(() => {

@@ -15,8 +15,10 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
          processFPValue: `${id}_processFPValue`,
          objectFP: `${id}_objectFP`,
          objectGL: `${id}_objectGL`,
-         fieldFPStart: `${id}fieldFPStart`,
-         fieldFPOpen: `${id}fieldFPOpen`,
+         fieldFPStart: `${id}_fieldFPStart`,
+         fieldFPOpen: `${id}_fieldFPOpen`,
+         fieldFPStatus: `${id}_fieldFPStatus`,
+         fieldFPActive: `${id}_fieldFPActive`,
          fieldGLStarting: `${id}_fieldGLStarting`,
          fieldGLRunning: `${id}_fieldGLRunning`,
          fieldGLAccount: `${id}_fieldGLAccount`,
@@ -66,11 +68,43 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
          return fields;
       };
 
-      let updateFPFields = (fpFields) => {
-         [ids.fieldFPStart, ids.fieldFPOpen].forEach((fieldGLElem) => {
-            $$(fieldGLElem).define("options", fpFields);
-            $$(fieldGLElem).refresh();
+      let getStatusFieldOptions = (statusFieldId) => {
+         let result = [];
+         let fpObject = this.application.objects(
+            (obj) => obj.id == this.objectFP
+         )[0];
+         if (!fpObject) return result;
+
+         let fpStatusField = fpObject.fields((f) => f.id == statusFieldId)[0];
+         if (
+            !fpStatusField ||
+            !fpStatusField.settings ||
+            !fpStatusField.settings.options
+         )
+            return result;
+
+         result = (fpStatusField.settings.options || []).map((opt) => {
+            return {
+               id: opt.id,
+               value: opt.text
+            };
          });
+
+         return result;
+      };
+
+      let updateFPFields = (fpFields) => {
+         [ids.fieldFPStart, ids.fieldFPOpen, ids.fieldFPStatus].forEach(
+            (fieldGLElem) => {
+               $$(fieldGLElem).define("options", fpFields);
+               $$(fieldGLElem).refresh();
+            }
+         );
+      };
+
+      let updateFPStatusFields = (fpStatusOptions) => {
+         $$(ids.fieldFPActive).define("options", fpStatusOptions);
+         $$(ids.fieldFPActive).refresh();
       };
 
       let updateGLFields = (glFields) => {
@@ -84,6 +118,7 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
 
       let fpFields = getFieldOptions(this.objectFP);
       let glFields = getFieldOptions(this.objectGL);
+      let fpStatusFields = getStatusFieldOptions(this.fieldFPStatus);
 
       var ui = {
          id: id,
@@ -158,6 +193,30 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                value: this.fieldFPOpen,
                name: "fieldFPOpen",
                options: fpFields
+            },
+            {
+               id: ids.fieldFPStatus,
+               view: "select",
+               label: L("ab.process.accounting.fieldFPStatus", "*FP -> Status"),
+               value: this.fieldFPStatus,
+               name: "fieldFPStatus",
+               options: fpFields,
+               on: {
+                  onChange(newVal, oldVal) {
+                     if (newVal != oldVal) {
+                        fpStatusFields = getStatusFieldOptions(newVal);
+                        updateFPStatusFields(fpStatusFields);
+                     }
+                  }
+               }
+            },
+            {
+               id: ids.fieldFPActive,
+               view: "select",
+               label: L("ab.process.accounting.fieldFPActive", "*FP -> Active"),
+               value: this.fieldFPActive,
+               name: "fieldFPActive",
+               options: fpStatusFields
             },
             {
                id: ids.fieldGLStarting,
