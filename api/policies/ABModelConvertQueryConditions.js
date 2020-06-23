@@ -123,7 +123,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
             var err = new Error("Unknown Query ID in condition.");
             err.condition = cond;
-            cb(err);
+            cb();
          } else {
             var queryColumn;
             // {string} this is the 'tablename'.'colname' of the data to return
