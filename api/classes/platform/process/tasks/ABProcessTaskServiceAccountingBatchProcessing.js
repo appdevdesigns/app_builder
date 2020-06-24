@@ -460,6 +460,9 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       // keep track of all the balance records that were updated in the
       // routine .processBalanceRecord() so we can recalculate them.
 
+      // find Account 3991
+      var acct3991 = this.allAccountRecords.find((a) => a["Acct Num"] == 3991);
+
       return Promise.resolve()
          .then(() => {
             // pull fully populated Balance Records that were updated on this run
@@ -506,8 +509,18 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      journalEntry["Credit"] || 0
                   );
 
-                  // lookup the Account type
+                  // lookup the Account type from the journalEntry
                   var accountType = this.lookupAccountType(journalEntry);
+
+                  // #Fix: for account 3991, we must use the "Equity" type, not
+                  // what is on the journalEntry
+                  if (
+                     balanceRecord[this.brAccountField.columnName] ==
+                     acct3991.uuid
+                  ) {
+                     accountType = "equity";
+                  }
+
                   switch (accountType) {
                      // case: "asset" || "expense"
                      case "assets":
