@@ -1705,28 +1705,15 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                            // when done get the next 10
                            var next = remainingPromises.shift();
                            // if there are any remaining in the group call performThrottledSaves
-                           if (remainingPromises.length) {
+                           if (next && next.length) {
                               return performThrottledSaves(
                                  next,
                                  remainingPromises,
                                  importer
                               );
-                           } else if (typeof next == "undefined") {
+                           } else {
                               uiCleanUp();
                               return Promise.resolve();
-                           } else {
-                              // if the remainging group is empty just call Promise.all()
-                              return Promise.all(next)
-                                 .then(() => {
-                                    // you are done clean up th UI and listen to events again
-                                    // $$(ids.datatable).unblockEvent();
-                                    uiCleanUp();
-                                    return Promise.resolve();
-                                 })
-                                 .catch((err) => {
-                                    // Handle errors here
-                                    return Promise.resolve(err);
-                                 });
                            }
                         })
                         .catch((err) => {
