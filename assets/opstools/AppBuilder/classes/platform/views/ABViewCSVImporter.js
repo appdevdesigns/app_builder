@@ -1620,14 +1620,13 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   // NOTE: Parallel exectuion of all these:
                   var allSaves = [];
 
-                  validRows.forEach((data) => {
-                     let newRowData = data.data;
-
-                     allSaves.push(
+                  function createRecord(objModel, newRowData, data, element) {
+                     return new Promise((resolve, reject) => {
                         objModel
                            .create(newRowData)
                            .catch((errMessage) => {
                               itemFailed(data.id, errMessage);
+                              reject(errMessage);
                            })
                            .then((insertedRow) => {
                               if (insertedRow) {
@@ -1643,7 +1642,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                     if (!isCreated) return next();
 
                                     // Process Record Rule
-                                    this.doRecordRules(newRowData)
+                                    element
+                                       .doRecordRules(newRowData)
                                        .then(() => {
                                           itemPass(data.id);
 
@@ -1655,7 +1655,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                                 numDone
                                              );
                                           }
-
                                           next();
                                        })
                                        .catch((errMessage) => {
@@ -1664,32 +1663,53 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                        });
                                  })
                            )
-                     );
+                           .then(() => {
+                              resolve();
+                           });
+                     });
+                  }
+
+                  validRows.forEach((data) => {
+                     let newRowData = data.data;
+                     allSaves.push({
+                        record: newRowData,
+                        data: data
+                     });
                   });
 
                   // we are going to store these promises in an array of arrays with 50 in each sub array
                   var throttledSaves = [];
                   var index = 0;
                   while (allSaves.length) {
-                     throttledSaves[index] = allSaves.splice(0, 100);
+                     throttledSaves[index] = allSaves.splice(0, 10);
                      index++;
                   }
 
                   // execute the array of array of 100 promises one at at time
                   function performThrottledSaves(
                      currentPromises,
-                     remainingPromises
+                     remainingPromises,
+                     importer
                   ) {
                      // execute the next 100
-                     return Promise.all(currentPromises)
+                     const requests = currentPromises.map((data) => {
+                        return createRecord(
+                           objModel,
+                           data.record,
+                           data.data,
+                           importer
+                        );
+                     });
+                     return Promise.all(requests)
                         .then(() => {
-                           // when done get the next 100
+                           // when done get the next 10
                            var next = remainingPromises.shift();
                            // if there are any remaining in the group call performThrottledSaves
                            if (remainingPromises.length) {
                               return performThrottledSaves(
                                  next,
-                                 remainingPromises
+                                 remainingPromises,
+                                 importer
                               );
                            } else if (typeof next == "undefined") {
                               uiCleanUp();
@@ -1722,7 +1742,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   // get the first group of Promises out of the collection
                   var next = throttledSaves.shift();
                   // execute our Promise iterator
-                  return performThrottledSaves(next, throttledSaves);
+                  return performThrottledSaves(next, throttledSaves, this);
                })
                .catch((err) => {
                   // resolve Error UI
