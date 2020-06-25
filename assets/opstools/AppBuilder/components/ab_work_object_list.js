@@ -257,6 +257,11 @@ module.exports = class AB_Work_Object_List extends ABComponent {
           *										we are working with.
           */
          applicationLoad: function(application) {
+            //
+            if (!application) {
+               return;
+            }
+
             _logic.listBusy();
 
             CurrentApplication = application;

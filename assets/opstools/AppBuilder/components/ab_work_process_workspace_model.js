@@ -449,6 +449,14 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                            }
                         });
                      } else {
+                        console.warn(
+                           "Selected Element is unknown to this Process: " +
+                              event.newSelection[0].id
+                        );
+                        // Perhaps, this was a diagram element that was unsaved.
+                        // And now we don't know what to do with it.
+                        // What do we do? Suggest that the User Delete it, and
+                        // recreate it?
                         $$(ids.properties).hide();
                      }
                   } else {
