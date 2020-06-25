@@ -35,13 +35,14 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
          view: "window",
          head: labels.component.newScope,
          hidden: true,
+         resize: true,
+         minWidth: 800,
          modal: true,
          position: "center",
          body: {
             id: ids.form,
             view: "form",
             // padding: 24,
-            width: 800,
             elementsConfig: { labelAlign: "right", labelWidth: 85 },
             rows: [
                {
