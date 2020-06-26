@@ -253,8 +253,23 @@ module.exports = class FilterComplex extends FilterComplexCore {
    isValid(rowData) {
       let helper = () => true;
 
-      if ($$(this.ids.querybuilder))
+      if ($$(this.ids.querybuilder)) {
          helper = $$(this.ids.querybuilder).getFilterHelper();
+
+         // convert rowData from { colName : data } to { id : data }
+         // in order to match the format of the conditions.
+         var newData = {};
+         (this._Fields || []).forEach((field) => {
+            newData[field.id] = rowData[field.columnName];
+         });
+
+         // for the case of "this_object" conditions:
+         if (rowData.uuid) {
+            newData["this_object"] = rowData.uuid;
+         }
+
+         rowData = newData;
+      }
 
       return helper(rowData);
    }
