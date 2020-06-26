@@ -263,7 +263,7 @@ module.exports = class AB_Work_Object_List extends ABComponent {
 
             // get a DataCollection of all our objects
             objectList = new webix.DataCollection({
-               data: application.objects()
+               data: application ? application.objects() : []
             });
 
             // setup object list settings
