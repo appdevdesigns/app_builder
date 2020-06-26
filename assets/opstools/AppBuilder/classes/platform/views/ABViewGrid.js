@@ -370,11 +370,32 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                padding: 10,
                rows: [
                   {
-                     view: "select",
+                     view: "multiselect",
                      name: "groupBy",
                      label: L("ab.component.grid.groupBy", "*Group by:"),
                      labelWidth: App.config.labelWidthLarge,
-                     options: []
+                     options: [],
+                     on: {
+                        onChange: (newV, oldV) => {
+                           let currView = _logic.currentEditObject();
+                           currView.propertyGroupByList(ids, newV);
+                        }
+                     }
+                  },
+                  {
+                     view: "list",
+                     name: "groupByList",
+                     drag: true,
+                     data: [],
+                     height: 200,
+                     template:
+                        "<span class='fa fa-sort'></span>&nbsp;&nbsp; #value#",
+                     on: {
+                        onAfterDrop: () => {
+                           let currView = _logic.currentEditObject();
+                           this.propertyEditorSave(ids, currView);
+                        }
+                     }
                   }
                ]
             }
@@ -643,7 +664,11 @@ module.exports = class ABViewGrid extends ABViewGridCore {
       view.settings.hideHeader = $$(ids.hideHeader).getValue();
       view.settings.labelAsField = $$(ids.labelAsField).getValue();
       view.settings.hideButtons = $$(ids.hideButtons).getValue();
-      view.settings.groupBy = $$(ids.groupBy).getValue();
+      // view.settings.groupBy = $$(ids.groupBy).getValue();
+
+      // pull order groupBy list
+      let groupByList = $$(ids.groupByList).serialize() || [];
+      view.settings.groupBy = groupByList.map((item) => item.id).join(",");
 
       view.settings.gridFilter = PopupFilterProperty.getSettings();
 
@@ -674,6 +699,25 @@ module.exports = class ABViewGrid extends ABViewGridCore {
             PopupFilterProperty.objectLoad(object, selectedDv.settings.loadAll);
          }
       }
+   }
+
+   propertyGroupByList(ids, groupBy) {
+      let colNames = groupBy || [];
+      if (typeof colNames == "string") {
+         colNames = colNames.split(",");
+      }
+
+      let options = $$(ids.groupBy)
+         .getList()
+         .data.find({});
+
+      $$(ids.groupByList).clearAll();
+      colNames.forEach((colName) => {
+         let opt = options.filter((o) => o.id == colName)[0];
+         if (opt) {
+            $$(ids.groupByList).add(opt);
+         }
+      });
    }
 
    /**
@@ -845,7 +889,8 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                   datacollection: dv
                });
 
-               dv.bind($$(DataTable.ui.id));
+               // dv.bind($$(DataTable.ui.id));
+               DataTable.datacollectionLoad(dv);
 
                var editPage = this.settings.editPage;
                var detailsPage = this.settings.detailsPage;
@@ -1320,13 +1365,8 @@ module.exports = class ABViewGrid extends ABViewGridCore {
       }
 
       // Grouping options
-      let groupFields = [
-         {
-            id: "",
-            value: L("ab.component.grid.noGroupBy", "*No group field")
-         }
-      ];
-      var dv = this.datacollection;
+      let groupFields = [];
+      let dv = this.datacollection;
       if (dv && dv.datasource) {
          dv.datasource
             .fields((f) => {
@@ -1346,6 +1386,8 @@ module.exports = class ABViewGrid extends ABViewGridCore {
       }
       $$(ids.groupBy).define("options", groupFields);
       $$(ids.groupBy).refresh();
+
+      this.propertyGroupByList(ids, view.settings.groupBy);
    }
 
    populatePopupEditors(view, dataSource) {
