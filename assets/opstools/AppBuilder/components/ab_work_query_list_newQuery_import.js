@@ -67,6 +67,15 @@ module.exports = class AB_Work_Query_List_NewQuery_Import extends ABComponent {
             _logic.formClear();
             _logic.busyStart();
 
+            // find the queries not included in this Application
+            let availableQueries = [];
+            CurrentApplication.queriesExcluded().forEach((query) => {
+               availableQueries.push(query);
+            });
+            $$(ids.queryList).parse(availableQueries, "json");
+
+            _logic.busyEnd();
+            /*      
             // CurrentApplication.queryFind()
             CurrentApplication.queryInfo()
                .then((queries) => {
@@ -90,6 +99,7 @@ module.exports = class AB_Work_Query_List_NewQuery_Import extends ABComponent {
                .catch((err) => {
                   _logic.busyEnd();
                });
+               */
          },
 
          busyStart: function() {
@@ -145,18 +155,31 @@ module.exports = class AB_Work_Query_List_NewQuery_Import extends ABComponent {
             saveButton.disable();
             _logic.busyStart();
 
-            CurrentApplication.queryImport(selectedQuery.id)
-               .then((newQuery) => {
+            CurrentApplication.queryInsert(selectedQuery)
+               .then(() => {
                   saveButton.enable();
                   _logic.busyEnd();
 
-                  _logic.callbacks.onDone(newQuery);
+                  _logic.callbacks.onDone(selectedQuery);
                })
                .catch((err) => {
                   console.log("ERROR:", err);
                   saveButton.enable();
                   _logic.busyEnd();
                });
+
+            // CurrentApplication.queryImport(selectedQuery.id)
+            //    .then((newQuery) => {
+            //       saveButton.enable();
+            //       _logic.busyEnd();
+
+            //       _logic.callbacks.onDone(newQuery);
+            //    })
+            //    .catch((err) => {
+            //       console.log("ERROR:", err);
+            //       saveButton.enable();
+            //       _logic.busyEnd();
+            //    });
          },
 
          /**
