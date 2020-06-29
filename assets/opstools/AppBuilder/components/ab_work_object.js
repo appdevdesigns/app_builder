@@ -73,22 +73,33 @@ module.exports = class AB_Work_Object extends ABComponent {
          show: function() {
             $$(ids.component).show();
 
-            /*
-				if (CurrentApplication &&
-					(!CurrentApplication.loadedObjects ||
-					ObjectList.count() < 1)) {
+            // if (
+            //    CurrentApplication &&
+            //    (!CurrentApplication.loadedObjects || ObjectList.count() < 1)
+            // ) {
+            //    ObjectList.busy();
+            //
+            //    CurrentApplication.objectLoad().then(() => {
+            //       ObjectList.applicationLoad(CurrentApplication);
+            //       ObjectList.ready();
+            //    });
+            // }
 
-					ObjectList.busy();
+            let tasks = [];
 
-					CurrentApplication.objectLoad()
-						.then(() => {
+            if (CurrentApplication) {
+               // Load queries
+               tasks.push(CurrentApplication.queryLoad());
 
-							ObjectList.applicationLoad(CurrentApplication);
-							ObjectList.ready();
+               // Load data views
+               if (!CurrentApplication.loadedObjects || ObjectList.count() < 1)
+                  tasks.push(CurrentApplication.objectLoad());
+            }
 
-						});
-				}
-*/
+            Promise.all(tasks).then(() => {
+               ObjectList.applicationLoad(CurrentApplication);
+               ObjectList.ready();
+            });
          },
 
          callbackSelectObject: function(object) {

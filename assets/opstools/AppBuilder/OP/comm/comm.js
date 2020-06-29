@@ -38,14 +38,39 @@ window.addEventListener("online", updateOnlineStatus);
 window.addEventListener("offline", updateOnlineStatus);
 
 var countdownStarted = false;
-var startCountdown;
 var countInterval;
+var pingFails = 0;
 
 function ping() {
    if (!navigator.onLine) return false;
-   var countdown = 30;
-   if (countdownStarted) clearInterval(startCountdown);
    var element = document.getElementById("connectionPrompt");
+
+   var countdown = 30;
+   pingFails++;
+   // if our ping fails more than 40 times you have been idle for 20 minutes
+   if (pingFails > 40) {
+      body.insertAdjacentHTML(
+         "afterbegin",
+         `<div id='reloadPrompt'>
+            <div>
+               <i class="fa fa-clock-o" style="font-size: 90pt;"></i>
+               <br>
+               ${L(
+                  "ab.interface.reloadPrompt1",
+                  "*You have been idle for too long."
+               )}
+               <br>
+               <button class="reloadPage" onclick="location.reload();">
+               ${L("ab.interface.reloadPrompt2", "*Reload page")}
+               </button>
+            </div>
+         </div>`
+      );
+      clearInterval(vpnCheck);
+      clearInterval(countInterval);
+      if (element) element.style.height = "0px";
+      return false;
+   }
 
    // just in case the dom element doesn't exisit already create it
    if (!element) {
@@ -72,6 +97,7 @@ function ping() {
       if (this.readyState == 4) {
          if (this.status == 200) {
             element.style.height = "0px";
+            pingFails = 0;
             clearInterval(countInterval);
          } else {
             element.style.height = "30px";
@@ -80,6 +106,7 @@ function ping() {
             var countdownNumberEl = document.getElementById("countdown-number");
             countdownNumberEl.textContent = countdown;
 
+            clearInterval(countInterval);
             countInterval = setInterval(function() {
                countdown = --countdown <= 0 ? 30 : countdown;
                countdownNumberEl.textContent = countdown;

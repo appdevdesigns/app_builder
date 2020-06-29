@@ -51,6 +51,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
          isTreeDatable: params.isTreeDatable || 0 // if true webix.treedatable, otherwise webix.datatable
       };
+      this._settings = settings;
 
       var L = this.Label;
       var labels = {
@@ -925,101 +926,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             PopupHeaderEditComponent.objectLoad(object);
 
             // grouping
-            if (settings.groupBy) {
-               // map: {
-               //     votes:["votes", "sum"],
-               //     title:["year"]
-               // }
-               let groupMap = {};
-               CurrentObject.fields().forEach((f) => {
-                  // if (f.columnName == settings.groupBy) return;
-
-                  switch (f.key) {
-                     case "number":
-                        groupMap[f.columnName] = [f.columnName, "sum"];
-                        break;
-                     case "calculate":
-                     case "formula":
-                        groupMap[f.columnName] = [
-                           f.columnName,
-                           function(prop, listData) {
-                              if (!listData) return 0;
-
-                              let sum = 0;
-
-                              listData.forEach((r) => {
-                                 sum += f.format(r) * 1;
-                              });
-
-                              return sum;
-                           }
-                        ];
-                        break;
-                     case "connectObject":
-                        groupMap[f.columnName] = [
-                           f.columnName,
-                           function(prop, listData) {
-                              if (!listData || !listData.length) return 0;
-
-                              let count = 0;
-
-                              listData.forEach((r) => {
-                                 var valRelation = r[f.relationName()];
-
-                                 // array
-                                 if (valRelation && valRelation.length != null)
-                                    count += valRelation.length;
-                                 // object
-                                 else if (valRelation) count += 1;
-                              });
-
-                              return count;
-                           }
-                        ];
-                        break;
-                     default:
-                        groupMap[f.columnName] = [
-                           f.columnName,
-                           function(prop, listData) {
-                              if (!listData || !listData.length) return 0;
-
-                              let count = 0;
-
-                              listData.forEach((r) => {
-                                 var val = prop(r);
-
-                                 // // "false" to boolean
-                                 // if (f.key == "boolean") {
-
-                                 //     try {
-                                 //         val = JSON.parse(val || 0);
-                                 //     }
-                                 //     catch (err) {
-                                 //         val = false;
-                                 //     }
-                                 // }
-
-                                 // count only exists data
-                                 if (val) {
-                                    count += 1;
-                                 }
-                              });
-
-                              return count;
-                           }
-                        ];
-                        break;
-                  }
-               });
-
-               // set group definition
-               DataTable.define("scheme", {
-                  $group: {
-                     by: settings.groupBy,
-                     map: groupMap
-                  }
-               });
-            }
+            // _logic.grouping(settings.groupBy);
 
             // supressed this because it seems to be making an extra call?
             // _logic.refresh();
@@ -1039,8 +946,10 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                   _logic.busy();
                });
                CurrentDatacollection.on("initializedData", () => {
+                  _logic.grouping();
                   _logic.ready();
                });
+               _logic.grouping();
             } else DataTable.unbind();
          },
 
@@ -1158,15 +1067,19 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                }
 
                // group header
-               if (settings.groupBy && settings.groupBy == col.id) {
+               if (
+                  settings.groupBy &&
+                  (settings.groupBy || "").indexOf(col.id) > -1
+               ) {
                   var groupField = CurrentObject.fields(
                      (f) => f.columnName == col.id
                   )[0];
                   if (groupField) {
                      col.template = function(obj, common) {
+                        // return common.treetable(obj, common) + obj.value;
                         if (obj.$group) {
-                           let rowData = {};
-                           rowData[groupField.columnName] = obj.value;
+                           let rowData = _.clone(obj);
+                           rowData[groupField.columnName] = rowData.value;
 
                            return (
                               common.treetable(obj, common) +
@@ -1339,6 +1252,142 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             DataTable.refreshColumns();
 
             // }
+         },
+
+         grouping: () => {
+            if (!this._settings.groupBy) return;
+
+            let $treetable = $$(this.ui.id);
+
+            // map: {
+            //     votes:["votes", "sum"],
+            //     title:["year"]
+            // }
+            let baseGroupMap = {};
+            CurrentObject.fields().forEach((f) => {
+               // if (f.columnName == settings.groupBy) return;
+
+               switch (f.key) {
+                  case "number":
+                     baseGroupMap[f.columnName] = [f.columnName, "sum"];
+                     break;
+                  case "calculate":
+                  case "formula":
+                     baseGroupMap[f.columnName] = [
+                        f.columnName,
+                        function(prop, listData) {
+                           if (!listData) return 0;
+
+                           let sum = 0;
+
+                           listData.forEach((r) => {
+                              sum += f.format(r) * 1;
+                           });
+
+                           return sum;
+                        }
+                     ];
+                     break;
+                  case "connectObject":
+                     baseGroupMap[f.columnName] = [
+                        f.columnName,
+                        function(prop, listData) {
+                           if (!listData || !listData.length) return 0;
+
+                           let count = 0;
+
+                           listData.forEach((r) => {
+                              var valRelation = r[f.relationName()];
+
+                              // array
+                              if (valRelation && valRelation.length != null)
+                                 count += valRelation.length;
+                              // object
+                              else if (valRelation) count += 1;
+                           });
+
+                           return count;
+                        }
+                     ];
+                     break;
+                  default:
+                     baseGroupMap[f.columnName] = [
+                        f.columnName,
+                        function(prop, listData) {
+                           if (!listData || !listData.length) return 0;
+
+                           let count = 0;
+
+                           listData.forEach((r) => {
+                              var val = prop(r);
+
+                              // // "false" to boolean
+                              // if (f.key == "boolean") {
+
+                              //     try {
+                              //         val = JSON.parse(val || 0);
+                              //     }
+                              //     catch (err) {
+                              //         val = false;
+                              //     }
+                              // }
+
+                              // count only exists data
+                              if (val) {
+                                 count += 1;
+                              }
+                           });
+
+                           return count;
+                        }
+                     ];
+                     break;
+               }
+            });
+
+            // set group definition
+            // DataTable.define("scheme", {
+            //    $group: {
+            //       by: settings.groupBy,
+            //       map: groupMap
+            //    }
+            // });
+
+            // NOTE: https://snippet.webix.com/e3a2bf60
+            let groupBys = (this._settings.groupBy || "")
+               .split(",")
+               .map((g) => g.trim());
+            // Reverse the array NOTE: call .group from child to root
+            groupBys = groupBys.reverse();
+            groupBys.forEach((colName, gIndex) => {
+               let by;
+               let groupMap = _.clone(baseGroupMap);
+
+               // Root
+               if (gIndex == groupBys.length - 1) {
+                  by = colName;
+               }
+               // Sub groups
+               else {
+                  by = (row) => {
+                     let byValue = row[colName];
+                     for (let i = gIndex + 1; i < groupBys.length; i++) {
+                        byValue = `${row[groupBys[i]]} - ${byValue}`;
+                     }
+                     return byValue;
+                  };
+
+                  // remove parent group data
+                  groupBys.forEach((gColName) => {
+                     if (gColName != colName) groupMap[gColName] = [gColName];
+                  });
+               }
+
+               $treetable.data.group({
+                  by: by,
+                  map: groupMap
+               });
+            });
          },
 
          /**
