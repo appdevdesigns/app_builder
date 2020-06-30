@@ -452,7 +452,7 @@ module.exports = {
          batch.forEach((newRecord) => {
             batchCreate.push(
                new Promise((resolve, reject) => {
-                  this.create(req, null, newRecord.data, resolve, reject);
+                  this.create(req, null, null, newRecord.data, resolve, reject);
                })
             );
          });
