@@ -1629,7 +1629,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                               reject(errMessage);
                            })
                            .then((insertedRows) => {
-                              debugger;
                               var recordRules = [];
                               insertedRows.forEach((newRowData) => {
                                  recordRules.push(
@@ -1638,7 +1637,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                        element
                                           .doRecordRules(newRowData)
                                           .then(() => {
-                                             debugger;
                                              // itemPass(data.id);
                                              next();
                                           })
@@ -1657,7 +1655,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                     reject(err);
                                  })
                                  .then(() => {
-                                    debugger;
                                     newRowsData.forEach((row) => {
                                        itemPass(row.id);
                                        numDone++;
@@ -1714,11 +1711,9 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                         importer,
                         total
                      );
-                     debugger;
                      requests
                         .then(() => {
                            // when done get the next 10
-                           debugger;
                            var nextRecords = remainingRecords.shift();
                            // if there are any remaining in the group call performThrottledSaves
                            if (nextRecords && nextRecords.length) {
