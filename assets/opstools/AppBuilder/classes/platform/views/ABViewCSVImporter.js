@@ -1620,99 +1620,116 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   // NOTE: Parallel exectuion of all these:
                   var allSaves = [];
 
-                  function createRecord(objModel, newRowData, data, element) {
+                  function createRecord(objModel, newRowsData, element, total) {
                      return new Promise((resolve, reject) => {
                         objModel
-                           .create(newRowData)
+                           .batchCreate({ batch: newRowsData })
                            .catch((errMessage) => {
                               itemFailed(data.id, errMessage);
                               reject(errMessage);
                            })
-                           .then((insertedRow) => {
-                              if (insertedRow) {
-                                 newRowData.id =
-                                    insertedRow.id || insertedRow.uuid;
-                                 return true;
-                              }
-                              return false;
-                           })
-                           .then(
-                              (isCreated) =>
-                                 new Promise((next, err) => {
-                                    if (!isCreated) return next();
-
-                                    // Process Record Rule
-                                    element
-                                       .doRecordRules(newRowData)
-                                       .then(() => {
-                                          itemPass(data.id);
-
-                                          numDone++;
-                                          if (numDone % 20 == 0) {
-                                             _logic.refreshRemainingTimeText(
-                                                startUpdateTime,
-                                                validRows.length,
-                                                numDone
-                                             );
-                                          }
-                                          next();
-                                       })
-                                       .catch((errMessage) => {
-                                          itemFailed(data.id, errMessage);
-                                          next();
-                                       });
+                           .then((insertedRows) => {
+                              debugger;
+                              var recordRules = [];
+                              insertedRows.forEach((newRowData) => {
+                                 recordRules.push(
+                                    new Promise((next, err) => {
+                                       // Process Record Rule
+                                       element
+                                          .doRecordRules(newRowData)
+                                          .then(() => {
+                                             debugger;
+                                             // itemPass(data.id);
+                                             next();
+                                          })
+                                          .catch((errMessage) => {
+                                             // itemFailed(data.id, errMessage);
+                                             err("that didn't work");
+                                          });
+                                    })
+                                 );
+                              });
+                              Promise.all(recordRules)
+                                 .catch((err) => {
+                                    newRowsData.forEach((row) => {
+                                       itemFailed(row.id, err);
+                                    });
+                                    reject(err);
                                  })
-                           )
-                           .then(() => {
-                              resolve();
+                                 .then(() => {
+                                    debugger;
+                                    newRowsData.forEach((row) => {
+                                       itemPass(row.id);
+                                       numDone++;
+                                       if (numDone % 50 == 0) {
+                                          _logic.refreshRemainingTimeText(
+                                             startUpdateTime,
+                                             validRows.length,
+                                             numDone
+                                          );
+                                       }
+                                    });
+                                    if (numDone == total) {
+                                       uiCleanUp();
+                                    }
+                                    resolve();
+                                 });
                            });
                      });
                   }
 
                   validRows.forEach((data) => {
                      let newRowData = data.data;
-                     allSaves.push({
-                        record: newRowData,
-                        data: data
-                     });
+                     allSaves.push({ id: data.id, data: newRowData });
                   });
 
                   // we are going to store these promises in an array of arrays with 50 in each sub array
                   var throttledSaves = [];
                   var index = 0;
+                  var total = allSaves.length;
                   while (allSaves.length) {
-                     throttledSaves[index] = allSaves.splice(0, 10);
+                     throttledSaves[index] = allSaves.splice(0, 50);
                      index++;
                   }
 
                   // execute the array of array of 100 promises one at at time
                   function performThrottledSaves(
-                     currentPromises,
-                     remainingPromises,
-                     importer
+                     currentRecords,
+                     remainingRecords,
+                     importer,
+                     total
                   ) {
                      // execute the next 100
-                     const requests = currentPromises.map((data) => {
-                        return createRecord(
-                           objModel,
-                           data.record,
-                           data.data,
-                           importer
-                        );
-                     });
-                     return Promise.all(requests)
+                     // const requests = currentRecords.map((data) => {
+                     //    return createRecord(
+                     //       objModel,
+                     //       data.record,
+                     //       data.data,
+                     //       importer
+                     //    );
+                     // });
+                     const requests = createRecord(
+                        objModel,
+                        currentRecords,
+                        importer,
+                        total
+                     );
+                     debugger;
+                     requests
                         .then(() => {
                            // when done get the next 10
-                           var next = remainingPromises.shift();
+                           debugger;
+                           var nextRecords = remainingRecords.shift();
                            // if there are any remaining in the group call performThrottledSaves
-                           if (next && next.length) {
+                           if (nextRecords && nextRecords.length) {
                               return performThrottledSaves(
-                                 next,
-                                 remainingPromises,
-                                 importer
+                                 nextRecords,
+                                 remainingRecords,
+                                 importer,
+                                 total
                               );
                            } else {
-                              uiCleanUp();
+                              // uiCleanUp();
                               return Promise.resolve();
                            }
                         })
@@ -1729,7 +1746,12 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   // get the first group of Promises out of the collection
                   var next = throttledSaves.shift();
                   // execute our Promise iterator
-                  return performThrottledSaves(next, throttledSaves, this);
+                  return performThrottledSaves(
+                     next,
+                     throttledSaves,
+                     this,
+                     total
+                  );
                })
                .catch((err) => {
                   // resolve Error UI

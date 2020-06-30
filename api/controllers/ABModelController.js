@@ -440,9 +440,40 @@ function updateTranslationsValues(object, id, translations, isInsert) {
 }
 
 module.exports = {
-   create: function(req, res) {
-      newPendingTransaction();
+   batchCreate: function(req, res) {
       var allParams = req.allParams();
+      sails.log.verbose(
+         "ABModelController.batchCreate(): allParams:",
+         allParams
+      );
+      var batch = allParams.batch;
+      var batchCreate = [];
+      if (batch && Array.isArray(batch)) {
+         batch.forEach((newRecord) => {
+            batchCreate.push(
+               new Promise((resolve, reject) => {
+                  this.create(req, null, newRecord.data, resolve, reject);
+               })
+            );
+         });
+         Promise.all(batchCreate)
+            .catch((error) => {
+               res.AD.error(error);
+            })
+            .then((data) => {
+               res.AD.success(data);
+            });
+      }
+   },
+
+   create: function(req, res, callbacks, batchRecord, resolve, reject) {
+      newPendingTransaction();
+      var allParams;
+      if (batchRecord) {
+         allParams = batchRecord;
+      } else {
+         allParams = req.allParams();
+      }
       sails.log.verbose("ABModelController.create(): allParams:", allParams);
 
       var createParams; // used in several process steps below:
@@ -719,13 +750,13 @@ module.exports = {
 
                // now send the error message:
                resolvePendingTransaction();
-               res.AD.error(errorResponse);
+               if (res) {
+                  res.AD.error(errorResponse);
+               } else {
+                  reject(errorResponse);
+               }
                return;
             }
-
-            // return a Successful operation:
-            resolvePendingTransaction();
-            res.AD.success(newItem);
 
             // We want to broadcast the change from the server to the client so all datacollections can properly update
             // Build a payload that tells us what was updated
@@ -740,6 +771,14 @@ module.exports = {
                "ab.datacollection.create",
                payload
             );
+
+            // return a Successful operation:
+            resolvePendingTransaction();
+            if (res) {
+               res.AD.success(newItem);
+            } else {
+               resolve(newItem);
+            }
          }
       );
 
