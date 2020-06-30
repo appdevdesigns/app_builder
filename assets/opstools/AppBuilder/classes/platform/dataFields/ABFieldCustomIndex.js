@@ -55,7 +55,19 @@ var ABFieldCustomIndexComponent = new ABFieldComponent({
 
       show: () => {
          let fields = ABFieldCustomIndexComponent.CurrentObject.fields((f) => {
-            return f.key != "connectObject";
+            return (
+               f.key == "string" ||
+               f.key == "LongText" ||
+               f.key == "number" ||
+               f.key == "date" ||
+               f.key == "datetime" ||
+               f.key == "boolean" ||
+               f.key == "list" ||
+               f.key == "email" ||
+               f.key == "user" ||
+               f.key == "AutoIndex" ||
+               f.key == "customIndex"
+            );
          }).map((f) => {
             return {
                id: f.id,

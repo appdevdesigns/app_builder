@@ -889,7 +889,8 @@ module.exports = class RowFilter extends RowFilterCore {
          batchName = field.key;
          if (field.id == "this_object") batchName = "query";
          // Special this object query
-         else if (batchName == "LongText") batchName = "string";
+         else if (batchName == "LongText" || batchName == "customIndex")
+            batchName = "string";
          else if (field.key == "formula") batchName = "number";
          var isQueryField =
             this._QueryFields.filter((f) => {
@@ -990,13 +991,17 @@ module.exports = class RowFilter extends RowFilterCore {
 
       _logic.onChangeRule = (rule, $viewCond, notify = false) => {
          switch (rule) {
-            // If want to call notify or call .onChange(), then pass notify is true.
-            // case 'contains':
-            // case 'not_contains':
-            // case 'equals':
-            // case 'not_equal':
-            // 	_logic.onChange();
-            // 	break;
+            case "contains":
+            case "not_contains":
+            case "equals":
+            case "not_equal":
+               // For "connect_fields" search by CUSTOM index value
+               if (batchName == "query") {
+                  $viewCond.$$(ids.inputValue).showBatch("string");
+               }
+               // If want to call notify or call .onChange(), then pass notify is true.
+               // _logic.onChange();
+               break;
 
             case "is_current_user":
             case "is_not_current_user":
