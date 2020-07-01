@@ -58,6 +58,13 @@ module.exports = class ABDefinition extends ABDefinitionCore {
       return allObjs.filter(f);
    }
 
+   static allDatacollections(f = () => true) {
+      var allObjs = ABDefinition.all((d) => {
+         return d.type == "datacollection";
+      });
+      return allObjs.filter(f);
+   }
+
    /**
     * @method create()
     *

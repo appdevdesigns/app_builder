@@ -72,16 +72,16 @@ module.exports = class AB_Work_Interface extends ABComponent {
          show: function() {
             $$(ids.component).show();
 
-            if (
-               CurrentApplication &&
-               !CurrentApplication.loadedDatacollection
-            ) {
-               _logic.busy();
+            // if (
+            //    CurrentApplication &&
+            //    !CurrentApplication.loadedDatacollection
+            // ) {
+            //    _logic.busy();
 
-               CurrentApplication.datacollectionLoad().then(() => {
-                  _logic.ready();
-               });
-            }
+            //    CurrentApplication.datacollectionLoad().then(() => {
+            //       _logic.ready();
+            //    });
+            // }
          },
 
          busy: () => {

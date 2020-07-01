@@ -67,6 +67,15 @@ module.exports = class AB_Work_Datacollection_List_NewDataview_Import extends AB
             _logic.formClear();
             _logic.busyStart();
 
+            let availableDCs = [];
+            CurrentApplication.datacollectionsExcluded().forEach((dc) => {
+               availableDCs.push(dc);
+            });
+            $$(ids.datacollectionList).parse(availableDCs, "json");
+
+            _logic.busyEnd();
+
+            /*
             // CurrentApplication.datacollectionFind()
             CurrentApplication.datacollectionInfo()
                .then((datacollections) => {
@@ -94,6 +103,7 @@ module.exports = class AB_Work_Datacollection_List_NewDataview_Import extends AB
                .catch((err) => {
                   _logic.busyEnd();
                });
+            */
          },
 
          busyStart: function() {
@@ -151,12 +161,12 @@ module.exports = class AB_Work_Datacollection_List_NewDataview_Import extends AB
             saveButton.disable();
             _logic.busyStart();
 
-            CurrentApplication.datacollectionImport(selectedDatacollection.id)
-               .then((newDatacollection) => {
+            CurrentApplication.datacollectionInsert(selectedDatacollection)
+               .then(() => {
                   saveButton.enable();
                   _logic.busyEnd();
 
-                  _logic.callbacks.onDone(newDatacollection);
+                  _logic.callbacks.onDone(selectedDatacollection);
                })
                .catch((err) => {
                   console.log("ERROR:", err);

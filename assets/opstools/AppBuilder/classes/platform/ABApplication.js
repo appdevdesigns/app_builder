@@ -26,6 +26,11 @@ var __AllQueries = {
 };
 // {obj} : a hash of all ABObjectQueriess in our system.
 
+var __AllDatacollections = {
+   /* ABDatacollection.id : ABDataCollection */
+};
+// {obj} : a hash of all ABDataCollection in our system.
+
 var _AllUserRoles = [];
 // an array of {id:, lable:} of the ABRoles the current User has assigned
 
@@ -874,74 +879,74 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
       });
    }
 
-   queryLoad() {
-      if (this.loadedQueries) return Promise.resolve();
-      debugger;
-      //// REFACTOR THIS:
+   // queryLoad() {
+   //    if (this.loadedQueries) return Promise.resolve();
+   //    debugger;
+   //    //// REFACTOR THIS:
 
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .queryLoad(this.id)
-            .catch(reject)
-            .then((queries) => {
-               this.loadedQueries = true;
+   //    return new Promise((resolve, reject) => {
+   //       this.Model.staticData
+   //          .queryLoad(this.id)
+   //          .catch(reject)
+   //          .then((queries) => {
+   //             this.loadedQueries = true;
 
-               var newQueries = [];
-               (queries || []).forEach((query) => {
-                  // prevent processing of null values.
-                  if (query) {
-                     newQueries.push(this.queryNew(query));
-                  }
-               });
-               this._queries = newQueries;
+   //             var newQueries = [];
+   //             (queries || []).forEach((query) => {
+   //                // prevent processing of null values.
+   //                if (query) {
+   //                   newQueries.push(this.queryNew(query));
+   //                }
+   //             });
+   //             this._queries = newQueries;
 
-               resolve();
-            });
-      });
-   }
+   //             resolve();
+   //          });
+   //    });
+   // }
 
-   queryGet(id) {
-      debugger;
-      // REFACTOR THIS!!
+   // queryGet(id) {
+   //    debugger;
+   //    // REFACTOR THIS!!
 
-      return new Promise((resolve, reject) => {
-         var query = this.queries((q) => {
-            return q.id == id;
-         })[0];
+   //    return new Promise((resolve, reject) => {
+   //       var query = this.queries((q) => {
+   //          return q.id == id;
+   //       })[0];
 
-         resolve(query);
-      });
-   }
+   //       resolve(query);
+   //    });
+   // }
 
-   queryFind(cond) {
-      debugger;
-      //// REFACTOR THIS???
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .queryFind(cond)
-            .catch(reject)
-            .then((queries) => {
-               if (queries && queries.forEach) {
-                  let result = [];
+   // queryFind(cond) {
+   //    debugger;
+   //    //// REFACTOR THIS???
+   //    return new Promise((resolve, reject) => {
+   //       this.Model.staticData
+   //          .queryFind(cond)
+   //          .catch(reject)
+   //          .then((queries) => {
+   //             if (queries && queries.forEach) {
+   //                let result = [];
 
-                  queries.forEach((q) => {
-                     if (q) result.push(this.queryNew(q, this));
-                  });
+   //                queries.forEach((q) => {
+   //                   if (q) result.push(this.queryNew(q, this));
+   //                });
 
-                  resolve(result);
-               } else {
-                  resolve(null);
-               }
-            });
-      });
-   }
+   //                resolve(result);
+   //             } else {
+   //                resolve(null);
+   //             }
+   //          });
+   //    });
+   // }
 
-   queryInfo(cond) {
-      debugger;
-      // REFACTOR THIS!!!
+   // queryInfo(cond) {
+   //    debugger;
+   //    // REFACTOR THIS!!!
 
-      return this.Model.staticData.queryInfo(cond);
-   }
+   //    return this.Model.staticData.queryInfo(cond);
+   // }
 
    /**
     * @method queryNew()
@@ -1001,51 +1006,52 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
       return Promise.resolve();
    }
 
-   queryImport(queryId) {
-      debugger;
-      // REFACTOR THIS!
+   // queryImport(queryId) {
+   //    debugger;
+   //    // REFACTOR THIS!
 
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .queryImport(this.id, queryId)
-            .catch(reject)
-            .then((newQuery) => {
-               let newQueryClass = this.queryNew(newQuery);
+   //    return new Promise((resolve, reject) => {
+   //       this.Model.staticData
+   //          .queryImport(this.id, queryId)
+   //          .catch(reject)
+   //          .then((newQuery) => {
+   //             let newQueryClass = this.queryNew(newQuery);
 
-               // add to list
-               var isIncluded =
-                  this.queries((q) => q.id == newQuery.id).length > 0;
-               if (!isIncluded) {
-                  this._queries.push(newQueryClass);
-               }
+   //             // add to list
+   //             var isIncluded =
+   //                this.queries((q) => q.id == newQuery.id).length > 0;
+   //             if (!isIncluded) {
+   //                this._queries.push(newQueryClass);
+   //             }
 
-               resolve(newQueryClass);
-            });
-      });
-   }
+   //             resolve(newQueryClass);
+   //          });
+   //    });
+   // }
 
-   queryExclude(queryId) {
-      debugger;
-      // REFACTOR THIS!!!
+   // queryExclude(queryId) {
+   //    debugger;
+   //    // REFACTOR THIS!!!
 
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .queryExclude(this.id, queryId)
-            .catch(reject)
-            .then(() => {
-               // remove query from list
-               this._queries = this.queries((q) => q.id != queryId);
+   //    return new Promise((resolve, reject) => {
+   //       this.Model.staticData
+   //          .queryExclude(this.id, queryId)
+   //          .catch(reject)
+   //          .then(() => {
+   //             // remove query from list
+   //             this._queries = this.queries((q) => q.id != queryId);
 
-               resolve();
-            });
-      });
-   }
+   //             resolve();
+   //          });
+   //    });
+   // }
 
    ///
    /// Data collections
    ///
 
    datacollectionLoad() {
+      debugger;
       if (this.loadedDatacollection) return Promise.resolve();
 
       return new Promise((resolve, reject) => {
@@ -1100,8 +1106,57 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
       return this.Model.staticData.datacollectionInfo(cond);
    }
 
+   datacollectionsAll() {
+      return ABDefinition.allDatacollections().map((d) => {
+         return __AllDatacollections[d.id]
+            ? __AllDatacollections[d.id]
+            : this.datacollectionNew(d);
+      });
+   }
+
    datacollectionNew(values) {
-      return new ABDataCollection(values, this);
+      var dc = new ABDataCollection(values, this);
+      dc.on("destroyed", () => {
+         delete __AllDatacollections[dc.id];
+      });
+      __AllDatacollections[dc.id] = dc;
+      return dc;
+   }
+
+   /**
+    * @method datacollectionInsert()
+    * persist the current ABDatacollection in our list of .datacollectionIDs.
+    * @param {ABDatacollection} datacollection
+    * @return {Promise}
+    */
+   datacollectionInsert(datacollection) {
+      var isIncluded = this.datacollectionIDs.indexOf(datacollection.id) != -1;
+      if (!isIncluded) {
+         this.datacollectionIDs.push(datacollection.id);
+         // Save our own Info:
+         return this.save();
+      }
+      return Promise.resolve();
+   }
+
+   /**
+    * @method datacollectionRemove()
+    *
+    * remove the current ABDataCollection from our list of .datacollectionIDs.
+    *
+    * @param {ABObject} datacollection
+    * @return {Promise}
+    */
+   datacollectionRemove(datacollection) {
+      var begLen = this.datacollectionIDs.length;
+      this.datacollectionIDs = this.datacollectionIDs.filter((id) => {
+         return id != datacollection.id;
+      });
+      // if there was a change then save this.
+      if (begLen != this.datacollectionIDs.length) {
+         return this.save();
+      }
+      return Promise.resolve();
    }
 
    /**
