@@ -229,6 +229,9 @@ module.exports = {
    "post /app_builder/model/application/:appID/object/:objID":
       "app_builder/ABModelController.create",
 
+   "post /app_builder/model/application/:appID/object/:objID/batch":
+      "app_builder/ABModelController.batchCreate",
+
    "put /app_builder/model/application/:appID/object/:objID/:id":
       "app_builder/ABModelController.update",
 
