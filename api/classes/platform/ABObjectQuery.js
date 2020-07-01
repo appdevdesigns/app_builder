@@ -1490,4 +1490,10 @@ module.exports = class ABClassQuery extends ABClassObject {
       // Query does not need to generate formula field.
       // It should be created in CREATE VIEW command
    }
+
+   convertConnectFieldCondition(field, condition) {
+      condition.key = `${condition.alias}.${field.relationName()}`;
+
+      return condition;
+   }
 };
