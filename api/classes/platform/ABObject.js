@@ -954,105 +954,10 @@ module.exports = class ABClassObject extends ABObjectCore {
                                        condition.rule == "equals" ||
                                        condition.rule == "not_equal")
                                  ) {
-                                    let getCustomKey = (f, fCustomIndex) => {
-                                       return "{prefix}.`{columnName}`"
-                                          .replace("{prefix}", f.dbPrefix())
-                                          .replace(
-                                             "{columnName}",
-                                             fCustomIndex
-                                                ? fCustomIndex.columnName
-                                                : f.object.PK()
-                                          );
-                                    };
-
-                                    // M:1 or 1:1 (isSource == false)
-                                    if (
-                                       (field.settings.linkType == "many" &&
-                                          field.settings.linkViaType ==
-                                             "one") ||
-                                       (field.settings.linkType == "one" &&
-                                          field.settings.linkViaType == "one" &&
-                                          !field.settings.isSource)
-                                    ) {
-                                       condition.key = getCustomKey(
-                                          field,
-                                          field.indexField
-                                       );
-                                    }
-                                    // M:N
-                                    else if (
-                                       field.settings.linkType == "many" &&
-                                       field.settings.linkViaType == "many"
-                                    ) {
-                                       // find custom index field
-                                       let customIndexField;
-                                       if (
-                                          field.indexField &&
-                                          field.indexField.object.id ==
-                                             field.object.id
-                                       ) {
-                                          customIndexField = field.indexField;
-                                       } else if (
-                                          field.indexField2 &&
-                                          field.indexField2.object.id ==
-                                             field.object.id
-                                       ) {
-                                          customIndexField = field.indexField2;
-                                       }
-
-                                       // update condition.key is PK or CustomFK
-                                       condition.key = getCustomKey(
-                                          field,
-                                          customIndexField
-                                       );
-
-                                       let fieldLink = field.fieldLink;
-                                       let joinTable = field.joinTableName();
-                                       let sourceFkName = field.object.name;
-                                       let targetFkName = fieldLink.object.name;
-
-                                       let mnOperators = {
-                                          contains: "LIKE",
-                                          not_contains: "LIKE", // not NOT LIKE because we will use IN or NOT IN at condition.rule instead
-                                          equals: "=",
-                                          not_equal: "=" // same .not_contains
-                                       };
-
-                                       // create sub-query to get values from MN table
-                                       condition.value = "(SELECT `{sourceFkName}` FROM `{joinTable}` WHERE `{targetFkName}` {ops} '{percent}{value}{percent}')"
-                                          .replace(
-                                             "{sourceFkName}",
-                                             sourceFkName
-                                          )
-                                          .replace("{joinTable}", joinTable)
-                                          .replace(
-                                             "{targetFkName}",
-                                             targetFkName
-                                          )
-                                          .replace(
-                                             "{ops}",
-                                             mnOperators[condition.rule]
-                                          )
-                                          .replace("{value}", condition.value);
-
-                                       condition.value =
-                                          condition.rule == "contains" ||
-                                          condition.rule == "not_contains"
-                                             ? condition.value.replace(
-                                                  /{percent}/g,
-                                                  "%"
-                                               )
-                                             : condition.value.replace(
-                                                  /{percent}/g,
-                                                  ""
-                                               );
-
-                                       condition.rule =
-                                          condition.rule == "contains" ||
-                                          condition.rule == "equals"
-                                             ? "in"
-                                             : "not_in";
-                                    }
+                                    condition = this.convertConnectFieldCondition(
+                                       field,
+                                       condition
+                                    );
                                  }
                               }
                            }
@@ -1888,5 +1793,79 @@ module.exports = class ABClassObject extends ABObjectCore {
       }
 
       return selectSQL;
+   }
+
+   convertConnectFieldCondition(field, condition) {
+      let getCustomKey = (f, fCustomIndex) => {
+         return "{prefix}.`{columnName}`"
+            .replace("{prefix}", f.dbPrefix())
+            .replace(
+               "{columnName}",
+               fCustomIndex ? fCustomIndex.columnName : f.object.PK()
+            );
+      };
+
+      // M:1 or 1:1 (isSource == false)
+      if (
+         (field.settings.linkType == "many" &&
+            field.settings.linkViaType == "one") ||
+         (field.settings.linkType == "one" &&
+            field.settings.linkViaType == "one" &&
+            !field.settings.isSource)
+      ) {
+         condition.key = getCustomKey(field, field.indexField);
+      }
+      // M:N
+      else if (
+         field.settings.linkType == "many" &&
+         field.settings.linkViaType == "many"
+      ) {
+         // find custom index field
+         let customIndexField;
+         if (
+            field.indexField &&
+            field.indexField.object.id == field.object.id
+         ) {
+            customIndexField = field.indexField;
+         } else if (
+            field.indexField2 &&
+            field.indexField2.object.id == field.object.id
+         ) {
+            customIndexField = field.indexField2;
+         }
+
+         // update condition.key is PK or CustomFK
+         condition.key = getCustomKey(field, customIndexField);
+
+         let fieldLink = field.fieldLink;
+         let joinTable = field.joinTableName();
+         let sourceFkName = field.object.name;
+         let targetFkName = fieldLink.object.name;
+
+         let mnOperators = {
+            contains: "LIKE",
+            not_contains: "LIKE", // not NOT LIKE because we will use IN or NOT IN at condition.rule instead
+            equals: "=",
+            not_equal: "=" // same .not_contains
+         };
+
+         // create sub-query to get values from MN table
+         condition.value = "(SELECT `{sourceFkName}` FROM `{joinTable}` WHERE `{targetFkName}` {ops} '{percent}{value}{percent}')"
+            .replace("{sourceFkName}", sourceFkName)
+            .replace("{joinTable}", joinTable)
+            .replace("{targetFkName}", targetFkName)
+            .replace("{ops}", mnOperators[condition.rule])
+            .replace("{value}", condition.value);
+
+         condition.value =
+            condition.rule == "contains" || condition.rule == "not_contains"
+               ? condition.value.replace(/{percent}/g, "%")
+               : condition.value.replace(/{percent}/g, "");
+
+         condition.rule =
+            condition.rule == "contains" || condition.rule == "equals"
+               ? "in"
+               : "not_in";
+      }
    }
 };
