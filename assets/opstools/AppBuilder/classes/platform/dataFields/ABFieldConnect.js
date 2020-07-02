@@ -977,7 +977,8 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          // Pull linked object data
          linkedModel
             .findAll({
-               where: where
+               where: where,
+               populate: false
             })
             .then((result) => {
                // cache linked object data

@@ -101,6 +101,33 @@ module.exports = class ABModel extends ABModelCore {
    }
 
    /**
+    * @method batchCreate
+    * update model values on the server.
+    */
+   batchCreate(values) {
+      values.batch.map((vals) => {
+         return this.prepareMultilingualData(vals.data);
+      });
+
+      return new Promise((resolve, reject) => {
+         OP.Comm.Service.post({
+            url: this.object.urlRestBatch(),
+            params: values
+         })
+            .then((data) => {
+               this.normalizeData(data);
+
+               resolve(data);
+
+               // FIX: now with sockets, the triggers are fired from socket updates.
+               // trigger a create event
+               // triggerEvent('create', this.object, data);
+            })
+            .catch(reject);
+      });
+   }
+
+   /**
     * @method create
     * update model values on the server.
     */
