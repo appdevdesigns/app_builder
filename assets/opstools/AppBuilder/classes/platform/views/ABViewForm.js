@@ -1358,16 +1358,6 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   reject(err);
                })
                .then((newFormVals) => {
-                  // validate for record rules
-                  let ruleValidator = obj.isValidData(newFormVals);
-                  let isUpdatedDataValid = ruleValidator.pass();
-                  if (!isUpdatedDataValid) {
-                     OP.Error.log("Updated data is invalid.", {
-                        newFormVals: newFormVals
-                     });
-                     return resolve(newFormVals);
-                  }
-
                   this.doRecordRules(newFormVals)
                      .then(() => {
                         this.doSubmitRules(newFormVals);
