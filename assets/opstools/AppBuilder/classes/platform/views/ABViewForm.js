@@ -854,8 +854,20 @@ module.exports = class ABViewForm extends ABViewFormCore {
                      // check each rule that was stored previously on the element
                      fieldValidating.$view.complexValidations.forEach(
                         (filter) => {
+                           let object = dc.datasource;
+                           let data = this.getValues();
+                           // convert rowData from { colName : data } to { id : data }
+                           var newData = {};
+                           (object.fields() || []).forEach((field) => {
+                              newData[field.id] = data[field.columnName];
+                           });
+                           // for the case of "this_object" conditions:
+                           if (data.uuid) {
+                              newData["this_object"] = data.uuid;
+                           }
+
                            // use helper funtion to check if valid
-                           var ruleValid = filter.filters(this.getValues());
+                           var ruleValid = filter.filters(newData);
                            // if invalid we need to tell the field
                            if (ruleValid == false) {
                               isValid = false;

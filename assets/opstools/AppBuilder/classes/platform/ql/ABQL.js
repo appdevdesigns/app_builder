@@ -378,6 +378,8 @@ class ABQL extends ABQLCore {
                      return k.object && k.object.id == this.object.id;
                   });
 
+               Filter.processFieldsLoad(foundFields);
+               /*
                (foundFields || []).forEach((processField) => {
                   var type = {};
                   if (processField.field) {
@@ -432,7 +434,8 @@ class ABQL extends ABQLCore {
                         }
                      }
                   ]);
-               });
+                  
+               }); */
             }
 
             // every time the Filter "saves" it's data, it emits this event:
