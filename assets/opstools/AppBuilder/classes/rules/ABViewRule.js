@@ -310,6 +310,7 @@ module.exports = class ABViewRule {
    // @return {Promise}
    process(options) {
       var currentAction = this.currentAction();
+      if (!currentAction) return Promise.resolve();
 
       var id = "hiddenQB_" + webix.uid();
 
@@ -392,6 +393,7 @@ module.exports = class ABViewRule {
          // store our Query Rules
          this.selectedAction = settings.selectedAction;
          var selectedAction = this.currentAction();
+         if (!selectedAction) return;
          selectedAction.stashCondition(settings.queryRules || {});
 
          // if our UI components are present, populate them properly:
@@ -413,7 +415,10 @@ module.exports = class ABViewRule {
       if (this.selectedAction) {
          settings.selectedAction = this.selectedAction;
          settings.queryRules = this.objectQB.getValue();
-         settings.actionSettings = this.currentAction().toSettings();
+         let currentAction = this.currentAction();
+         if (currentAction) {
+            settings.actionSettings = currentAction.toSettings();
+         }
       }
 
       return settings;

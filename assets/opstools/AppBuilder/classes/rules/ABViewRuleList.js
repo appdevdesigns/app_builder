@@ -240,6 +240,8 @@ module.exports = class ABViewRuleList {
     */
    addRule(settings) {
       var Rule = this.getRule();
+      if (!Rule) return;
+
       this.listRules.push(Rule);
 
       // if we have tried to create our component:
@@ -282,7 +284,15 @@ module.exports = class ABViewRuleList {
 
       // clear any existing Rules:
       this.listRules.forEach((rule) => {
-         $$(this.ids.rules).removeView(rule.ids.component);
+         if (
+            this.ids &&
+            this.ids.rules &&
+            rule &&
+            rule.ids &&
+            rule.ids.component
+         ) {
+            $$(this.ids.rules).removeView(rule.ids.component);
+         }
       });
       this.listRules = [];
 
@@ -309,6 +319,17 @@ module.exports = class ABViewRuleList {
       });
    }
 
+   processPre(options) {
+      (this.listRules || [])
+         .map((rule) => rule.currentAction())
+         .filter((ruleAction) => {
+            return ruleAction.isPreProcess == true;
+         })
+         .forEach((ruleAction) => {
+            ruleAction.processUpdateObject(options, options.data);
+         });
+   }
+
    /**
     * @method process
     * Take the provided data and process each of our rules.
@@ -325,7 +346,12 @@ module.exports = class ABViewRuleList {
             }
          };
 
-         this.listRules.forEach((rule) => {
+         let listRules = (this.listRules || []).filter((rule) => {
+            let currentAction = rule.currentAction();
+            return !currentAction.isPreProcess;
+         });
+
+         listRules.forEach((rule) => {
             rule
                .process(options)
                .then(function() {
@@ -336,7 +362,7 @@ module.exports = class ABViewRuleList {
                });
          });
 
-         if (this.listRules.length == 0) {
+         if (listRules.length == 0) {
             resolve();
          }
       });
@@ -359,7 +385,7 @@ module.exports = class ABViewRuleList {
       console.error(
          "!!! ABViewRuleList.getRule() should be overridded by a child object."
       );
-      return {};
+      return null;
    }
 
    formLoad(form) {

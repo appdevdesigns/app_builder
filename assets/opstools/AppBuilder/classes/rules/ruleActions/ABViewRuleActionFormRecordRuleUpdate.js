@@ -23,4 +23,8 @@ module.exports = class ABViewRuleActionFormRecordRuleUpdate extends ABViewRuleAc
       this.key = "ABViewRuleActionFormRecordRuleUpdate";
       this.label = L("ab.component.ruleaction.updateRecord", "*Update Record");
    }
+
+   get isPreProcess() {
+      return true;
+   }
 };
