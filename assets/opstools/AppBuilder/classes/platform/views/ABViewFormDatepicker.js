@@ -66,12 +66,16 @@ module.exports = class ABViewFormDatepicker extends ABViewFormDatepickerCore {
       component.ui.view = "datepicker";
 
       // Ignore date - Only time picker
-      if (field.settings.dateFormat == 1) {
+      if (field && field.settings.dateFormat == 1) {
          component.ui.type = "time";
       }
 
       // Date & Time picker
-      if (field.settings.timeFormat && field.settings.timeFormat != 1) {
+      if (
+         field &&
+         field.settings.timeFormat &&
+         field.settings.timeFormat != 1
+      ) {
          component.ui.timepicker = this.settings.timepicker;
       }
 
