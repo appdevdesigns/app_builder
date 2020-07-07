@@ -332,6 +332,9 @@ module.exports = class ABViewRule {
          fields = QBCondition[1] || [];
 
       let convertToNumber = (text = "") => {
+         // if we have multiple rules we need to check if value is already a number before converting.
+         if (typeof text == "number") return text;
+
          return parseFloat(text.replace(/[^0-9.]/g, ""));
       };
 
