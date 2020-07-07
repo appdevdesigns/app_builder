@@ -321,12 +321,9 @@ module.exports = class ABViewRuleList {
 
    processPre(options) {
       (this.listRules || [])
-         .map((rule) => rule.currentAction())
-         .filter((ruleAction) => {
-            return ruleAction.isPreProcess == true;
-         })
-         .forEach((ruleAction) => {
-            ruleAction.processUpdateObject(options, options.data);
+         .filter((rule) => rule.isPreProcess == true)
+         .forEach((rule) => {
+            rule.processPre(options, options.data);
          });
    }
 
@@ -346,10 +343,9 @@ module.exports = class ABViewRuleList {
             }
          };
 
-         let listRules = (this.listRules || []).filter((rule) => {
-            let currentAction = rule.currentAction();
-            return !currentAction.isPreProcess;
-         });
+         let listRules = (this.listRules || []).filter(
+            (rule) => !rule.isPreProcess
+         );
 
          listRules.forEach((rule) => {
             rule
