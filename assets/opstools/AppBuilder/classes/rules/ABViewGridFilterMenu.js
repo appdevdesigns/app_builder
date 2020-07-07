@@ -279,7 +279,7 @@ module.exports = class ABViewGridFilterMenu {
     * @param {obj} settings  The settings object from the Rule we created in .toSettings()
     */
    addFilterRule(settings) {
-      var Rule = this);
+      var Rule = this.getRule();
       this.filterRulesList.push(Rule);
 
       // if we have tried to create our component:
