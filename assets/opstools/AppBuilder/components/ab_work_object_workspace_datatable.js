@@ -689,7 +689,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             if (editor.config) {
                switch (editor.config.editor) {
                   case "number":
-                     state.value = parseInt(state.value);
+                     state.value = parseFloat(state.value);
                      break;
                   case "datetime":
                      state.value = state.value.getTime();
