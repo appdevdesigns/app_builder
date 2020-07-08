@@ -90,6 +90,36 @@ module.exports = class ABClassApplication extends ABApplicationCore {
    }
 
    ///
+   /// Definition
+   ///
+
+   datacollectionsAll() {
+      // On the server, we shouldn't work directly with "datacollections".
+      // let's simply return [] for now:
+      return [];
+      /*
+      return ABDefinition.definitions((d)=>d.type == "datacollection").map((d) => {
+         return __AllDatacollections[d.id]
+            ? __AllDatacollections[d.id]
+            : this.datacollectionNew(d);
+      });
+      */
+   }
+
+   datacollectionNew(values) {
+      var dc = new ABDataCollection(values, this);
+      dc.on("destroyed", () => {
+         delete __AllDatacollections[dc.id];
+      });
+      __AllDatacollections[dc.id] = dc;
+      return dc;
+   }
+
+   definitionForID(id) {
+      return ABDefinition.definition(id);
+   }
+
+   ///
    /// Objects
    ///
    objects(filter = () => true) {

@@ -698,15 +698,49 @@ AppDev Team
 //       });
 // }
 
+function prepareDefinition(values) {
+   var def = values.json;
+   if (typeof def == "string") {
+      try {
+         def = JSON.parse(def);
+      } catch (e) {}
+   }
+   return def;
+}
 function loadDefinitionCallbacks(next) {
+   //
+   // Application Lifecycle
+   //
+   var ApplicationMaintainance = [
+      "application.afterCreate",
+      "application.afterUpdate"
+   ];
+   ApplicationMaintainance.forEach((key) => {
+      ABModelLifecycle.register(key, (values, cb) => {
+         var def = prepareDefinition(values);
+         var pending = [];
+         // track any Async operations.
+
+         // .upudateNavBarArea() will update it if it exists, or create it if it
+         // doesn't.  Will work for both .afterCreate && .afterUpdate:
+         pending.push(AppBuilder.updateNavBarArea(def.id));
+
+         // make sure all Async operations are complete before calling
+         // our CB()
+         Promise.all(pending)
+            .then(() => {
+               cb();
+            })
+            .catch((err) => {
+               sails.log.error("application.afterCreate :: Error:", err);
+               cb(err);
+            });
+      });
+   });
+
    // ABObject.beforeCreate Lifecycle
    ABModelLifecycle.register("object.beforeCreate", (values, cb) => {
-      var def = values.json;
-      if (typeof def == "string") {
-         try {
-            def = JSON.parse(def);
-         } catch (e) {}
-      }
+      var def = prepareDefinition(values);
       var pending = [];
       // track any Async operations.
 
@@ -730,12 +764,7 @@ function loadDefinitionCallbacks(next) {
 
    // ABObject.beforeCreate Lifecycle
    ABModelLifecycle.register("object.afterUpdate", (values, cb) => {
-      var def = values.json;
-      if (typeof def == "string") {
-         try {
-            def = JSON.parse(def);
-         } catch (e) {}
-      }
+      var def = prepareDefinition(values);
       var pending = [];
       // track any Async operations.
 
@@ -759,12 +788,7 @@ function loadDefinitionCallbacks(next) {
 
    // ABField.afterUpdate Lifcycle
    ABModelLifecycle.register("field.afterUpdate", (values, cb) => {
-      var def = values.json;
-      if (typeof def == "string") {
-         try {
-            def = JSON.parse(def);
-         } catch (e) {}
-      }
+      var def = prepareDefinition(values);
       var pending = [];
       // track any Async operations.
 
@@ -815,12 +839,7 @@ function loadDefinitionCallbacks(next) {
    var QueryDataValidations = ["query.beforeCreate", "query.beforeUpdate"];
    QueryDataValidations.forEach((key) => {
       ABModelLifecycle.register(key, (values, cb) => {
-         var def = values.json;
-         if (typeof def == "string") {
-            try {
-               def = JSON.parse(def);
-            } catch (e) {}
-         }
+         var def = prepareDefinition(values);
          var pending = [];
          // track any Async operations.
 
@@ -848,18 +867,83 @@ function loadDefinitionCallbacks(next) {
    var QueryMaintainance = ["query.afterCreate", "query.afterUpdate"];
    QueryMaintainance.forEach((key) => {
       ABModelLifecycle.register(key, (values, cb) => {
-         var def = values.json;
-         if (typeof def == "string") {
-            try {
-               def = JSON.parse(def);
-            } catch (e) {}
-         }
+         var def = prepareDefinition(values);
          var pending = [];
          // track any Async operations.
 
          // perform a Migrate.create() to create/update the Query Table.
          var qClass = ABSystemObject.getApplication().queryNew(def);
          pending.push(ABMigration.createQuery(qClass));
+
+         // make sure all Async operations are complete before calling
+         // our CB()
+         Promise.all(pending)
+            .then(() => {
+               cb();
+            })
+            .catch((err) => {
+               sails.log.error("query.afterCreate :: Error:", err);
+               cb(err);
+            });
+      });
+   });
+
+   // ABObjectQuery.afterCreate Lifecycle
+   var ViewMaintainance = ["view.afterCreate", "view.afterUpdate"];
+   ViewMaintainance.forEach((key) => {
+      ABModelLifecycle.register(key, (values, cb) => {
+         var def = prepareDefinition(values);
+         var pending = [];
+         // track any Async operations.
+
+         // If this is a New Page, then create the OPs portal permissions:
+         if (def.key == "page") {
+            // var Page = ABSystemObject.getApplication().pageNew(def);
+
+            // Find the Parent ABApplication
+            var appDef = ABDefinition.definition(def.myAppID);
+            if (appDef) {
+               var pApp = new ABApplication(appDef);
+               let pageName = "Application Admin Page";
+
+               // 1)  Update Admin App page
+               if (pApp.isAdminApp) {
+                  let optionsAdmin = {
+                     isAdminPage: true,
+                     name: pageName,
+                     label: "Admin",
+                     icon: "fa-circle-o-notch" // TODO admin app icon
+                  };
+
+                  pending.push(AppBuilder.updateNavView(pApp, optionsAdmin));
+               }
+               // Remove Admin App page
+               else {
+                  pending.push(AppBuilder.removeNavView(pApp, pageName));
+               }
+
+               // 2) manage the pages Nav View Permission
+               var label = def.name;
+               if (def.translations && def.translations.length) {
+                  label = def.translations[0].label;
+               }
+               let options = {
+                  name: def.name,
+                  label: label,
+                  pageID: def.id,
+                  icon: def.icon
+               };
+
+               pending.push(AppBuilder.updateNavView(pApp, options));
+            } else {
+               var err = new Error(
+                  `${key} :: Error:Could not find Application[${def.myAppID}] for Page[${def.id}]`
+               );
+               sails.log.error(err);
+
+               //// TODO: better way to respond to this failed operation!
+            }
+         }
 
          // make sure all Async operations are complete before calling
          // our CB()

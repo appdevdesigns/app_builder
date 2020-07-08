@@ -1207,11 +1207,15 @@ steal(
                                  };
 
                                  self.data.application
-                                    .datacollections()
+                                    .datacollectionsIncluded()
                                     .forEach((dc) => {
                                        if (!dc) return;
 
                                        dc.init();
+
+                                       /*
+                                       // ABApplications can now already referece
+                                       // all objects and queries:
 
                                        let datasource = dc.datasource;
                                        if (!datasource) return;
@@ -1238,6 +1242,7 @@ steal(
                                        else {
                                           storeObject(datasource);
                                        }
+                                       */
                                     });
 
                                  next();

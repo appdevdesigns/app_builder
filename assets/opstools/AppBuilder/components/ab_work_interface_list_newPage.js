@@ -198,6 +198,8 @@ module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
                page
                   .save(includeSubview)
                   .then(() => {
+                     // Q: in the new ABDefinition approach, do we need to do this?
+                     /*
                      // save sub-pages sequentially
                      var subTasks = Promise.resolve();
                      page.pages().forEach((subPage) => {
@@ -205,6 +207,7 @@ module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
                            subPage.save(includeSubview)
                         );
                      });
+                     */
 
                      _logic.callbacks.onSave(page);
 
@@ -223,6 +226,7 @@ module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
                   })
                   .catch((err) => {
                      // TODO: error message
+                     console.error(err);
 
                      SaveButton.enable();
                      CurrentEditor.formReady();

@@ -1008,6 +1008,9 @@ module.exports = {
 
          async.series(
             [
+               /*
+                // Depreciated: OLD Arango Method:
+
                function(next) {
                   ABGraphApplication.findOne(appID)
                      .then(function(app) {
@@ -1030,6 +1033,20 @@ module.exports = {
                         next(err);
                         return null;
                      });
+               },
+               */
+
+               function(next) {
+                  var appDef = ABDefinitionModel.definitionForID(appID);
+                  if (appDef) {
+                     Application = new ABApplication(appDef);
+                     next();
+                  } else {
+                     var error = new Error(
+                        `AppBuilder.registerNavBarArea(): unknown Application[${appID}]`
+                     );
+                     next(error);
+                  }
                },
 
                // make sure OpsPortal navigation has an area for this application defined:
@@ -1088,6 +1105,9 @@ module.exports = {
 
          async.series(
             [
+               /*
+                // Depreciated: OLD Arango Method:
+
                function(next) {
                   ABGraphApplication.findOne(appID)
                      .then(function(app) {
@@ -1106,6 +1126,20 @@ module.exports = {
                         next(err);
                         return null;
                      });
+               },
+               */
+
+               function(next) {
+                  var appDef = ABDefinitionModel.definitionForID(appID);
+                  if (appDef) {
+                     Application = new ABApplication(appDef);
+                     next();
+                  } else {
+                     var error = new Error(
+                        `AppBuilder.registerNavBarArea(): unknown Application[${appID}]`
+                     );
+                     next(error);
+                  }
                },
                function(next) {
                   var areaName = Application.name;
