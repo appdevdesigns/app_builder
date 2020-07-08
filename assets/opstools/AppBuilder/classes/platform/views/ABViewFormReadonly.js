@@ -131,7 +131,9 @@ module.exports = class ABViewFormReadonly extends ABViewFormReadonlyCore {
 
       component.logic = {
          getValue: (rowData) => {
-            return null;
+            let field = this.field();
+            if (!field) return null;
+            return rowData[field.columnName];
          },
 
          refresh: (rowData) => {
