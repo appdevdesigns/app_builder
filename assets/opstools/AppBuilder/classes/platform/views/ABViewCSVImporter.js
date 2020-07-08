@@ -1622,6 +1622,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
                   function createRecord(objModel, newRowsData, element, total) {
                      return new Promise((resolve, reject) => {
+                        element.doRecordRulesPre(newRowsData);
+
                         objModel
                            .batchCreate({ batch: newRowsData })
                            .catch((errMessage) => {

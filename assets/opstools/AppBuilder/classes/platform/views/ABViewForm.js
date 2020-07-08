@@ -1258,6 +1258,9 @@ module.exports = class ABViewForm extends ABViewFormCore {
       // get update data
       var formVals = this.getFormValues(formView, obj, dv.datacollectionLink);
 
+      // update value from the record rule (pre-update)
+      this.doRecordRulesPre(formVals);
+
       // validate data
       if (!this.validateData(formView, obj, formVals)) {
          return Promise.resolve();

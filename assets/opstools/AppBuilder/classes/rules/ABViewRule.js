@@ -304,13 +304,87 @@ module.exports = class ABViewRule {
       });
    }
 
+   processPre(options = {}) {
+      let isValid = this.isValid(options.data);
+      if (!isValid) return;
+
+      let currentAction = this.currentAction();
+      if (!currentAction) return;
+
+      currentAction.processUpdateObject({}, options.data);
+   }
+
    // process
    // Take the provided data and process this rule
    // @param {obj} options
    // @return {Promise}
    process(options) {
       var currentAction = this.currentAction();
+      if (!currentAction) return Promise.resolve();
 
+      let isValid = this.isValid(options.data);
+      if (isValid) {
+         return currentAction.process(options);
+      } else {
+         // else just resolve and continue on
+         return new Promise((resolve, reject) => {
+            resolve();
+         });
+      }
+   }
+
+   fromSettings(settings) {
+      settings = settings || {};
+
+      if (settings.selectedAction) {
+         // store our Query Rules
+         this.selectedAction = settings.selectedAction;
+         var selectedAction = this.currentAction();
+         if (!selectedAction) return;
+         selectedAction.stashCondition(settings.queryRules || {});
+
+         // if our UI components are present, populate them properly:
+         if (this.ids) {
+            // Trigger our UI to refresh with this selected Action:
+            // NOTE: this also populates the QueryBuilder
+            $$(this.ids.selectAction).setValue(this.selectedAction);
+            // this._logic.selectAction(this.selectedAction);
+         }
+
+         // now continue with setting up our settings:
+         selectedAction.fromSettings(settings.actionSettings);
+      }
+   }
+
+   toSettings() {
+      var settings = {};
+
+      if (this.selectedAction) {
+         settings.selectedAction = this.selectedAction;
+         settings.queryRules = this.objectQB.getValue();
+         let currentAction = this.currentAction();
+         if (currentAction) {
+            settings.actionSettings = currentAction.toSettings();
+         }
+      }
+
+      return settings;
+   }
+
+   // NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or]
+   // choosers properly if it hasn't been shown before the .setValue() call.
+   // so this work around allows us to refresh the display after the .show()
+   // on the popup.
+   // When they've fixed the bug, we'll remove this workaround:
+   qbFixAfterShow() {
+      var currAction = this.currentAction();
+      if (currAction && this.objectQB) {
+         this.objectQB.setValue(currAction.condition());
+         currAction.qbFixAfterShow();
+      }
+   }
+
+   isValid(data = {}) {
       var id = "hiddenQB_" + webix.uid();
 
       // if our data passes the QueryRules then tell Action to process
@@ -321,6 +395,7 @@ module.exports = class ABViewRule {
       };
       var hiddenQB = webix.ui(ui);
 
+      let currentAction = this.currentAction();
       var QBCondition = currentAction.condition();
 
       if (this.objectQB) {
@@ -331,6 +406,9 @@ module.exports = class ABViewRule {
          fields = QBCondition[1] || [];
 
       let convertToNumber = (text = "") => {
+         // if we have multiple rules we need to check if value is already a number before converting.
+         if (typeof text == "number") return text;
+
          return parseFloat(text.replace(/[^0-9.]/g, ""));
       };
 
@@ -355,11 +433,8 @@ module.exports = class ABViewRule {
                }
 
                // row data
-               if (
-                  options.data[f.id] &&
-                  typeof options.data[f.id] === "string"
-               ) {
-                  options.data[f.id] = convertToNumber(options.data[f.id]);
+               if (data[f.id] && typeof data[f.id] === "string") {
+                  data[f.id] = convertToNumber(data[f.id]);
                }
             } catch (e) {}
          });
@@ -371,64 +446,15 @@ module.exports = class ABViewRule {
       });
 
       var QBHelper = hiddenQB.getFilterHelper();
-      var isValid = QBHelper(options.data);
+      var isValid = QBHelper(data);
 
       hiddenQB.destructor(); // remove the QB
 
-      if (isValid) {
-         return currentAction.process(options);
-      } else {
-         // else just resolve and continue on
-         return new Promise((resolve, reject) => {
-            resolve();
-         });
-      }
+      return isValid;
    }
 
-   fromSettings(settings) {
-      settings = settings || {};
-
-      if (settings.selectedAction) {
-         // store our Query Rules
-         this.selectedAction = settings.selectedAction;
-         var selectedAction = this.currentAction();
-         selectedAction.stashCondition(settings.queryRules || {});
-
-         // if our UI components are present, populate them properly:
-         if (this.ids) {
-            // Trigger our UI to refresh with this selected Action:
-            // NOTE: this also populates the QueryBuilder
-            $$(this.ids.selectAction).setValue(this.selectedAction);
-            // this._logic.selectAction(this.selectedAction);
-         }
-
-         // now continue with setting up our settings:
-         selectedAction.fromSettings(settings.actionSettings);
-      }
-   }
-
-   toSettings() {
-      var settings = {};
-
-      if (this.selectedAction) {
-         settings.selectedAction = this.selectedAction;
-         settings.queryRules = this.objectQB.getValue();
-         settings.actionSettings = this.currentAction().toSettings();
-      }
-
-      return settings;
-   }
-
-   // NOTE: Querybuilder v5.2 has a bug where it won't display the [and/or]
-   // choosers properly if it hasn't been shown before the .setValue() call.
-   // so this work around allows us to refresh the display after the .show()
-   // on the popup.
-   // When they've fixed the bug, we'll remove this workaround:
-   qbFixAfterShow() {
-      var currAction = this.currentAction();
-      if (currAction && this.objectQB) {
-         this.objectQB.setValue(currAction.condition());
-         currAction.qbFixAfterShow();
-      }
+   get isPreProcess() {
+      let currentAction = this.currentAction();
+      return currentAction.isPreProcess || false;
    }
 };
