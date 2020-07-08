@@ -270,6 +270,8 @@ module.exports = class ABViewContainer extends ABViewContainerCore {
 
                var viewState = Dashboard.serialize();
 
+               var allViewUpdates = [];
+
                // save view position state to views
                this.views().forEach((v) => {
                   var state = viewState.filter((vs) => vs.name == v.id)[0];
@@ -280,11 +282,17 @@ module.exports = class ABViewContainer extends ABViewContainerCore {
                      // validate position data
                      if (v.position.x < 0) v.position.x = 0;
                      if (v.position.y < 0) v.position.y = 0;
+
+                     allViewUpdates.push(v.save());
                   }
                });
 
                // save template layout
-               this.saveReorder()
+               // this.saveReorder()
+               Promise.all(allViewUpdates)
+                  .then(() => {
+                     return this.save();
+                  })
                   .catch((err) => {
                      OP.Error.log("Error trying to save selected View:", {
                         error: err,

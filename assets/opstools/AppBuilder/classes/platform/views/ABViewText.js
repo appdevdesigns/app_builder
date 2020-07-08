@@ -189,17 +189,7 @@ module.exports = class ABViewText extends ABViewTextCore {
       var SourceSelector = $$(ids.datacollection);
 
       // Pull data collections to options
-      var dvOptions = view.application.datacollections().map((dv) => {
-         return {
-            id: dv.id,
-            value: dv.label
-         };
-      });
-
-      dvOptions.unshift({
-         id: null,
-         value: "[Select]"
-      });
+      var dvOptions = view.propertyDatacollections();
       SourceSelector.define("options", dvOptions);
       SourceSelector.define("value", dataviewID);
       SourceSelector.refresh();

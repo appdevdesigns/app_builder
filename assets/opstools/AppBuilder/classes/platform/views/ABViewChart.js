@@ -209,19 +209,7 @@ module.exports = class ABViewChart extends ABViewChartCore {
 
    static populateDataview(ids, view) {
       // Set the objects you can choose from in the list
-      var objectOptions = view.application.datacollections().map((dc) => {
-         return {
-            id: dc.id,
-            value: dc.label
-         };
-      });
-
-      // Add a default option
-      var defaultOption = {
-         id: "",
-         value: L("ab.component.label.selectObject", "*Select an object")
-      };
-      objectOptions.unshift(defaultOption);
+      var objectOptions = view.propertyDatacollections();
 
       $$(ids.dataview).define("options", objectOptions);
       $$(ids.dataview).refresh();

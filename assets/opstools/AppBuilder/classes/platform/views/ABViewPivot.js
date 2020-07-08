@@ -135,17 +135,7 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
       var SourceSelector = $$(ids.datacollection);
 
       // Pull data collections to options
-      var dcOptions = view.application.datacollections().map((dc) => {
-         return {
-            id: dc.id,
-            value: dc.label
-         };
-      });
-
-      dcOptions.unshift({
-         id: null,
-         value: "[Select]"
-      });
+      var dcOptions = view.propertyDatacollections();
       SourceSelector.define("options", dcOptions);
       SourceSelector.define("value", datacollectionId);
       SourceSelector.refresh();

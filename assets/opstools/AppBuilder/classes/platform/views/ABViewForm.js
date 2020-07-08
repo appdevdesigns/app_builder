@@ -495,22 +495,10 @@ module.exports = class ABViewForm extends ABViewFormCore {
       var SourceSelector = $$(ids.datacollection);
 
       // Pull data collections to options
-      var dcOptions = view.application
-         .datacollections((dc) => {
-            var obj = dc.datasource;
+      var dcOptions = view.propertyDatacollections((dc) => {
+         var obj = dc.datasource;
 
-            return dc.sourceType == "object" && obj && !obj.isImported;
-         })
-         .map((dc) => {
-            return {
-               id: dc.id,
-               value: dc.label
-            };
-         });
-
-      dcOptions.unshift({
-         id: null,
-         value: "[Select]"
+         return dc.sourceType == "object" && obj && !obj.isImported;
       });
       SourceSelector.define("options", dcOptions);
       SourceSelector.define("value", datacollectionId);

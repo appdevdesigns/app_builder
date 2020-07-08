@@ -231,13 +231,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
       var datacollectionId = view.settings.dataviewID || null;
 
       // Pull data views to options
-      var dcOptions = view.application.datacollections().map((dc) => {
-         return {
-            id: dc.id,
-            value: dc.label
-         };
-      });
-
+      var dcOptions = view.propertyDatacollections();
       SourceSelector.define("options", dcOptions);
       SourceSelector.define("value", datacollectionId);
       SourceSelector.refresh();
