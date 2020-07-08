@@ -964,6 +964,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
 
                   // set value to each components
                   if (f.field()) f.field().setValue($$(comp.ui.id), rowData);
+
+                  if (comp.logic.refresh) comp.logic.refresh(rowData);
                });
             }
          },
@@ -1128,7 +1130,9 @@ module.exports = class ABViewForm extends ABViewFormCore {
          if (vComponent == null) return;
 
          if (f.field())
-            formVals[f.field().columnName] = vComponent.logic.getValue();
+            formVals[f.field().columnName] = vComponent.logic.getValue(
+               formVals
+            );
       });
 
       // clear undefined values or empty arrays
