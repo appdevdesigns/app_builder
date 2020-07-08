@@ -775,6 +775,7 @@ module.exports = {
             // return a Successful operation:
             resolvePendingTransaction();
             if (res) {
+               updateConnectedFields(object, newItem);
                res.AD.success(newItem);
             } else {
                resolve(newItem);
@@ -1629,6 +1630,7 @@ console.error(err);
                                     .then(() => {
                                        resolvePendingTransaction();
                                        res.AD.success(result);
+                                       updateConnectedFields(object, result);
 
                                        // We want to broadcast the change from the server to the client so all datacollections can properly update
                                        // Build a payload that tells us what was updated
