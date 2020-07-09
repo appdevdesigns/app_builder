@@ -163,7 +163,6 @@ module.exports = class ABViewList extends ABViewListCore {
       var _ui = {
          id: ids.component,
          view: "dataview",
-         height: this.settings.height,
          type: {
             width: 1000,
             height: 30
@@ -175,6 +174,13 @@ module.exports = class ABViewList extends ABViewListCore {
             return field.format(item);
          }
       };
+
+      // set height or autoHeight
+      if (this.settings.height != 0) {
+         _ui.height = this.settings.height;
+      } else {
+         _ui.autoHeight = true;
+      }
 
       var _init = (options) => {
          var dv = this.datacollection;
