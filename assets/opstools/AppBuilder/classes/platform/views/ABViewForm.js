@@ -76,10 +76,18 @@ module.exports = class ABViewForm extends ABViewFormCore {
          currView.settings.dataviewID = dcId;
 
          // clear sub views
+         var viewsToRemove = currView._views;
          currView._views = [];
 
          return (
             Promise.resolve()
+               .then(() => {
+                  var allRemoves = [];
+                  viewsToRemove.forEach((v) => {
+                     allRemoves.push(v.destroy());
+                  });
+                  return Promise.all(allRemoves);
+               })
                // .then(() => {
                // 	// remove all old components
                // 	let destroyTasks = [];
@@ -104,7 +112,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   // add all fields to editor by default
                   if (currView._views.length > 0) return Promise.resolve();
 
-                  // let saveTasks = [];
+                  let saveTasks = [];
                   let fields = $$(ids.fields).find({});
                   fields.reverse();
                   fields.forEach((f, index) => {
@@ -122,7 +130,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
                            );
 
                            // // Call save API
-                           // saveTasks.push(() => newFieldView.save());
+                           saveTasks.push(newFieldView.save());
                         }
 
                         // update item to UI list
@@ -132,19 +140,17 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   });
 
                   let defaultButton = formView.refreshDefaultButton(ids);
-                  // if (defaultButton)
-                  // 	saveTasks.push(() => defaultButton.save());
+                  if (defaultButton) saveTasks.push(defaultButton.save());
 
-                  // return saveTasks.reduce((promiseChain, currTask) => {
-                  // 	return promiseChain.then(currTask);
-                  // }, Promise.resolve([]));
-
-                  return Promise.resolve();
+                  return Promise.all(saveTasks);
                })
                // Saving
                .then(() => {
-                  let includeSubViews = true;
-                  return currView.save(includeSubViews);
+                  //// NOTE: the way the .addFieldToForm() works, it will prevent
+                  //// the typical field.save() -> triggering the form.save() on a
+                  //// new Field.  So once all our field.saves() are finished, we
+                  //// need to perform a form.save() to persist the changes.
+                  return currView.save();
                })
                // Finally
                .then(() => {
@@ -222,8 +228,9 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   fieldView.once("destroyed", () =>
                      this.propertyEditorPopulate(App, ids, currView)
                   );
-
-                  doneFn();
+                  currView.save().then(() => {
+                     doneFn();
+                  });
                });
             }
          }

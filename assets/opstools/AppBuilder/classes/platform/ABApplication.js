@@ -480,6 +480,14 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    }
 
    ///
+   /// Definition
+   ///
+
+   definitionForID(id) {
+      return ABDefinition.definition(id);
+   }
+
+   ///
    /// Objects
    ///
 
@@ -742,6 +750,44 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
       values.key = ABViewPage.common().key;
 
       return new ABViewManager.newView(values, this, null);
+   }
+
+   /**
+    * @method pageInsert()
+    *
+    * persist the current ABViewPage in our list of .pages.
+    *
+    * @param {ABViewPage} page
+    * @return {Promise}
+    */
+   pageInsert(page) {
+      var isIncluded = this._pages.filter((p) => p.id == page.id)[0];
+      if (!isIncluded) {
+         this._pages.push(page);
+         // Save our own Info:
+         return this.save();
+      }
+      return Promise.resolve();
+   }
+
+   /**
+    * @method pageRemove()
+    *
+    * remove the current ABViewPage from our list of pages.
+    *
+    * @param {ABViewPage} page
+    * @return {Promise}
+    */
+   pageRemove(page) {
+      var begLen = this._pages.length;
+      this._pages = this._pages.filter((p) => {
+         return p.id != page.id;
+      });
+      // if there was a change then save this.
+      if (begLen != this._pages.length) {
+         return this.save();
+      }
+      return Promise.resolve();
    }
 
    /**
@@ -1249,16 +1295,12 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     */
    static livepage(appID, pageID) {
       return new Promise((resolve, reject) => {
-         var ModelApplication = OP.Model.get("opstools.BuildApp.ABApplication");
-         ModelApplication.Models(ABApplication); // set the Models  setting.
-
-         ModelApplication.staticData
-            .livepage(appID, pageID)
-            .catch(reject)
-            .then(function(app) {
-               if (app) resolve(new ABApplication(app));
-               else resolve();
-            });
+         var appDef = ABDefinition.definition(appID);
+         if (appDef) {
+            resolve(new ABApplication(appDef));
+         } else {
+            reject(new Error(`Unknown Application [${appID}]`));
+         }
       });
    }
 

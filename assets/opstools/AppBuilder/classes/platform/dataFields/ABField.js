@@ -749,7 +749,7 @@ module.exports = class ABField extends ABFieldCore {
             values.settings = values.settings || {};
             values.settings.objectId = this.object.id;
             values.settings.fieldId = this.id;
-            values.id = OP.Util.uuid(); // new view/widget id
+            //values.id = OP.Util.uuid(); // new view/widget id
 
             var ABFieldPlaceholder = application.viewNew(
                values,
