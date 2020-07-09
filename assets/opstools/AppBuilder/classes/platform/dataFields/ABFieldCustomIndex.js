@@ -66,7 +66,15 @@ var ABFieldCustomIndexComponent = new ABFieldComponent({
                f.key == "email" ||
                f.key == "user" ||
                f.key == "AutoIndex" ||
-               f.key == "customIndex"
+               f.key == "customIndex" ||
+               (f.key == "connectObject" &&
+                  // 1:M
+                  ((f.settings.linkType == "one" &&
+                     f.settings.linkViaType == "many") ||
+                     // 1:1 isSource = true
+                     (f.settings.linkType == "one" &&
+                        f.settings.linkViaType == "one" &&
+                        f.settings.isSource)))
             );
          }).map((f) => {
             return {
