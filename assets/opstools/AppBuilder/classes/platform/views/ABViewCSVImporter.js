@@ -1045,7 +1045,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                            // reformat data to display
                            (matchFields || []).forEach((f) => {
                               let record = data[f.columnIndex];
-                              rowValue[f.field.columnName] = record;
+                              rowValue[f.field.id] = record;
                            });
                            var ruleValid = filter.filters(rowValue);
                            // if invalid we need to tell the field
@@ -1609,6 +1609,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                         text:
                            "One or more connected records referenced an unknown item."
                      });
+                     uiCleanUp();
 
                      return Promise.resolve();
                   }
