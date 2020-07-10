@@ -1614,6 +1614,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                         text:
                            "One or more connected records referenced an unknown item."
                      });
+                     uiCleanUp();
 
                      return Promise.resolve();
                   }
