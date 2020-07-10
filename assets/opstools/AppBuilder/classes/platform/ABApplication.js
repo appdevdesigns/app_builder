@@ -336,16 +336,26 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    destroy() {
-      return super
-         .destroy()
+      return Promise.resolve()
          .then(() => {
-            // TODO:
-            // go through any Application Unique objects and
-            // make sure they are destroyed as well, like:
-            // - interface objects
-            // ...
+            // When deleting an ABApplication
+            // be sure to remove any of it's ABViewPages as well
+            // This cleans out any dangling ABDefinitions and cleans up the
+            // OpsPortal Permissions:
 
-            return Promise.resolve();
+            var allPageDeletes = [];
+            var allPages = this.pages();
+            this._pages = [];
+            // doing ._pages = [] prevents any ABApplication updates when
+            // a page is .destroy()ed
+
+            allPages.forEach((p) => {
+               allPageDeletes.push(p.destroy());
+            });
+            return Promise.all(allPageDeletes);
+         })
+         .then(() => {
+            return super.destroy();
          })
          .then(() => {
             _AllApplications.remove(this.id);

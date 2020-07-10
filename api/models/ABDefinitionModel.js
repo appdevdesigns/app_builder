@@ -117,14 +117,19 @@ module.exports = {
    },
 
    beforeDestroy: function(criteria, cb) {
-      cb();
+      var record = __AllDefinitions[criteria.where.id];
+      if (record) {
+         ABModelLifecycle.process(`${record.type}.beforeDestroy`, record, cb);
+      } else {
+         cb();
+      }
    },
 
    afterDestroy: function(record, cb) {
-      // remove cache
-      // ABObjectCache.remove(record.id);
+      // remove my local definition copy:
       delete __AllDefinitions[record.id];
-      cb();
+
+      ABModelLifecycle.process(`${record.type}.afterDestroy`, record, cb);
    },
 
    refresh: function() {

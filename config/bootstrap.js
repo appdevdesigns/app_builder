@@ -7,6 +7,7 @@
  * For more information on bootstrapping your app, check out:
  * http://sailsjs.org/#documentation
  */
+var _ = require("lodash");
 var path = require("path");
 var AD = require("ad-utils");
 var fs = require("fs");
@@ -738,6 +739,33 @@ function loadDefinitionCallbacks(next) {
       });
    });
 
+   ABModelLifecycle.register("application.beforeDestroy", (values, cb) => {
+      var def = prepareDefinition(values);
+      var pending = [];
+      // track any Async operations.
+
+      debugger;
+      // figure out our actionKeyName:
+      var appName = AppBuilder.rules.toApplicationNameFormat(def.name);
+      var actionKeys = [`opstools.${appName}.view`];
+      var areaKey = _.kebabCase(`ab-${def.name}`);
+
+      Promise.resolve()
+         .then(() => {
+            return Permissions.action.destroyKeys(actionKeys);
+         })
+         .then(() => {
+            return OPSPortal.NavBar.Area.remove(areaKey);
+         })
+         .then(() => {
+            cb();
+         })
+         .catch((err) => {
+            sails.log.error("application.beforeDestroy :: Error:", err);
+            cb(err);
+         });
+   });
+
    // ABObject.beforeCreate Lifecycle
    ABModelLifecycle.register("object.beforeCreate", (values, cb) => {
       var def = prepareDefinition(values);
@@ -952,10 +980,54 @@ function loadDefinitionCallbacks(next) {
                cb();
             })
             .catch((err) => {
-               sails.log.error("query.afterCreate :: Error:", err);
+               sails.log.error(`${key} :: Error:`, err);
                cb(err);
             });
       });
+   });
+
+   ABModelLifecycle.register("view.beforeDestroy", (values, cb) => {
+      var def = prepareDefinition(values);
+      var pending = [];
+      // track any Async operations.
+
+      // If this is a Page, then remove the OPs portal permissions:
+      if (def.key == "page") {
+         // var Page = ABSystemObject.getApplication().pageNew(def);
+
+         // Find the Parent ABApplication
+         var appDef = ABDefinition.definition(def.myAppID);
+         if (appDef) {
+            var pApp = new ABApplication(appDef);
+            let pageName = "Application Admin Page";
+
+            // 1)  Remove Admin App page
+            if (pApp.isAdminApp) {
+               pending.push(AppBuilder.removeNavView(pApp, pageName));
+            }
+
+            // 2) remove the pages Nav View Permission
+            pending.push(AppBuilder.removeNavView(pApp, def.name));
+         } else {
+            var err = new Error(
+               `${key} :: Error:Could not find Application[${def.myAppID}] for Page[${def.id}]`
+            );
+            sails.log.error(err);
+
+            //// TODO: better way to respond to this failed operation!
+         }
+      }
+
+      // make sure all Async operations are complete before calling
+      // our CB()
+      Promise.all(pending)
+         .then(() => {
+            cb();
+         })
+         .catch((err) => {
+            sails.log.error("query.afterCreate :: Error:", err);
+            cb(err);
+         });
    });
 
    next();
