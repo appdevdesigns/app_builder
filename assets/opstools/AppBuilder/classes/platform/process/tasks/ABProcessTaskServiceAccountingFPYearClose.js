@@ -18,6 +18,13 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
          objectAccount: `${id}_objectAccount`,
          valueFundBalances: `${id}_valueFundBalances`,
          valueNetIncome: `${id}_valueNetIncome`,
+         fieldFPYearStart: `${id}_fieldFPYearStart`,
+         fieldFPYearEnd: `${id}_fieldFPYearEnd`,
+         fieldFPYearStatus: `${id}_fieldFPYearStatus`,
+         fieldFPYearActive: `${id}_fieldFPYearActive`,
+         fieldFPMonthStart: `${id}_fieldFPMonthStart`,
+         fieldFPMonthEnd: `${id}_fieldFPMonthEnd`,
+         fieldAccNumber: `${id}_fieldAccNumber`,
          fieldAccType: `${id}_fieldAccType`,
          fieldAccTypeIncome: `${id}_fieldAccTypeIncome`,
          fieldAccTypeExpense: `${id}_fieldAccTypeExpense`,
@@ -48,7 +55,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
          value: L("ab.process.accounting.selectObject", "*Select an Object")
       });
 
-      let getAccFieldOptions = (accObjID) => {
+      let getFieldOptions = (objID, fieldKey) => {
          let fields = [
             {
                id: 0,
@@ -56,11 +63,11 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
             }
          ];
 
-         if (accObjID) {
-            var entry = objectList.find((o) => o.id == accObjID);
+         if (objID) {
+            var entry = objectList.find((o) => o.id == objID);
             if (entry && entry.object) {
                entry.object
-                  .fields((f) => f.key == "list")
+                  .fields((f) => f.key == fieldKey)
                   .forEach((f) => {
                      fields.push({ id: f.id, value: f.label, field: f });
                   });
@@ -69,14 +76,12 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
          return fields;
       };
 
-      let getAccTypeOptions = (typeFieldId) => {
+      let getListOptions = (objectId, fieldId) => {
          let result = [];
-         let fpAccount = this.application.objects(
-            (obj) => obj.id == this.objectAccount
-         )[0];
-         if (!fpAccount) return result;
+         let object = this.application.objects((obj) => obj.id == objectId)[0];
+         if (!object) return result;
 
-         let fpStatusField = fpAccount.fields((f) => f.id == typeFieldId)[0];
+         let fpStatusField = object.fields((f) => f.id == fieldId)[0];
          if (
             !fpStatusField ||
             !fpStatusField.settings ||
@@ -94,9 +99,14 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
          return result;
       };
 
+      let updateAccNumberFields = (accNumberFields) => {
+         $$(ids.fieldAccNumber).define("options", accNumberFields);
+         $$(ids.fieldAccNumber).refresh();
+      };
+
       let updateAccFields = (accFields) => {
-         $$(ids.objectAccount).define("options", accFields);
-         $$(ids.objectAccount).refresh();
+         $$(ids.fieldAccType).define("options", accFields);
+         $$(ids.fieldAccType).refresh();
       };
 
       let updateAccTypeOptions = (accTypeOptions) => {
@@ -110,12 +120,50 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
          });
       };
 
-      let accTypeFields = getAccFieldOptions(this.objectAccount);
-      let accTypeOptions = getAccTypeOptions(this.fieldAccType);
+      let updateFPYearDateOptions = (fpYearDateOptions) => {
+         [ids.fieldFPYearStart, ids.fieldFPYearEnd].forEach((fieldGLElem) => {
+            $$(fieldGLElem).define("options", fpYearDateOptions);
+            $$(fieldGLElem).refresh();
+         });
+      };
+
+      let updateFPYearStatusOptions = (fpYearStatusFields) => {
+         $$(ids.fieldFPYearStatus).define("options", fpYearStatusFields);
+         $$(ids.fieldFPYearStatus).refresh();
+      };
+
+      let updateFPYearActiveOptions = (fpYearStatusOptions) => {
+         $$(ids.fieldFPYearActive).define("options", fpYearStatusOptions);
+         $$(ids.fieldFPYearActive).refresh();
+      };
+
+      let updateFPMonthDateFields = (fpMonthDateOpts) => {
+         [ids.fieldFPMonthStart, ids.fieldFPMonthEnd].forEach((fieldGLElem) => {
+            $$(fieldGLElem).define("options", fpMonthDateOpts);
+            $$(fieldGLElem).refresh();
+         });
+      };
+
+      let fpYearDateFields = getFieldOptions(this.objectFPYear, "date");
+      let fpYearStatusFields = getFieldOptions(this.objectFPYear, "list");
+      let fpYearStatusOptions = getListOptions(
+         this.objectFPYear,
+         this.fieldFPYearStatus
+      );
+      let fpMonthDateFields = getFieldOptions(this.objectFPMonth, "date");
+      let accNumberFields = getFieldOptions(this.objectAccount, "number");
+      let accTypeFields = getFieldOptions(this.objectAccount, "list");
+      let accTypeOptions = getListOptions(
+         this.objectAccount,
+         this.fieldAccType
+      );
 
       var ui = {
          id: id,
          view: "form",
+         elementsConfig: {
+            labelWidth: 200
+         },
          elements: [
             {
                id: ids.name,
@@ -144,7 +192,18 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                ),
                value: this.objectFPYear,
                name: "objectFPYear",
-               options: objectList
+               options: objectList,
+               on: {
+                  onChange: (newVal, oldVal) => {
+                     if (newVal != oldVal) {
+                        fpYearDateFields = getFieldOptions(newVal, "date");
+                        updateFPYearDateOptions(fpYearDateFields);
+
+                        accTypeFields = getFieldOptions(newVal, "list");
+                        updateFPYearStatusOptions(accTypeFields);
+                     }
+                  }
+               }
             },
             {
                id: ids.objectFPMonth,
@@ -155,7 +214,15 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                ),
                value: this.objectFPMonth,
                name: "objectFPMonth",
-               options: objectList
+               options: objectList,
+               on: {
+                  onChange: (newVal, oldVal) => {
+                     if (newVal != oldVal) {
+                        fpMonthDateFields = getFieldOptions(newVal, "date");
+                        updateFPMonthDateFields(fpMonthDateFields);
+                     }
+                  }
+               }
             },
             {
                id: ids.objectGL,
@@ -178,8 +245,11 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                on: {
                   onChange: (newVal, oldVal) => {
                      if (newVal != oldVal) {
-                        accTypeFields = getAccFieldOptions(newVal);
+                        accTypeFields = getFieldOptions(newVal, "list");
                         updateAccFields(accTypeFields);
+
+                        accNumberFields = getFieldOptions(newVal, "number");
+                        updateAccNumberFields(accNumberFields);
                      }
                   }
                }
@@ -205,6 +275,94 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                name: "valueNetIncome"
             },
             {
+               id: ids.fieldFPYearStart,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldFPYearStart",
+                  "*FP Year -> Start"
+               ),
+               value: this.fieldFPYearStart,
+               name: "fieldFPYearStart",
+               options: fpYearDateFields
+            },
+            {
+               id: ids.fieldFPYearEnd,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldFPYearEnd",
+                  "*FP Year -> End"
+               ),
+               value: this.fieldFPYearEnd,
+               name: "fieldFPYearEnd",
+               options: fpYearDateFields
+            },
+            {
+               id: ids.fieldFPYearStatus,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldFPYearStatus",
+                  "*FP Year -> Status"
+               ),
+               value: this.fieldFPYearStatus,
+               name: "fieldFPYearStatus",
+               options: fpYearStatusFields,
+               on: {
+                  onChange: (newVal, oldVal) => {
+                     if (newVal != oldVal) {
+                        fpYearStatusOptions = getListOptions(
+                           this.objectFPYear,
+                           newVal
+                        );
+                        updateFPYearActiveOptions(fpYearStatusOptions);
+                     }
+                  }
+               }
+            },
+            {
+               id: ids.fieldFPYearActive,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldFPYearActive",
+                  "*FP Year -> Active"
+               ),
+               value: this.fieldFPYearActive,
+               name: "fieldFPYearActive",
+               options: fpYearStatusOptions
+            },
+            {
+               id: ids.fieldFPMonthStart,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldFPMonthStart",
+                  "*FP Month -> Start"
+               ),
+               value: this.fieldFPMonthStart,
+               name: "fieldFPMonthStart",
+               options: fpMonthDateFields
+            },
+            {
+               id: ids.fieldFPMonthEnd,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldFPMonthEnd",
+                  "*FP Month -> End"
+               ),
+               value: this.fieldFPMonthEnd,
+               name: "fieldFPMonthEnd",
+               options: fpMonthDateFields
+            },
+            {
+               id: ids.fieldAccNumber,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldAccNumber",
+                  "*Acc -> Account Number"
+               ),
+               value: this.fieldAccNumber,
+               name: "fieldAccNumber",
+               options: accNumberFields
+            },
+            {
                id: ids.fieldAccType,
                view: "select",
                label: L("ab.process.accounting.fieldAccType", "*Acc -> Type"),
@@ -214,7 +372,10 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                on: {
                   onChange: (newVal, oldVal) => {
                      if (newVal != oldVal) {
-                        accTypeOptions = getAccTypeOptions(newVal);
+                        accTypeOptions = getListOptions(
+                           this.objectAccount,
+                           newVal
+                        );
                         updateAccTypeOptions(accTypeOptions);
                      }
                   }

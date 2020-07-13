@@ -38,312 +38,446 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
       this.fpYearObject = this.application.objects(
          (o) => o.id == this.objectFPYear
       )[0];
+      if (!this.fpYearObject) {
+         this.log(instance, "Could not found FP Year object");
+         return Promise.reject(new Error("Could not found FP Year object"));
+      }
+
       this.fpMonthObject = this.application.objects(
          (o) => o.id == this.objectFPMonth
       )[0];
+      if (!this.fpMonthObject) {
+         this.log(instance, "Could not found FP Month object");
+         return Promise.reject(new Error("Could not found FP Month object"));
+      }
+
       this.glObject = this.application.objects((o) => o.id == this.objectGL)[0];
+      if (!this.glObject) {
+         this.log(instance, "Could not found Balance object");
+         return Promise.reject(new Error("Could not found Balance object"));
+      }
+
       this.accObject = this.application.objects(
          (o) => o.id == this.objectAccount
       )[0];
+      if (!this.accObject) {
+         this.log(instance, "Could not found Account object");
+         return Promise.reject(new Error("Could not found Account object"));
+      }
 
-      return new Promise((resolve, reject) => {
-         var myState = this.myState(instance);
+      var myState = this.myState(instance);
 
-         var currentProcessValues = this.hashProcessDataValues(instance);
-         var currentFPYearID = currentProcessValues[this.processFPYearValue];
-         if (!currentFPYearID) {
-            this.log(instance, "unable to find relevant Fiscal Year ID");
-            var error = new Error(
-               "AccountingFPYearClose.do(): unable to find relevant Fiscal Year ID"
-            );
-            reject(error);
-            return;
-         }
+      var currentProcessValues = this.hashProcessDataValues(instance);
+      var currentFPYearID = currentProcessValues[this.processFPYearValue];
+      if (!currentFPYearID) {
+         this.log(instance, "unable to find relevant Fiscal Year ID");
+         var error = new Error(
+            "AccountingFPYearClose.do(): unable to find relevant Fiscal Year ID"
+         );
+         return Promise.reject(error);
+      }
 
-         // Find last fiscal month in fiscal year (M12)
-         // var cond = {
-         //    where: {
-         //       glue: "and",
-         //       rules: [
-         //          {
-         //             key: this.fpObject.PK(),
-         //             rule: "equals",
-         //             value: currentFPID
-         //          }
-         //       ]
-         //    },
-         //    populate: true
-         // };
+      return (
+         Promise.resolve()
+            // Pull FP Year object
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     let cond = {
+                        where: {
+                           glue: "and",
+                           rules: [
+                              {
+                                 key: this.fpYearObject.PK(),
+                                 rule: "equals",
+                                 value: currentFPYearID
+                              }
+                           ]
+                        },
+                        populate: true
+                     };
 
-         // Promise.resolve()
-         //    .then(() => {
-         //       return this.fpObject
-         //          .modelAPI()
-         //          .findAll(cond)
-         //          .then((rows) => {
-         //             this.currentFP = rows[0];
-         //             this.log(instance, "Found FPObj");
-         //             this.log(instance, rows);
-         //          })
-         //          .catch((err) => {
-         //             reject(err);
-         //          });
-         //    })
-         //    .then(() =>
-         //       new Promise((next, fail) => {
-         //          // make sure exists FP
-         //          if (this.currentFP == null) {
-         //             this.log(instance, `Count not found FP: ${currentFPID}`);
-         //             return next();
-         //          }
+                     this.fpYearObject
+                        .modelAPI()
+                        .findAll(cond)
+                        .then((rows) => {
+                           this.currentFPYear = rows[0];
+                           this.log(instance, "Found FPYearObj");
+                           this.log(instance, rows);
 
-         //          // Pull the .Start field for use to search the next FP
-         //          let startField = this.fpObject.fields(
-         //             (f) => f.id == this.fieldFPStart
-         //          )[0];
-         //          if (startField == null) {
-         //             this.log(instance, `Count not found the .Start field`);
-         //             return next();
-         //          }
+                           if (this.currentFPYear) {
+                              next();
+                           } else {
+                              this.log(instance, "Not Found FPYearObj");
+                              bad(new Error("Not Found FPYearObj"));
+                           }
+                        })
+                        .catch((err) => {
+                           bad(err);
+                        });
+                  })
+            )
+            // 1. Find last fiscal month in fiscal year (M12)
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     let fpMonthField = this.fpYearObject.fields(
+                        (f) =>
+                           f.key == "connectObject" &&
+                           f.settings.linkObject == this.objectFPMonth
+                     )[0];
+                     if (!fpMonthField) {
+                        this.log(instance, "Not Found fpMonthField");
+                        return bad(new Error("Not Found fpMonthField"));
+                     }
 
-         //          // Pull the .Open field for use to search the next FP
-         //          let openField = this.fpObject.fields(
-         //             (f) => f.id == this.fieldFPOpen
-         //          )[0];
-         //          if (openField == null) {
-         //             this.log(instance, `Count not found the .Open field`);
-         //             return next();
-         //          }
+                     let fpMonthEndField = this.fpMonthObject.fields(
+                        (f) => f.id == this.fieldFPMonthEnd
+                     )[0];
+                     if (!fpMonthEndField) {
+                        this.log(instance, "Not Found fpMonthEndField");
+                        return bad(new Error("Not Found fpMonthEndField"));
+                     }
 
-         //          // find the next fiscal month(.startDate == my.endDate + 1)
-         //          // .open = true
-         //          // .status = active
-         //          let startDate = null;
-         //          if (this.currentFP.End) {
-         //             if (!(this.currentFP.End instanceof Date)) {
-         //                startDate = new Date(this.currentFP.End);
-         //             } else {
-         //                startDate = _.clone(this.currentFP.End);
-         //             }
+                     let FPmonths =
+                        this.currentFPYear[fpMonthField.relationName()] || [];
+                     // Sort descending
+                     FPmonths = FPmonths.sort(
+                        (a, b) =>
+                           b[fpMonthEndField.columnName] -
+                           a[fpMonthEndField.columnName]
+                     );
+                     if (!FPmonths[0]) {
+                        this.log(instance, "Not Found the last FP month");
+                        return bad(new Error("Not Found the last FP month"));
+                     }
 
-         //             // add 1 day
-         //             startDate.setDate(startDate.getDate() + 1);
+                     let cond = {
+                        where: {
+                           glue: "and",
+                           rules: [
+                              {
+                                 key: this.fpMonthObject.PK(),
+                                 rule: "equals",
+                                 value: FPmonths[0][this.fpMonthObject.PK()]
+                              }
+                           ]
+                        },
+                        populate: true
+                     };
 
-         //             if (startField.key == "date")
-         //                startDate = AppBuilder.rules.toSQLDate(startDate);
-         //          }
-         //          this.fpObject
-         //             .modelAPI()
-         //             .findAll({
-         //                where: {
-         //                   glue: "and",
-         //                   rules: [
-         //                      {
-         //                         key: startField.id,
-         //                         rule: "equals",
-         //                         value: startDate
-         //                      },
-         //                      {
-         //                         key: openField.id,
-         //                         rule: "equals",
-         //                         value: 1
-         //                      }
-         //                   ]
-         //                },
-         //                populate: true
-         //             })
-         //             .then((rows) => {
-         //                this.nextFP = rows[0];
-         //                this.log(instance, "Found the next FPObj");
-         //                this.log(instance, rows);
-         //                next();
-         //             })
-         //             .catch((err) => {
-         //                fail(err);
-         //                reject(err);
-         //             });
-         //       }).then(
-         //          () =>
-         //             new Promise((next, fail) => {
-         //                // make sure exists FP
-         //                if (this.currentFP == null) {
-         //                   return next();
-         //                }
+                     this.fpMonthObject
+                        .modelAPI()
+                        .findAll(cond)
+                        .then((rows) => {
+                           this.lastFPMonth = rows[0];
+                           this.log(instance, "Found the last FP Month");
+                           this.log(instance, rows);
 
-         //                // make sure exists next FP
-         //                if (this.nextFP == null) {
-         //                   this.log(instance, "Count not found next FP");
-         //                   return next();
-         //                }
+                           if (this.lastFPMonth) {
+                              next();
+                           } else {
+                              this.log(
+                                 instance,
+                                 "Not Found last FP Month with balances"
+                              );
+                              bad(
+                                 new Error(
+                                    "Not Found last FP Month with balances"
+                                 )
+                              );
+                           }
+                        })
+                        .catch((err) => {
+                           bad(err);
+                        });
+                  })
+            )
+            // 2. Find M12 Balances with Account Number = 3500 or 3991
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     let accNumberField = this.accObject.fields(
+                        (f) => f.id == this.fieldAccNumber
+                     )[0];
+                     if (!accNumberField) {
+                        this.log(instance, "Not Found Account Number Field");
+                        return bad(new Error("Not Found Account Number Field"));
+                     }
 
-         //                if (this.glObject == null) {
-         //                   this.log(instance, "GL object is undefined");
-         //                   return next();
-         //                }
+                     let cond = {
+                        where: {
+                           glue: "or",
+                           rules: [
+                              {
+                                 key: accNumberField.id,
+                                 rule: "equals",
+                                 value: this.valueFundBalances
+                              },
+                              {
+                                 key: accNumberField.id,
+                                 rule: "equals",
+                                 value: this.valueNetIncome
+                              }
+                           ]
+                        },
+                        populate: false
+                     };
 
-         //                let fieldFPLink = this.fpObject.fields(
-         //                   (f) =>
-         //                      f.key == "connectObject" &&
-         //                      f.settings.linkObject == this.glObject.id
-         //                )[0];
-         //                if (fieldFPLink == null) {
-         //                   this.log(instance, "GL connect field is undefined");
-         //                   return next();
-         //                }
+                     // find id of accounts with Account Number = 3500 or 3991
+                     this.accObject
+                        .modelAPI()
+                        .findAll(cond)
+                        .catch(bad)
+                        .then((rows) => {
+                           let accountIds = (rows || []).map(
+                              (r) => r[this.accObject.PK()]
+                           );
 
-         //                let fieldGLlink = this.glObject.fields(
-         //                   (f) =>
-         //                      f.key == "connectObject" &&
-         //                      f.settings.linkObject == this.fpObject.id
-         //                )[0];
-         //                let fieldGLStarting = this.glObject.fields(
-         //                   (f) => f.id == this.fieldGLStarting
-         //                )[0];
-         //                let fieldGLRunning = this.glObject.fields(
-         //                   (f) => f.id == this.fieldGLRunning
-         //                )[0];
-         //                let fieldGLAccount = this.glObject.fields(
-         //                   (f) => f.id == this.fieldGLAccount
-         //                )[0];
-         //                let fieldGLRc = this.glObject.fields(
-         //                   (f) => f.id == this.fieldGLRc
-         //                )[0];
+                           let fpBalanceField = this.fpMonthObject.fields(
+                              (f) =>
+                                 f.key == "connectObject" &&
+                                 f.settings.linkObject == this.objectGL
+                           )[0];
+                           if (!fpBalanceField) {
+                              this.log(instance, "Not Found fpBalanceField");
+                              return bad(new Error("Not Found fpBalanceField"));
+                           }
+                           let balances =
+                              this.lastFPMonth[fpBalanceField.relationName()] ||
+                              [];
 
-         //                let linkName = fieldFPLink.relationName();
-         //                let tasks = [];
+                           // filter balances by Account Number = 3500 or 3991
+                           let glAccountField = this.glObject.fields(
+                              (f) =>
+                                 f.key == "connectObject" &&
+                                 f.settings.linkObject == this.objectAccount
+                           )[0];
+                           if (!glAccountField) {
+                              this.log(instance, "Not Found glAccountField");
+                              return bad(new Error("Not Found glAccountField"));
+                           }
 
-         //                (this.currentFP[linkName] || []).forEach(
-         //                   (glSegment) => {
-         //                      let newGL = {};
-         //                      newGL[this.glObject.PK()] = uuid.v4();
+                           this.balances = balances.filter(
+                              (b) =>
+                                 accountIds.indexOf(
+                                    b[glAccountField.columnName]
+                                 ) > -1
+                           );
 
-         //                      // link to the next FP
-         //                      if (fieldGLlink) {
-         //                         newGL[fieldGLlink.columnName] = this.nextFP[
-         //                            this.fpObject.PK()
-         //                         ];
-         //                      }
+                           next();
+                        });
+                  })
+            )
+            // 3. Find the next fiscal year
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     let fpStartField = this.fpYearObject.fields(
+                        (f) => f.id == this.fieldFPYearStart
+                     )[0];
+                     let fpEndField = this.fpYearObject.fields(
+                        (f) => f.id == this.fieldFPYearEnd
+                     )[0];
 
-         //                      // set Starting & Running Balance
-         //                      if (fieldGLRunning) {
-         //                         if (fieldGLStarting) {
-         //                            newGL[fieldGLStarting.columnName] =
-         //                               glSegment[fieldGLRunning.columnName];
-         //                         }
-         //                         newGL[fieldGLRunning.columnName] =
-         //                            glSegment[fieldGLRunning.columnName];
-         //                      }
+                     if (!fpStartField) {
+                        this.log(instance, "Not Found FP Year Start Field");
+                        return bad(new Error("Not Found FP Year Start Field"));
+                     }
+                     if (!fpEndField) {
+                        this.log(instance, "Not Found FP Year End Field");
+                        return bad(new Error("Not Found FP Year End Field"));
+                     }
 
-         //                      // set link to Account
-         //                      if (fieldGLAccount) {
-         //                         newGL[fieldGLAccount.columnName] =
-         //                            glSegment[fieldGLAccount.columnName];
-         //                      }
+                     let endDate = this.currentFPYear[fpEndField.columnName];
+                     if (!endDate) {
+                        this.log(instance, "FP Year End date is empty");
+                        return bad(new Error("FP Year End date is empty"));
+                     }
 
-         //                      // set link to RC
-         //                      if (fieldGLRc) {
-         //                         newGL[fieldGLRc.columnName] =
-         //                            glSegment[fieldGLRc.columnName];
-         //                      }
+                     if (!(endDate instanceof Date)) {
+                        endDate = new Date(endDate);
+                     } else {
+                        endDate = _.clone(endDate);
+                     }
 
-         //                      // make a new GLSegment ( same Account & RC + new FiscalMonth)
-         //                      tasks.push(
-         //                         new Promise((ok, bad) => {
-         //                            this.glObject
-         //                               .modelAPI()
-         //                               .create(newGL)
-         //                               .catch(bad)
-         //                               .then((newGLResult) => {
-         //                                  if (!this.nextFP[linkName])
-         //                                     this.nextFP[linkName] = [];
+                     // add 1 day
+                     let startDate = endDate.setDate(endDate.getDate() + 1);
 
-         //                                  this.nextFP[linkName].push(
-         //                                     newGLResult
-         //                                  );
+                     if (fpStartField.key == "date")
+                        startDate = AppBuilder.rules.toSQLDate(startDate);
 
-         //                                  // Broadcast the create
-         //                                  sails.sockets.broadcast(
-         //                                     this.glObject.id,
-         //                                     "ab.datacollection.create",
-         //                                     newGLResult
-         //                                  );
-         //                                  ok();
-         //                               });
-         //                         })
-         //                      );
-         //                   }
-         //                );
+                     let cond = {
+                        where: {
+                           glue: "and",
+                           rules: [
+                              {
+                                 key: fpStartField.id,
+                                 rule: "equals",
+                                 value: startDate
+                              }
+                           ]
+                        },
+                        populate: true
+                     };
 
-         //                Promise.all(tasks)
-         //                   .catch(fail)
-         //                   .then(() => {
-         //                      next();
-         //                   });
-         //             })
-         //       )
-         //    )
-         //    // Set the next FP 'Status' field to 'Active'
-         //    .then(
-         //       () =>
-         //          new Promise((next, fail) => {
-         //             // make sure exists next FP
-         //             if (this.nextFP == null) {
-         //                this.log(instance, "Count not found next FP");
-         //                return next();
-         //             }
+                     this.fpYearObject
+                        .modelAPI()
+                        .findAll(cond)
+                        .catch(bad)
+                        .then((rows) => {
+                           this.nextFpYear = rows[0];
 
-         //             if (this.fieldFPStatus == null) {
-         //                this.log(
-         //                   instance,
-         //                   "FP status field does not be defined"
-         //                );
-         //                return next();
-         //             }
+                           if (!this.nextFpYear) {
+                              this.log(instance, "Not Found Next FP Year");
+                              return bad(new Error("Not Found Next FP Year"));
+                           }
 
-         //             let fieldStatus = this.fpObject.fields(
-         //                (f) => f.id == this.fieldFPStatus
-         //             )[0];
-         //             if (fieldStatus == null) {
-         //                this.log(instance, "Could not found FP status field");
-         //                return next();
-         //             }
+                           next();
+                        });
+                  })
+            )
+            // 3.1 set the next FP Year to Status = Active
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     let fieldFPYearStatus = this.fpYearObject.fields(
+                        (f) => f.id == this.fieldFPYearStatus
+                     )[0];
+                     if (!fieldFPYearStatus) {
+                        this.log(instance, "Could not found FP status field");
+                        return bad(
+                           new Error("Could not found FP status field")
+                        );
+                     }
 
-         //             if (this.fieldFPActive == null) {
-         //                this.log(
-         //                   instance,
-         //                   "Active value option does not be defined"
-         //                );
-         //                return next();
-         //             }
+                     let values = {};
+                     values[
+                        fieldFPYearStatus.columnName
+                     ] = this.fieldFPYearActive;
 
-         //             let nextFpID = this.nextFP[this.fpObject.PK()];
-         //             let values = {};
-         //             values[fieldStatus.columnName] = this.fieldFPActive;
+                     this.fpYearObject
+                        .modelAPI()
+                        .update(this.nextFpYear[this.fpYearObject.PK()], values)
+                        .catch(bad)
+                        .then((updatedNextFP) => {
+                           // Broadcast the update
+                           sails.sockets.broadcast(
+                              this.fpYearObject.id,
+                              "ab.datacollection.update",
+                              {
+                                 objectId: this.fpYearObject.id,
+                                 data: updatedNextFP
+                              }
+                           );
+                           next();
+                        });
+                  })
+            )
+            // 4. Find first fiscal month in the next fiscal year (M1)
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     let fpMonthField = this.fpYearObject.fields(
+                        (f) =>
+                           f.key == "connectObject" &&
+                           f.settings.linkObject == this.objectFPMonth
+                     )[0];
 
-         //             this.fpObject
-         //                .modelAPI()
-         //                .update(nextFpID, values)
-         //                .catch(fail)
-         //                .then((updatedNextFP) => {
-         //                   // Broadcast the create
-         //                   sails.sockets.broadcast(
-         //                      this.fpObject.id,
-         //                      "ab.datacollection.update",
-         //                      {
-         //                         objectId: this.fpObject.id,
-         //                         data: updatedNextFP
-         //                      }
-         //                   );
-         //                   next();
-         //                });
-         //          })
-         //    )
-         //    // Final step
-         //    .then(() => {
-         //       this.log(instance, "I'm done.");
-         //       this.stateCompleted(instance);
-         //       resolve(true);
-         //    });
-      });
+                     if (!fpMonthField) {
+                        this.log(instance, "Could not found FP month field");
+                        return bad(new Error("Could not found FP month field"));
+                     }
+
+                     let fpMonthStartField = this.fpMonthObject.fields(
+                        (f) => f.id == this.fieldFPMonthStart
+                     )[0];
+
+                     if (!fpMonthStartField) {
+                        this.log(
+                           instance,
+                           "Could not found FP month start field"
+                        );
+                        return bad(
+                           new Error("Could not found FP month start field")
+                        );
+                     }
+
+                     let fpMonths =
+                        this.nextFpYear[fpMonthField.relationName()] || [];
+
+                     // Sort ascending
+                     fpMonths = fpMonths.sort(
+                        (a, b) =>
+                           a[fpMonthStartField.columnName] -
+                           b[fpMonthStartField.columnName]
+                     );
+                     this.firstFpMonth = fpMonths[0];
+                     if (!this.firstFpMonth) {
+                        this.log(
+                           instance,
+                           "Could not found the first FP month data"
+                        );
+                        return bad(
+                           new Error("Could not found the first FP month data")
+                        );
+                     }
+
+                     next();
+                  })
+            )
+            // 5. Find All M1 Balances With Account Type = Income, Expense, or Equity
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     let glField = this.glObject.fields(
+                        (f) =>
+                           f.key == "connectObject" &&
+                           f.settings.linkObject == this.objectFPMonth
+                     )[0];
+                     if (!glField) {
+                        this.log(instance, "Could not found GL field");
+                        return bad(new Error("Could not found GL field"));
+                     }
+
+                     let glField = this.glObject.fields(
+                        (f) =>
+                           f.key == "connectObject" &&
+                           f.settings.linkObject == this.objectFPMonth
+                     )[0];
+                     if (!glField) {
+                        this.log(instance, "Could not found GL field");
+                        return bad(new Error("Could not found GL field"));
+                     }
+
+
+                     let cond = {
+                        where: {
+                           glue: "and",
+                           rules: [
+                              {
+                                 key: glField.id,
+                                 rule: "equals",
+                                 value: this.firstFpMonth[
+                                    this.fpMonthObject.PK()
+                                 ]
+                              }
+                           ]
+                        },
+                        populate: true
+                     };
+
+                     this.glObject
+                        .modelAPI()
+                        .findAll(cond)
+                        .catch(bad)
+                        .then((rows) => {
+                           // TODO
+                           // this.nextBalances = (rows || []).filter((b) => );
+                           next();
+                        });
+                  })
+            )
+      );
    }
 };
