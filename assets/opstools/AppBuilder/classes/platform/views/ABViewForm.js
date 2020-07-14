@@ -959,6 +959,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   var defaultRowData = {};
                   field.defaultValue(defaultRowData);
                   field.setValue($$(comp.ui.id), defaultRowData);
+
+                  if (comp.logic.refresh) comp.logic.refresh(defaultRowData);
                });
                var normalFields = this.fieldComponents(
                   (comp) =>
@@ -1438,4 +1440,3 @@ module.exports = class ABViewForm extends ABViewFormCore {
       }
    }
 };
-
