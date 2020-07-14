@@ -230,8 +230,12 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         .findAll(cond)
                         .catch(bad)
                         .then((rows) => {
-                           let accountIds = (rows || []).map(
-                              (r) => r[this.accObject.PK()]
+                           // { AccuntNumber: AccountId, ..., AccuntNumberN: AccountIdN }
+                           this.accounts = {};
+                           (rows || []).forEach(
+                              (r) =>
+                                 (this.accounts[r[accNumberField.columnName]] =
+                                    r[this.accObject.PK()])
                            );
 
                            let fpBalanceField = this.fpMonthObject.fields(
@@ -260,7 +264,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
 
                            this.balances = balances.filter(
                               (b) =>
-                                 accountIds.indexOf(
+                                 // Compare Account Id
+                                 Object.values(this.accounts).indexOf(
                                     b[glAccountField.columnName]
                                  ) > -1
                            );
@@ -440,17 +445,6 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         return bad(new Error("Could not found GL field"));
                      }
 
-                     let glField = this.glObject.fields(
-                        (f) =>
-                           f.key == "connectObject" &&
-                           f.settings.linkObject == this.objectFPMonth
-                     )[0];
-                     if (!glField) {
-                        this.log(instance, "Could not found GL field");
-                        return bad(new Error("Could not found GL field"));
-                     }
-
-
                      let cond = {
                         where: {
                            glue: "and",
@@ -472,12 +466,175 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         .findAll(cond)
                         .catch(bad)
                         .then((rows) => {
-                           // TODO
-                           // this.nextBalances = (rows || []).filter((b) => );
+                           this.nextBalances = rows || [];
                            next();
                         });
+                  })
+            )
+            // 6. Update M1 Balances
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     let glAccountField = this.glObject.fields(
+                        (f) =>
+                           f.key == "connectObject" &&
+                           f.settings.linkObject == this.objectAccount
+                     )[0];
+                     if (!glAccountField) {
+                        this.log(
+                           instance,
+                           "Could not found link GL to Acc field"
+                        );
+                        return bad(
+                           new Error("Could not found link GL to Acc field")
+                        );
+                     }
+
+                     let accNumberField = this.accObject.fields(
+                        (f) => f.id == this.fieldAccNumber
+                     )[0];
+                     if (!accNumberField) {
+                        this.log(
+                           instance,
+                           "Could not found link Acc Number field"
+                        );
+                        return bad(
+                           new Error("Could not found link Acc Number field")
+                        );
+                     }
+
+                     let accTypeField = this.accObject.fields(
+                        (f) => f.id == this.fieldAccType
+                     )[0];
+                     if (!accTypeField) {
+                        this.log(
+                           instance,
+                           "Could not found link Acc Type field"
+                        );
+                        return bad(
+                           new Error("Could not found link Acc Type field")
+                        );
+                     }
+
+                     let glStartField = this.glObject.fields(
+                        (f) => f.id == this.fieldGLStartBalance
+                     )[0];
+                     if (!glStartField) {
+                        this.log(
+                           instance,
+                           "Could not found GL start balance field"
+                        );
+                        return bad(
+                           new Error("Could not found GL start balance field")
+                        );
+                     }
+
+                     let glRunningField = this.glObject.fields(
+                        (f) => f.id == this.fieldGLRunningBalance
+                     )[0];
+                     if (!glRunningField) {
+                        this.log(
+                           instance,
+                           "Could not found GL running balance field"
+                        );
+                        return bad(
+                           new Error("Could not found GL running balance field")
+                        );
+                     }
+
+                     let glRcField = this.glObject.fields(
+                        (f) => f.id == this.fieldGLrc
+                     )[0];
+                     if (!glRcField) {
+                        this.log(instance, "Could not found GL RC field");
+                        return bad(new Error("Could not found GL RC field"));
+                     }
+
+                     let tasks = [];
+
+                     this.nextBalances.forEach((b) => {
+                        let accInfo = b[glAccountField.relationName()];
+                        if (!accInfo) return;
+
+                        let values = null;
+
+                        // If Account Type is Income or Expense or Equity, or Account is 3991:
+                        // Set Starting Balance and Running Balance to 0
+                        if (
+                           accInfo[accTypeField.columnName] ==
+                              this.fieldAccTypeIncome ||
+                           accInfo[accTypeField.columnName] ==
+                              this.fieldAccTypeExpense ||
+                           accInfo[accTypeField.columnName] ==
+                              this.fieldAccTypeEquity ||
+                           accInfo[accNumberField.columnName] ==
+                              this.valueNetIncome
+                        ) {
+                           values = values || {};
+                           values[glStartField.columnName] = 0;
+                           values[glRunningField.columnName] = 0;
+                        }
+                        // If Account is 3500
+                        // Set Starting Balance and Running Balance equal to M12-3500 Running Balance + M12-3991 Running Balance (with matching RCs)
+                        else if (
+                           accInfo[accNumberField.columnName] ==
+                           this.valueFundBalances
+                        ) {
+                           let b3500 =
+                              this.balances.filter(
+                                 (bal) =>
+                                    bal[glAccountField.columnName] ==
+                                       this.accounts[this.valueFundBalances] &&
+                                    bal[glRcField.columnName] ==
+                                       b[glRcField.columnName]
+                              )[0] || {};
+
+                           let b3991 =
+                              this.balances.filter(
+                                 (bal) =>
+                                    bal[glAccountField.columnName] ==
+                                       this.accounts[this.valueNetIncome] &&
+                                    bal[glRcField.columnName] ==
+                                       b[glRcField.columnName]
+                              )[0] || {};
+
+                           let numBalance =
+                              (b3500[glRunningField.columnName] || 0) +
+                              (b3991[glRunningField.columnName] || 0);
+
+                           values = values || {};
+                           values[glStartField.columnName] = numBalance;
+                           values[glRunningField.columnName] = numBalance;
+                        }
+
+                        if (values) {
+                           tasks.push(
+                              new Promise((go, fail) => {
+                                 this.glObject
+                                    .modelAPI()
+                                    .update(b[this.glObject.PK()], values)
+                                    .catch(fail)
+                                    .then((updatedGL) => {
+                                       // Broadcast the update
+                                       sails.sockets.broadcast(
+                                          this.glObject.id,
+                                          "ab.datacollection.update",
+                                          {
+                                             objectId: this.glObject.id,
+                                             data: updatedGL
+                                          }
+                                       );
+                                       go();
+                                    });
+                              })
+                           );
+                        }
+                     });
+
+                     Promise.all(tasks).then(() => next());
                   })
             )
       );
    }
 };
+

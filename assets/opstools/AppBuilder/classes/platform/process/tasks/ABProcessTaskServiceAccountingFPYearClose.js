@@ -24,6 +24,9 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
          fieldFPYearActive: `${id}_fieldFPYearActive`,
          fieldFPMonthStart: `${id}_fieldFPMonthStart`,
          fieldFPMonthEnd: `${id}_fieldFPMonthEnd`,
+         fieldGLStartBalance: `${id}_fieldGLStartBalance`,
+         fieldGLRunningBalance: `${id}_fieldGLRunningBalance`,
+         fieldGLrc: `${id}_fieldGLrc`,
          fieldAccNumber: `${id}_fieldAccNumber`,
          fieldAccType: `${id}_fieldAccType`,
          fieldAccTypeIncome: `${id}_fieldAccTypeIncome`,
@@ -144,6 +147,20 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
          });
       };
 
+      let updateGlNumberFields = (glNumberOptions) => {
+         [ids.fieldGLStartBalance, ids.fieldGLRunningBalance].forEach(
+            (fieldGLElem) => {
+               $$(fieldGLElem).define("options", glNumberOptions);
+               $$(fieldGLElem).refresh();
+            }
+         );
+      };
+
+      let updateGlConnectFields = (glRcOptions) => {
+         $$(ids.fieldGLrc).define("options", glRcOptions);
+         $$(ids.fieldGLrc).refresh();
+      };
+
       let fpYearDateFields = getFieldOptions(this.objectFPYear, "date");
       let fpYearStatusFields = getFieldOptions(this.objectFPYear, "list");
       let fpYearStatusOptions = getListOptions(
@@ -151,6 +168,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
          this.fieldFPYearStatus
       );
       let fpMonthDateFields = getFieldOptions(this.objectFPMonth, "date");
+      let glNumberFields = getFieldOptions(this.objectGL, "number");
+      let glRcFields = getFieldOptions(this.objectGL, "connectObject");
       let accNumberFields = getFieldOptions(this.objectAccount, "number");
       let accTypeFields = getFieldOptions(this.objectAccount, "list");
       let accTypeOptions = getListOptions(
@@ -230,7 +249,18 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                label: L("ab.process.accounting.objectGL", "*Balance Object"),
                value: this.objectGL,
                name: "objectGL",
-               options: objectList
+               options: objectList,
+               on: {
+                  onChange: (newVal, oldVal) => {
+                     if (newVal != oldVal) {
+                        glNumberFields = getFieldOptions(newVal, "number");
+                        updateGlNumberFields(glNumberFields);
+
+                        glRcFields = getFieldOptions(newVal, "connectObject");
+                        updateGlConnectFields(glRcFields);
+                     }
+                  }
+               }
             },
             {
                id: ids.objectAccount,
@@ -352,6 +382,36 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                options: fpMonthDateFields
             },
             {
+               id: ids.fieldGLStartBalance,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldGLStartBalance",
+                  "*GL -> Start Balance"
+               ),
+               value: this.fieldGLStartBalance,
+               name: "fieldGLStartBalance",
+               options: glNumberFields
+            },
+            {
+               id: ids.fieldGLRunningBalance,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldGLRunningBalance",
+                  "*GL -> Running Balance"
+               ),
+               value: this.fieldGLRunningBalance,
+               name: "fieldGLRunningBalance",
+               options: glNumberFields
+            },
+            {
+               id: ids.fieldGLrc,
+               view: "select",
+               label: L("ab.process.accounting.fieldGLrc", "*GL -> RC"),
+               value: this.fieldGLrc,
+               name: "fieldGLrc",
+               options: glRcFields
+            },
+            {
                id: ids.fieldAccNumber,
                view: "select",
                label: L(
@@ -439,3 +499,4 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
       });
    }
 };
+
