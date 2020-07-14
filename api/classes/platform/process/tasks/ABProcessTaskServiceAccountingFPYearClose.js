@@ -103,7 +103,10 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         .then((rows) => {
                            this.currentFPYear = rows[0];
                            this.log(instance, "Found FPYearObj");
-                           this.log(instance, rows);
+                           this.log(
+                              instance,
+                              JSON.stringify(this.currentFPYear)
+                           );
 
                            if (this.currentFPYear) {
                               next();
@@ -172,7 +175,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         .then((rows) => {
                            this.lastFPMonth = rows[0];
                            this.log(instance, "Found the last FP Month");
-                           this.log(instance, rows);
+                           this.log(instance, JSON.stringify(rows));
 
                            if (this.lastFPMonth) {
                               next();
@@ -271,7 +274,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            );
 
                            this.log(instance, "Found M12 Balances");
-                           this.log(instance, this.balances);
+                           this.log(instance, JSON.stringify(this.balances));
 
                            next();
                         });
@@ -472,7 +475,10 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            this.nextBalances = rows || [];
 
                            this.log(instance, "Found next M1 Balances");
-                           this.log(instance, this.nextBalances);
+                           this.log(
+                              instance,
+                              JSON.stringify(this.nextBalances)
+                           );
                            next();
                         });
                   })
