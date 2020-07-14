@@ -270,6 +270,9 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                                  ) > -1
                            );
 
+                           this.log(instance, "Found M12 Balances");
+                           this.log(instance, this.balances);
+
                            next();
                         });
                   })
@@ -467,6 +470,9 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         .catch(bad)
                         .then((rows) => {
                            this.nextBalances = rows || [];
+
+                           this.log(instance, "Found next M1 Balances");
+                           this.log(instance, this.nextBalances);
                            next();
                         });
                   })
@@ -637,4 +643,3 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
       );
    }
 };
-
