@@ -340,7 +340,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                   onChange: (newVal, oldVal) => {
                      if (newVal != oldVal) {
                         fpYearStatusOptions = getListOptions(
-                           this.objectFPYear,
+                           this.objectFPYear || $$(ids.objectFPYear).getValue(),
                            newVal
                         );
                         updateFPYearActiveOptions(fpYearStatusOptions);
@@ -433,7 +433,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                   onChange: (newVal, oldVal) => {
                      if (newVal != oldVal) {
                         accTypeOptions = getListOptions(
-                           this.objectAccount,
+                           this.objectAccount ||
+                              $$(ids.objectAccount).getValue(),
                            newVal
                         );
                         updateAccTypeOptions(accTypeOptions);
