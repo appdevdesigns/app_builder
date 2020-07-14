@@ -998,7 +998,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   // set value to each components
                   if (f.field()) f.field().setValue($$(comp.ui.id), rowData);
 
-                  if (comp.logic.refresh) comp.logic.refresh(rowData);
+                  if (comp.logic && comp.logic.refresh)
+                     comp.logic.refresh(rowData);
                });
             }
          },
