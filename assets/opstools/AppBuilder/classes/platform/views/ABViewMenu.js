@@ -57,8 +57,8 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
          this.ClearPagesInView(Menu);
          if (this.settings.order && this.settings.order.length) {
             this.AddPagesToView(Menu, this.settings.order);
-         } else if (this.settings.pages && this.settings.pages.length) {
-            this.AddPagesToView(Menu, this.settings.pages);
+            // } else if (this.settings.pages && this.settings.pages.length) {
+            //    this.AddPagesToView(Menu, this.settings.pages);
          }
       };
 
@@ -88,17 +88,31 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
       _logic.updateTreeDnD = (id, state) => {
          var currView = _logic.currentEditObject();
 
-         var curPage = currView.settings.pages.filter((page) => {
-            return page.pageId == id || page.tabId == id;
-         })[0];
+         // var curPage = currView.settings.pages.filter((page) => {
+         //    return page.pageId == id || page.tabId == id;
+         // })[0];
+
+         var curPage = currView.application.pages(
+            (page) => page.id == id,
+            true
+         )[0];
+
+         // must not have been a page...lets check tabs
+         if (!curPage) {
+            curPage = currView.application.views(
+               (view) => view.id == id,
+               true
+            )[0];
+         }
 
          if (state) {
             let label = currView.getAliasname(curPage);
             $$(ids.treeDnD).add({
-               id: curPage.tabId || curPage.pageId,
+               id: curPage.id,
                value: label,
                type: curPage.type,
-               pageId: curPage.pageId
+               pageId: curPage.pageId || "",
+               tabId: curPage.tabId || ""
             });
             _logic.reorderPages();
          } else {
@@ -134,28 +148,76 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
          // loop through tree to reorder pages
          $$(ids.treeDnD).data.each((obj) => {
             // find the page in settings that matches the item in the tree
-            var curPage = currView.settings.pages.filter((page) => {
-               return page.pageId == obj.id || page.tabId == obj.id;
-            })[0];
+            // var curPage = currView.settings.pages.filter((page) => {
+            //    return page.pageId == obj.id || page.tabId == obj.id;
+            // })[0];
+
+            var curPage = currView.application.pages(
+               (page) => page.id == obj.id,
+               true
+            )[0];
+
+            // must not have been a page...lets check tabs
+            if (!curPage) {
+               curPage = currView.application.views(
+                  (view) => view.id == obj.id,
+                  true
+               )[0];
+            }
+
             // put that page in the next possition of the page container
             pages.push(curPage);
          });
 
          var newPageOrder = [];
          // loop through pages
+         /*
+         {
+            "pageId": "9b8a9458-3ad4-46c1-9ea8-6c96950e161d",
+            "tabId": "",
+            "type": "page",
+            "aliasname": "Sub Page 1",
+            "isChecked": "true",
+            "translations": [
+               {
+                  "language_code": "en",
+                  "label": "Sub Page 1",
+                  "aliasname": "Sub Page 1"
+               }
+            ],
+            "parent": "0",
+            "position": "0"
+         }
+         */
          pages.forEach((page) => {
-            // get the id of the element we are clicking to
-            var id = page.tabId || page.pageId;
-            // get the object of the data with the id in the tree view
-            var treeItem = $$(ids.treeDnD).getItem(id);
-            // set the parent element in the page if the treeItem has one
-            page.parent = treeItem.$parent;
-            // store the position so we can put it back in the right spot later
-            page.position = $$(ids.treeDnD).getBranchIndex(id);
-            // store the icon
-            page.icon = treeItem.icon;
+            if (page) {
+               var thisPage = {};
+               // get the id of the element we are clicking to
+               var id = page.id;
+               // get the object of the data with the id in the tree view
+               var treeItem = $$(ids.treeDnD).getItem(id);
+               // set the parent element in the page if the treeItem has one
+               thisPage.parent = treeItem.$parent;
+               // store the position so we can put it back in the right spot later
+               thisPage.position = $$(ids.treeDnD).getBranchIndex(id);
+               // store the icon
+               thisPage.icon = treeItem.icon;
+               // store the getAliasname
+               thisPage.aliasname = currView.getAliasname(page);
+               // store the page types
+               thisPage.type = page.key == "viewcontainer" ? "tab" : "page";
+               if (thisPage.type == "tab") {
+                  thisPage.tabId = page.id;
+                  thisPage.pageId = currView.getParentPageId(page);
+               } else {
+                  thisPage.pageId = page.id;
+               }
+               thisPage.isChecked = "true";
+               thisPage.translations = page.translations;
+               newPageOrder.push(thisPage);
+            }
          });
-         currView.settings.order = pages;
+         currView.settings.order = newPageOrder;
 
          _logic.onChange();
          $$(ids.treeDnD).openAll();
@@ -536,19 +598,21 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
        */
       var addPage = function(page, index, parentId) {
          // update .aliasname and .translations of the page
-         if (view.settings.pages) {
-            view.settings.pages.forEach((localpage) => {
-               if (
-                  (localpage.pageId == page.id && !localpage.tabId) || // Page
-                  (parentId &&
-                     localpage.pageId == parentId &&
-                     localpage.tabId == page.id)
-               ) {
-                  // Tab
-                  page.aliasname = view.getAliasname(localpage);
-               }
-            });
-         }
+         // if (view.settings.order && view.settings.order.forEach) {
+         //    view.settings.order.forEach((localpage) => {
+         //       if (
+         //          (localpage.id == page.id && !localpage.id) || // Page
+         //          (parentId &&
+         //             localpage.pageId == parentId &&
+         //             localpage.tabId == page.id)
+         //       ) {
+         //          // Tab
+         //          page.aliasname = view.getAliasname(localpage);
+         //       }
+         //    });
+         // }
+
+         // page.aliasname = view.getAliasname(localpage);
          // add to tree collection
          pageTree.add(page, index, parentId);
 
@@ -587,52 +651,61 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
       $$(ids.pages).openAll();
 
       // Select pages
-      if (view.settings.pages && view.settings.pages.forEach) {
-         // $$(ids.treeDnD).clearAll();
-         view.settings.pages.forEach((page) => {
-            if (page.isChecked) {
-               if ($$(ids.pages).exists(page.tabId || page.pageId)) {
-                  //after this command all events will be ignored
-                  $$(ids.pages).blockEvent();
-                  // we don't want to send a toggle event because it triggers saves to the database
-                  $$(ids.pages).checkItem(page.tabId || page.pageId);
-                  //resume listening
-                  $$(ids.pages).unblockEvent();
-               }
-            }
-         });
+      // if (view.settings.pages && view.settings.pages.forEach) {
+      // $$(ids.treeDnD).clearAll();
+      // view.settings.pages.forEach((page) => {
+      //    if (page.isChecked) {
+      //       if ($$(ids.pages).exists(page.tabId || page.pageId)) {
+      //          //after this command all events will be ignored
+      //          $$(ids.pages).blockEvent();
+      //          // we don't want to send a toggle event because it triggers saves to the database
+      //          $$(ids.pages).checkItem(page.tabId || page.pageId);
+      //          //resume listening
+      //          $$(ids.pages).unblockEvent();
+      //       }
+      //    }
+      // });
 
-         $$(ids.treeDnD).clearAll();
-         if (view.settings.order && view.settings.order.forEach) {
-            view.settings.order.forEach((page) => {
-               let label = view.getAliasname(page);
-               $$(ids.treeDnD).add(
-                  {
-                     id: page.tabId || page.pageId,
-                     value: label,
-                     type: page.type,
-                     pageId: page.pageId,
-                     icon: page.icon
-                  },
-                  page.position ? parseInt(page.position) : 0,
-                  page.parent && page.parent != "0" ? page.parent : ""
-               );
-            });
-         } else if (view.settings.pages && view.settings.pages.forEach) {
-            view.settings.pages.forEach((page) => {
-               if (page.isChecked) {
-                  let label = view.getAliasname(page);
-                  $$(ids.treeDnD).add({
-                     id: page.tabId || page.pageId,
-                     value: label,
-                     type: page.type,
-                     pageId: page.pageId
-                  });
-               }
-            });
-         }
-         $$(ids.treeDnD).openAll();
+      $$(ids.treeDnD).clearAll();
+      if (view.settings.order && view.settings.order.forEach) {
+         view.settings.order.forEach((page) => {
+            if ($$(ids.pages).exists(page.tabId || page.pageId)) {
+               //after this command all events will be ignored
+               $$(ids.pages).blockEvent();
+               // we don't want to send a toggle event because it triggers saves to the database
+               $$(ids.pages).checkItem(page.tabId || page.pageId);
+               //resume listening
+               $$(ids.pages).unblockEvent();
+            }
+            let label = view.getAliasname(page);
+            $$(ids.treeDnD).add(
+               {
+                  id: page.tabId || page.pageId,
+                  value: label,
+                  type: page.type,
+                  pageId: page.pageId || "",
+                  tabId: page.tabId || "",
+                  icon: page.icon
+               },
+               page.position ? parseInt(page.position) : 0,
+               page.parent && page.parent != "0" ? page.parent : ""
+            );
+         });
+         // } else if (view.settings.pages && view.settings.pages.forEach) {
+         //    view.settings.pages.forEach((page) => {
+         //       if (page.isChecked) {
+         //          let label = view.getAliasname(page);
+         //          $$(ids.treeDnD).add({
+         //             id: page.tabId || page.pageId,
+         //             value: label,
+         //             type: page.type,
+         //             pageId: page.pageId
+         //          });
+         //       }
+         //    });
       }
+      $$(ids.treeDnD).openAll();
+      // }
 
       // $$(ids.pagesFieldset).config.height = ($$(ids.pages).count()*28)+18; // Number of pages plus 9px of padding top and bottom
       $$(ids.pagesFieldset).config.height =
@@ -657,7 +730,7 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
       view.settings.menuTextCenter = $$(ids.menuTextCenter).getValue();
       view.settings.menuTextRight = $$(ids.menuTextRight).getValue();
 
-      var pagesIdList = [];
+      // var pagesIdList = [];
       if ($$(ids.pages)) {
          for (var i = 0; i < $$(ids.pages).data.count(); i++) {
             var currentPageId = $$(ids.pages).getIdByIndex(i);
@@ -674,27 +747,28 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                tabId = "";
             }
 
-            let pageInfo = view.settings.pages.filter(
-               (p) => p.pageId == currentPageId
-            )[0];
+            // let pageInfo = view.settings.pages.filter(
+            //    (p) => p.pageId == currentPageId
+            // )[0];
 
             let translations = [];
 
             if (currentItem && currentItem.translations)
                translations = currentItem.translations;
-            else if (pageInfo && pageInfo.translations)
-               translations = _.cloneDeep(pageInfo.translations);
+            // else if (pageInfo && pageInfo.translations)
+            //    translations = _.cloneDeep(pageInfo.translations);
 
-            pagesIdList.push({
-               pageId: currentPageId,
-               tabId: tabId,
-               type: type,
-               aliasname: currentItem.aliasname,
-               isChecked: currentItem.checked,
-               translations: translations
-            });
+            // pagesIdList.push({
+            //    pageId: currentPageId,
+            //    tabId: tabId,
+            //    type: type,
+            //    aliasname: currentItem.aliasname,
+            //    isChecked: currentItem.checked,
+            //    translations: translations
+            // });
          }
-         view.settings.pages = pagesIdList;
+         // view.settings.pages = pagesIdList;
+         if (view.settings.pages) delete view.settings.pages;
       }
    }
 
@@ -882,8 +956,8 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
             this.ClearPagesInView(Menu);
             if (this.settings.order && this.settings.order.length) {
                this.AddPagesToView(Menu, this.settings.order);
-            } else if (this.settings.pages && this.settings.pages.length) {
-               this.AddPagesToView(Menu, this.settings.pages);
+               // } else if (this.settings.pages && this.settings.pages.length) {
+               //    this.AddPagesToView(Menu, this.settings.pages);
             }
          }
       };
