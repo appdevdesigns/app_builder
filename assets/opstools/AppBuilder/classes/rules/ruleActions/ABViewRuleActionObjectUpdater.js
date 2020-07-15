@@ -1044,8 +1044,22 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
                         // if we are setting a connection we do not want to pass the full object because
                         // batch creates payload gets too large
                         objectToUpdate[field.columnName] = {};
-                        objectToUpdate[field.columnName][field.object.PK()] =
-                           value[field.object.PK()];
+                        objectToUpdate[field.columnName].id =
+                           value[field.datasourceLink.PK()];
+                        objectToUpdate[field.columnName][
+                           field.datasourceLink.PK()
+                        ] = value[field.datasourceLink.PK()];
+
+                        field.datasourceLink
+                           .fields(
+                              (f) =>
+                                 f.key == "customIndex" || f.key == "AutoIndex"
+                           )
+                           .forEach((f) => {
+                              objectToUpdate[field.columnName][f.columnName] =
+                                 value[f.columnName];
+                           });
+
                         break;
                   }
                   break;
