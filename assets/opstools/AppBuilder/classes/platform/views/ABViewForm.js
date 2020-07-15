@@ -881,6 +881,39 @@ module.exports = class ABViewForm extends ABViewFormCore {
             }
          }
 
+         // init DC in record rules
+         if (
+            this.settings &&
+            this.settings.recordRules &&
+            this.settings.recordRules.length
+         ) {
+            this.settings.recordRules.forEach((rule) => {
+               if (
+                  !rule ||
+                  !rule.actionSettings ||
+                  !rule.actionSettings.valueRules ||
+                  !rule.actionSettings.valueRules.fieldOperations ||
+                  !rule.actionSettings.valueRules.fieldOperations.length
+               )
+                  return;
+               rule.actionSettings.valueRules.fieldOperations.forEach((op) => {
+                  if (op.valueType != "exist") return;
+
+                  let pullDataDC = this.application.datacollections(
+                     (dc) => dc.id == op.value
+                  )[0];
+
+                  if (
+                     pullDataDC &&
+                     pullDataDC.dataStatus ==
+                        pullDataDC.dataStatusFlag.notInitial
+                  ) {
+                     pullDataDC.loadData();
+                  }
+               });
+            });
+         }
+
          // _onShow();
       };
 
@@ -921,6 +954,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   var defaultRowData = {};
                   field.defaultValue(defaultRowData);
                   field.setValue($$(comp.ui.id), defaultRowData);
+
+                  if (comp.logic.refresh) comp.logic.refresh(defaultRowData);
                });
                var normalFields = this.fieldComponents(
                   (comp) =>
@@ -960,7 +995,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   // set value to each components
                   if (f.field()) f.field().setValue($$(comp.ui.id), rowData);
 
-                  if (comp.logic.refresh) comp.logic.refresh(rowData);
+                  if (comp.logic && comp.logic.refresh)
+                     comp.logic.refresh(rowData);
                });
             }
          },
