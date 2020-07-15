@@ -75,7 +75,21 @@ module.exports = class ABMLClass extends ABMLClassCore {
       var def = this.toDefinition().toObj();
       if (def.id) {
          // here ABDefinition is our sails.model()
-         return ABDefinition.destroy(def.id);
+         return new Promise((resolve, reject) => {
+            ABDefinition.destroy(def.id)
+               .then(resolve)
+               .catch((err) => {
+                  if (err.toString().indexOf("No record found") > -1) {
+                     // this is weird, but not breaking:
+                     console.log(
+                        `ABMLClass.destroy(): could not find record for id[${def.id}]`
+                     );
+                     console.log(def);
+                     return resolve();
+                  }
+                  reject(err);
+               });
+         });
       } else {
          return Promise.resolve();
       }
