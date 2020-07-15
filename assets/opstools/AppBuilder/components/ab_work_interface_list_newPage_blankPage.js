@@ -196,13 +196,15 @@ module.exports = class AB_Work_Interface_List_NewPage_BlankPage extends ABCompon
 
             // TODO : validate unique page's name
 
-            return {
-               parent: parent, // should be either null or an {}
-               name: $$(ids.formName)
-                  .getValue()
-                  .trim(),
-               key: ABPage.common().key
-            };
+            return Promise.resolve().then(() => {
+               return {
+                  parent: parent, // should be either null or an {}
+                  name: $$(ids.formName)
+                     .getValue()
+                     .trim(),
+                  key: ABPage.common().key
+               };
+            });
          },
 
          formBusy: () => {

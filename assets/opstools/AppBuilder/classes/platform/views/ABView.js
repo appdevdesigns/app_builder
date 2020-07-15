@@ -386,10 +386,12 @@ module.exports = class ABView extends ABViewCore {
    }
 
    static propertyEditorPopulate(App, ids, view) {
+      if (!view) return;
       $$(ids.label).setValue(view.label);
    }
 
    static propertyEditorValues(ids, view) {
+      if (!view) return;
       view.label = $$(ids.label).getValue();
    }
 
