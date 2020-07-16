@@ -9,6 +9,8 @@ var ids = {
    combinedFields: "ab-new-customIndex-combinedFields"
 };
 
+const defaultValues = ABFieldCustomIndexCore.defaultValues();
+
 /**
  * ABFieldCustomIndexComponent
  *
@@ -31,15 +33,29 @@ var ABFieldCustomIndexComponent = new ABFieldComponent({
             name: "combinedFields",
             view: "multicombo",
             label: L("ab.customIndex.combinedFields", "*Combined Fields"),
-            labelWidth: 130,
+            labelWidth: App.config.labelWidthXLarge,
             disallowEdit: true,
             options: []
+         },
+         {
+            view: "richselect",
+            name: "delimiter",
+            label: L("ab.customIndex.delimiter", "*Delimiter"),
+            value: defaultValues.delimiter,
+            labelWidth: App.config.labelWidthXLarge,
+            disallowEdit: true,
+            options: [
+               { id: "plus", value: "Plus ( + )" },
+               { id: "dash", value: "Dash ( - )" },
+               { id: "period", value: "Period ( . )" },
+               { id: "space", value: "Space ( )" }
+            ]
          }
       ];
    },
 
    // defaultValues: the keys must match a .name of your elements to set it's default value.
-   defaultValues: ABFieldCustomIndexCore.defaultValues(),
+   defaultValues: defaultValues,
 
    // rules: basic form validation rules for webix form entry.
    // the keys must match a .name of your .elements for it to apply
@@ -95,7 +111,7 @@ var ABFieldCustomIndexComponent = new ABFieldComponent({
    // @param {obj} ids  the hash of id values for all the current form elements.
    //					 it should have your elements + the default Header elements:
    //						.label, .columnName, .fieldDescription, .showIcon
-   init: function(ids) {}
+   init: function (ids) { }
 });
 
 module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {

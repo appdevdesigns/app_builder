@@ -1,6 +1,12 @@
 const ABFieldCustomIndexCore = require("../../core/dataFields/ABFieldCustomIndexCore");
 
 const MAX_VALUE_LENGTH = 535;
+const DELIMITERS = {
+   plus: "+",
+   dash: "-",
+   period: ".",
+   space: " "
+};
 
 module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
    constructor(values, object) {
@@ -69,7 +75,7 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
                               .map(
                                  (colName) => `COALESCE(NEW.\`${colName}\`, '')`
                               )
-                              .join(", '+', ")}),
+                              .join(`, '${DELIMITERS[this.settings.delimiter]}', `)}),
                               NEW.\`${
                                  this.columnName
                               }\` = IF(@new_index_value = "" OR @new_index_value IS NULL, NULL, @new_index_value);`
