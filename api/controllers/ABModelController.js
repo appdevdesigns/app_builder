@@ -257,10 +257,28 @@ function updateRelationValues(object, id, updateRelationParams) {
 
          // Normal relations
          else {
+            let needToClear = true;
+
+            // If link column is in the table, then will not need to clear connect data
+            if (
+               updateRelationParams[colName] &&
+               field &&
+               field.settings &&
+               // 1:M
+               ((field.settings.linkType == "one" &&
+                  field.settings.linkViaType == "many") ||
+                  // 1:1 isSource = true
+                  (field.settings.linkType == "one" &&
+                     field.settings.linkViaType == "one" &&
+                     field.settings.isSource))
+            ) {
+               needToClear = false;
+            }
+
             // Clear relations
-            updateTasks.push(() => {
-               return clearRelate(object, colName, id);
-            });
+            if (needToClear) {
+               updateTasks.push(() => clearRelate(object, colName, id));
+            }
 
             // convert relation data to array
             if (!Array.isArray(updateRelationParams[colName])) {
