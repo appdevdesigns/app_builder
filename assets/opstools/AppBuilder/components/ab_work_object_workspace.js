@@ -820,6 +820,14 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                                  );
                               })
                               .catch((err) => {
+                                 if (err && err.message) {
+                                    webix.alert({
+                                       type: "alert-error",
+                                       title: "Could not delete",
+                                       text: err.message
+                                    });
+                                 }
+
                                  OP.Error.log("Error trying to delete field", {
                                     error: err,
                                     fields: field

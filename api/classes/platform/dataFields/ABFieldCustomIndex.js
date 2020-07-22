@@ -75,7 +75,9 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
                               .map(
                                  (colName) => `COALESCE(NEW.\`${colName}\`, '')`
                               )
-                              .join(`, '${DELIMITERS[this.settings.delimiter]}', `)}),
+                              .join(
+                                 `, '${DELIMITERS[this.settings.delimiter]}', `
+                              )}),
                               NEW.\`${
                                  this.columnName
                               }\` = IF(@new_index_value = "" OR @new_index_value IS NULL, NULL, @new_index_value);`
@@ -130,6 +132,21 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
     * @param {knex} knex the Knex connection.
     */
    migrateDrop(knex) {
+      // validate this index is being FK
+      let linkFields = this.object.fields(
+         (f) =>
+            f.key == "connectObject" &&
+            f.settings &&
+            (f.settings.indexField == this.id ||
+               f.settings.indexField2 == this.id)
+      );
+      if (linkFields && linkFields.length) {
+         let errMessage = `Could not delete this field because it is index of ${linkFields
+            .map((f) => f.label)
+            .join(", ")}`;
+         return Promise.reject(new Error(errMessage));
+      }
+
       return Promise.resolve()
          .then(
             () =>
