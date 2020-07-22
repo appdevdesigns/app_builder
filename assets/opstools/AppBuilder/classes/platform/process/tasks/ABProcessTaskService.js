@@ -3,6 +3,7 @@ const ABProcessTaskServiceCore = require("../../../core/process/tasks/ABProcessT
 const AccountingBatchProcessing = require("./ABProcessTaskServiceAccountingBatchProcessing.js");
 const AccountingFPClose = require("./ABProcessTaskServiceAccountingFPClose.js");
 const AccountingFPYearClose = require("./ABProcessTaskServiceAccountingFPYearClose.js");
+const AccountingJEArchive = require("./ABProcessTaskServiceAccountingJEArchive.js");
 const ABProcessTaskServiceQuery = require("./ABProcessTaskServiceQuery.js");
 
 function L(key, altText) {
@@ -65,6 +66,16 @@ module.exports = class ABProcessTaskService extends ABProcessTaskServiceCore {
             },
             {
                view: "button",
+               label: L(
+                  "ab.process.task.service.accountingJEArchive",
+                  "*Accounting: Journal Entry Archive"
+               ),
+               click: () => {
+                  this.switchTo("accountingJEArchive", id);
+               }
+            },
+            {
+               view: "button",
                label: L("ab.process.task.service.query", "*Query Task"),
                click: () => {
                   this.switchTo("query", id);
@@ -113,6 +124,14 @@ module.exports = class ABProcessTaskService extends ABProcessTaskServiceCore {
 
          case "accountingFPYearClose":
             child = new AccountingFPYearClose(
+               myValues,
+               this.process,
+               this.application
+            );
+            break;
+
+         case "accountingJEArchive":
+            child = new AccountingJEArchive(
                myValues,
                this.process,
                this.application
