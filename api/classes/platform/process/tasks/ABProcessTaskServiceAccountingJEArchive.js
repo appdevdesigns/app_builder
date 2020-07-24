@@ -1,5 +1,4 @@
 const path = require("path");
-const uuid = require("uuid/v4");
 const AccountingJEArchiveCore = require(path.join(
    __dirname,
    "..",
@@ -114,7 +113,6 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
 
                      (this.journals || []).forEach((je) => {
                         let jeArchiveValues = {};
-                        jeArchiveValues[this.jeArchiveObject.PK()] = uuid();
 
                         this.jeObject.fields().forEach((f) => {
                            // Connect field
@@ -153,6 +151,9 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                         });
 
                         if (Object.keys(jeArchiveValues).length > 1) {
+                           this.log(instance, "Creating JE Archive ...");
+                           this.log(instance, JSON.stringify(jeArchiveValues));
+
                            tasks.push(
                               this.jeArchiveObject
                                  .modelAPI()
