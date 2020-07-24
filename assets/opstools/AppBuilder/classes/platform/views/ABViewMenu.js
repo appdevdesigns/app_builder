@@ -176,7 +176,6 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
             "pageId": "9b8a9458-3ad4-46c1-9ea8-6c96950e161d",
             "tabId": "",
             "type": "page",
-            "aliasname": "Sub Page 1",
             "isChecked": "true",
             "translations": [
                {
@@ -203,7 +202,7 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                // store the icon
                thisPage.icon = treeItem.icon;
                // store the getAliasname
-               thisPage.aliasname = currView.getAliasname(page);
+               //thisPage.aliasname = currView.getAliasname(page);
                // store the page types
                thisPage.type = page.key == "viewcontainer" ? "tab" : "page";
                if (thisPage.type == "tab") {
@@ -439,10 +438,7 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                                  ? "window-maximize"
                                  : "file"
                            )
-                           .replace(
-                              "#label#",
-                              item.aliasname ? item.aliasname : item.label
-                           );
+                           .replace("#label#", item.label);
                      },
                      on: {
                         onItemCheck: function(id, state) {
@@ -460,7 +456,14 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                         onBeforeEditStop: function(state, editor) {
                            var item = this.getItem(editor.id);
                            if (item) {
-                              item.aliasname = state.value;
+                              item.translations.forEach((t) => {
+                                 if (
+                                    t.language_code == AD.lang.currentLanguage
+                                 ) {
+                                    t.aliasname = state.value;
+                                 }
+                              });
+                              item.label = state.value;
                               this.updateItem(item);
                            }
                            // we need to update the drag and drop tree item as well so get it first
@@ -598,21 +601,20 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
        */
       var addPage = function(page, index, parentId) {
          // update .aliasname and .translations of the page
-         // if (view.settings.order && view.settings.order.forEach) {
-         //    view.settings.order.forEach((localpage) => {
-         //       if (
-         //          (localpage.id == page.id && !localpage.id) || // Page
-         //          (parentId &&
-         //             localpage.pageId == parentId &&
-         //             localpage.tabId == page.id)
-         //       ) {
-         //          // Tab
-         //          page.aliasname = view.getAliasname(localpage);
-         //       }
-         //    });
-         // }
-
-         // page.aliasname = view.getAliasname(localpage);
+         if (view.settings.order && view.settings.order.forEach) {
+            view.settings.order.forEach((localpage) => {
+               if (
+                  (localpage.pageId == page.id && !localpage.id) ||
+                  (parentId &&
+                     localpage.pageId == parentId &&
+                     localpage.tabId == page.id)
+               ) {
+                  page.translations = localpage.translations;
+               }
+            });
+         }
+         let alias = view.getAliasname(page);
+         page.label = alias ? alias : page.label;
          // add to tree collection
          pageTree.add(page, index, parentId);
 
