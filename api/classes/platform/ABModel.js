@@ -17,6 +17,11 @@ module.exports = class ABModel extends ABModelCore {
     * @return {Promise} resolved with the result of the find()
     */
    create(values) {
+      let validationErrors = this.object.isValidData(values);
+      if (validationErrors.length > 0) {
+         return Promise.reject(validationErrors);
+      }
+
       return new Promise((resolve, reject) => {
          // get a Knex Query Object
          let query = this.modelKnex().query();
