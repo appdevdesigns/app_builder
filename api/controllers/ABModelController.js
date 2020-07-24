@@ -257,10 +257,28 @@ function updateRelationValues(object, id, updateRelationParams) {
 
          // Normal relations
          else {
+            let needToClear = true;
+
+            // If link column is in the table, then will not need to clear connect data
+            if (
+               updateRelationParams[colName] &&
+               field &&
+               field.settings &&
+               // 1:M
+               ((field.settings.linkType == "one" &&
+                  field.settings.linkViaType == "many") ||
+                  // 1:1 isSource = true
+                  (field.settings.linkType == "one" &&
+                     field.settings.linkViaType == "one" &&
+                     field.settings.isSource))
+            ) {
+               needToClear = false;
+            }
+
             // Clear relations
-            updateTasks.push(() => {
-               return clearRelate(object, colName, id);
-            });
+            if (needToClear) {
+               updateTasks.push(() => clearRelate(object, colName, id));
+            }
 
             // convert relation data to array
             if (!Array.isArray(updateRelationParams[colName])) {
@@ -446,22 +464,47 @@ module.exports = {
          "ABModelController.batchCreate(): allParams:",
          allParams
       );
+
+      let result = {};
+
+      // log error into a variable
+      let errorRows = {};
+      let onError = (rowIndex, error) => {
+         errorRows[rowIndex] = error;
+      };
+
       var batch = allParams.batch;
       var batchCreate = [];
       if (batch && Array.isArray(batch)) {
          batch.forEach((newRecord) => {
             batchCreate.push(
                new Promise((resolve, reject) => {
-                  this.create(req, null, null, newRecord.data, resolve, reject);
+                  this.create(
+                     req,
+                     null,
+                     null,
+                     newRecord.data,
+                     (newRow) => {
+                        result[newRecord.id] = newRow;
+                        resolve(newRow);
+                     },
+                     (errorResponse) => {
+                        onError(newRecord.id, errorResponse);
+                        resolve();
+                     }
+                  );
                })
             );
          });
          Promise.all(batchCreate)
-            .catch((error) => {
-               res.AD.error(error);
-            })
+            // .catch((error) => {
+            //    res.AD.error(error);
+            // })
             .then((data) => {
-               res.AD.success(data);
+               res.AD.success({
+                  data: result,
+                  errors: errorRows // Return error messages of each rows
+               });
             });
       }
    },

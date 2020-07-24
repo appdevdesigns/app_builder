@@ -123,6 +123,9 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
       var ui = {
          id: id,
          view: "form",
+         elementsConfig: {
+            labelWidth: 200
+         },
          elements: [
             {
                id: ids.name,

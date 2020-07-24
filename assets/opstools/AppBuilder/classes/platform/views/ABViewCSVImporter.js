@@ -1623,23 +1623,37 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                         objModel
                            .batchCreate({ batch: newRowsData })
                            .catch((errMessage) => {
-                              itemFailed(data.id, errMessage);
                               reject(errMessage);
                            })
-                           .then((insertedRows) => {
+                           .then((result) => {
                               var recordRules = [];
-                              insertedRows.forEach((newRowData) => {
+
+                              // Show errors of each row
+                              Object.keys(result.errors).forEach((rowIndex) => {
+                                 let error = result.errors[rowIndex];
+                                 if (error) {
+                                    itemFailed(
+                                       rowIndex,
+                                       error.message ||
+                                          error.sqlMessage ||
+                                          error
+                                    );
+                                 }
+                              });
+
+                              Object.keys(result.data).forEach((rowIndex) => {
+                                 let rowData = result.data[rowIndex];
                                  recordRules.push(
                                     new Promise((next, err) => {
                                        // Process Record Rule
                                        element
-                                          .doRecordRules(newRowData)
+                                          .doRecordRules(rowData)
                                           .then(() => {
-                                             // itemPass(data.id);
+                                             itemPass(rowIndex);
                                              next();
                                           })
                                           .catch((errMessage) => {
-                                             // itemFailed(data.id, errMessage);
+                                             itemFailed(rowIndex, errMessage);
                                              err("that didn't work");
                                           });
                                     })
@@ -1647,14 +1661,14 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                               });
                               Promise.all(recordRules)
                                  .catch((err) => {
-                                    newRowsData.forEach((row) => {
-                                       itemFailed(row.id, err);
-                                    });
+                                    // newRowsData.forEach((row) => {
+                                    //    itemFailed(row.id, err);
+                                    // });
                                     reject(err);
                                  })
                                  .then(() => {
                                     newRowsData.forEach((row) => {
-                                       itemPass(row.id);
+                                       // itemPass(row.id);
                                        numDone++;
                                        if (numDone % 50 == 0) {
                                           _logic.refreshRemainingTimeText(

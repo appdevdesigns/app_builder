@@ -2,6 +2,7 @@ const ABModelCore = require("../core/ABModelCore");
 const Model = require("objection").Model;
 
 const _ = require("lodash");
+const uuid = require("uuid/v4");
 
 var __ModelPool = {}; // reuse any previously created Model connections
 // to minimize .knex bindings (and connection pools!)
@@ -21,6 +22,17 @@ module.exports = class ABModel extends ABModelCore {
     * @return {Promise} resolved with the result of the find()
     */
    create(values) {
+      values = this.object.requestParams(values);
+
+      if (values[this.object.PK()] == null) {
+         values[this.object.PK()] = uuid();
+      }
+
+      let validationErrors = this.object.isValidData(values);
+      if (validationErrors.length > 0) {
+         return Promise.reject(validationErrors);
+      }
+
       return new Promise((resolve, reject) => {
          // get a Knex Query Object
          let query = this.modelKnex().query();
