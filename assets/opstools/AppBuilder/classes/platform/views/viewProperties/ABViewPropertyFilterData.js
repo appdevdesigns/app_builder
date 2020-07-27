@@ -527,7 +527,10 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
       rowFilterForm = new RowFilter(App, idBase + "_filter_form");
 
       if (this.object) {
+         rowFilter.applicationLoad(this.object.application);
          rowFilter.fieldsLoad(this.object.fields());
+
+         rowFilterForm.applicationLoad(this.object.application);
          rowFilterForm.fieldsLoad(this.object.fields());
       }
 
