@@ -71,7 +71,6 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
                      fJe.settings.linkObject == f.settings.linkObject &&
                      fJe.settings.linkType == f.settings.linkType &&
                      fJe.settings.linkViaType == f.settings.linkViaType &&
-                     fJe.settings.isSource == f.settings.isSource &&
                      fJe.settings.isCustomFK == f.settings.isCustomFK
                   );
                });
