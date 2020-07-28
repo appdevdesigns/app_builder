@@ -134,10 +134,12 @@ module.exports = class ABDefinition extends ABDefinitionCore {
             return (__AllDefinitions[serverDef.id] = serverDef);
          })
          .catch((err) => {
-            debugger;
             if (err.toString().indexOf("Not Found") > -1) {
                return this.create(data);
             }
+            // keep the error propagating:
+            console.error(err);
+            throw err;
          });
    }
 

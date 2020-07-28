@@ -1025,8 +1025,10 @@ function loadDefinitionCallbacks(next) {
             cb();
          })
          .catch((err) => {
+            // if a NavView() fn returns an error, just post it here
             sails.log.error("query.afterCreate :: Error:", err);
-            cb(err);
+            // and continue
+            cb();
          });
    });
 
