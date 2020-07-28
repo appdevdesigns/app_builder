@@ -14,7 +14,8 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
          processBatchValue: `${id}_processBatchValue`,
          objectBatch: `${id}_objectBatch`,
          objectJE: `${id}_objectJE`,
-         objectJEArchive: `${id}_objectJEArchive`
+         objectJEArchive: `${id}_objectJEArchive`,
+         fieldsMatch: `${id}_fieldsMatch`
       };
    }
 
@@ -41,6 +42,60 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
          id: 0,
          value: L("ab.process.accounting.selectObject", "*Select an Object")
       });
+
+      let refreshFieldsMatch = () => {
+         let $fieldsMatch = $$(ids.fieldsMatch);
+         if (!$fieldsMatch) return;
+
+         // clear form
+         webix.ui([], $fieldsMatch);
+
+         let JEObj = this.application.objects((o) => o.id == this.objectJE)[0];
+         if (!JEObj) return;
+
+         let JEArchiveObj = this.application.objects(
+            (o) => o.id == this.objectJEArchive
+         )[0];
+         if (!JEArchiveObj) return;
+
+         // create JE acrhive field options to the form
+         JEArchiveObj.fields().forEach((f) => {
+            let jeFields = [];
+
+            if (f.key == "connectObject") {
+               jeFields = JEObj.fields((fJe) => {
+                  return (
+                     fJe.key == "connectObject" &&
+                     fJe.settings &&
+                     f.settings &&
+                     fJe.settings.linkObject == f.settings.linkObject &&
+                     fJe.settings.linkType == f.settings.linkType &&
+                     fJe.settings.linkViaType == f.settings.linkViaType &&
+                     fJe.settings.isSource == f.settings.isSource &&
+                     fJe.settings.isCustomFK == f.settings.isCustomFK
+                  );
+               });
+            } else {
+               jeFields = JEObj.fields((fJe) => fJe.key == f.key);
+            }
+
+            jeFields = jeFields.map((fJe) => {
+               return {
+                  id: fJe.id,
+                  value: fJe.label
+               };
+            });
+
+            $fieldsMatch.addView({
+               view: "select",
+               name: f.id,
+               label: f.label,
+               options: jeFields
+            });
+         });
+
+         $fieldsMatch.setValues(this.fieldsMatch || {});
+      };
 
       let ui = {
          id: id,
@@ -81,7 +136,13 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
                label: L("ab.process.accounting.objectJE", "*JE Object"),
                value: this.objectJE,
                name: "objectJE",
-               options: objectList
+               options: objectList,
+               on: {
+                  onChange: (newVal) => {
+                     this.objectJE = newVal;
+                     refreshFieldsMatch();
+                  }
+               }
             },
             {
                id: ids.objectJEArchive,
@@ -92,7 +153,23 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
                ),
                value: this.objectJEArchive,
                name: "objectJEArchive",
-               options: objectList
+               options: objectList,
+               on: {
+                  onChange: (newVal) => {
+                     this.objectJEArchive = newVal;
+                     refreshFieldsMatch();
+                  }
+               }
+            },
+            {
+               view: "fieldset",
+               label: "Fields Matching",
+               body: {
+                  id: ids.fieldsMatch,
+                  view: "form",
+                  borderless: true,
+                  elements: []
+               }
             }
          ]
       };
@@ -100,6 +177,8 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
       webix.ui(ui, $$(id));
 
       $$(id).show();
+
+      refreshFieldsMatch();
    }
 
    /**
@@ -115,7 +194,11 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
       // TIP: keep the .settings entries == ids[s] keys and this will
       // remain simple:
       this.defaults.settings.forEach((s) => {
-         this[s] = this.property(ids[s]);
+         if (s === "fieldsMatch") {
+            this[s] = $$(ids.fieldsMatch).getValues();
+         } else {
+            this[s] = this.property(ids[s]);
+         }
       });
    }
 };
