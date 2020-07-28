@@ -74,7 +74,6 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
       };
 
       FilterComponent = new RowFilter(App, idBase + "_filter");
-      FilterComponent.applicationLoad(this.application);
       FilterComponent.init({
          // when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
          onChange: _logic.onFilterChange
@@ -150,6 +149,8 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
 
    static propertyEditorPopulate(App, ids, view) {
       super.propertyEditorPopulate(App, ids, view);
+
+      FilterComponent.applicationLoad(view.application);
 
       var datacollectionId = view.settings.dataviewID
          ? view.settings.dataviewID
