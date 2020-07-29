@@ -1,5 +1,4 @@
 const path = require("path");
-const uuid = require("uuid/v4");
 const AccountingJEArchiveCore = require(path.join(
    __dirname,
    "..",
@@ -114,45 +113,37 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
 
                      (this.journals || []).forEach((je) => {
                         let jeArchiveValues = {};
-                        jeArchiveValues[this.jeArchiveObject.PK()] = uuid();
 
-                        this.jeObject.fields().forEach((f) => {
+                        Object.keys(this.fieldsMatch).forEach((fId) => {
+                           let fJe = this.jeObject.fields(
+                              (f) => f.id == this.fieldsMatch[fId]
+                           )[0];
+                           if (fJe == null) return;
+
+                           let fArc = this.jeArchiveObject.fields(
+                              (f) => f.id == fId
+                           )[0];
+                           if (fArc == null) return;
+
                            // Connect field
-                           if (f.key == "connectObject") {
-                              let connectedField = this.jeArchiveObject.fields(
-                                 (fArc) =>
-                                    fArc.settings &&
-                                    fArc.settings.linkObject ==
-                                       f.settings.linkObject &&
-                                    fArc.settings.linkType ==
-                                       f.settings.linkType &&
-                                    fArc.settings.linkViaType ==
-                                       f.settings.linkViaType &&
-                                    fArc.settings.isSource ==
-                                       f.settings.isSource
-                              )[0];
-                              if (connectedField == null) return;
+                           if (fJe.key == "connectObject") {
+                              jeArchiveValues[fArc.columnName] =
+                                 je[fJe.columnName];
 
-                              jeArchiveValues[connectedField.columnName] =
-                                 je[f.columnName];
-
-                              jeArchiveValues[connectedField.relationName()] =
-                                 je[f.relationName()];
-                              // Other field
-                           } else if (je[f.columnName] != null) {
-                              let jeField = this.jeArchiveObject.fields(
-                                 (fArc) =>
-                                    fArc.columnName == f.columnName &&
-                                    fArc.key == f.key
-                              )[0];
-                              if (jeField == null) return;
-
-                              jeArchiveValues[jeField.columnName] =
-                                 je[f.columnName];
+                              jeArchiveValues[fArc.relationName()] =
+                                 je[fJe.relationName()];
+                           }
+                           // Other field
+                           else if (je[fJe.columnName] != null) {
+                              jeArchiveValues[fArc.columnName] =
+                                 je[fJe.columnName];
                            }
                         });
 
                         if (Object.keys(jeArchiveValues).length > 1) {
+                           this.log(instance, "Creating JE Archive ...");
+                           this.log(instance, JSON.stringify(jeArchiveValues));
+
                            tasks.push(
                               this.jeArchiveObject
                                  .modelAPI()
