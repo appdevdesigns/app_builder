@@ -249,6 +249,8 @@ module.exports = class ABChooseList extends ABComponent {
             // Get applications data from the server
             _logic.busy();
 
+            ABApplication.initRoles();
+
             // ABApplication.allApplications()
             ABApplication.applicationInfo()
                .then(function(data) {
