@@ -136,41 +136,23 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    static initRoles() {
-      return new Promise((resolve, reject) => {
-         var __Roles = [];
-         var __UserRoles = [];
-
-         async.series(
-            [
-               function(next) {
-                  ABRole.rolesOfUser(window.OP.User.username())
-                     .then((list) => {
-                        list.forEach(function(l) {
-                           __UserRoles.push({
-                              id: l.id,
-                              label: l.label
-                           });
-                        });
-                        _AllUserRoles = __UserRoles;
-                        next();
-                     })
-                     .catch((err) => {
-                        AD.error.log(
-                           "ABLiveTool: Error loading roles of user",
-                           {
-                              error: err
-                           }
-                        );
-                        next(err);
-                     });
-               }
-            ],
-            function(err) {
-               if (err) reject(err);
-               else resolve();
-            }
-         );
-      });
+      return ABRole.rolesOfUser(window.OP.User.username())
+         .then((list) => {
+            _AllUserRoles = [];
+            list.forEach(function(l) {
+               _AllUserRoles.push({
+                  id: l.id,
+                  label: l.label
+               });
+            });
+         })
+         .catch((err) => {
+            AD.error.log("ABLiveTool: Error loading roles of user", {
+               error: err
+            });
+            // keep the error going!
+            throw err;
+         });
    }
 
    static isReady() {

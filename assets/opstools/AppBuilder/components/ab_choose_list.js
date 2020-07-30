@@ -249,6 +249,9 @@ module.exports = class ABChooseList extends ABComponent {
             // Get applications data from the server
             _logic.busy();
 
+            // Q: is it possible this might be delayed before the
+            //    .applicationInfo() below is complete, continues and this info
+            //    is needed?
             ABApplication.initRoles();
 
             // ABApplication.allApplications()
