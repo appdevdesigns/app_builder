@@ -501,9 +501,15 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
       // 	});
       // }
 
-      if (rowFilter) rowFilter.fieldsLoad(object.fields());
+      if (rowFilter) {
+         rowFilter.applicationLoad(object.application);
+         rowFilter.fieldsLoad(object.fields());
+      }
 
-      if (rowFilterForm) rowFilterForm.fieldsLoad(object.fields());
+      if (rowFilterForm) {
+         rowFilterForm.applicationLoad(object.application);
+         rowFilterForm.fieldsLoad(object.fields());
+      }
    }
 
    viewLoad(view) {
@@ -867,3 +873,4 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
       };
    }
 };
+
