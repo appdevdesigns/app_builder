@@ -275,32 +275,9 @@ module.exports = class AB_Work_Object_List_NewObject_External extends ABComponen
                      }
                   }
 
-                  currentApp.objectSave(updateObj).then(() => {
+                  currentApp.objectInsert(updateObj).then(() => {
                      _logic.callbacks.onDone(updateObj);
                   });
-
-                  // objectList.forEach((objValue) => {
-                  //    var indexObj = -1,
-                  //       updateObj = currentApp.objectNew(objValue); // the import object
-
-                  //    currentApp.objects().forEach((obj, index) => {
-                  //       if (obj.id == objValue.id) indexObj = index;
-                  //    });
-
-                  //    // Update a object into list
-                  //    if (indexObj > -1) {
-                  //       currentApp._objects[indexObj] = updateObj;
-                  //    }
-                  //    // Add new object to list
-                  //    else {
-                  //       currentApp._objects.push(updateObj);
-                  //    }
-
-                  //    if (tableName == updateObj.tableName)
-                  //       _logic.callbacks.onDone(updateObj);
-                  // });
-
-                  // _logic.callbacks.onDone(newObj);
                })
                .catch((err) => {
                   console.log("ERROR:", err);
