@@ -391,7 +391,9 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
                      selectedPage.destroy().then(() => {
                         _logic.listReady();
 
-                        viewList.remove(selectedPage.id);
+                        if (viewList.exists(selectedPage.id)) {
+                           viewList.remove(selectedPage.id);
+                        }
 
                         // refresh the root page list
                         PopupNewPageComponent.applicationLoad(
