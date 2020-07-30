@@ -5,9 +5,6 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-// const ABGraphScope = require("../graphModels/ABScope");
-// const ABGraphRole = require("../graphModels/ABRole");
-
 const ABModelController = require("./ABModelController");
 
 function getScopeObject() {

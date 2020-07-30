@@ -1,4 +1,3 @@
-// const ABGraphObject = require("../graphModels/ABObject");
 const path = require("path");
 const ABDefinition = require(path.join(
    __dirname,

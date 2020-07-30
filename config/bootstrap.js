@@ -13,9 +13,6 @@ var AD = require("ad-utils");
 var fs = require("fs");
 var async = require("async");
 
-var ABGraphObject = require(path.join("..", "api", "graphModels", "ABObject"));
-var ABGraphQuery = require(path.join("..", "api", "graphModels", "ABQuery"));
-
 const ABDefinition = require(path.join(
    __dirname,
    "..",
@@ -170,39 +167,7 @@ function verifyWellKnownConfigs(next) {
 
 function cacheABClassObjects(next) {
    let tasks = [];
-   /*
-   tasks.push(
-      new Promise((resolve, reject) => {
-         ABGraphObject.find()
-            .catch(reject)
-            .then((objects) => {
-               objects.forEach((obj) => {
-                  // it will be cached here
-                  obj.toABClass();
-               });
 
-               resolve();
-            });
-      })
-   );
-
-   tasks.push(
-      new Promise((resolve, reject) => {
-         ABGraphQuery.find({
-            relations: ["objects"]
-         })
-            .catch(reject)
-            .then((queries) => {
-               (queries || []).forEach((q) => {
-                  // it will be cached here
-                  q.toABClass();
-               });
-
-               resolve();
-            });
-      })
-   );
-*/
    var genApp = ABSystemObject.getApplication();
    var objDefs = (allDefinitions || []).filter((d) => d.type == "object");
    objDefs.forEach((o) => {

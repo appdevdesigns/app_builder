@@ -10,8 +10,6 @@ var _ = require("lodash");
 var path = require("path");
 var async = require("async");
 
-var ABGraphObject = require(path.join("..", "graphModels", "ABObject"));
-
 var reloading = null;
 
 module.exports = {

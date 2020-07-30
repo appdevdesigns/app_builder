@@ -9,8 +9,6 @@ const async = require("async");
 const _ = require("lodash");
 
 const ABApplication = require("../classes/platform/ABApplication");
-// const RoleGraph = require("../graphModels/ABRole");
-// const ScopeGraph = require("../graphModels/ABScope");
 
 const ABModelController = require("./ABModelController");
 
