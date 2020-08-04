@@ -31,6 +31,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
          fixSelect: this.unique("fixSelect"),
 
          filterPanel: this.unique("filterPanel"),
+         preventPopulate: this.unique("preventPopulate"),
          sortPanel: this.unique("sortPanel"),
 
          buttonFilter: this.unique("buttonFilter"),
@@ -259,6 +260,21 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
                                  ]
                               },
                               {
+                                 id: ids.preventPopulate,
+                                 view: "checkbox",
+                                 name: "preventPopulate",
+                                 label: L(
+                                    "ab.component.datacollection.preventPopulate",
+                                    "*Do not populate related data:"
+                                 ),
+                                 labelWidth: 210,
+                                 on: {
+                                    onChange: (newv, oldv) => {
+                                       this._logic.save();
+                                    }
+                                 }
+                              },
+                              {
                                  id: ids.fixSelect,
                                  view: "select",
                                  name: "fixSelect",
@@ -485,11 +501,13 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
             $$(ids.linkField).define("value", settings.linkFieldID);
             $$(ids.loadAll).define("value", settings.loadAll);
             $$(ids.fixSelect).define("value", settings.fixSelect);
+            $$(ids.preventPopulate).define("value", settings.preventPopulate);
 
             $$(ids.dataSource).refresh();
             $$(ids.linkDatacollection).refresh();
             $$(ids.linkField).refresh();
             $$(ids.loadAll).refresh();
+            $$(ids.preventPopulate).refresh();
             $$(ids.fixSelect).refresh();
             $$(ids.list).openAll();
          },
@@ -575,6 +593,9 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
             this._datacollection.settings.objectWorkspace.filterConditions = this.FilterComponent.getValue();
             this._datacollection.settings.objectWorkspace.sortFields = this.PopupSortFieldComponent.getValue();
             this._datacollection.settings.loadAll = $$(ids.loadAll).getValue();
+            this._datacollection.settings.preventPopulate = $$(
+               ids.preventPopulate
+            ).getValue();
             this._datacollection.settings.fixSelect = $$(
                ids.fixSelect
             ).getValue();
