@@ -290,8 +290,9 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
                   ABViewPropertyFilterData.default.userFilterPosition
             );
             $$(ids.globalToolbar).setValue(
-               settings.isGlobalToolbar ||
-                  ABViewPropertyFilterData.default.isGlobalToolbar
+               typeof settings.isGlobalToolbar != "undefined"
+                  ? settings.isGlobalToolbar
+                  : ABViewPropertyFilterData.default.isGlobalToolbar
             );
 
             $$(ids.filterGlobal).setValue(
@@ -315,17 +316,19 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
 
          getSettings() {
             var settings = this.settings || {};
-            settings.filterOption = JSON.parse(
-               $$(ids.filterOptionRadio).getValue() || 0
+            settings.filterOption = parseInt(
+               $$(ids.filterOptionRadio).getValue()
             );
             settings.queryRules = [];
 
             switch (settings.filterOption) {
+               case 0: // Disable User filters
+                  settings.isGlobalToolbar = 0;
+                  break;
                case 1: // Enable User filters
                   settings.userFilterPosition = $$(ids.filterUser).getValue();
 
-                  settings.isGlobalToolbar =
-                     $$(ids.globalToolbar).getValue() || false;
+                  settings.isGlobalToolbar = $$(ids.globalToolbar).getValue();
                   break;
                case 2: // Use a filter menu
                   instance.queryRules.forEach((r) => {
@@ -448,14 +451,15 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
 
       settings = settings || {};
 
-      settings.filterOption = JSON.parse(
-         settings.filterOption || ABViewPropertyFilterData.default.filterOption
-      );
+      settings.filterOption =
+         typeof settings.filterOption != "undefined"
+            ? settings.filterOption
+            : ABViewPropertyFilterData.default.filterOption;
 
-      settings.isGlobalToolbar = JSON.parse(
-         settings.isGlobalToolbar ||
-            ABViewPropertyFilterData.default.isGlobalToolbar
-      );
+      settings.isGlobalToolbar =
+         typeof settings.isGlobalToolbar != "undefined"
+            ? settings.isGlobalToolbar
+            : ABViewPropertyFilterData.default.isGlobalToolbar;
 
       // (settings.queryRules || []).forEach(qr => {
 
@@ -663,6 +667,8 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
          $$(ids.globalFilterFormContainer).hide();
 
          switch (this.settings.filterOption) {
+            case 0:
+               break;
             case 1:
                switch (this.settings.userFilterPosition) {
                   case "form":
@@ -873,4 +879,3 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
       };
    }
 };
-
