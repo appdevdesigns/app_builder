@@ -23,11 +23,13 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
     * do()
     * this method actually performs the action for this task.
     * @param {obj} instance  the instance data of the running process
+    * @param {Knex.Transaction?} trx - [optional]
+    *
     * @return {Promise}
     *      resolve(true/false) : true if the task is completed.
     *                            false if task is still waiting
     */
-   do(instance) {
+   do(instance, trx) {
       this.batchObject = this.application.objects(
          (o) => o.id == this.objectBatch
       )[0];
@@ -147,7 +149,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            tasks.push(
                               this.jeArchiveObject
                                  .modelAPI()
-                                 .create(jeArchiveValues)
+                                 .create(jeArchiveValues, trx)
                            );
                         }
                      });
