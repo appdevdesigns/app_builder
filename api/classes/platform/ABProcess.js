@@ -148,64 +148,74 @@ module.exports = class ABProcess extends ABProcessCore {
                return this.instanceClose(instance);
             }
 
-            // else give each task a chance to do it's thing
-            async.map(
-               listOfPendingTasks,
-               (task, cb) => {
-                  task
-                     .do(instance)
-                     .then((isDone) => {
-                        // if the task returns it is done,
-                        // pass that along
+            // Create Knex.transactions
+            ABMigration.createTransaction((trx) => {
+               // else give each task a chance to do it's thing
+               async.map(
+                  listOfPendingTasks,
+                  (task, cb) => {
+                     task
+                        .do(instance, trx)
+                        .then((isDone) => {
+                           // if the task returns it is done,
+                           // pass that along
 
-                        if (isDone) {
-                           // make sure the next tasks know they are
-                           // ready to run (again if necessary)
-                           var nextTasks = task.nextTasks(instance);
-                           if (nextTasks) {
-                              nextTasks.forEach((t) => {
-                                 t.reset(instance);
-                              });
-                              cb(null, isDone);
+                           if (isDone) {
+                              // make sure the next tasks know they are
+                              // ready to run (again if necessary)
+                              var nextTasks = task.nextTasks(instance);
+                              if (nextTasks) {
+                                 nextTasks.forEach((t) => {
+                                    t.reset(instance);
+                                 });
+                                 cb(null, isDone);
+                              } else {
+                                 // if null was returned then an error
+                                 // happened during the .nextTask() fn
+                                 var error = new Error("error parsing next task");
+                                 this.instanceError(instance, task, error).then(
+                                    () => {
+                                       cb();
+                                    }
+                                 );
+                              }
                            } else {
-                              // if null was returned then an error
-                              // happened during the .nextTask() fn
-                              var error = new Error("error parsing next task");
-                              this.instanceError(instance, task, error).then(
-                                 () => {
-                                    cb();
-                                 }
-                              );
+                              cb(null, false);
                            }
-                        } else {
-                           cb(null, false);
-                        }
-                     })
-                     .catch((err) => {
-                        task.onError(instance, err);
-                        this.instanceError(instance, task, err).then(() => {
-                           cb();
+                        })
+                        .catch((err) => {
+                           task.onError(instance, err);
+                           this.instanceError(instance, task, err).then(() => {
+                              cb();
+                           });
                         });
-                     });
-               },
-               (err, results) => {
-                  // if at least 1 task has reported back it is done
-                  // we try to run this again and process another task.
-                  var hasProgress = false;
-                  if (results) {
-                     results.forEach((res) => {
-                        if (res) hasProgress = true;
-                     });
+                  },
+                  (err, results) => {
+                     // if at least 1 task has reported back it is done
+                     // we try to run this again and process another task.
+                     var hasProgress = false;
+                     if (results) {
+                        results.forEach((res) => {
+                           if (res) hasProgress = true;
+                        });
+                     }
+                     if (hasProgress) {
+                        // repeat this process allowing new tasks to .do()
+                        return this.run(instance);
+                     } else {
+                        // save changes to DB
+                        trx.commit()
+                           .then(() => {
+                              return this.instanceUpdate(instance);
+                           })
+                           .catch((err) => {
+                              // If we get here, that means no any data is updated to db
+                              return Promise.reject(err);
+                           });
+                     }
                   }
-                  if (hasProgress) {
-                     // repeat this process allowing new tasks to .do()
-                     return this.run(instance);
-                  } else {
-                     // update instance (and end .run())
-                     return this.instanceUpdate(instance);
-                  }
-               }
-            );
+               );
+            });
          });
       } else {
          return Promise.resolve();
