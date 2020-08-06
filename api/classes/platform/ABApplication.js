@@ -119,6 +119,82 @@ module.exports = class ABClassApplication extends ABApplicationCore {
       return ABDefinition.definition(id);
    }
 
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @return {array}
+    *         any relevalt ABDefinition IDs
+    */
+   exportIDs() {
+      var myIDs = [this.id];
+
+      // start with Objects:
+      this.objectsIncluded().forEach((o) => {
+         myIDs = myIDs.concat(o.exportIDs());
+      });
+
+      // Queries
+      this.queriesIncluded().forEach((q) => {
+         myIDs = myIDs.concat(q.exportIDs());
+      });
+
+      // Datacollections
+      // NOTE: currently the server doesn't make instances of DataCollections
+      // so we manually parse the related info here:
+      this.datacollectionIDs.forEach((dID) => {
+         var def = this.definitionForID(dID);
+         if (def) {
+            myIDs.push(dID);
+            if (def.settings.datasourceID) {
+               var object = this.objects((o) => {
+                  return o.id == def.settings.datasourceID;
+               })[0];
+               if (object) {
+                  myIDs = myIDs.concat(object.exportIDs());
+               }
+            }
+         }
+      });
+
+      // Processes
+      this.processes().forEach((p) => {
+         myIDs = myIDs.concat(p.exportIDs());
+      });
+
+      // Pages
+      // NOTE: currently the server doesn't make instances of ABViews
+      // so we manually parse the object data here:
+      var parseView = (view) => {
+         var ids = [view.id];
+         (view.pageIDs || []).forEach((pid) => {
+            var pdef = this.definitionForID(pid);
+            if (pdef) {
+               ids = ids.concat(parseView(pdef));
+            }
+         });
+
+         (view.viewIDs || []).forEach((vid) => {
+            var vdef = this.definitionForID(vid);
+            if (vdef) {
+               ids = ids.concat(parseView(vdef));
+            }
+         });
+
+         return ids;
+      };
+
+      var pageIDs = this._pages.map((p) => p.id);
+      (pageIDs || []).forEach((pid) => {
+         var pdef = this.definitionForID(pid);
+         if (pdef) {
+            myIDs = myIDs.concat(parseView(pdef));
+         }
+      });
+
+      // return only unique entries:
+      return _.uniq(myIDs);
+   }
+
    ///
    /// Objects
    ///

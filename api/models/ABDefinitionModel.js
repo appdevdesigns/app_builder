@@ -141,8 +141,12 @@ module.exports = {
       });
    },
 
+   objForID: function(id) {
+      return __AllDefinitions[id] || null;
+   },
+
    definitionForID: function(id) {
-      var def = __AllDefinitions[id];
+      var def = ABDefinitionModel.objForID(id);
       if (def) {
          return def.json;
       } else {

@@ -64,6 +64,23 @@ module.exports = class ABClassObject extends ABObjectCore {
    /// Instance Methods
    ///
 
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @return {array}
+    *         any relevalt ABDefinition IDs
+    */
+   exportIDs() {
+      var myIDs = [this.id];
+
+      // include my fields:
+      this.fields().forEach((f) => {
+         myIDs = myIDs.concat(f.exportIDs());
+      });
+
+      return myIDs;
+   }
+
    ///
    /// Migration Services
    ///

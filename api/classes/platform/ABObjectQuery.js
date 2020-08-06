@@ -31,6 +31,23 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
    }
 
    /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @return {array}
+    *         any relevalt ABDefinition IDs
+    */
+   exportIDs() {
+      var myIDs = [this.id];
+
+      // include my fields:
+      this.objects().forEach((o) => {
+         myIDs = myIDs.concat(o.exportIDs());
+      });
+
+      return myIDs;
+   }
+
+   /**
     * migrateCreateTable
     * verify that a table for this object exists.
     * @param {Knex} knex the knex sql library manager for manipulating the DB.

@@ -67,6 +67,16 @@ module.exports = class ABField extends ABFieldCore {
    }
 
    /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @return {array}
+    *         any relevalt ABDefinition IDs
+    */
+   exportIDs() {
+      return [this.id];
+   }
+
+   /**
     * @function migrateCreate
     * perform the necessary sql actions to ADD this column to the DB table.
     * @param {knex} knex the Knex connection.
@@ -154,7 +164,8 @@ module.exports = class ABField extends ABFieldCore {
                   new Promise((next, err) => {
                      if (!isColumnExists) return next();
 
-                     knex.schema.table(tableName, (t) => {
+                     knex.schema
+                        .table(tableName, (t) => {
                            t.dropColumn(this.columnName);
                         })
                         .then(next)

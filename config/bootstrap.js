@@ -765,7 +765,7 @@ function loadDefinitionCallbacks(next) {
       // we update our ABObjectCache
       new ABObject(def, ABSystemObject.getApplication());
 
-      sails.log("object.afterUpdate(): new Object definitions:", def);
+      // sails.log("object.afterUpdate(): new Object definitions:", def);
 
       // make sure all Async operations are complete before calling
       // our CB()
@@ -823,7 +823,7 @@ function loadDefinitionCallbacks(next) {
             cb();
          })
          .catch((err) => {
-            sails.log.error("object.afterUpdate :: Error:", err);
+            sails.log.error("field.afterUpdate :: Error:", err);
             cb(err);
          });
    });
@@ -875,7 +875,7 @@ function loadDefinitionCallbacks(next) {
                cb();
             })
             .catch((err) => {
-               sails.log.error("query.afterCreate :: Error:", err);
+               sails.log.error(`${key} :: Error:`, err);
                cb(err);
             });
       });
@@ -991,7 +991,7 @@ function loadDefinitionCallbacks(next) {
          })
          .catch((err) => {
             // if a NavView() fn returns an error, just post it here
-            sails.log.error("query.afterCreate :: Error:", err);
+            sails.log.error("view.beforeDestroy :: Error:", err);
             // and continue
             cb();
          });

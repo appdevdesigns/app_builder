@@ -426,7 +426,8 @@ module.exports = class ABChooseList extends ABComponent {
           *
           * The File Upload process finished.
           */
-         onFileUpload: function(item, response) {
+         onFileUpload: (item, response) => {
+            this.loaded = false;
             _logic.loadData(); // refresh app list
             $$(ids.uploader).enable();
             _logic.ready();

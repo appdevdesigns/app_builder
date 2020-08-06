@@ -96,10 +96,10 @@ module.exports = {
       var forDownload = req.param("download");
 
       AppBuilderExport.appToJSON(appID)
-         .fail(function(err) {
+         .catch(function(err) {
             res.AD.error(err);
          })
-         .done(function(data) {
+         .then(function(data) {
             if (forDownload) {
                res.set(
                   "Content-Disposition",
@@ -136,26 +136,24 @@ module.exports = {
                   try {
                      var jsonData = JSON.parse(data.toString());
                      AppBuilderExport.appFromJSON(jsonData)
-                        .fail(function(err) {
-                           console.log("jsonImport import error", err);
-                           res.send({
-                              status: "error",
-                              message: err.message,
-                              error: err
-                           });
+                        .catch(function(err) {
+                           console.log(
+                              "ABApplicationController.jsonImport(): import error",
+                              err
+                           );
+                           err.message = `json import error : ${err.message}`;
+                           res.AD.error(err, 500);
                            //res.AD.error(err);
                         })
-                        .done(function() {
-                           res.send({ status: "server" });
+                        .then(function() {
+                           res.AD.success({ done: true });
+                           // unless we need to return the data to the browser:
+                           // res.AD.success(jsonData);
                         });
                   } catch (err) {
                      console.log("jsonImport parse error", err);
-                     res.send({
-                        status: "error",
-                        message: "json parse error",
-                        error: err
-                     });
-                     //res.AD.error(err);
+                     err.message = `json parse error : ${err.message}`;
+                     res.AD.error(err, 500);
                   }
                }
             });
