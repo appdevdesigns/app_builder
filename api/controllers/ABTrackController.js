@@ -52,25 +52,31 @@ module.exports = {
                         res.AD.error(error);
                      })
                      .then((list) => {
-                        if (list[0]) {
+                        let row = list[0];
+                        if (row) {
                            // last updated date
                            if (
+                              (row["updated_at"] || row["updatedAt"]) &&
                               !result.filter((item) => item.level == "update")
                                  .length
                            ) {
                               result.push({
                                  level: "update",
                                  rowId: cond.rowId,
-                                 timestamp: list[0].updated_at
+                                 timestamp:
+                                    row["updated_at"] || row["updatedAt"]
                               });
                            }
 
                            // .created_at
-                           result.push({
-                              level: "insert",
-                              rowId: cond.rowId,
-                              timestamp: list[0].created_at
-                           });
+                           if (row["created_at"] || row["createdAt"]) {
+                              result.push({
+                                 level: "insert",
+                                 rowId: cond.rowId,
+                                 timestamp:
+                                    row["created_at"] || row["createdAt"]
+                              });
+                           }
                         }
 
                         next();
