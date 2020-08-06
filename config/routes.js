@@ -6,6 +6,10 @@
  */
 
 module.exports = {
+   /* Object tracking */
+   "get /app_builder/object/:objectId/track":
+      "app_builder/ABTrackController.find",
+
    /* Scopes */
    "get /app_builder/scope": "app_builder/ABScopeController.find",
 

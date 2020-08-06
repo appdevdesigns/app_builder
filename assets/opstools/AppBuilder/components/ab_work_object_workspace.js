@@ -14,6 +14,8 @@ const ABWorkspaceDatatable = require("./ab_work_object_workspace_datatable");
 const ABWorkspaceKanBan = require("./ab_work_object_workspace_kanban");
 const ABWorkspaceGantt = require("./ab_work_object_workspace_gantt");
 
+const ABWorkspaceTrack = require("./ab_work_object_workspace_track");
+
 const ABPopupDefineLabel = require("./ab_work_object_workspace_popupDefineLabel");
 const ABPopupFilterDataTable = require("./ab_work_object_workspace_popupFilterDataTable");
 const ABPopupFrozenColumns = require("./ab_work_object_workspace_popupFrozenColumns");
@@ -87,6 +89,8 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
 
       // default settings
       settings = settings || {};
+      if (settings.trackView == null) settings.trackView = true;
+
       if (settings.allowDelete == null) settings.allowDelete = true;
 
       if (settings.isInsertable == null) settings.isInsertable = true;
@@ -141,6 +145,8 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
 
       var Gantt = new ABWorkspaceGantt(App, idBase);
       hashViews["gantt"] = Gantt;
+
+      let Track = new ABWorkspaceTrack(App, idBase);
 
       // Various Popups on our page:
       var PopupDefineLabelComponent = new ABPopupDefineLabel(App, idBase);
@@ -537,6 +543,8 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
          Gantt.init();
 
          CurrentDatacollection.init();
+
+         Track.init();
 
          DataTable.datacollectionLoad(CurrentDatacollection);
          KanBan.datacollectionLoad(CurrentDatacollection);
@@ -1412,7 +1420,11 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
       this._logic = _logic;
 
       // Expose any globally accessible Actions:
-      this.actions({});
+      this.actions({
+         openObjectTrack: (CurrentObject, rowId) => {
+            Track.open(CurrentObject, rowId);
+         }
+      });
 
       //
       // Define our external interface methods:

@@ -620,13 +620,23 @@ module.exports = {
                   .insert(createParams)
                   .then(
                      (newObj) => {
+                        let rowId = newObj[object.PK()];
+
+                        // track logging
+                        ABTrack.logInsert({
+                           objectId: object.id,
+                           rowId,
+                           username: req.user.data.username,
+                           data: createParams
+                        });
+
                         // return the parameters of connectObject data field values
                         var updateRelationParams = object.requestRelationParams(
                            allParams
                         );
                         var updateTasks = updateRelationValues(
                            object,
-                           newObj[object.PK()],
+                           rowId,
                            updateRelationParams
                         );
 
@@ -1307,6 +1317,14 @@ console.error(err);
                   .delete()
                   .where(object.PK(), "=", id)
                   .then((countRows) => {
+                     // track logging
+                     ABTrack.logDelete({
+                        objectId: object.id,
+                        rowId: id,
+                        username: req.user.data.username,
+                        data: oldItem
+                     });
+
                      resolvePendingTransaction();
                      numRows = countRows;
                      next();
@@ -1619,6 +1637,18 @@ console.error(err);
                .where(object.PK(), id)
                .then(
                   (values) => {
+                     // track logging
+                     ABTrack.logUpdate({
+                        objectId: object.id,
+                        rowId: id,
+                        username: req.user.data.username,
+                        data: Object.assign(
+                           updateParams,
+                           updateRelationParams,
+                           transParams
+                        )
+                     });
+
                      // create a new query when use same query, then new data are created duplicate
                      var updateTasks = updateRelationValues(
                         object,

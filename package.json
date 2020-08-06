@@ -50,6 +50,7 @@
     "rimraf": "^2.7.1",
     "uuid": "^3.4.0",
     "waterline-sqlite3": "^50.0.0",
+    "winston": "^3.3.3",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
