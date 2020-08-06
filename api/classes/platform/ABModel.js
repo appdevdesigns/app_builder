@@ -65,10 +65,7 @@ module.exports = class ABModel extends ABModelCore {
                      // this returns an [] so pull 1st value:
                      resolve(rows[0]);
                   })
-                  .catch((err) => {
-                     if (trx) trx.rollback();
-                     reject(err);
-                  });
+                  .catch(reject);
             });
       });
    }
@@ -199,10 +196,7 @@ module.exports = class ABModel extends ABModelCore {
                      // this returns an [] so pull 1st value:
                      resolve(rows[0]);
                   })
-                  .catch((err) => {
-                     if (trx) trx.rollback();
-                     reject(err);
-                  });
+                  .catch(reject);
             });
       });
    }
@@ -291,10 +285,7 @@ module.exports = class ABModel extends ABModelCore {
                return relateQuery;
             })
             .then(resolve)
-            .catch((err) => {
-               if (trx) trx.rollback();
-               reject(err);
-            });
+            .catch(reject);
       });
       // let objInstance = this.modelKnex()
       //    .query()

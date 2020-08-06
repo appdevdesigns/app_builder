@@ -203,15 +203,22 @@ module.exports = class ABProcess extends ABProcessCore {
                         // repeat this process allowing new tasks to .do()
                         return this.run(instance);
                      } else {
+                        // cancel changes
+                        if (err) {
+                           return trx.rollback();
+                        }
                         // save changes to DB
-                        trx.commit()
-                           .then(() => {
-                              return this.instanceUpdate(instance);
-                           })
-                           .catch((err) => {
-                              // If we get here, that means no any data is updated to db
-                              return Promise.reject(err);
-                           });
+                        else {
+                           return trx
+                              .commit()
+                              .then(() => {
+                                 return this.instanceUpdate(instance);
+                              })
+                              .catch((error) => {
+                                 // If we get here, that means no any data is updated to db
+                                 return Promise.reject(error);
+                              });
+                        }
                      }
                   }
                );
