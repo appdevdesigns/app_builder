@@ -22,9 +22,10 @@ module.exports = class ABWorkObjectWorkspaceTrack extends ABComponent {
          common: App.labels,
          component: {
             title: L("ab.object.track.title", "*Record History"),
-            insert: L("ab.object.track.insert", "*Insert"),
-            update: L("ab.object.track.update", "*Update"),
-            delete: L("ab.object.track.delete", "*Delete")
+            insert: L("ab.object.track.insert", "*Add"),
+            update: L("ab.object.track.update", "*Edit"),
+            delete: L("ab.object.track.delete", "*Delete"),
+            unknown: L("ab.object.track.unknown", "*Unknown")
          }
       };
 
@@ -106,7 +107,8 @@ module.exports = class ABWorkObjectWorkspaceTrack extends ABComponent {
                   }
 
                   // By
-                  obj.details = `by <b>${obj.username}</b>`;
+                  obj.details = `by <b>${obj.username ||
+                     labels.component.unknown}</b>`;
 
                   // Detail of record
                   if (obj.record) {
