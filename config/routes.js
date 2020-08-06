@@ -49,6 +49,10 @@ module.exports = {
    "delete /app_builder/application/:appID/object/:objID":
       "app_builder/ABObjectController.excludeObject",
 
+   /* Object tracking */
+   "get /app_builder/object/:objectId/track":
+      "app_builder/ABTrackController.find",
+
    /* Application Views */
    "put /app_builder/application/:appID/view":
       "app_builder/ABApplicationController.viewSave",

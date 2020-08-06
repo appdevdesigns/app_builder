@@ -37,6 +37,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
          allowDelete: params.allowDelete != null ? params.allowDelete : true,
          detailsView: params.detailsView || null,
          editView: params.editView || null,
+         trackView: params.trackView || null,
          isEditable: params.isEditable != null ? params.isEditable : true,
          massUpdate: params.massUpdate != null ? params.massUpdate : true,
          configureHeaders:
@@ -124,6 +125,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                var skippable = [
                   "appbuilder_select_item",
                   "appbuilder_view_detail",
+                  "appbuilder_view_track",
                   "appbuilder_view_edit",
                   "appbuilder_trash"
                ];
@@ -227,6 +229,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                // if we resize the delete column we want to resize the last column but Webix will not allow since the column is split
                var rightSplitItems = [
                   "appbuilder_view_detail",
+                  "appbuilder_view_track",
                   "appbuilder_view_edit",
                   "appbuilder_trash"
                ];
@@ -274,6 +277,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                var skippable = [
                   "appbuilder_select_item",
                   "appbuilder_view_detail",
+                  "appbuilder_view_track",
                   "appbuilder_view_edit",
                   "appbuilder_trash"
                ];
@@ -284,6 +288,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                var skippable = [
                   "appbuilder_select_item",
                   "appbuilder_view_detail",
+                  "appbuilder_view_track",
                   "appbuilder_view_edit",
                   "appbuilder_trash"
                ];
@@ -451,6 +456,8 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             } else if (e.target.className.indexOf("eye") > -1) {
                // if this was our view icon:
                // alert("view");
+            } else if (e.target.className.indexOf("track") > -1) {
+               App.actions.openObjectTrack(CurrentObject, id.row);
             } else if (e.target.className.indexOf("trash") > -1) {
                // if this was our trash icon:
 
@@ -883,6 +890,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             var skippable = [
                "appbuilder_select_item",
                "appbuilder_view_detail",
+               "appbuilder_view_track",
                "appbuilder_view_edit",
                "appbuilder_trash"
             ];
@@ -1206,6 +1214,17 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                      return "<div class='detailsView'><span class='webix_icon fa fa-eye'></span></div>";
                   },
                   css: { "text-align": "center" }
+               });
+               columnSplitRight++;
+            }
+            if (settings.trackView != null && accessLevel == 2) {
+               columnHeaders.push({
+                  id: "appbuilder_view_track",
+                  header: "",
+                  width: 40,
+                  template:
+                     "<div class='track'><span class='track fa fa-history'></span></div>",
+                  css: { "text-align": "center", cursor: "pointer" }
                });
                columnSplitRight++;
             }

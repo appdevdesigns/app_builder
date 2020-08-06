@@ -729,6 +729,20 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    }
 
    ///
+   /// Object Tracks
+   ///
+   objectTrack(objectId, rowId) {
+      return new Promise((resolve, reject) => {
+         this.Model.staticData
+            .objectTrack(objectId, rowId)
+            .catch(reject)
+            .then((data) => {
+               resolve(data);
+            });
+      });
+   }
+
+   ///
    /// Fields
    ///
 
