@@ -315,6 +315,16 @@ function updateConnectedFields(object, newData, oldData) {
    connectFields.forEach((f) => {
       // Get the field object that the field is linked to
       var field = f.fieldLink;
+      if (!field) {
+         var err = new Error(
+            `ABModelController.updateConnectedFields(): object[${object.name}][${object.id}] had connected field[${f.label}][${f.id}] with no linked field reference`
+         );
+         sails.log.error(err);
+         sails.log.error("object:", object);
+         sails.log.error("field:", f);
+         return;
+      }
+
       // Get the relation name so we can separate the linked fields updates from the rest
       var relationName = f.relationName();
       if (Array.isArray(newData)) {
