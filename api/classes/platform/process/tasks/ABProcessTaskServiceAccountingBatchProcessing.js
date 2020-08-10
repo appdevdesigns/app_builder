@@ -446,7 +446,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             }
             this.brObject
                .modelAPI()
-               .create(balValues, this._dbTransaction)
+               .create(balValues)
                .then((newEntry) => {
                   resolve(newEntry);
                })
@@ -610,7 +610,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       var categoryOption = categoryOptions.find(
          (o) => o.id == account["Category"]
       );
-      type = categoryOption.text;
+      if (categoryOption) type = categoryOption.text;
       return type.toLowerCase();
    }
 };

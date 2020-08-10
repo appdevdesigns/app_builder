@@ -227,7 +227,7 @@ module.exports = class ABModel extends ABModelCore {
       if (typeof id == undefined)
          return errorReturn("ABModel.relate(): missing id");
       if (typeof fieldRef == undefined)
-         return errorReturn("ABModel.relate(): missing id");
+         return errorReturn("ABModel.relate(): missing fieldRef");
       if (typeof value == undefined)
          return errorReturn("ABModel.relate(): missing value");
 
@@ -276,6 +276,11 @@ module.exports = class ABModel extends ABModelCore {
             .then((objInstance) => {
                let relateQuery = objInstance
                   .$relatedQuery(relationName)
+                  .alias(
+                     "#column#_#relation#"
+                        .replace("#column#", abField.columnName)
+                        .replace("#relation#", relationName)
+                  ) // FIX: SQL syntax error because alias name includes special characters
                   .relate(useableValues);
 
                // Used by knex.transaction, the transacting method may be chained to any query and
