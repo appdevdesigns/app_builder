@@ -1375,13 +1375,13 @@ console.error(err);
                   payload
                );
 
-               // // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
-               // updateConnectedFields(object, oldItem[0]);
-               // if (relatedItems.length) {
-               //     relatedItems.forEach((r) => {
-               //         updateConnectedFields(r.object, r.items);
-               //     });
-               // }
+               // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
+               updateConnectedFields(object, oldItem[0]);
+               if (relatedItems.length) {
+                  relatedItems.forEach((r) => {
+                     updateConnectedFields(r.object, r.items);
+                  });
+               }
                next();
             }
          ],
