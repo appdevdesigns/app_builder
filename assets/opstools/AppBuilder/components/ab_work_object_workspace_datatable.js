@@ -949,7 +949,18 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             let DataTable = $$(this.ui.id);
             CurrentDatacollection = datacollection;
             if (CurrentDatacollection) {
-               CurrentDatacollection.bind(DataTable);
+               if (
+                  CurrentDatacollection.datacollectionLink &&
+                  CurrentDatacollection.fieldLink
+               ) {
+                  CurrentDatacollection.bind(
+                     DataTable,
+                     CurrentDatacollection.datacollectionLink,
+                     CurrentDatacollection.fieldLink
+                  );
+               } else {
+                  CurrentDatacollection.bind(DataTable);
+               }
                CurrentDatacollection.on("initializingData", () => {
                   _logic.busy();
                });
