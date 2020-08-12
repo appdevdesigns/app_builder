@@ -97,6 +97,7 @@ module.exports = {
 
       AppBuilderExport.appToJSON(appID)
          .catch(function(err) {
+            console.log(err);
             res.AD.error(err);
          })
          .then(function(data) {
