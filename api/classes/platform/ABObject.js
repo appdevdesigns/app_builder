@@ -508,10 +508,10 @@ module.exports = class ABClassObject extends ABObjectCore {
          .then(() => this.populateFindConditions(query, options, userData))
          .then(() => {
             try {
-               sails.log.debug(
-                  "ABClassObject.queryFind - SQL:",
-                  query.toString()
-               );
+               // sails.log.debug(
+               //    "ABClassObject.queryFind - SQL:",
+               query.toString();
+               // );
             } catch (e) {
                // sails.log.debug('ABClassObject.queryFind - SQL:', query.debug() );
             }
@@ -567,10 +567,10 @@ module.exports = class ABClassObject extends ABObjectCore {
                .first();
 
             try {
-               sails.log.debug(
-                  "ABClassObject.queryCount - SQL:",
-                  query.toString()
-               );
+               // sails.log.debug(
+               //    "ABClassObject.queryCount - SQL:",
+               //    query.toString()
+               // );
             } catch (e) {
                // sails.log.debug('ABClassObject.queryFind - SQL:', query.debug() );
             }
@@ -804,7 +804,11 @@ module.exports = class ABClassObject extends ABObjectCore {
                         // @param {ObjectionJS Query} Query the query object to perform the operations.
                         var parseCondition = (condition, Query) => {
                            // 'have_no_relation' condition will be applied below
-                           if (condition.rule == "have_no_relation") return;
+                           if (
+                              condition == null ||
+                              condition.rule == "have_no_relation"
+                           )
+                              return;
 
                            // FIX: some improper inputs:
                            // if they didn't provide a .glue, then default to 'and'

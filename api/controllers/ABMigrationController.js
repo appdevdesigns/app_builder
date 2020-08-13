@@ -58,6 +58,42 @@ module.exports = {
     */
    dropField: function(req, res) {
       simpleFieldOperation(req, res, "dropField");
+   },
+
+   /**
+    * createIndex
+    *
+    * post app_builder/migrate/object/:objID/index/:indexID
+    */
+   createIndex: function(req, res) {
+      simpleIndexOperation(req, res, "createIndex")
+         .then(function() {
+            res.AD.success({ good: "job" });
+         })
+         .catch(function(err) {
+            ADCore.error.log("ABMigration.createIndex() failed:", {
+               error: err
+            });
+            res.AD.error(err, 500);
+         });
+   },
+
+   /**
+    * dropField
+    *
+    * delete app_builder/migrate/object/:objID/index/:indexID
+    */
+   dropIndex: function(req, res) {
+      simpleIndexOperation(req, res, "dropIndex")
+         .then(function() {
+            res.AD.success({ good: "job" });
+         })
+         .catch(function(err) {
+            ADCore.error.log("ABMigration.dropIndex() failed:", {
+               error: err
+            });
+            res.AD.error(err, 500);
+         });
    }
 };
 
@@ -236,4 +272,44 @@ function simpleFieldOperation(req, res, operation) {
             res.AD.error(err, 500);
          });
    });
+}
+
+function simpleIndexOperation(req, res, operation) {
+   res.set("content-type", "application/javascript");
+
+   sails.log.info("ABMigrationConroller." + operation + "()");
+
+   let objID = req.param("objID", -1);
+   let indexID = req.param("indexID", -1);
+   if (!objID || !indexID) {
+      res.AD.error("Bad parameters", 400);
+      return Promise.reject();
+   }
+
+   return Promise.resolve()
+      .then(() => ABGraphObject.findOne(objID))
+      .then(
+         (objectData) =>
+            new Promise((next, err) => {
+               if (!objectData) {
+                  let missingObj = new Error("Missing Object");
+                  missingObj.objID = objID;
+                  console.log(`Error: Missing Object from id: ${objID}`);
+                  return err(missingObj);
+               }
+
+               let object = objectData.toABClass();
+
+               let index = object.indexes((idx) => idx.id == indexID)[0];
+               if (!index) {
+                  let missingIndex = new Error("Missing Index");
+                  missingIndex.objID = indexID;
+                  console.log(`Error: Missing Index from id: ${indexID}`);
+                  return err(missingIndex);
+               }
+
+               next(index);
+            })
+      )
+      .then((index) => ABMigration[operation](index));
 }
