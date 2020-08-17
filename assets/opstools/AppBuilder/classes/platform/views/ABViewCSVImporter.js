@@ -830,6 +830,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
                let columnOptUI = {
                   view: "richselect",
+                  gravity: 2,
                   options: csvColumnList,
                   fieldId: f.id,
                   abName: "columnIndex",
@@ -841,6 +842,121 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      }
                   }
                };
+
+               // Add date format options
+               if (f.key == "date") {
+                  let dateSeparatorOptions = ["/", "-", ".", ",", " "];
+                  let dayFormatOptions = [
+                     { value: "1 to 31", id: "D" },
+                     { value: "01 to 31", id: "DD" }
+                  ];
+                  let monthFormatOptions = [
+                     { value: "1 to 12", id: "M" },
+                     { value: "01 to 12", id: "MM" }
+                  ];
+                  let yearFormatOptions = [
+                     { value: "00 to 99", id: "YY" },
+                     { value: "2000 to 2099", id: "YYYY" }
+                  ];
+                  let dateOrderOptions = [
+                     {
+                        value: L("ab.component.label.dateOrderDMY", "D-M-Y"),
+                        id: 1
+                     },
+                     {
+                        value: L("ab.component.label.dateOrderMDY", "M-D-Y"),
+                        id: 2
+                     },
+                     {
+                        value: L("ab.component.label.dateOrderYMD", "Y-M-D"),
+                        id: 3
+                     },
+                     {
+                        value: L("ab.component.label.dateOrderYMD", "Y-D-M"),
+                        id: 4
+                     }
+                  ];
+
+                  columnOptUI = {
+                     gravity: 2,
+                     rows: [
+                        columnOptUI,
+                        {
+                           view: "richselect",
+                           label: L(
+                              "ab.component.label.separator",
+                              "Separator"
+                           ),
+                           labelWidth: 100,
+                           on: {
+                              onChange: function() {
+                                 _logic.loadDataToGrid();
+                              }
+                           },
+                           name: "separator",
+                           abName: "columnDateFormat",
+                           options: dateSeparatorOptions,
+                           value: "/"
+                        },
+                        {
+                           view: "richselect",
+                           label: L("ab.component.label.dayFormat", "Day"),
+                           labelWidth: 100,
+                           on: {
+                              onChange: function() {
+                                 _logic.loadDataToGrid();
+                              }
+                           },
+                           name: "day",
+                           abName: "columnDateFormat",
+                           options: dayFormatOptions,
+                           value: "D"
+                        },
+                        {
+                           view: "richselect",
+                           label: L("ab.component.label.monthFormat", "Month"),
+                           labelWidth: 100,
+                           on: {
+                              onChange: function() {
+                                 _logic.loadDataToGrid();
+                              }
+                           },
+                           name: "month",
+                           abName: "columnDateFormat",
+                           options: monthFormatOptions,
+                           value: "M"
+                        },
+                        {
+                           view: "richselect",
+                           label: L("ab.component.label.yearFormat", "Year"),
+                           labelWidth: 100,
+                           on: {
+                              onChange: function() {
+                                 _logic.loadDataToGrid();
+                              }
+                           },
+                           name: "year",
+                           abName: "columnDateFormat",
+                           options: yearFormatOptions,
+                           value: "YY"
+                        },
+                        {
+                           view: "richselect",
+                           label: L("ab.component.label.dateOrder", "Order"),
+                           labelWidth: 100,
+                           on: {
+                              onChange: function() {
+                                 _logic.loadDataToGrid();
+                              }
+                           },
+                           name: "order",
+                           abName: "columnDateFormat",
+                           options: dateOrderOptions,
+                           value: 1
+                        }
+                     ]
+                  };
+               }
 
                // Add connected field options
                if (f.key == "connectObject") {
@@ -858,6 +974,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   }
 
                   columnOptUI = {
+                     gravity: 2,
                      rows: [
                         columnOptUI,
                         {
@@ -881,6 +998,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   cols: [
                      {
                         view: "template",
+                        gravity: 1,
                         borderless: true,
                         css: { "padding-top": 10 },
                         template: '<span class="fa fa-{icon}"></span> {label}'
@@ -996,9 +1114,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   case "number":
                      editor = "number";
                      break;
-                  case "datetime":
-                     editor = "datetime";
-                     break;
                   default:
                   // code block
                }
@@ -1050,6 +1165,12 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                            // reformat data to display
                            (matchFields || []).forEach((f) => {
                               let record = data[f.columnIndex];
+                              if (
+                                 f.field.key == "date" &&
+                                 record.includes("Invalid date")
+                              ) {
+                                 isValid = false;
+                              }
                               rowValue[f.field.id] = record;
                            });
                            var ruleValid = filter.filters(rowValue);
@@ -1096,8 +1217,14 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                (matchFields || []).forEach((f) => {
                   let data = row[f.columnIndex - 1];
 
-                  if (f.field.key == "connectObject") {
-                     rowValue[f.columnIndex] = data;
+                  if (f.field.key == "date") {
+                     let dateFormat = moment(data, f.format).format(
+                        "YYYY-MM-DD"
+                     );
+                     if (dateFormat == "Invalid date") {
+                        dateFormat = dateFormat + " - " + data;
+                     }
+                     rowValue[f.columnIndex] = dateFormat;
                   } else {
                      rowValue[f.columnIndex] = data; // array to object
                   }
@@ -1215,6 +1342,58 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   columnIndex: colIndex,
                   field: field
                };
+
+               if (field.key == "date") {
+                  let $optionPanel = $selector.getParentView();
+                  let $dateFormatSelectors = $optionPanel.queryView(
+                     { abName: "columnDateFormat" },
+                     "all"
+                  );
+
+                  // define the column to compare data to search .id
+                  if ($dateFormatSelectors) {
+                     $dateFormatSelectors.forEach((selector) => {
+                        fieldData[selector.config.name] = selector.getValue();
+                     });
+
+                     // convert all dates into mysql date format YYYY-DD-MM
+                     var format;
+                     switch (fieldData.order) {
+                        case "1":
+                           format =
+                              fieldData.day +
+                              fieldData.separator +
+                              fieldData.month +
+                              fieldData.separator +
+                              fieldData.year;
+                           break;
+                        case "2":
+                           format =
+                              fieldData.month +
+                              fieldData.separator +
+                              fieldData.day +
+                              fieldData.separator +
+                              fieldData.year;
+                           break;
+                        case "3":
+                           format =
+                              fieldData.year +
+                              fieldData.separator +
+                              fieldData.month +
+                              fieldData.separator +
+                              fieldData.day;
+                           break;
+                        case "4":
+                           format =
+                              fieldData.year +
+                              fieldData.separator +
+                              fieldData.day +
+                              fieldData.separator +
+                              fieldData.month;
+                     }
+                     fieldData.format = format;
+                  }
+               }
 
                if (field.key == "connectObject") {
                   let $optionPanel = $selector.getParentView();
