@@ -958,7 +958,7 @@ module.exports = class ABClassObject extends ABObjectCore {
                                        condition.rule == "equals" ||
                                        condition.rule == "not_equal")
                                  ) {
-                                    condition = this.convertConnectFieldCondition(
+                                    this.convertConnectFieldCondition(
                                        field,
                                        condition
                                     );
