@@ -334,7 +334,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
          type: "clean",
          id: ids.form,
          borderless: true,
-         width: 400,
+         minWidth: 400,
+         gravity: 1,
          elements: [
             {
                rows: [
@@ -423,6 +424,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
       var validationError = false;
 
       let _uiRecordsView = {
+         gravity: 2,
          rows: [
             {
                view: "toolbar",
