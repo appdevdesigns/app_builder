@@ -452,7 +452,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
          let linkViaType = $$(ids.linkViaType).getValue();
 
          let sourceObject = null; // object stores index column
-         let indexLinkFields = null; // the index fields of link object M:N
+         let linkIndexes = null; // the index fields of link object M:N
 
          $$(ids.indexField2).define("options", []);
          $$(ids.indexField2).refresh();
@@ -480,18 +480,20 @@ var ABFieldConnectComponent = new ABFieldComponent({
             )[0];
 
             // Populate the second index fields
-            indexLinkFields = linkObject.indexFields();
-            if (indexLinkFields && indexLinkFields.length > 0) {
-               $$(ids.indexField2).define(
-                  "options",
-                  indexLinkFields.map((f) => {
-                     return {
-                        id: f.id,
-                        value: `${linkObject.label} - ${f.label}`
-                     };
-                  })
-               );
-            }
+            let linkIndexFields = [];
+            linkIndexes = linkObject.indexes((idx) => idx.unique);
+            (linkIndexes || []).forEach((idx) => {
+               (idx.fields || []).forEach((f) => {
+                  if (linkIndexFields.filter((opt) => opt.id == f.id).length)
+                     return;
+
+                  linkIndexFields.push({
+                     id: f.id,
+                     value: f.label
+                  });
+               });
+            });
+            $$(ids.indexField2).define("options", linkIndexFields);
             $$(ids.indexField2).refresh();
          }
 
@@ -503,10 +505,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
             return;
          }
 
-         let indexFields = sourceObject.indexFields();
+         let indexes = sourceObject.indexes((idx) => idx.unique);
          if (
-            (!indexFields || indexFields.length < 1) &&
-            (!indexLinkFields || indexLinkFields.length < 1)
+            (!indexes || indexes.length < 1) &&
+            (!linkIndexes || linkIndexes.length < 1)
          ) {
             $$(ids.isCustomFK).hide();
             $$(ids.indexField).define("options", []);
@@ -514,17 +516,20 @@ var ABFieldConnectComponent = new ABFieldComponent({
             return;
          }
 
-         $$(ids.isCustomFK).show();
-         $$(ids.indexField).define(
-            "options",
-            indexFields.map((f) => {
-               return {
+         let indexFields = [];
+         (indexes || []).forEach((idx) => {
+            (idx.fields || []).forEach((f) => {
+               if (indexFields.filter((opt) => opt.id == f.id).length) return;
+
+               indexFields.push({
                   id: f.id,
-                  value: `${sourceObject.label} - ${f.label}`
-               };
-            })
-         );
+                  value: f.label
+               });
+            });
+         });
+         $$(ids.indexField).define("options", indexFields);
          $$(ids.indexField).refresh();
+         $$(ids.isCustomFK).show();
 
          ABFieldConnectComponent.logic.checkCustomFK();
       }

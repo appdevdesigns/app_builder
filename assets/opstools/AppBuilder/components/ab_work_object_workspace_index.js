@@ -40,7 +40,9 @@ module.exports = class ABWorkObjectWorkspaceIndex extends ABComponent {
       this.ids = {
          popup: this.unique(idBase + "_popup"),
          form: this.unique(idBase + "_form"),
+         name: this.unique(idBase + "_name"),
          fields: this.unique(idBase + "_fields"),
+         unique: this.unique(idBase + "_unique"),
          removeButton: this.unique(idBase + "_removeButton"),
          saveButton: this.unique(idBase + "_saveButton")
       };
@@ -84,13 +86,24 @@ module.exports = class ABWorkObjectWorkspaceIndex extends ABComponent {
             view: "form",
             id: ids.form,
             elements: [
-               { view: "text", label: "Name", name: "name" },
+               {
+                  id: ids.name,
+                  view: "text",
+                  label: "Name",
+                  name: "name"
+               },
                {
                   id: ids.fields,
                   view: "multicombo",
                   label: "Fields",
                   name: "fields",
                   options: []
+               },
+               {
+                  id: ids.unique,
+                  view: "checkbox",
+                  label: "Unique",
+                  name: "unique"
                },
                {
                   cols: [
@@ -193,12 +206,24 @@ module.exports = class ABWorkObjectWorkspaceIndex extends ABComponent {
          if (index) $form.setValues(index.toObj());
       }
 
+      let $name = $$(ids.name);
+      let $unique = $$(ids.unique);
       let $saveButton = $$(ids.saveButton);
       let $removeButton = $$(ids.removeButton);
+
+      // Edit
       if (this.CurrentIndex) {
+         $name.disable();
+         $fields.disable();
+         $unique.disable();
          $saveButton.hide();
          $removeButton.show();
-      } else {
+      }
+      // Add new
+      else {
+         $name.enable();
+         $fields.enable();
+         $unique.enable();
          $saveButton.show();
          $removeButton.hide();
       }

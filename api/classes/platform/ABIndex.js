@@ -16,15 +16,24 @@ module.exports = class ABIndex extends ABIndexCore {
       let tableName = this.object.dbTableName();
       let columnNames = this.fields.map((f) => f.columnName);
 
-      return new Promise((resolve, reject) => {
-         knex.schema
-            .table(tableName, function(table) {
-               // Create new Index
-               table.index(columnNames, indexName);
-            })
-            .catch(reject)
-            .then(() => resolve());
-      });
+      let result;
+
+      // Create new Unique Index
+      if (this.unique) {
+         result = knex.schema.raw(
+            `ALTER TABLE ${tableName} ADD UNIQUE INDEX ${indexName}(${knex.client
+               .formatter()
+               .columnize(columnNames)})`
+         );
+      }
+      // Create new Index
+      else {
+         result = knex.schema.table(tableName, (table) => {
+            table.index(columnNames, indexName);
+         });
+      }
+
+      return result;
    }
 
    migrateDrop(knex) {
@@ -36,11 +45,14 @@ module.exports = class ABIndex extends ABIndexCore {
 
       return new Promise((resolve, reject) => {
          knex.schema
-            .table(tableName, function(table) {
+            .table(tableName, (table) => {
                // Drop Index
                table.dropIndex(columnNames, indexName);
             })
-            .catch(reject)
+            .catch((err) => {
+               console.error(err);
+               resolve();
+            })
             .then(() => resolve());
       });
    }
