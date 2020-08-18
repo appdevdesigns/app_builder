@@ -152,6 +152,8 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          if (indexField) {
             linkFK = indexField.columnName;
          }
+         let indexType = "";
+         let indexType2 = "";
 
          // 1:M - create a column in the table and references to id of the link table
          if (
@@ -169,21 +171,31 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         })
                         .catch(next);
                   },
+                  // get MySQL column type of index field
+                  (exists, next) => {
+                     if (exists || !indexField) return next(null, exists);
+
+                     this.getIndexColumnType(
+                        knex,
+                        indexField.object.tableName,
+                        indexField.columnName
+                     ).then((result) => {
+                        indexType = result;
+                        next(null, exists);
+                     });
+                  },
                   // create a column
                   (exists, next) => {
                      if (exists) return next();
 
                      knex.schema
                         .table(tableName, (t) => {
-                           let linkCol;
-
-                           if (linkFK == "id")
-                              linkCol = t
-                                 .integer(this.columnName)
-                                 .unsigned()
-                                 .nullable();
-                           // uuid
-                           else linkCol = t.string(this.columnName).nullable();
+                           let linkCol = this.setNewColumnSchema(
+                              t,
+                              this.columnName,
+                              indexType,
+                              linkFK
+                           );
 
                            // NOTE: federated table does not support reference column
                            if (
@@ -234,20 +246,31 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         })
                         .catch(next);
                   },
+                  // get MySQL column type of index field
+                  (exists, next) => {
+                     if (exists || !indexField) return next(null, exists);
+
+                     this.getIndexColumnType(
+                        knex,
+                        indexField.object.tableName,
+                        indexField.columnName
+                     ).then((result) => {
+                        indexType = result;
+                        next(null, exists);
+                     });
+                  },
                   // create a column
                   (exists, next) => {
                      if (exists) return next();
 
                      knex.schema
                         .table(tableName, (t) => {
-                           let linkCol;
-                           if (linkFK == "id")
-                              linkCol = t
-                                 .integer(this.columnName)
-                                 .unsigned()
-                                 .nullable();
-                           // uuid
-                           else linkCol = t.string(this.columnName).nullable();
+                           let linkCol = this.setNewColumnSchema(
+                              t,
+                              this.columnName,
+                              indexType,
+                              linkFK
+                           );
 
                            // NOTE: federated table does not support reference column
                            if (
@@ -299,20 +322,31 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         })
                         .catch(next);
                   },
+                  // get MySQL column type of index field
+                  (exists, next) => {
+                     if (exists || !indexField) return next(null, exists);
+
+                     this.getIndexColumnType(
+                        knex,
+                        indexField.object.tableName,
+                        indexField.columnName
+                     ).then((result) => {
+                        indexType = result;
+                        next(null, exists);
+                     });
+                  },
                   // create a column
                   (exists, next) => {
                      if (exists) return next();
 
                      linkKnex.schema
                         .table(linkTableName, (t) => {
-                           let linkCol;
-                           if (linkFK == "id")
-                              linkCol = t
-                                 .integer(linkColumnName)
-                                 .unsigned()
-                                 .nullable();
-                           // uuid
-                           else linkCol = t.string(linkColumnName).nullable();
+                           let linkCol = this.setNewColumnSchema(
+                              t,
+                              linkColumnName,
+                              indexType,
+                              linkFK
+                           );
 
                            // NOTE: federated table does not support reference column
                            if (
@@ -370,10 +404,50 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
             var sourceKnex = this.settings.isSource ? knex : linkKnex;
 
             sourceKnex.schema.hasTable(joinTableName).then((exists) => {
+               if (exists) {
+                  resolve();
+                  return;
+               }
+
                // if it doesn't exist, then create it and any known fields:
-               if (!exists) {
-                  return sourceKnex.schema
-                     .createTable(joinTableName, (t) => {
+               return Promise.resolve()
+                  .then(
+                     () =>
+                        new Promise((next, bad) => {
+                           if (!indexField) return next();
+
+                           this.getIndexColumnType(
+                              knex,
+                              indexField.object.tableName,
+                              indexField.columnName
+                           )
+                              .catch(bad)
+                              .then((result) => {
+                                 indexType = result;
+                                 next();
+                              });
+                        })
+                  )
+                  .then(
+                     () =>
+                        new Promise((next, bad) => {
+                           let indexField2 = this.indexField2;
+                           if (!indexField2) return next();
+
+                           this.getIndexColumnType(
+                              knex,
+                              indexField2.object.tableName,
+                              indexField2.columnName
+                           )
+                              .catch(bad)
+                              .then((result) => {
+                                 indexType2 = result;
+                                 next();
+                              });
+                        })
+                  )
+                  .then(() =>
+                     sourceKnex.schema.createTable(joinTableName, (t) => {
                         t.increments("id").primary();
                         t.timestamps();
                         t.engine("InnoDB");
@@ -400,21 +474,19 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                            linkFK2 = indexField2.columnName;
                         }
 
-                        if (linkFK == "id")
-                           linkCol = t
-                              .integer(this.object.name)
-                              .unsigned()
-                              .nullable();
-                        // uuid
-                        else linkCol = t.string(this.object.name).nullable();
+                        linkCol = this.setNewColumnSchema(
+                           t,
+                           this.object.name,
+                           indexType,
+                           linkFK
+                        );
 
-                        if (linkFK2 == "id")
-                           linkCol2 = t
-                              .integer(linkObject.name)
-                              .unsigned()
-                              .nullable();
-                        // uuid
-                        else linkCol2 = t.string(linkObject.name).nullable();
+                        linkCol2 = this.setNewColumnSchema(
+                           t,
+                           linkObject.name,
+                           indexType2,
+                           linkFK2
+                        );
 
                         // NOTE: federated table does not support reference column
                         if (
@@ -448,17 +520,15 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         // 	.withKeyName(targetFkName)
                         // 	.onDelete('SET NULL');
                      })
-                     .then(() => {
-                        resolve();
-                     })
-                     .catch((err) => {
-                        // If the table exists, skip the error
-                        if (err.code == "ER_TABLE_EXISTS_ERROR") resolve();
-                        else reject(err);
-                     });
-               } else {
-                  resolve();
-               }
+                  )
+                  .then(() => {
+                     resolve();
+                  })
+                  .catch((err) => {
+                     // If the table exists, skip the error
+                     if (err.code == "ER_TABLE_EXISTS_ERROR") resolve();
+                     else reject(err);
+                  });
             });
          } else {
             resolve();
@@ -779,5 +849,39 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          sourceColumnName: sourceColumnName,
          targetColumnName: targetColumnName
       };
+   }
+
+   getIndexColumnType(knex, tableName, columnName) {
+      return new Promise((resolve, reject) => {
+         knex.schema
+            .raw(`SHOW COLUMNS FROM ${tableName} LIKE '${columnName}';`)
+            .then((data) => {
+               let indexType;
+               let rows = data[0];
+               if (rows[0]) {
+                  indexType = rows[0].Type;
+               }
+
+               resolve(indexType);
+            });
+      });
+   }
+
+   setNewColumnSchema(t, columnName, columnType, linkFKname) {
+      let result;
+
+      // custom index - create column to match FK type
+      if (columnType)
+         result = t.specificType(columnName, columnType).nullable();
+      // id
+      else if (linkFKname == "id")
+         result = t
+            .integer(columnName)
+            .unsigned()
+            .nullable();
+      // uuid
+      else result = t.string(columnName).nullable();
+
+      return result;
    }
 };
