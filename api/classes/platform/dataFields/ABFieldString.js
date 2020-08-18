@@ -126,7 +126,11 @@ module.exports = class ABFieldString extends ABFieldStringCore {
                               .then(() => {
                                  next();
                               })
-                              .catch(next);
+                              .catch((err) => {
+                                 // Skip duplicate unique key
+                                 if (err.code == "ER_DUP_KEYNAME") resolve();
+                                 else reject(err);
+                              });
                         })
                         .catch(next);
                   } else {

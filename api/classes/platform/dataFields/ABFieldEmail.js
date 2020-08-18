@@ -82,7 +82,11 @@ module.exports = class ABFieldEmail extends ABFieldEmailCore {
                .then(() => {
                   resolve();
                })
-               .catch(reject);
+               .catch((err) => {
+                  // Skip duplicate unique key
+                  if (err.code == "ER_DUP_KEYNAME") resolve();
+                  else reject(err);
+               });
          });
       });
    }

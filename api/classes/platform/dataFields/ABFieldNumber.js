@@ -65,14 +65,21 @@ module.exports = class ABFieldNumber extends ABFieldNumberCore {
                   }
 
                   // field is required (not null)
-                  if (this.settings.required && this.settings.default != null) {
+                  if (
+                     this.settings.required &&
+                     this.settings.default != null &&
+                     this.settings.default != ""
+                  ) {
                      currCol.notNullable();
                   } else {
                      currCol.nullable();
                   }
 
                   // set default value
-                  if (this.settings.default != null) {
+                  if (
+                     this.settings.default != null &&
+                     this.settings.default != ""
+                  ) {
                      let defaultTo = parseInt(this.settings.default) || 0;
                      currCol.defaultTo(defaultTo);
                   }
@@ -99,7 +106,11 @@ module.exports = class ABFieldNumber extends ABFieldNumberCore {
                .then(() => {
                   resolve();
                })
-               .catch(reject);
+               .catch((err) => {
+                  // Skip duplicate unique key
+                  if (err.code == "ER_DUP_KEYNAME") resolve();
+                  else reject(err);
+               });
          });
       });
    }
