@@ -550,7 +550,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
          });
          $$(ids.indexField).define("options", indexFields);
          $$(ids.indexField).refresh();
-         $$(ids.isCustomFK).show();
+
+         if (indexFields && indexFields.length) {
+            $$(ids.isCustomFK).show();
+         }
 
          ABFieldConnectComponent.logic.checkCustomFK();
       }
