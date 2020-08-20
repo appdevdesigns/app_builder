@@ -1154,6 +1154,12 @@ module.exports = class ABViewForm extends ABViewFormCore {
     * @param {ABDatacollection} dcLink [optional]
     */
    getFormValues(formView, obj, dcLink) {
+      // get the fields that are on this form
+      var visibleFields = [];
+      var loopForm = formView.getValues(function(obj) {
+         visibleFields.push(obj.config.name);
+      });
+
       // get update data
       var formVals = formView.getValues();
 
@@ -1169,6 +1175,19 @@ module.exports = class ABViewForm extends ABViewFormCore {
             formVals[f.field().columnName] = vComponent.logic.getValue(
                formVals
             );
+      });
+
+      // remove connected fields if they were not on the form and they are present in the formVals because it is a datacollection
+      obj.fields().forEach((f) => {
+         if (
+            f.key == "connectObject" &&
+            visibleFields.indexOf(f.columnName) == -1 &&
+            formVals[f.columnName]
+         ) {
+            delete formVals[f.columnName];
+            if (formVals[f.columnName + "__relation"])
+               delete formVals[f.columnName + "__relation"];
+         }
       });
 
       // clear undefined values or empty arrays
