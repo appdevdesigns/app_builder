@@ -215,7 +215,7 @@ module.exports = class ABModel extends ABModelCore {
       if (typeof id == undefined)
          return errorReturn("ABModel.relate(): missing id");
       if (typeof fieldRef == undefined)
-         return errorReturn("ABModel.relate(): missing id");
+         return errorReturn("ABModel.relate(): missing fieldRef");
       if (typeof value == undefined)
          return errorReturn("ABModel.relate(): missing value");
 
@@ -232,7 +232,19 @@ module.exports = class ABModel extends ABModelCore {
          return errorReturn(
             `ABModel.relate(): provided field[${fieldRef}] could not resolve its object`
          );
-      var fieldPK = dl.PK();
+
+      let indexField = abField.indexField;
+
+      // M:N case
+      if (
+         abField.settings.linkType == "many" &&
+         abField.settings.linkViaType == "many" &&
+         (indexField == null || indexField.object.id != dl.id)
+      ) {
+         indexField = abField.indexField2;
+      }
+
+      var fieldPK = indexField ? indexField.columnName : dl.PK();
 
       // which is correct?
       // var relationName = abField.relationName();
