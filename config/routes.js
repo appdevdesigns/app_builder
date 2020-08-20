@@ -103,6 +103,12 @@ module.exports = {
    "delete /app_builder/migrate/object/:objID/field/:fieldID":
       "app_builder/ABMigrationController.dropField",
 
+   "post /app_builder/migrate/object/:objID/index/:indexID":
+      "app_builder/ABMigrationController.createIndex",
+
+   "delete /app_builder/migrate/object/:objID/index/:indexID":
+      "app_builder/ABMigrationController.dropIndex",
+
    /* Model Services */
    // app_builder/model/application/:appID/object/:objID
    // get  url   // find   the object data

@@ -166,6 +166,7 @@ module.exports = class ABField extends ABFieldCore {
 
                      knex.schema
                         .table(tableName, (t) => {
+                           t.dropForeign(this.columnName);
                            t.dropColumn(this.columnName);
                         })
                         .then(next)
@@ -173,7 +174,7 @@ module.exports = class ABField extends ABFieldCore {
                            if (error.code == "ER_CANT_DROP_FIELD_OR_KEY") {
                               next();
                            } else {
-                              err(err);
+                              err(error);
                            }
                         });
                   })

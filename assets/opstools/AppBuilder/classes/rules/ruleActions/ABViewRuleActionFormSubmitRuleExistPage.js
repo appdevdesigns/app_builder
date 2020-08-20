@@ -206,7 +206,22 @@ module.exports = class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRul
                var tab = tabView.parent;
                if (!tab) return resolve();
 
-               tab.emit("changeTab", tabView.id);
+               var toggleParent = (element) => {
+                  if (!element.parent) return false;
+                  var parentElem = element.parent;
+                  if (!parentElem.parent) return false;
+                  parentElem.parent.emit("changeTab", parentElem.id);
+                  toggleParent(parentElem.parent);
+               };
+
+               toggleParent(tab);
+               let showIt = setInterval(function() {
+                  if ($$(tabView.id) && $$(tabView.id).isVisible()) {
+                     clearInterval(showIt);
+                     return;
+                  }
+                  tab.emit("changeTab", tabView.id);
+               }, 100);
             }
          }
 

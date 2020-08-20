@@ -255,6 +255,11 @@ var ABFieldConnectComponent = new ABFieldComponent({
                "*Select index field"
             ),
             options: []
+            // on: {
+            //    onChange: () => {
+            //       ABFieldConnectComponent.logic.updateColumnName();
+            //    }
+            // }
          },
          {
             id: ids.indexField2,
@@ -336,6 +341,8 @@ var ABFieldConnectComponent = new ABFieldComponent({
             )
          );
 
+         // keep the column name element to use when custom index is checked
+         ABFieldConnectComponent._$columnName = $$(pass_ids.columnName);
          ABFieldConnectComponent.logic.updateCustomIndex();
       },
 
@@ -444,6 +451,8 @@ var ABFieldConnectComponent = new ABFieldComponent({
                $$(ids.indexField2).show();
             }
          }
+
+         // ABFieldConnectComponent.logic.updateColumnName();
       },
 
       updateCustomIndex: () => {
@@ -452,7 +461,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
          let linkViaType = $$(ids.linkViaType).getValue();
 
          let sourceObject = null; // object stores index column
-         let indexLinkFields = null; // the index fields of link object M:N
+         let linkIndexes = null; // the index fields of link object M:N
 
          $$(ids.indexField2).define("options", []);
          $$(ids.indexField2).refresh();
@@ -480,18 +489,25 @@ var ABFieldConnectComponent = new ABFieldComponent({
             )[0];
 
             // Populate the second index fields
-            indexLinkFields = linkObject.indexFields();
-            if (indexLinkFields && indexLinkFields.length > 0) {
-               $$(ids.indexField2).define(
-                  "options",
-                  indexLinkFields.map((f) => {
-                     return {
-                        id: f.id,
-                        value: `${linkObject.label} - ${f.label}`
-                     };
-                  })
-               );
-            }
+            let linkIndexFields = [];
+            linkIndexes = linkObject.indexes((idx) => idx.unique);
+            (linkIndexes || []).forEach((idx) => {
+               (idx.fields || []).forEach((f) => {
+                  if (
+                     !f ||
+                     !f.settings ||
+                     !f.settings.required ||
+                     linkIndexFields.filter((opt) => opt.id == f.id).length
+                  )
+                     return;
+
+                  linkIndexFields.push({
+                     id: f.id,
+                     value: f.label
+                  });
+               });
+            });
+            $$(ids.indexField2).define("options", linkIndexFields);
             $$(ids.indexField2).refresh();
          }
 
@@ -503,10 +519,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
             return;
          }
 
-         let indexFields = sourceObject.indexFields();
+         let indexes = sourceObject.indexes((idx) => idx.unique);
          if (
-            (!indexFields || indexFields.length < 1) &&
-            (!indexLinkFields || indexLinkFields.length < 1)
+            (!indexes || indexes.length < 1) &&
+            (!linkIndexes || linkIndexes.length < 1)
          ) {
             $$(ids.isCustomFK).hide();
             $$(ids.indexField).define("options", []);
@@ -514,20 +530,62 @@ var ABFieldConnectComponent = new ABFieldComponent({
             return;
          }
 
-         $$(ids.isCustomFK).show();
-         $$(ids.indexField).define(
-            "options",
-            indexFields.map((f) => {
-               return {
+         let indexFields = [];
+         (indexes || []).forEach((idx) => {
+            (idx.fields || []).forEach((f) => {
+               if (
+                  !f ||
+                  !f.settings ||
+                  !f.settings.required ||
+                  indexFields.filter((opt) => opt.id == f.id).length
+               )
+                  return;
+
+               indexFields.push({
                   id: f.id,
-                  value: `${sourceObject.label} - ${f.label}`
-               };
-            })
-         );
+                  value: f.label,
+                  field: f
+               });
+            });
+         });
+         $$(ids.indexField).define("options", indexFields);
          $$(ids.indexField).refresh();
+
+         if (indexFields && indexFields.length) {
+            $$(ids.isCustomFK).show();
+         }
 
          ABFieldConnectComponent.logic.checkCustomFK();
       }
+
+      // updateColumnName: () => {
+      //    let isChecked = $$(ids.isCustomFK).getValue();
+      //    let indexFieldId = $$(ids.indexField).getValue();
+      //    let indexFieldOpt = (
+      //       $$(ids.indexField).getList().config.data || []
+      //    ).filter((opt) => opt.id == indexFieldId)[0];
+
+      //    if (isChecked && indexFieldOpt && indexFieldOpt.field) {
+      //       // Disable & Update the column name
+      //       if (ABFieldConnectComponent._$columnName) {
+      //          let linkObjectId = $$(ids.linkObject).getValue();
+      //          let linkObject = ABFieldConnectComponent.CurrentApplication.objects(
+      //             (o) => o.id == linkObjectId
+      //          )[0];
+      //          if (linkObject) {
+      //             ABFieldConnectComponent._$columnName.setValue(
+      //                `${linkObject.name}.${indexFieldOpt.field.columnName}`
+      //             );
+      //          }
+      //          ABFieldConnectComponent._$columnName.disable();
+      //       }
+      //    } else {
+      //       // Enable the column name element
+      //       if (ABFieldConnectComponent._$columnName) {
+      //          ABFieldConnectComponent._$columnName.enable();
+      //       }
+      //    }
+      // }
    }
 });
 
