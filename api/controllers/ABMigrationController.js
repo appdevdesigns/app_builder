@@ -66,16 +66,42 @@ module.exports = {
     * post app_builder/migrate/object/:objID/index/:indexID
     */
    createIndex: function(req, res) {
-      simpleIndexOperation(req, res, "createIndex")
-         .then(function() {
-            res.AD.success({ good: "job" });
-         })
-         .catch(function(err) {
-            ADCore.error.log("ABMigration.createIndex() failed:", {
-               error: err
-            });
-            res.AD.error(err, 500);
-         });
+      let newIndexVals = req.body;
+      let objID = req.param("objID", -1);
+
+      return (Promise.resolve()
+            .then(() => ABGraphObject.findOne(objID))
+            .then(
+               (objectData) =>
+                  new Promise((next, err) => {
+                     if (!objectData) {
+                        let missingObj = new Error("Missing Object");
+                        missingObj.objID = objID;
+                        console.log(`Error: Missing Object from id: ${objID}`);
+                        return err(missingObj);
+                     }
+
+                     let object = objectData.toABClass();
+                     let index = object.application.indexNew(
+                        newIndexVals,
+                        object
+                     );
+                     next(index);
+                  })
+            )
+            // Create MySQL index
+            .then((index) => ABMigration.createIndex(index))
+            // TODO: Save index to ABObject
+            .then(function() {
+               res.AD.success({ good: "job" });
+            })
+            .catch(function(err) {
+               ADCore.error.log("ABMigration.createIndex() failed:", {
+                  error: err
+               });
+               res.AD.error(err, 500);
+            })
+      );
    },
 
    /**

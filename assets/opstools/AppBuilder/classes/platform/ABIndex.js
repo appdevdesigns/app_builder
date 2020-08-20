@@ -17,8 +17,8 @@ module.exports = class ABIndex extends ABIndexCore {
       if (!this.id) this.id = OP.Util.uuid();
 
       return Promise.resolve()
-         .then(() => this.object.indexSave(this))
-         .then(() => this.migrateCreate());
+         .then(() => this.migrateCreate())
+         .then(() => this.object.indexSave(this));
    }
 
    /**
@@ -44,7 +44,8 @@ module.exports = class ABIndex extends ABIndexCore {
       let url = `/app_builder/migrate/object/${this.object.id}/index/${this.id}`;
 
       return OP.Comm.Service.post({
-         url: url
+         url: url,
+         data: this.toObj()
       });
    }
 
