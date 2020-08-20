@@ -247,10 +247,18 @@ module.exports = class ABWorkObjectWorkspaceIndex extends ABComponent {
       this.CurrentIndex.fromValues(vals);
       this.CurrentIndex.save()
          .catch((err) => {
+            let message = "The system could not create your index.";
+            switch (err.code) {
+               case "ER_DUP_ENTRY":
+                  message =
+                     message + " : There are duplicated values in this column.";
+                  break;
+            }
+
             webix.alert({
                type: "alert-error",
                title: "Failed",
-               text: "The system could not create your index"
+               text: message
             });
             console.error(err);
             this.ready();
