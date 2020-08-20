@@ -64,42 +64,7 @@ module.exports = {
     * post app_builder/migrate/object/:objID/index/:indexID
     */
    createIndex: function(req, res) {
-      let newIndexVals = req.body;
-      let objID = req.param("objID", -1);
-
-      return (Promise.resolve()
-            .then(() => ABGraphObject.findOne(objID))
-            .then(
-               (objectData) =>
-                  new Promise((next, err) => {
-                     if (!objectData) {
-                        let missingObj = new Error("Missing Object");
-                        missingObj.objID = objID;
-                        console.log(`Error: Missing Object from id: ${objID}`);
-                        return err(missingObj);
-                     }
-
-                     let object = objectData.toABClass();
-                     let index = object.application.indexNew(
-                        newIndexVals,
-                        object
-                     );
-                     next(index);
-                  })
-            )
-            // Create MySQL index
-            .then((index) => ABMigration.createIndex(index))
-            // TODO: Save index to ABObject
-            .then(function() {
-               res.AD.success({ good: "job" });
-            })
-            .catch(function(err) {
-               ADCore.error.log("ABMigration.createIndex() failed:", {
-                  error: err
-               });
-               res.AD.error(err, 500);
-            })
-      );
+      simpleIndexOperation(req, res, "createIndex");
    },
 
    /**
@@ -108,16 +73,7 @@ module.exports = {
     * delete app_builder/migrate/object/:objID/index/:indexID
     */
    dropIndex: function(req, res) {
-      simpleIndexOperation(req, res, "dropIndex")
-         .then(function() {
-            res.AD.success({ good: "job" });
-         })
-         .catch(function(err) {
-            ADCore.error.log("ABMigration.dropIndex() failed:", {
-               error: err
-            });
-            res.AD.error(err, 500);
-         });
+      simpleIndexOperation(req, res, "dropIndex");
    }
 };
 
@@ -364,23 +320,19 @@ function simpleIndexOperation(req, res, operation) {
    let indexID = req.param("indexID", -1);
    if (!objID || !indexID) {
       res.AD.error("Bad parameters", 400);
-      return Promise.reject();
+      return;
    }
 
-   return Promise.resolve()
-      .then(() => ABGraphObject.findOne(objID))
+   // NOTE: verifyAnd...() handles any errors and responses internally.
+   // only need to responde to an object being passed back on .resolve()
+
+   AppBuilder.routes
+      .verifyAndReturnObject(req, res)
+      // ABGraphObject.findOne(objID)
       .then(
-         (objectData) =>
+         (object) =>
             new Promise((next, err) => {
-               if (!objectData) {
-                  let missingObj = new Error("Missing Object");
-                  missingObj.objID = objID;
-                  console.log(`Error: Missing Object from id: ${objID}`);
-                  return err(missingObj);
-               }
-
-               let object = objectData.toABClass();
-
+               // Now get our index
                let index = object.indexes((idx) => idx.id == indexID)[0];
                if (!index) {
                   let missingIndex = new Error("Missing Index");
@@ -392,5 +344,15 @@ function simpleIndexOperation(req, res, operation) {
                next(index);
             })
       )
-      .then((index) => ABMigration[operation](index));
+      .then((index) =>
+         ABMigration[operation](index).then(function() {
+            res.AD.success({ good: "job" });
+         })
+      )
+      .catch(function(err) {
+         ADCore.error.log(`ABMigration.${operation}() failed:`, {
+            error: err
+         });
+         res.AD.error(err, 500);
+      });
 }
