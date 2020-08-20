@@ -168,8 +168,6 @@ module.exports = class ABWorkObjectWorkspaceIndex extends ABComponent {
       if ($fields && this.CurrentObject) {
          let fields = this.CurrentObject.fields((f) => {
             return (
-               f.key == "string" ||
-               f.key == "LongText" ||
                f.key == "number" ||
                f.key == "date" ||
                f.key == "datetime" ||
@@ -179,6 +177,9 @@ module.exports = class ABWorkObjectWorkspaceIndex extends ABComponent {
                f.key == "user" ||
                f.key == "AutoIndex" ||
                f.key == "customIndex" ||
+               ((f.key == "string" || f.key == "LongText") &&
+                  f.settings &&
+                  !f.settings.supportMultilingual) ||
                (f.key == "connectObject" &&
                   // 1:M
                   ((f.settings.linkType == "one" &&
@@ -246,6 +247,19 @@ module.exports = class ABWorkObjectWorkspaceIndex extends ABComponent {
       this.CurrentIndex.fromValues(vals);
       this.CurrentIndex.save()
          .catch((err) => {
+            let message = "The system could not create your index.";
+            switch (err.code) {
+               case "ER_DUP_ENTRY":
+                  message =
+                     message + " : There are duplicated values in this column.";
+                  break;
+            }
+
+            webix.alert({
+               type: "alert-error",
+               title: "Failed",
+               text: message
+            });
             console.error(err);
             this.ready();
          })
