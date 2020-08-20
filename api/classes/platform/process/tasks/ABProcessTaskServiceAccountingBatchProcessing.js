@@ -610,7 +610,11 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       var categoryOption = categoryOptions.find(
          (o) => o.id == account["Category"]
       );
-      if (categoryOption) type = categoryOption.text;
+      if (!categoryOption) {
+         return null;
+      }
+
+      type = categoryOption.text;
       return type.toLowerCase();
    }
 };

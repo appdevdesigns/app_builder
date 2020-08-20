@@ -105,17 +105,17 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             settings.summaryColumns.length > 0 ||
             settings.countColumns.length > 0, // show footer when there are summary columns
          tooltip: {
-            id: ids.tooltip,
+            // id: ids.tooltip,
             template: function(obj, common) {
                return _logic.toolTip(obj, common);
             },
             on: {
                // When showing a larger image preview the tooltip sometime displays part of the image off the screen...this attempts to fix that problem
                onBeforeRender: function() {
-                  _logic.toolTipOnBeforeRender();
+                  _logic.toolTipOnBeforeRender(this.getNode());
                },
                onAfterRender: function(data) {
-                  _logic.toolTipOnAfterRender();
+                  _logic.toolTipOnAfterRender(this.getNode());
                }
             }
          },
@@ -949,7 +949,18 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             let DataTable = $$(this.ui.id);
             CurrentDatacollection = datacollection;
             if (CurrentDatacollection) {
-               CurrentDatacollection.bind(DataTable);
+               if (
+                  CurrentDatacollection.datacollectionLink &&
+                  CurrentDatacollection.fieldLink
+               ) {
+                  CurrentDatacollection.bind(
+                     DataTable,
+                     CurrentDatacollection.datacollectionLink,
+                     CurrentDatacollection.fieldLink
+                  );
+               } else {
+                  CurrentDatacollection.bind(DataTable);
+               }
                CurrentDatacollection.on("initializingData", () => {
                   _logic.busy();
                });
@@ -1518,8 +1529,8 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
           *
           * Add visibility "hidden" to all tooltips before render so we can move to a new location without the visual jump
           */
-         toolTipOnBeforeRender: function() {
-            var node = $$(ids.tooltip).getNode();
+         toolTipOnBeforeRender: function(node) {
+            // var node = $$(ids.tooltip).getNode();
             node.style.visibility = "hidden";
          },
 
@@ -1528,8 +1539,8 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
           *
           * If the tooltip is displaying off the screen we want to try to reposition it for a better experience
           */
-         toolTipOnAfterRender: function() {
-            var node = $$(ids.tooltip).getNode();
+         toolTipOnAfterRender: function(node) {
+            // var node = $$(ids.tooltip).getNode();
             if (node.firstChild != null && node.firstChild.nodeName == "IMG") {
                setTimeout(function() {
                   var imgBottom =
