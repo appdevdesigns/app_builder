@@ -35,7 +35,7 @@ module.exports = class ABModel extends ABModelCore {
 
          // Used by knex.transaction, the transacting method may be chained to any query and
          // passed the object you wish to join the query as part of the transaction for.
-         if (trx) query.transacting(trx);
+         if (trx) query = query.transacting(trx);
 
          var PK = this.object.PK();
 
@@ -165,7 +165,7 @@ module.exports = class ABModel extends ABModelCore {
 
          // Used by knex.transaction, the transacting method may be chained to any query and
          // passed the object you wish to join the query as part of the transaction for.
-         if (trx) query.transacting(trx);
+         if (trx) query = query.transacting(trx);
 
          var PK = this.object.PK();
 
@@ -285,7 +285,7 @@ module.exports = class ABModel extends ABModelCore {
 
                // Used by knex.transaction, the transacting method may be chained to any query and
                // passed the object you wish to join the query as part of the transaction for.
-               if (trx) relateQuery.transacting(trx);
+               if (trx) relateQuery = relateQuery.transacting(trx);
 
                return relateQuery;
             })
