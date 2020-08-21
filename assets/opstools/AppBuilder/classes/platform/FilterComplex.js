@@ -151,10 +151,10 @@ module.exports = class FilterComplex extends FilterComplexCore {
 
       // internal list of Webix IDs to reference our UI components.
       let ids = (this.ids = {
-         filterForm: this.unique(idBase + "_rowFilter_form"),
-         popup: this.unique(idBase + "_popup"),
-         querybuilder: this.unique(idBase + "_querybuilder"),
-         save: this.unique(idBase + "_save")
+         filterForm: idBase + "_rowFilter_form",
+         popup: idBase + "_popup",
+         querybuilder: idBase + "_querybuilder",
+         save: idBase + "_save"
       });
 
       // Default options list to push to all fields
