@@ -500,7 +500,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
                         linkIndexFields.filter((opt) => opt.id == f.id)
                            .length) &&
                      f.key != "AutoIndex" &&
-                     f.key != "customIndex"
+                     f.key != "combined"
                   )
                      return;
 
@@ -542,7 +542,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
                      !f.settings.required ||
                      indexFields.filter((opt) => opt.id == f.id).length) &&
                   f.key != "AutoIndex" &&
-                  f.key != "customIndex"
+                  f.key != "combined"
                )
                   return;
 

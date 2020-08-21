@@ -6,7 +6,7 @@ function L(key, altText) {
 }
 
 var ids = {
-   combinedFields: "ab-new-customIndex-combinedFields"
+   combinedFields: "ab-new-combined-combinedFields"
 };
 
 const defaultValues = ABFieldCombineCore.defaultValues();
@@ -32,7 +32,7 @@ var ABFieldCombineComponent = new ABFieldComponent({
             id: ids.combinedFields,
             name: "combinedFields",
             view: "multicombo",
-            label: L("ab.customIndex.combinedFields", "*Combined Fields"),
+            label: L("ab.combined.combinedFields", "*Combined Fields"),
             labelWidth: App.config.labelWidthXLarge,
             disallowEdit: true,
             options: []
@@ -40,7 +40,7 @@ var ABFieldCombineComponent = new ABFieldComponent({
          {
             view: "richselect",
             name: "delimiter",
-            label: L("ab.customIndex.delimiter", "*Delimiter"),
+            label: L("ab.combined.delimiter", "*Delimiter"),
             value: defaultValues.delimiter,
             labelWidth: App.config.labelWidthXLarge,
             disallowEdit: true,
@@ -82,7 +82,7 @@ var ABFieldCombineComponent = new ABFieldComponent({
                f.key == "email" ||
                f.key == "user" ||
                f.key == "AutoIndex" ||
-               f.key == "customIndex" ||
+               f.key == "combined" ||
                (f.key == "connectObject" &&
                   // 1:M
                   ((f.settings.linkType == "one" &&
