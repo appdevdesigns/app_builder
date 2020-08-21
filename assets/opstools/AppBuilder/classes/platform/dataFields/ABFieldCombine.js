@@ -1,5 +1,5 @@
-var ABFieldCombineCore = require("app_builder/assets/opstools/AppBuilder/classes/core/dataFields/ABFieldCombineCore");
-var ABFieldComponent = require("app_builder/assets/opstools/AppBuilder/classes/platform/dataFields/ABFieldComponent");
+var ABFieldCombineCore = require("../../core/dataFields/ABFieldCombineCore");
+var ABFieldComponent = require("./ABFieldComponent");
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
