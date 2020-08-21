@@ -80,7 +80,6 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                id: ids.modelerWorking,
                cols: [
                   {
-                     id: ids.modelerWorking,
                      view: "template",
                      // height: 800,
                      template: `<div id="${ids.modeler}" style="width: 100%; height: 100%;"></div>`
