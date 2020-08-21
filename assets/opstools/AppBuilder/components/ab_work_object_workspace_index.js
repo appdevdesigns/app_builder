@@ -176,7 +176,7 @@ module.exports = class ABWorkObjectWorkspaceIndex extends ABComponent {
                f.key == "email" ||
                f.key == "user" ||
                f.key == "AutoIndex" ||
-               f.key == "customIndex" ||
+               f.key == "combined" ||
                ((f.key == "string" || f.key == "LongText") &&
                   f.settings &&
                   !f.settings.supportMultilingual) ||

@@ -157,7 +157,7 @@ steal(
                               rows: [
                                  {
                                     view: "toolbar",
-                                    id: "myToolbar",
+                                    id: "myToolbarABLiveTool",
                                     css: "webix_dark",
                                     cols: [
                                        {
@@ -465,7 +465,6 @@ steal(
                                     width: 15
                                  },
                                  {
-                                    id: "taskTitle",
                                     view: "label",
                                     label: "Access Manager",
                                     autowidth: true

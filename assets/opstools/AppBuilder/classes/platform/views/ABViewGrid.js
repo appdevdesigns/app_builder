@@ -1134,13 +1134,13 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                .then(
                   () =>
                      new Promise((next, err) => {
-                        if (
-                           !this.settings ||
-                           !this.settings.gridFilter ||
-                           this.settings.gridFilter.filterOption != 3
-                        )
-                           // Global search
-                           return next();
+                        // if (
+                        //    !this.settings ||
+                        //    !this.settings.gridFilter ||
+                        //    this.settings.gridFilter.filterOption != 3
+                        // )
+                        //    // Global search
+                        //    return next();
 
                         let dc = this.datacollection;
                         if (
@@ -1152,7 +1152,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                            return next();
 
                         // Load all data
-                        dc.loadData(0, null)
+                        dc.reloadData(0, null)
                            .catch(err)
                            .then(() => {
                               // Should set .loadAll to this data collection ?

@@ -494,10 +494,13 @@ var ABFieldConnectComponent = new ABFieldComponent({
             (linkIndexes || []).forEach((idx) => {
                (idx.fields || []).forEach((f) => {
                   if (
-                     !f ||
-                     !f.settings ||
-                     !f.settings.required ||
-                     linkIndexFields.filter((opt) => opt.id == f.id).length
+                     (!f ||
+                        !f.settings ||
+                        !f.settings.required ||
+                        linkIndexFields.filter((opt) => opt.id == f.id)
+                           .length) &&
+                     f.key != "AutoIndex" &&
+                     f.key != "combined"
                   )
                      return;
 
@@ -534,10 +537,12 @@ var ABFieldConnectComponent = new ABFieldComponent({
          (indexes || []).forEach((idx) => {
             (idx.fields || []).forEach((f) => {
                if (
-                  !f ||
-                  !f.settings ||
-                  !f.settings.required ||
-                  indexFields.filter((opt) => opt.id == f.id).length
+                  (!f ||
+                     !f.settings ||
+                     !f.settings.required ||
+                     indexFields.filter((opt) => opt.id == f.id).length) &&
+                  f.key != "AutoIndex" &&
+                  f.key != "combined"
                )
                   return;
 

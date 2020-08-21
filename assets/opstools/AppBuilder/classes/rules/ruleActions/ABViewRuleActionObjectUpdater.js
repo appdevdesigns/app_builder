@@ -1053,7 +1053,7 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
                         field.datasourceLink
                            .fields(
                               (f) =>
-                                 f.key == "customIndex" || f.key == "AutoIndex"
+                                 f.key == "combined" || f.key == "AutoIndex"
                            )
                            .forEach((f) => {
                               objectToUpdate[field.columnName][f.columnName] =
