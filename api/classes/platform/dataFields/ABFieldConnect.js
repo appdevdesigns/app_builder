@@ -374,8 +374,12 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                   }
                ],
                (err) => {
-                  if (err) reject(err);
-                  else resolve();
+                  if (err) {
+                     if (err.code == "ER_DUP_FIELDNAME") resolve();
+                     else reject(err);
+                  } else {
+                     resolve();
+                  }
                }
             );
          }
