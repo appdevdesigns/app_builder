@@ -1,4 +1,4 @@
-const ABFieldCustomIndexCore = require("../../core/dataFields/ABFieldCustomIndexCore");
+const ABFieldCombineCore = require("../../core/dataFields/ABFieldCombineCore");
 
 const MAX_VALUE_LENGTH = 535;
 const DELIMITERS = {
@@ -8,7 +8,7 @@ const DELIMITERS = {
    space: " "
 };
 
-module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
+module.exports = class ABFieldCombine extends ABFieldCombineCore {
    constructor(values, object) {
       super(values, object);
    }
@@ -51,7 +51,7 @@ module.exports = class ABFieldCustomIndex extends ABFieldCustomIndexCore {
                                  // Create a new column here.
                                  t.specificType(
                                     this.columnName,
-                                    `VARCHAR(${MAX_VALUE_LENGTH}) NULL UNIQUE`
+                                    `VARCHAR(${MAX_VALUE_LENGTH}) NULL`
                                  );
                               })
                               .then(() => {

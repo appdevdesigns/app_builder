@@ -889,7 +889,7 @@ module.exports = class RowFilter extends RowFilterCore {
          batchName = field.key;
          if (field.id == "this_object") batchName = "query";
          // Special this object query
-         else if (batchName == "LongText" || batchName == "customIndex")
+         else if (batchName == "LongText" || batchName == "combined")
             batchName = "string";
          else if (field.key == "formula") batchName = "number";
          var isQueryField =
