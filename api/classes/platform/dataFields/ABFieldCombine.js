@@ -51,7 +51,7 @@ module.exports = class ABFieldCombine extends ABFieldCombineCore {
                                  // Create a new column here.
                                  t.specificType(
                                     this.columnName,
-                                    `VARCHAR(${MAX_VALUE_LENGTH}) NULL UNIQUE`
+                                    `VARCHAR(${MAX_VALUE_LENGTH}) NULL`
                                  );
                               })
                               .then(() => {
