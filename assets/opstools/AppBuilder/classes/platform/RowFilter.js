@@ -152,26 +152,30 @@ module.exports = class RowFilter extends RowFilterCore {
 
       // internal list of Webix IDs to reference our UI components.
       let ids = (this.ids = {
-         component: idBase + "_rowFilter",
-         filterForm: idBase + "_rowFilter_form",
-         addNewFilter: idBase + "_rowFilter_addNewFilter",
+         component: this.unique(idBase + "_rowFilter"),
+         filterForm: this.unique(idBase + "_rowFilter_form"),
+         addNewFilter: this.unique(idBase + "_rowFilter_addNewFilter"),
 
-         glue: idBase + "_rowFilter_glue",
-         field: idBase + "_rowFilter_field",
-         rule: idBase + "_rowFilter_rule",
-         inputValue: idBase + "_rowFilter_inputValue",
+         glue: this.unique(idBase + "_rowFilter_glue"),
+         field: this.unique(idBase + "_rowFilter_field"),
+         rule: this.unique(idBase + "_rowFilter_rule"),
+         inputValue: this.unique(idBase + "_rowFilter_inputValue"),
 
-         queryCombo: idBase + "_rowFilter_queryCombo",
-         queryFieldCombo: idBase + "_rowFilter_queryFieldCombo",
-         queryFieldComboQuery: idBase + "_rowFilter_queryFieldComboQuery",
-         queryFieldComboField: idBase + "_rowFilter_queryFieldComboField",
-         fieldMatch: idBase + "_rowFilter_fieldMatchCombo",
+         queryCombo: this.unique(idBase + "_rowFilter_queryCombo"),
+         queryFieldCombo: this.unique(idBase + "_rowFilter_queryFieldCombo"),
+         queryFieldComboQuery: this.unique(
+            idBase + "_rowFilter_queryFieldComboQuery"
+         ),
+         queryFieldComboField: this.unique(
+            idBase + "_rowFilter_queryFieldComboField"
+         ),
+         fieldMatch: this.unique(idBase + "_rowFilter_fieldMatchCombo"),
 
-         dataCollection: idBase + "_rowFilter_dataCollection",
+         dataCollection: this.unique(idBase + "_rowFilter_dataCollection"),
 
-         listOptions: idBase + "_rowFilter_listOptions",
+         listOptions: this.unique(idBase + "_rowFilter_listOptions"),
 
-         datePicker: idBase + "_rowFilter_datePicker"
+         datePicker: this.unique(idBase + "_rowFilter_datePicker")
       });
 
       var batchName; // we need to revert to this default when switching away from a in/by query field
