@@ -30,6 +30,8 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
     *                            false if task is still waiting
     */
    do(instance, trx) {
+      this._dbTransaction = trx;
+
       this.batchObject = this.application.objects(
          (o) => o.id == this.objectBatch
       )[0];
@@ -365,7 +367,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                      this.jeObject
                         .modelAPI()
                         .modelKnex()
-                        .query()
+                        .query(trx)
                         .delete()
                         .where("uuid", "IN", jeIds)
                         .catch(bad)

@@ -32,6 +32,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
     * do()
     * this method actually performs the action for this task.
     * @param {obj} instance  the instance data of the running process
+    * @param {Knex.Transaction?} trx - [optional]
     * @return {Promise}
     *      resolve(true/false) : true if the task is completed.
     *                            false if task is still waiting
@@ -232,7 +233,11 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
          ] = this.fieldJEStatusComplete;
          this.jeObject
             .modelAPI()
-            .update(journalEntry[this.jeObject.PK()], updateValue, this._dbTransaction)
+            .update(
+               journalEntry[this.jeObject.PK()],
+               updateValue,
+               this._dbTransaction
+            )
             .then(() => {
                resolve();
             })
