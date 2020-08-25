@@ -210,37 +210,35 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             return;
          }
 
-         // var rcID = journalEntry[this.jeRCField.columnName];
-         // this.processBalanceRecord(
-         //    financialPeriod,
-         //    accountID,
-         //    rcID,
-         //    journalEntry
-         // )
-         //    .then(() => {
-
-         // set JE.status = Complete
-         journalEntry[
-            this.jeStatusField.columnName
-         ] = this.fieldJEStatusComplete;
-
-         var updateValue = {};
-         updateValue[
-            this.jeStatusField.columnName
-         ] = this.fieldJEStatusComplete;
-         this.jeObject
-            .modelAPI()
-            .update(journalEntry[this.jeObject.PK()], updateValue)
+         var rcID = journalEntry[this.jeRCField.columnName];
+         this.processBalanceRecord(
+            financialPeriod,
+            accountID,
+            rcID,
+            journalEntry
+         )
             .then(() => {
-               resolve();
-            })
-            .catch(reject);
+               // set JE.status = Complete
+               journalEntry[
+                  this.jeStatusField.columnName
+               ] = this.fieldJEStatusComplete;
 
-         // })
-         // .catch((error) => {
-         //    console.error(error);
-         //    reject(error);
-         // });
+               var updateValue = {};
+               updateValue[
+                  this.jeStatusField.columnName
+               ] = this.fieldJEStatusComplete;
+               this.jeObject
+                  .modelAPI()
+                  .update(journalEntry[this.jeObject.PK()], updateValue)
+                  .then(() => {
+                     resolve();
+                  })
+                  .catch(reject);
+            })
+            .catch((error) => {
+               console.error(error);
+               reject(error);
+            });
       });
    }
 
@@ -248,207 +246,207 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
    //    figure out which Account.category field ()
    //
 
-   // processBalanceRecord(financialPeriodID, AccountID, RCID, journalEntry) {
-   //    //         get BalanceRecord
-   //    //         if (BalanceRecord not Found)
-   //    //             Create BalanceRecord
-   //    //         add this JE to BalanceRecord.entries
+   processBalanceRecord(financialPeriodID, AccountID, RCID, journalEntry) {
+      //         get BalanceRecord
+      //         if (BalanceRecord not Found)
+      //             Create BalanceRecord
+      //         add this JE to BalanceRecord.entries
 
-   //    return new Promise((resolve, reject) => {
-   //       var balanceRecord = null;
+      return new Promise((resolve, reject) => {
+         var balanceRecord = null;
 
-   //       // find Account 3991
-   //       var acct3991 = this.allAccountRecords.find(
-   //          (a) => a["Acct Num"] == 3991
-   //       );
+         // find Account 3991
+         var acct3991 = this.allAccountRecords.find(
+            (a) => a["Acct Num"] == 3991
+         );
 
-   //       async.series(
-   //          [
-   //             (done) => {
-   //                var balCond = { glue: "and", rules: [] };
-   //                balCond.rules.push({
-   //                   key: this.brFinancialPeriodField.id,
-   //                   rule: "equals",
-   //                   value: financialPeriodID
-   //                });
-   //                balCond.rules.push({
-   //                   key: this.brAccountField.id,
-   //                   rule: "equals",
-   //                   value: AccountID
-   //                });
+         async.series(
+            [
+               (done) => {
+                  var balCond = { glue: "and", rules: [] };
+                  balCond.rules.push({
+                     key: this.brFinancialPeriodField.id,
+                     rule: "equals",
+                     value: financialPeriodID
+                  });
+                  balCond.rules.push({
+                     key: this.brAccountField.id,
+                     rule: "equals",
+                     value: AccountID
+                  });
 
-   //                if (RCID) {
-   //                   balCond.rules.push({
-   //                      key: this.brRCField.id,
-   //                      rule: "equals",
-   //                      value: RCID
-   //                   });
-   //                } else {
-   //                   balCond.rules.push({
-   //                      key: this.brRCField.id,
-   //                      rule: "is_null",
-   //                      value: null
-   //                   });
-   //                }
-   //                // try to find existing BalanceRecord matching our balCond
-   //                this.brObject
-   //                   .modelAPI()
-   //                   .findAll({ where: balCond, populate: true })
-   //                   .then((rows) => {
-   //                      balanceRecord = rows[0];
-   //                      done();
-   //                   })
-   //                   .catch((err) => {
-   //                      // TODO: need to pass in .instance so we can do a this.log()
-   //                      done(err);
-   //                   });
-   //             },
+                  if (RCID) {
+                     balCond.rules.push({
+                        key: this.brRCField.id,
+                        rule: "equals",
+                        value: RCID
+                     });
+                  } else {
+                     balCond.rules.push({
+                        key: this.brRCField.id,
+                        rule: "is_null",
+                        value: null
+                     });
+                  }
+                  // try to find existing BalanceRecord matching our balCond
+                  this.brObject
+                     .modelAPI()
+                     .findAll({ where: balCond, populate: true })
+                     .then((rows) => {
+                        balanceRecord = rows[0];
+                        done();
+                     })
+                     .catch((err) => {
+                        // TODO: need to pass in .instance so we can do a this.log()
+                        done(err);
+                     });
+               },
 
-   //             (done) => {
-   //                // create a new BalanceRecord if we didn't find one:
-   //                if (balanceRecord) {
-   //                   done();
-   //                   return;
-   //                }
+               (done) => {
+                  // create a new BalanceRecord if we didn't find one:
+                  if (balanceRecord) {
+                     done();
+                     return;
+                  }
 
-   //                // #Race Condition: if N parallel requests 1st try to find the
-   //                // balance entry and Don't, then we will get N parallel requests
-   //                // to create a new one.
-   //                // This routine will ensure only 1 unique Balance Record is created
-   //                // and returned to all N requests.
-   //                this.parallelSafeCreateBalance(
-   //                   financialPeriodID,
-   //                   AccountID,
-   //                   RCID
-   //                )
-   //                   .then((newEntry) => {
-   //                      balanceRecord = newEntry;
-   //                      done();
-   //                   })
-   //                   .catch((err) => {
-   //                      // TODO: need to pass in .instance so we can do a this.log()
-   //                      done(err);
-   //                   });
-   //             },
+                  // #Race Condition: if N parallel requests 1st try to find the
+                  // balance entry and Don't, then we will get N parallel requests
+                  // to create a new one.
+                  // This routine will ensure only 1 unique Balance Record is created
+                  // and returned to all N requests.
+                  this.parallelSafeCreateBalance(
+                     financialPeriodID,
+                     AccountID,
+                     RCID
+                  )
+                     .then((newEntry) => {
+                        balanceRecord = newEntry;
+                        done();
+                     })
+                     .catch((err) => {
+                        // TODO: need to pass in .instance so we can do a this.log()
+                        done(err);
+                     });
+               },
 
-   //             (done) => {
-   //                // sanity check at this point:
-   //                if (balanceRecord) {
-   //                   done();
-   //                   return;
-   //                }
+               (done) => {
+                  // sanity check at this point:
+                  if (balanceRecord) {
+                     done();
+                     return;
+                  }
 
-   //                var error = new Error(
-   //                   "Unable to establish a Balance Record for journal Entry:" +
-   //                      journalEntry.uuid
-   //                );
-   //                done(error);
-   //             },
+                  var error = new Error(
+                     "Unable to establish a Balance Record for journal Entry:" +
+                        journalEntry.uuid
+                  );
+                  done(error);
+               },
 
-   //             (done) => {
-   //                // update balanceRecord with new journalEntry value:
+               // (done) => {
+               //    // update balanceRecord with new journalEntry value:
 
-   //                var brID = balanceRecord[this.brObject.PK()];
-   //                this.brObject
-   //                   .modelAPI()
-   //                   .relate(brID, this.brEntriesField.id, journalEntry)
-   //                   .catch((err) => done(err))
-   //                   .then(() => {
-   //                      // mark this balance record as having been processed.
-   //                      this.balanceRecordsProcessed[brID] = brID;
-   //                      done();
-   //                   });
-   //             },
+               //    var brID = balanceRecord[this.brObject.PK()];
+               //    this.brObject
+               //       .modelAPI()
+               //       .relate(brID, this.brEntriesField.id, journalEntry)
+               //       .catch((err) => done(err))
+               //       .then(() => {
+               //          // mark this balance record as having been processed.
+               //          this.balanceRecordsProcessed[brID] = brID;
+               //          done();
+               //       });
+               // },
 
-   //             (done) => {
-   //                if (!acct3991) {
-   //                   done();
-   //                   return;
-   //                }
+               (done) => {
+                  if (!acct3991) {
+                     done();
+                     return;
+                  }
 
-   //                // if this account is Account3991 we don't need to do this again
-   //                if (AccountID == acct3991.uuid) {
-   //                   done();
-   //                   return;
-   //                }
+                  // if this account is Account3991 we don't need to do this again
+                  if (AccountID == acct3991.uuid) {
+                     done();
+                     return;
+                  }
 
-   //                // if this was a JE that was either an Income or Expnse Account
-   //                var jeType = this.lookupAccountType(journalEntry);
-   //                if (jeType == "income" || jeType == "expenses") {
-   //                   // perform another processBalanceRecord( with account3991)
-   //                   this.processBalanceRecord(
-   //                      financialPeriodID,
-   //                      acct3991.uuid,
-   //                      RCID,
-   //                      journalEntry
-   //                   )
-   //                      .then(() => {
-   //                         done();
-   //                      })
-   //                      .catch(done);
-   //                } else {
-   //                   done();
-   //                }
-   //             }
-   //          ],
-   //          (err) => {
-   //             if (err) {
-   //                reject(err);
-   //                return;
-   //             }
-   //             resolve();
-   //          }
-   //       );
-   //    });
-   // }
+                  // if this was a JE that was either an Income or Expnse Account
+                  var jeType = this.lookupAccountType(journalEntry);
+                  if (jeType == "income" || jeType == "expenses") {
+                     // perform another processBalanceRecord( with account3991)
+                     this.processBalanceRecord(
+                        financialPeriodID,
+                        acct3991.uuid,
+                        RCID,
+                        journalEntry
+                     )
+                        .then(() => {
+                           done();
+                        })
+                        .catch(done);
+                  } else {
+                     done();
+                  }
+               }
+            ],
+            (err) => {
+               if (err) {
+                  reject(err);
+                  return;
+               }
+               resolve();
+            }
+         );
+      });
+   }
 
-   // /**
-   //  * @method parallelSafeCreateBalance()
-   //  * Ensure that multiple Balance Records for matching FPID, AID and RCID are
-   //  * not created.
-   //  * @param {string} financialPeriodID
-   //  *        The uuid of the Financial Period for this Balance Record
-   //  * @param {string} AccountID
-   //  *        The uuid of the Account for this Balance Record
-   //  * @param {string} RCID
-   //  *        the uuid of the RC for this Balance Record
-   //  * @return {Promise}
-   //  *        resolved() when the given balance record is created.
-   //  */
-   // parallelSafeCreateBalance(financialPeriodID, AccountID, RCID) {
-   //    // if a create for this specific Balance Record is already In progress:
-   //    // return that Promise.
-   //    this.pendingCreates = this.pendingCreates || {};
-   //    var key = `${financialPeriodID}:${AccountID}${RCID ? ":" + RCID : ""}`;
-   //    if (!this.pendingCreates[key]) {
-   //       this.pendingCreates[key] = new Promise((resolve, reject) => {
-   //          var balValues = {
-   //             uuid: uuid(),
-   //             "Starting Balance": 0
-   //          };
-   //          balValues[
-   //             this.brFinancialPeriodField.columnName
-   //          ] = financialPeriodID;
-   //          balValues[this.brAccountField.columnName] = AccountID;
-   //          if (RCID) {
-   //             balValues[this.brRCField.columnName] = RCID;
-   //          } else {
-   //             balValues[this.brRCField.columnName] = null;
-   //          }
-   //          this.brObject
-   //             .modelAPI()
-   //             .create(balValues)
-   //             .then((newEntry) => {
-   //                resolve(newEntry);
-   //             })
-   //             .catch((err) => {
-   //                // TODO: need to pass in .instance so we can do a this.log()
-   //                reject(err);
-   //             });
-   //       });
-   //    }
-   //    return this.pendingCreates[key];
-   // }
+   /**
+    * @method parallelSafeCreateBalance()
+    * Ensure that multiple Balance Records for matching FPID, AID and RCID are
+    * not created.
+    * @param {string} financialPeriodID
+    *        The uuid of the Financial Period for this Balance Record
+    * @param {string} AccountID
+    *        The uuid of the Account for this Balance Record
+    * @param {string} RCID
+    *        the uuid of the RC for this Balance Record
+    * @return {Promise}
+    *        resolved() when the given balance record is created.
+    */
+   parallelSafeCreateBalance(financialPeriodID, AccountID, RCID) {
+      // if a create for this specific Balance Record is already In progress:
+      // return that Promise.
+      this.pendingCreates = this.pendingCreates || {};
+      var key = `${financialPeriodID}:${AccountID}${RCID ? ":" + RCID : ""}`;
+      if (!this.pendingCreates[key]) {
+         this.pendingCreates[key] = new Promise((resolve, reject) => {
+            var balValues = {
+               uuid: uuid(),
+               "Starting Balance": 0
+            };
+            balValues[
+               this.brFinancialPeriodField.columnName
+            ] = financialPeriodID;
+            balValues[this.brAccountField.columnName] = AccountID;
+            if (RCID) {
+               balValues[this.brRCField.columnName] = RCID;
+            } else {
+               balValues[this.brRCField.columnName] = null;
+            }
+            this.brObject
+               .modelAPI()
+               .create(balValues)
+               .then((newEntry) => {
+                  resolve(newEntry);
+               })
+               .catch((err) => {
+                  // TODO: need to pass in .instance so we can do a this.log()
+                  reject(err);
+               });
+         });
+      }
+      return this.pendingCreates[key];
+   }
 
    /**
     * @method recalculateBalances()
