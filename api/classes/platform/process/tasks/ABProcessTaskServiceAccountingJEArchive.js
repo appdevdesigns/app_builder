@@ -23,11 +23,15 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
     * do()
     * this method actually performs the action for this task.
     * @param {obj} instance  the instance data of the running process
+    * @param {Knex.Transaction?} trx - [optional]
+    *
     * @return {Promise}
     *      resolve(true/false) : true if the task is completed.
     *                            false if task is still waiting
     */
-   do(instance) {
+   do(instance, trx) {
+      this._dbTransaction = trx;
+
       this.batchObject = this.application.objects(
          (o) => o.id == this.objectBatch
       )[0];
@@ -155,7 +159,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                               glue: "and",
                               rules: [
                                  {
-                                    key: "uuid",
+                                    key: this.batchObject.PK(),
                                     rule: "equals",
                                     value: currentBatchID
                                  }
@@ -182,6 +186,14 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
             .then(
                () =>
                   new Promise((next, bad) => {
+                     // get custom index value to search
+                     let batchIndexVal = currentBatchID;
+                     if (this.jeBatchField.indexField) {
+                        batchIndexVal = this.batch[
+                           this.jeBatchField.indexField.columnName
+                        ];
+                     }
+
                      let cond = {
                         where: {
                            glue: "and",
@@ -189,7 +201,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                               {
                                  key: this.jeBatchField.id,
                                  rule: "equals",
-                                 value: currentBatchID
+                                 value: batchIndexVal
                               }
                            ]
                         },
@@ -340,7 +352,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            tasks.push(
                               this.jeArchiveObject
                                  .modelAPI()
-                                 .create(jeArchiveValues)
+                                 .create(jeArchiveValues, trx)
                            );
                         }
                      });
@@ -365,7 +377,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                      this.jeObject
                         .modelAPI()
                         .modelKnex()
-                        .query()
+                        .query(trx)
                         .delete()
                         .where("uuid", "IN", jeIds)
                         .catch(bad)
@@ -375,3 +387,4 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
       );
    }
 };
+
