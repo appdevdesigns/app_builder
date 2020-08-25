@@ -354,6 +354,8 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
             .then(
                () =>
                   new Promise((next, bad) => {
+                     if (!this.balances || !this.balances.length) return next();
+
                      let jeIds = (this.journals || []).map((je) => je.uuid);
                      if (!jeIds || !jeIds.length) return next();
 
