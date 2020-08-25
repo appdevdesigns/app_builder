@@ -159,7 +159,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                               glue: "and",
                               rules: [
                                  {
-                                    key: "uuid",
+                                    key: this.batchObject.PK(),
                                     rule: "equals",
                                     value: currentBatchID
                                  }
@@ -186,6 +186,14 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
             .then(
                () =>
                   new Promise((next, bad) => {
+                     // get custom index value to search
+                     let batchIndexVal = currentBatchID;
+                     if (this.jeBatchField.indexField) {
+                        batchIndexVal = this.batch[
+                           this.jeBatchField.indexField.columnName
+                        ];
+                     }
+
                      let cond = {
                         where: {
                            glue: "and",
@@ -193,7 +201,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                               {
                                  key: this.jeBatchField.id,
                                  rule: "equals",
-                                 value: currentBatchID
+                                 value: batchIndexVal
                               }
                            ]
                         },
@@ -379,3 +387,4 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
       );
    }
 };
+
