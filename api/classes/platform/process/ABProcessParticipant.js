@@ -30,6 +30,17 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
    ////
    //// Instance Methods
    ////
+
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @return {array}
+    *         any relevalt ABDefinition IDs
+    */
+   exportIDs() {
+      return [this.id];
+   }
+
    users() {
       return new Promise((resolve, reject) => {
          var allLookups = [];
