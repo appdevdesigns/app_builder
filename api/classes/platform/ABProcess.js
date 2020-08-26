@@ -54,12 +54,6 @@ module.exports = class ABProcess extends ABProcessCore {
 
       // start with Objects:
       this.elements().forEach((e) => {
-         if (!e.exportIDs) {
-            console.error(
-               "element did not have an .exportIDs() function:",
-               e.toObj()
-            );
-         }
          myIDs = myIDs.concat(e.exportIDs());
       });
 
