@@ -290,84 +290,88 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
             _logic.busy();
 
             let mockApp = new ABApplication({});
+            this._objects = mockApp.objects();
+            this._queries = mockApp.queries();
 
-            return Promise.resolve()
-               .then(
-                  () =>
-                     new Promise((next, err) => {
-                        let loadTasks = [];
+            return (
+               Promise.resolve()
+                  // .then(
+                  //    () =>
+                  //       new Promise((next, err) => {
+                  //          let loadTasks = [];
 
-                        if (!this._objects) {
-                           loadTasks.push(
-                              new Promise((ok, bad) => {
-                                 // (new ABApplication()).objectInfo()
-                                 mockApp
-                                    .objectFind()
-                                    .catch(bad)
-                                    .then((objects) => {
-                                       this._objects = objects;
-                                       mockApp._objects = objects;
-                                       ok();
-                                    });
-                              })
-                           );
-                        }
+                  //          if (!this._objects) {
+                  //             loadTasks.push(
+                  //                new Promise((ok, bad) => {
+                  //                   // (new ABApplication()).objectInfo()
+                  //                   mockApp
+                  //                      .objectFind()
+                  //                      .catch(bad)
+                  //                      .then((objects) => {
+                  //                         this._objects = objects;
+                  //                         mockApp._objects = objects;
+                  //                         ok();
+                  //                      });
+                  //                })
+                  //             );
+                  //          }
 
-                        if (!this._queries) {
-                           loadTasks.push(
-                              new Promise((ok, bad) => {
-                                 mockApp
-                                    .queryFind()
-                                    .catch(bad)
-                                    .then((queries) => {
-                                       this._queries = queries;
-                                       mockApp._queries = queries;
-                                       ok();
-                                    });
-                              })
-                           );
-                        }
+                  //          if (!this._queries) {
+                  //             loadTasks.push(
+                  //                new Promise((ok, bad) => {
+                  //                   mockApp
+                  //                      .queryFind()
+                  //                      .catch(bad)
+                  //                      .then((queries) => {
+                  //                         this._queries = queries;
+                  //                         mockApp._queries = queries;
+                  //                         ok();
+                  //                      });
+                  //                })
+                  //             );
+                  //          }
 
-                        Promise.all(loadTasks)
-                           .catch(err)
-                           .then(() => {
-                              next();
+                  //          Promise.all(loadTasks)
+                  //             .catch(err)
+                  //             .then(() => {
+                  //                next();
+                  //             });
+                  //       })
+                  // )
+                  .then(
+                     () =>
+                        new Promise((next, err) => {
+                           let objOptions = this._objects.map((o) => {
+                              return {
+                                 id: o.id,
+                                 value: o.label
+                              };
                            });
-                     })
-               )
-               .then(
-                  () =>
-                     new Promise((next, err) => {
-                        let objOptions = this._objects.map((o) => {
-                           return {
-                              id: o.id,
-                              value: o.label
-                           };
-                        });
 
-                        // let scope = _logic.getScope();
-                        // if (scope && scope.object && scope.object[0]) {
-                        //     let exists =
-                        //         objOptions.filter(
-                        //             (o) => o.id == scope.object[0].id
-                        //         ).length > 0;
-                        //     if (!exists) {
-                        //         objOptions.push({
-                        //             id: scope.object[0].id,
-                        //             value: scope.object[0].label
-                        //         });
-                        //     }
-                        // }
+                           // let scope = _logic.getScope();
+                           // if (scope && scope.object && scope.object[0]) {
+                           //     let exists =
+                           //         objOptions.filter(
+                           //             (o) => o.id == scope.object[0].id
+                           //         ).length > 0;
+                           //     if (!exists) {
+                           //         objOptions.push({
+                           //             id: scope.object[0].id,
+                           //             value: scope.object[0].label
+                           //         });
+                           //     }
+                           // }
 
-                        $$(ids.object).define("options", objOptions);
-                        $$(ids.object).refresh();
+                           $$(ids.object).define("options", objOptions);
+                           $$(ids.object).refresh();
 
-                        _logic.refreshData();
-                        _logic.ready();
+                           _logic.refreshData();
+                           _logic.ready();
 
-                        next();
-                     })
-               );
+                           next();
+                        })
+                  )
+            );
          },
 
          hide: () => {
