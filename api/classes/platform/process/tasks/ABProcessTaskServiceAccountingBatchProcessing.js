@@ -32,11 +32,14 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
     * do()
     * this method actually performs the action for this task.
     * @param {obj} instance  the instance data of the running process
+    * @param {Knex.Transaction?} trx - [optional]
     * @return {Promise}
     *      resolve(true/false) : true if the task is completed.
     *                            false if task is still waiting
     */
-   do(instance) {
+   do(instance, trx) {
+      this._dbTransaction = trx;
+
       // Setup references to the ABObject and Fields that we will use in our
       // operations.
       this.brObject = this.application.objects((o) => o.id == this.objectBR)[0];
@@ -229,7 +232,11 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                ] = this.fieldJEStatusComplete;
                this.jeObject
                   .modelAPI()
-                  .update(journalEntry[this.jeObject.PK()], updateValue)
+                  .update(
+                     journalEntry[this.jeObject.PK()],
+                     updateValue,
+                     this._dbTransaction
+                  )
                   .then(() => {
                      resolve();
                   })
@@ -560,7 +567,11 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                allUpdates.push(
                   this.brObject
                      .modelAPI()
-                     .update(balanceRecord[this.brObject.PK()], balanceRecord)
+                     .update(
+                        balanceRecord[this.brObject.PK()],
+                        balanceRecord,
+                        this._dbTransaction
+                     )
                );
             });
 
