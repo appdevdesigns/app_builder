@@ -169,7 +169,19 @@ module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
 
                   // bind a data collection to the display grid
                   datacollection.unbind($datatable);
-                  datacollection.bind($datatable);
+
+                  if (
+                     datacollection.datacollectionLink &&
+                     datacollection.fieldLink
+                  ) {
+                     datacollection.bind(
+                        $datatable,
+                        datacollection.datacollectionLink,
+                        datacollection.fieldLink
+                     );
+                  } else {
+                     datacollection.bind($datatable);
+                  }
 
                   $datatable.adjust();
 

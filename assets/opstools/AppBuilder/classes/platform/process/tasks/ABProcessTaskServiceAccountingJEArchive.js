@@ -8,13 +8,24 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
    ////
    //// Process Instance Methods
    ////
+
    propertyIDs(id) {
       return {
          name: `${id}_name`,
          processBatchValue: `${id}_processBatchValue`,
          objectBatch: `${id}_objectBatch`,
+         objectBalance: `${id}_objectBalance`,
          objectJE: `${id}_objectJE`,
          objectJEArchive: `${id}_objectJEArchive`,
+
+         fieldBatchFiscalMonth: `${id}_fieldBatchFiscalMonth`,
+         fieldJeAccount: `${id}_fieldJeAccount`,
+         fieldJeRC: `${id}_fieldJeRC`,
+         fieldJeArchiveBalance: `${id}_fieldJeArchiveBalance`,
+         fieldBrFiscalMonth: `${id}_fieldBrFiscalMonth`,
+         fieldBrAccount: `${id}_fieldBrAccount`,
+         fieldBrRC: `${id}_fieldBrRC`,
+
          fieldsMatch: `${id}_fieldsMatch`
       };
    }
@@ -42,6 +53,61 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
          id: 0,
          value: L("ab.process.accounting.selectObject", "*Select an Object")
       });
+
+      let getConnectFieldOptions = (objectId) => {
+         let object = this.application.objects((o) => o.id == objectId)[0];
+         if (!object) return [];
+
+         let options = object
+            .fields((f) => f.key == "connectObject")
+            .map((f) => {
+               return {
+                  id: f.id,
+                  value: f.label
+               };
+            });
+
+         options.unshift({
+            id: 0,
+            value: L("ab.process.accounting.selectField", "*Select a Field")
+         });
+
+         return options;
+      };
+
+      let updateFields = (fieldPickers, fieldValues) => {
+         fieldPickers.forEach((fp) => {
+            var picker = $$(fp);
+            if (picker) {
+               picker.define("options", fieldValues);
+               picker.refresh();
+               picker.show();
+            }
+         });
+      };
+
+      let refreshBatchFields = (objectId) => {
+         let options = getConnectFieldOptions(objectId);
+         updateFields([ids.fieldBatchFiscalMonth], options);
+      };
+
+      let refreshBRFields = (objectId) => {
+         let options = getConnectFieldOptions(objectId);
+         updateFields(
+            [ids.fieldBrAccount, ids.fieldBrFiscalMonth, ids.fieldBrRC],
+            options
+         );
+      };
+
+      let refreshJeFields = (objectId) => {
+         let options = getConnectFieldOptions(objectId);
+         updateFields([ids.fieldJeAccount, ids.fieldJeRC], options);
+      };
+
+      let refreshJeArchiveFields = (objectId) => {
+         let options = getConnectFieldOptions(objectId);
+         updateFields([ids.fieldJeArchiveBalance], options);
+      };
 
       let refreshFieldsMatch = () => {
          let $fieldsMatch = $$(ids.fieldsMatch);
@@ -96,6 +162,11 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
          $fieldsMatch.setValues(this.fieldsMatch || {});
       };
 
+      let fieldBatchList = getConnectFieldOptions(this.objectBatch);
+      let fieldBalanceList = getConnectFieldOptions(this.objectBalance);
+      let fieldJeList = getConnectFieldOptions(this.objectJE);
+      let fieldJeArchiveList = getConnectFieldOptions(this.objectJEArchive);
+
       let ui = {
          id: id,
          view: "form",
@@ -127,7 +198,68 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
                label: L("ab.process.accounting.objectBatch", "*Batch Object"),
                value: this.objectBatch,
                name: "objectBatch",
-               options: objectList
+               options: objectList,
+               on: {
+                  onChange: (newVal) => {
+                     this.objectBatch = newVal;
+                     refreshBatchFields(newVal);
+                  }
+               }
+            },
+            {
+               id: ids.fieldBatchFiscalMonth,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldBatchFiscalMonth",
+                  "*Batch -> Fiscal Month"
+               ),
+               value: this.fieldBatchFiscalMonth,
+               name: "fieldBatchFiscalMonth",
+               options: fieldBatchList
+            },
+            {
+               id: ids.objectBalance,
+               view: "select",
+               label: L("ab.process.accounting.objectBalance", "*BR Object"),
+               value: this.objectBalance,
+               name: "objectBalance",
+               options: objectList,
+               on: {
+                  onChange: (newVal) => {
+                     this.objectBalance = newVal;
+                     refreshBRFields(newVal);
+                  }
+               }
+            },
+            {
+               id: ids.fieldBrFiscalMonth,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldBrFiscalMonth",
+                  "*BR -> Fiscal Month"
+               ),
+               value: this.fieldBrFiscalMonth,
+               name: "fieldBrFiscalMonth",
+               options: fieldBalanceList
+            },
+            {
+               id: ids.fieldBrAccount,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldBrAccount",
+                  "*BR -> Account"
+               ),
+               value: this.fieldBrAccount,
+               name: "fieldBrAccount",
+               options: fieldBalanceList
+            },
+            {
+               id: ids.fieldBrRC,
+               view: "select",
+               label: L("ab.process.accounting.fieldBrRC", "*BR -> RC"),
+               value: this.fieldBrRC,
+               name: "fieldBrRC",
+               options: fieldBalanceList
             },
             {
                id: ids.objectJE,
@@ -139,9 +271,29 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
                on: {
                   onChange: (newVal) => {
                      this.objectJE = newVal;
+                     refreshJeFields(newVal);
                      refreshFieldsMatch();
                   }
                }
+            },
+            {
+               id: ids.fieldJeAccount,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldJeAccount",
+                  "*JE -> Account"
+               ),
+               value: this.fieldJeAccount,
+               name: "fieldJeAccount",
+               options: fieldJeList
+            },
+            {
+               id: ids.fieldJeRC,
+               view: "select",
+               label: L("ab.process.accounting.fieldJeRC", "*JE -> RC"),
+               value: this.fieldJeRC,
+               name: "fieldJeRC",
+               options: fieldJeList
             },
             {
                id: ids.objectJEArchive,
@@ -156,9 +308,21 @@ module.exports = class AccountingJEArchive extends AccountingJEArchiveCore {
                on: {
                   onChange: (newVal) => {
                      this.objectJEArchive = newVal;
+                     refreshJeArchiveFields(newVal);
                      refreshFieldsMatch();
                   }
                }
+            },
+            {
+               id: ids.fieldJeArchiveBalance,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldJeArchiveBalance",
+                  "*JE Archive -> BR"
+               ),
+               value: this.fieldJeArchiveBalance,
+               name: "fieldJeArchiveBalance",
+               options: fieldJeArchiveList
             },
             {
                view: "fieldset",

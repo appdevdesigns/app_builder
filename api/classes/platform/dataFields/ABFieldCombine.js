@@ -35,6 +35,13 @@ module.exports = class ABFieldCombine extends ABFieldCombineCore {
          columnNames.push(field.columnName);
       });
 
+      let sqlUpdateCommand = `SET @new_value = CONCAT(${columnNames
+         .map((colName) => `COALESCE(NEW.\`${colName}\`, '')`)
+         .join(`, '${DELIMITERS[this.settings.delimiter]}', `)}),
+         NEW.\`${
+            this.columnName
+         }\` = IF(@new_value = "" OR @new_value IS NULL, NULL, @new_value);`;
+
       return (
          Promise.resolve()
             .then(
@@ -61,7 +68,31 @@ module.exports = class ABFieldCombine extends ABFieldCombineCore {
                         });
                   })
             )
-            // Create trigger to update value when UPDATE exists row
+            // Create TRIGGER when INSERT
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     if (!columnNames || !columnNames.length) return next();
+
+                     knex
+                        .raw(
+                           `CREATE TRIGGER \`${this.createTriggerName}\`
+                           BEFORE INSERT ON \`${tableName}\` FOR EACH ROW
+                           ${sqlUpdateCommand}`
+                        )
+                        .then(() => {
+                           next();
+                        })
+                        .catch((error) => {
+                           if (error.code == "ER_TRG_ALREADY_EXISTS") {
+                              next();
+                           } else {
+                              bad(error);
+                           }
+                        });
+                  })
+            )
+            // Create TRIGGER when UPDATE
             .then(
                () =>
                   new Promise((next, bad) => {
@@ -71,17 +102,7 @@ module.exports = class ABFieldCombine extends ABFieldCombineCore {
                         .raw(
                            `CREATE TRIGGER \`${this.updateTriggerName}\`
                            BEFORE UPDATE ON \`${tableName}\` FOR EACH ROW
-                           SET @new_index_value = CONCAT(${columnNames
-                              .map(
-                                 (colName) => `COALESCE(NEW.\`${colName}\`, '')`
-                              )
-                              .join(
-                                 `, '${DELIMITERS[this.settings.delimiter]}', `
-                              )}),
-                              NEW.\`${
-                                 this.columnName
-                              }\` = IF(@new_index_value = "" OR @new_index_value IS NULL, NULL, @new_index_value);`
-                           // SET NEW.\`${this.columnName}\` = CONCAT(COALESCE(NEW.`COLUMN1`, ''), '+', COALESCE(NEW.`COLUMN2`, ''),
+                           ${sqlUpdateCommand}`
                         )
                         .then(() => {
                            next();
@@ -148,6 +169,17 @@ module.exports = class ABFieldCombine extends ABFieldCombineCore {
       }
 
       return Promise.resolve()
+         .then(
+            () =>
+               new Promise((next, bad) => {
+                  knex
+                     .raw(`DROP TRIGGER IF EXISTS ${this.createTriggerName}`)
+                     .then(() => {
+                        next();
+                     })
+                     .catch(bad);
+               })
+         )
          .then(
             () =>
                new Promise((next, bad) => {
@@ -220,7 +252,12 @@ module.exports = class ABFieldCombine extends ABFieldCombineCore {
       return (this.columnName || "").replace(/ /g, "").substring(0, 15);
    }
 
+   get createTriggerName() {
+      return `${this.safeTableName}_${this.safeColumnName}_create`;
+   }
+
    get updateTriggerName() {
       return `${this.safeTableName}_${this.safeColumnName}_update`;
    }
 };
+

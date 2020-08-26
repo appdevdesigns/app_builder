@@ -15,13 +15,13 @@ module.exports = class ABModel extends ABModelCore {
    /**
     * @method create
     * performs an update operation
-    * @param {string} id
-    *    the primary key for this update operation.
     * @param {obj} values
     *    A hash of the new values for this entry.
+    * @param {Knex.Transaction?} trx - [optional]
+    *
     * @return {Promise} resolved with the result of the find()
     */
-   create(values) {
+   create(values, trx = null) {
       values = this.object.requestParams(values);
 
       if (values[this.object.PK()] == null) {
@@ -36,6 +36,10 @@ module.exports = class ABModel extends ABModelCore {
       return new Promise((resolve, reject) => {
          // get a Knex Query Object
          let query = this.modelKnex().query();
+
+         // Used by knex.transaction, the transacting method may be chained to any query and
+         // passed the object you wish to join the query as part of the transaction for.
+         if (trx) query = query.transacting(trx);
 
          var PK = this.object.PK();
 
@@ -181,12 +185,18 @@ module.exports = class ABModel extends ABModelCore {
     *		the primary key for this update operation.
     * @param {obj} values
     *		A hash of the new values for this entry.
+    * @param {Knex.Transaction?} trx - [optional]
+    *
     * @return {Promise} resolved with the result of the find()
     */
-   update(id, values) {
+   update(id, values, trx = null) {
       return new Promise((resolve, reject) => {
          // get a Knex Query Object
          let query = this.modelKnex().query();
+
+         // Used by knex.transaction, the transacting method may be chained to any query and
+         // passed the object you wish to join the query as part of the transaction for.
+         if (trx) query = query.transacting(trx);
 
          var PK = this.object.PK();
 
@@ -236,9 +246,11 @@ module.exports = class ABModel extends ABModelCore {
     * @param {array} values
     *       one or more values to create a connection to.
     *       these can be either .uuid values, or full {obj} values.
+    * @param {Knex.Transaction?} trx - [optional]
+    *
     * @return {Promise}
     */
-   relate(id, fieldRef, value) {
+   relate(id, fieldRef, value, trx = null) {
       function errorReturn(message) {
          var error = new Error(message);
          return Promise.reject(error);
@@ -305,9 +317,20 @@ module.exports = class ABModel extends ABModelCore {
             .query()
             .findById(id)
             .then((objInstance) => {
-               return objInstance
+               let relateQuery = objInstance
                   .$relatedQuery(relationName)
+                  .alias(
+                     "#column#_#relation#"
+                        .replace("#column#", abField.columnName)
+                        .replace("#relation#", relationName)
+                  ) // FIX: SQL syntax error because alias name includes special characters
                   .relate(useableValues);
+
+               // Used by knex.transaction, the transacting method may be chained to any query and
+               // passed the object you wish to join the query as part of the transaction for.
+               if (trx) relateQuery = relateQuery.transacting(trx);
+
+               return relateQuery;
             })
             .then(resolve)
             .catch(reject);
@@ -1106,7 +1129,7 @@ module.exports = class ABModel extends ABModelCore {
                // TODO: move to ABOBjectExternal.js
                if (
                   !this.object.viewName && // NOTE: check if this object is a query, then it includes .translations already
-                  (orderField.object.isExternal || field.object.isImported)
+                  (orderField.object.isExternal || orderField.object.isImported)
                ) {
                   let prefix = "";
                   if (orderField.alias) {

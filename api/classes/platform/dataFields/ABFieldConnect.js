@@ -711,10 +711,20 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                ) {
                   PK = indexField2.columnName;
                }
-               // M:1, 1:M, 1:1
-            } else if (indexField) {
+            }
+            // 1:M, 1:1 isSource = true
+            else if (
+               indexField &&
+               ((this.settings.linkType == "one" &&
+                  this.settings.linkViaType == "many") ||
+                  (this.settings.linkType == "one" &&
+                     this.settings.linkViaType == "one" &&
+                     this.settings.isSource))
+            ) {
                PK = indexField.columnName;
-            } else if (datasourceLink) {
+            }
+            // M:1 or NO CUSTOM INDEX
+            else if (datasourceLink) {
                PK = datasourceLink.PK();
             }
 
@@ -928,3 +938,4 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
       return result;
    }
 };
+
