@@ -181,16 +181,15 @@ module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
                      );
                   } else {
                      datacollection.bind($datatable);
+                     $datatable.adjust();
+
+                     // load data
+                     if (
+                        datacollection.dataStatus ==
+                        datacollection.dataStatusFlag.notInitial
+                     )
+                        datacollection.loadData();
                   }
-
-                  $datatable.adjust();
-
-                  // load data
-                  if (
-                     datacollection.dataStatus ==
-                     datacollection.dataStatusFlag.notInitial
-                  )
-                     datacollection.loadData();
                }
             } else {
                this._logic.clearWorkspace();
