@@ -256,13 +256,15 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
                      )
                   );
                   // add bind items data as a filter to wheres
-                  wheres.rules.push({
-                     key: Object.keys(params)[0],
-                     rule: "equals",
-                     value: fieldLink.getRelationValue(
-                        dataCollectionLink.__dataCollection.getItem(value)
-                     )
-                  });
+                  if (value) {
+                     wheres.rules.push({
+                        key: Object.keys(params)[0],
+                        rule: "equals",
+                        value: fieldLink.getRelationValue(
+                           dataCollectionLink.__dataCollection.getItem(value)
+                        )
+                     });
+                  }
 
                   // this is the same item that was already bound...don't reload data
                   if (
