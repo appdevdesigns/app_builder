@@ -380,7 +380,9 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                   }
 
                   // if this account is Account3991 we don't need to do this again
-                  if (AccountID == acct3991.uuid) {
+                  if (
+                     AccountID == this.jeAccountField.getRelationValue(acct3991)
+                  ) {
                      done();
                      return;
                   }
@@ -391,7 +393,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      // perform another processBalanceRecord( with account3991)
                      this.processBalanceRecord(
                         financialPeriodID,
-                        acct3991.uuid,
+                        this.brAccountField.getRelationValue(acct3991),
                         RCID,
                         journalEntry
                      )
@@ -530,8 +532,9 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      // #Fix: for account 3991, we must use the "Equity" type, not
                      // what is on the journalEntry
                      if (
+                        acct3991 &&
                         balanceRecord[this.brAccountField.columnName] ==
-                        acct3991.uuid
+                           this.brAccountField.getRelationValue(acct3991)
                      ) {
                         accountType = "equity";
                      }
@@ -605,7 +608,9 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
          .options();
 
       var account = this.allAccountRecords.find(
-         (a) => a.uuid == journalEntry[this.jeAccountField.columnName]
+         (a) =>
+            this.jeAccountField.getRelationValue(a) ==
+            journalEntry[this.jeAccountField.columnName]
       );
       if (!account) {
          return null;
