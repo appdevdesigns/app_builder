@@ -691,80 +691,44 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
       var myParameter = super.requestRelationParam(allParameters);
       if (myParameter) {
          if (myParameter[this.columnName]) {
-            let PK;
-            let indexField = this.indexField;
-            let datasourceLink = this.datasourceLink;
-
-            // custom index
-            // M:N
-            if (
-               this.settings.linkType == "many" &&
-               this.settings.linkViaType == "many"
-            ) {
-               let indexField2 = this.indexField2;
-
-               if (indexField && indexField.object.id == datasourceLink.id) {
-                  PK = indexField.columnName;
-               } else if (
-                  indexField2 &&
-                  indexField2.object.id == datasourceLink.id
-               ) {
-                  PK = indexField2.columnName;
-               }
-            }
-            // 1:M, 1:1 isSource = true
-            else if (
-               indexField &&
-               ((this.settings.linkType == "one" &&
-                  this.settings.linkViaType == "many") ||
-                  (this.settings.linkType == "one" &&
-                     this.settings.linkViaType == "one" &&
-                     this.settings.isSource))
-            ) {
-               PK = indexField.columnName;
-            }
-            // M:1 or NO CUSTOM INDEX
-            else if (datasourceLink) {
-               PK = datasourceLink.PK();
-            }
+            // let PK;
 
             // if value is array, then get id of array
             if (myParameter[this.columnName].forEach) {
                let result = [];
 
-               myParameter[this.columnName].forEach(function(d) {
-                  let val = d[PK] || d.id || d;
+               myParameter[this.columnName].forEach((d) => {
+                  let val = this.getRelationValue(d);
 
-                  if (PK == "id") {
-                     val = parseInt(d[PK] || d.id || d);
+                  // if (PK == "id") {
+                  //    val = parseInt(d[PK] || d.id || d);
 
-                     // validate INT value
-                     if (val && !isNaN(val)) result.push(val);
-                  }
-                  // uuid
-                  else {
-                     result.push(val);
-                  }
+                  //    // validate INT value
+                  //    if (val && !isNaN(val)) result.push(val);
+                  // }
+                  // // uuid
+                  // else {
+                  result.push(val);
+                  // }
                });
 
                myParameter[this.columnName] = result;
             }
             // if value is a object
             else {
-               myParameter[this.columnName] =
-                  myParameter[this.columnName][PK] ||
-                  myParameter[this.columnName].id ||
-                  myParameter[this.columnName];
+               myParameter[this.columnName] = this.getRelationValue(
+                  myParameter[this.columnName]
+               );
 
-               if (PK == "id") {
-                  myParameter[this.columnName] = parseInt(
-                     myParameter[this.columnName]
-                  );
+               // if (PK == "id") {
+               //    myParameter[this.columnName] = parseInt(
+               //       myParameter[this.columnName]
+               //    );
 
-                  // validate INT value
-                  if (isNaN(myParameter[this.columnName]))
-                     myParameter[this.columnName] = null;
-               }
+               //    // validate INT value
+               //    if (isNaN(myParameter[this.columnName]))
+               //       myParameter[this.columnName] = null;
+               // }
             }
          } else {
             // myParameter[this.columnName] = [];
@@ -938,4 +902,5 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
       return result;
    }
 };
+
 

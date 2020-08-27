@@ -81,7 +81,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       return new Promise((resolve, reject) => {
          var myState = this.myState(instance);
          this.balanceRecordsProcessed = {};
-         // { balanceRecord.id : balanceRecord.id }
+         // { balanceRecord.id : [{ JournalEntry, ..., }] }
          // a hash of the balance records that were updated from this batch of
          // journal entries.  This will be used at the end to perform the recalculations
 
@@ -350,20 +350,28 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                   done(error);
                },
 
-               // (done) => {
-               //    // update balanceRecord with new journalEntry value:
+               (done) => {
+                  // update balanceRecord with new journalEntry value:
 
-               //    var brID = balanceRecord[this.brObject.PK()];
-               //    this.brObject
-               //       .modelAPI()
-               //       .relate(brID, this.brEntriesField.id, journalEntry)
-               //       .catch((err) => done(err))
-               //       .then(() => {
-               //          // mark this balance record as having been processed.
-               //          this.balanceRecordsProcessed[brID] = brID;
-               //          done();
-               //       });
-               // },
+                  let brID = balanceRecord[this.brObject.PK()];
+
+                  if (this.balanceRecordsProcessed[brID] == null)
+                     this.balanceRecordsProcessed[brID] = [];
+
+                  this.balanceRecordsProcessed[brID].push(journalEntry);
+
+                  done();
+
+                  // this.brObject
+                  //    .modelAPI()
+                  //    .relate(brID, this.brEntriesField.id, journalEntry)
+                  //    .catch((err) => done(err))
+                  //    .then(() => {
+                  //       // mark this balance record as having been processed.
+                  //       this.balanceRecordsProcessed[brID] = brID;
+                  //       done();
+                  //    });
+               },
 
                (done) => {
                   if (!acct3991) {
@@ -372,7 +380,9 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                   }
 
                   // if this account is Account3991 we don't need to do this again
-                  if (AccountID == acct3991.uuid) {
+                  if (
+                     AccountID == this.jeAccountField.getRelationValue(acct3991)
+                  ) {
                      done();
                      return;
                   }
@@ -383,7 +393,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      // perform another processBalanceRecord( with account3991)
                      this.processBalanceRecord(
                         financialPeriodID,
-                        acct3991.uuid,
+                        this.brAccountField.getRelationValue(acct3991),
                         RCID,
                         journalEntry
                      )
@@ -501,62 +511,64 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                // runningBalance = startingBalance
                // totalCredit, totalDebit = 0;
                var runningBalance = balanceRecord["Starting Balance"];
-               var totalCredit = 0;
-               var totalDebit = 0;
+               var totalCredit = parseFloat(balanceRecord["Credit"] || 0);
+               var totalDebit = parseFloat(balanceRecord["Debit"] || 0);
+               let brID = balanceRecord[this.brObject.PK()];
 
                // for each JournalEntry
-               (
-                  this.brEntriesField.pullRelationValues(balanceRecord) || []
-               ).forEach((journalEntry) => {
-                  // prevent working with data as a string or with NULL values
-                  journalEntry["Debit"] = parseFloat(
-                     journalEntry["Debit"] || 0
-                  );
-                  journalEntry["Credit"] = parseFloat(
-                     journalEntry["Credit"] || 0
-                  );
+               (this.balanceRecordsProcessed[brID] || []).forEach(
+                  (journalEntry) => {
+                     // prevent working with data as a string or with NULL values
+                     journalEntry["Debit"] = parseFloat(
+                        journalEntry["Debit"] || 0
+                     );
+                     journalEntry["Credit"] = parseFloat(
+                        journalEntry["Credit"] || 0
+                     );
 
-                  // lookup the Account type from the journalEntry
-                  var accountType = this.lookupAccountType(journalEntry);
+                     // lookup the Account type from the journalEntry
+                     var accountType = this.lookupAccountType(journalEntry);
 
-                  // #Fix: for account 3991, we must use the "Equity" type, not
-                  // what is on the journalEntry
-                  if (
-                     balanceRecord[this.brAccountField.columnName] ==
-                     acct3991.uuid
-                  ) {
-                     accountType = "equity";
+                     // #Fix: for account 3991, we must use the "Equity" type, not
+                     // what is on the journalEntry
+                     if (
+                        acct3991 &&
+                        balanceRecord[this.brAccountField.columnName] ==
+                           this.brAccountField.getRelationValue(acct3991)
+                     ) {
+                        accountType = "equity";
+                     }
+
+                     switch (accountType) {
+                        // case: "asset" || "expense"
+                        case "assets":
+                        case "expenses":
+                           // runningBalance = runningBalance - JE.credit + JE.debit
+                           runningBalance +=
+                              journalEntry["Debit"] - journalEntry["Credit"];
+                           break;
+
+                        // case: Liabilities, Equity, Income
+                        case "liabilities":
+                        case "equity":
+                        case "income":
+                           // runningBalance = runningBalance - JE.debit + JE.credit
+                           runningBalance +=
+                              journalEntry["Credit"] - journalEntry["Debit"];
+                           break;
+
+                        default:
+                           // Q: what to do if a JE didn't return an expected Account Type?
+                           break;
+                     }
+
+                     // totalCredit += JE.credit
+                     totalCredit += journalEntry["Credit"];
+
+                     // totalDebit += JE.debit
+                     totalDebit += journalEntry["Debit"];
                   }
-
-                  switch (accountType) {
-                     // case: "asset" || "expense"
-                     case "assets":
-                     case "expenses":
-                        // runningBalance = runningBalance - JE.credit + JE.debit
-                        runningBalance +=
-                           journalEntry["Debit"] - journalEntry["Credit"];
-                        break;
-
-                     // case: Liabilities, Equity, Income
-                     case "liabilities":
-                     case "equity":
-                     case "income":
-                        // runningBalance = runningBalance - JE.debit + JE.credit
-                        runningBalance +=
-                           journalEntry["Credit"] - journalEntry["Debit"];
-                        break;
-
-                     default:
-                        // Q: what to do if a JE didn't return an expected Account Type?
-                        break;
-                  }
-
-                  // totalCredit += JE.credit
-                  totalCredit += journalEntry["Credit"];
-
-                  // totalDebit += JE.debit
-                  totalDebit += journalEntry["Debit"];
-               });
+               );
 
                // update BalanceRecord
                balanceRecord["Running Balance"] = runningBalance;
@@ -597,7 +609,9 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
          .options();
 
       var account = this.allAccountRecords.find(
-         (a) => a.uuid == journalEntry[this.jeAccountField.columnName]
+         (a) =>
+            this.jeAccountField.getRelationValue(a) ==
+            journalEntry[this.jeAccountField.columnName]
       );
       if (!account) {
          return null;
@@ -614,3 +628,4 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       return type.toLowerCase();
    }
 };
+

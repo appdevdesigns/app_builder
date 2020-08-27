@@ -1265,8 +1265,13 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             }
 
             // add fillspace to last editiable column
+            var hiddenFields = settings.hiddenFields
+               ? settings.hiddenFields.length
+               : 0;
             var lastCol =
-               columnHeaders[columnHeaders.length - 1 - columnSplitRight];
+               columnHeaders[
+                  columnHeaders.length - hiddenFields - columnSplitRight - 1
+               ];
             if (lastCol) {
                lastCol.fillspace = true;
                lastCol.minWidth = lastCol.width;
