@@ -676,7 +676,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
             if (myParameter[this.columnName].forEach) {
                let result = [];
 
-               myParameter[this.columnName].forEach(function(d) {
+               myParameter[this.columnName].forEach((d) => {
                   let val = this.getRelationValue(d);
 
                   // if (PK == "id") {
