@@ -511,8 +511,8 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                // runningBalance = startingBalance
                // totalCredit, totalDebit = 0;
                var runningBalance = balanceRecord["Starting Balance"];
-               var totalCredit = 0;
-               var totalDebit = 0;
+               var totalCredit = parseFloat(balanceRecord["Credit"] || 0);
+               var totalDebit = parseFloat(balanceRecord["Debit"] || 0);
                let brID = balanceRecord[this.brObject.PK()];
 
                // for each JournalEntry
@@ -567,7 +567,8 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
                      // totalDebit += JE.debit
                      totalDebit += journalEntry["Debit"];
-                  });
+                  }
+               );
 
                // update BalanceRecord
                balanceRecord["Running Balance"] = runningBalance;
