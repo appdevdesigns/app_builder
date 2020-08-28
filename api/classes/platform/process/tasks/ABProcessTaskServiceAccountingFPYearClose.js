@@ -30,11 +30,12 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
     * do()
     * this method actually performs the action for this task.
     * @param {obj} instance  the instance data of the running process
+    * @param {Knex.Transaction?} trx - [optional]
     * @return {Promise}
     *      resolve(true/false) : true if the task is completed.
     *                            false if task is still waiting
     */
-   do(instance) {
+   do(instance, trx) {
       this.fpYearObject = this.application.objects(
          (o) => o.id == this.objectFPYear
       )[0];
@@ -140,16 +141,18 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
 
                      let FPmonths =
                         this.currentFPYear[fpMonthField.relationName()] || [];
+
+                     if (!FPmonths[0]) {
+                        this.log(instance, "Not Found the last FP month");
+                        return bad(new Error("Not Found the last FP month"));
+                     }
+
                      // Sort descending
                      FPmonths = FPmonths.sort(
                         (a, b) =>
                            b[fpMonthEndField.columnName] -
                            a[fpMonthEndField.columnName]
                      );
-                     if (!FPmonths[0]) {
-                        this.log(instance, "Not Found the last FP month");
-                        return bad(new Error("Not Found the last FP month"));
-                     }
 
                      let cond = {
                         where: {
@@ -228,12 +231,13 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         .findAll(cond)
                         .catch(bad)
                         .then((rows) => {
-                           // { AccuntNumber: AccountId, ..., AccuntNumberN: AccountIdN }
+                           // { AccuntNumber: AccountRow, ..., AccuntNumberN: AccountRowN }
                            this.accounts = {};
                            (rows || []).forEach(
                               (r) =>
-                                 (this.accounts[r[accNumberField.columnName]] =
-                                    r[this.accObject.PK()])
+                                 (this.accounts[
+                                    r[accNumberField.columnName]
+                                 ] = r)
                            );
 
                            let fpBalanceField = this.fpMonthObject.fields(
@@ -260,13 +264,20 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                               return bad(new Error("Not Found glAccountField"));
                            }
 
-                           this.balances = balances.filter(
-                              (b) =>
-                                 // Compare Account Id
-                                 Object.values(this.accounts).indexOf(
+                           this.balances = balances.filter((b) => {
+                              // Filter by Account
+                              let fkAccounts = Object.values(
+                                 this.accounts
+                              ).map((acc) =>
+                                 glAccountField.getRelationValue(acc)
+                              );
+
+                              return (
+                                 fkAccounts.indexOf(
                                     b[glAccountField.columnName]
                                  ) > -1
-                           );
+                              );
+                           });
 
                            this.log(instance, "Found M12 Balances");
 
@@ -363,7 +374,11 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
 
                      this.fpYearObject
                         .modelAPI()
-                        .update(this.nextFpYear[this.fpYearObject.PK()], values)
+                        .update(
+                           this.nextFpYear[this.fpYearObject.PK()],
+                           values,
+                           trx
+                        )
                         .catch(bad)
                         .then((updatedNextFP) => {
                            // Broadcast the update
@@ -435,14 +450,19 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
             .then(
                () =>
                   new Promise((next, bad) => {
-                     let glField = this.glObject.fields(
+                     let glFPMonthField = this.glObject.fields(
                         (f) =>
                            f.key == "connectObject" &&
                            f.settings.linkObject == this.objectFPMonth
                      )[0];
-                     if (!glField) {
-                        this.log(instance, "Could not found GL field");
-                        return bad(new Error("Could not found GL field"));
+                     if (!glFPMonthField) {
+                        this.log(
+                           instance,
+                           "Could not found GL -> FP month field"
+                        );
+                        return bad(
+                           new Error("Could not found GL -> FP month field")
+                        );
                      }
 
                      let cond = {
@@ -450,11 +470,11 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            glue: "and",
                            rules: [
                               {
-                                 key: glField.id,
+                                 key: glFPMonthField.id,
                                  rule: "equals",
-                                 value: this.firstFpMonth[
-                                    this.fpMonthObject.PK()
-                                 ]
+                                 value: glFPMonthField.getRelationValue(
+                                    this.firstFpMonth
+                                 )
                               }
                            ]
                         },
@@ -584,7 +604,9 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                               this.balances.filter(
                                  (bal) =>
                                     bal[glAccountField.columnName] ==
-                                       this.accounts[this.valueFundBalances] &&
+                                       glAccountField.getRelationValue(
+                                          this.accounts[this.valueFundBalances]
+                                       ) &&
                                     bal[glRcField.columnName] ==
                                        b[glRcField.columnName]
                               )[0] || {};
@@ -593,7 +615,9 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                               this.balances.filter(
                                  (bal) =>
                                     bal[glAccountField.columnName] ==
-                                       this.accounts[this.valueNetIncome] &&
+                                       glAccountField.getRelationValue(
+                                          this.accounts[this.valueNetIncome]
+                                       ) &&
                                     bal[glRcField.columnName] ==
                                        b[glRcField.columnName]
                               )[0] || {};
@@ -618,7 +642,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                               new Promise((go, fail) => {
                                  this.glObject
                                     .modelAPI()
-                                    .update(b[this.glObject.PK()], values)
+                                    .update(b[this.glObject.PK()], values, trx)
                                     .catch(fail)
                                     .then((updatedGL) => {
                                        // Broadcast the update
