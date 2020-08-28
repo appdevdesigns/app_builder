@@ -128,8 +128,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
          Promise.resolve()
             // Get data view
             .then(() => ABGraphDataview.findOne(cond.value))
-            .then((dv) => {
-               if (!dv) {
+            .then((dc) => {
+               if (!dc) {
                   ADCore.error.log(
                      "AppBuilder:Policy:ABModelConvertDataCollectionCondition:Could not find specified data collection:",
                      { dcId: cond.value, condition: cond }
@@ -144,11 +144,11 @@ function parseQueryCondition(_where, object, req, res, cb) {
                }
 
                // var sourceObject = object.application.objects(obj => obj.id == dc.settings.object)[0];
-               var sourceObject = ABObjectCache.get(dv.settings.datasourceID);
+               var sourceObject = ABObjectCache.get(dc.settings.datasourceID);
                if (!sourceObject) {
                   ADCore.error.log(
                      "AppBuilder:Policy:ABModelConvertDataCollectionCondition:Source object not exists:",
-                     { field: field, sourceObject: sourceObject, dc: dv }
+                     { field: field, sourceObject: sourceObject, dc: dc }
                   );
                   var err = new Error("Source object not exists.");
                   cb(err);
@@ -220,6 +220,11 @@ function parseQueryCondition(_where, object, req, res, cb) {
                         // I need to pull out the PK from the filter Query:
                         parseColumn = sourceObject.PK(); // 'id';
 
+                        // custom index
+                        if (field.indexField) {
+                           parseColumn = field.indexField.columnName;
+                        }
+
                         // make this the queryColumn:
                         objectColumn =
                            sourceObject.dbTableName(true) + "." + parseColumn;
@@ -231,6 +236,11 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                         // my .PK is what is used on our filter
                         newKey = object.PK(); // 'id';
+
+                        // custom index
+                        if (field.indexField) {
+                           newKey = field.indexField.columnName;
+                        }
 
                         // I need to pull out the linkedField's columnName
                         parseColumn = linkedField.columnName;
@@ -244,6 +254,20 @@ function parseQueryCondition(_where, object, req, res, cb) {
                      case "many:many":
                         // we need the .PK of our linked column out of the given query
                         parseColumn = sourceObject.PK(); // 'id';
+
+                        // custom index
+                        if (
+                           field.indexField &&
+                           field.indexField.object.id == sourceObject.id
+                        ) {
+                           parseColumn = field.indexField.columnName;
+                        } else if (
+                           field.indexField2 &&
+                           field.indexField2.object.id == sourceObject.id
+                        ) {
+                           parseColumn = field.indexField2.columnName;
+                        }
+
                         objectColumn =
                            sourceObject.dbTableName(true) + "." + parseColumn;
 
@@ -261,6 +285,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                               var joinTableName = field.joinTableName(true);
 
                               var parseName = object.name;
+
                               linkTableQuery
                                  .select(parseName)
                                  .from(joinTableName)
@@ -274,6 +299,20 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                     myIds = _.uniq(myIds);
 
                                     var myPK = object.PK(); // 'id';
+
+                                    // custom index
+                                    if (
+                                       field.indexField &&
+                                       field.indexField.object.id == object.id
+                                    ) {
+                                       myPK = field.indexField.columnName;
+                                    } else if (
+                                       field.indexField2 &&
+                                       field.indexField2.object.id == object.id
+                                    ) {
+                                       myPK = field.indexField2.columnName;
+                                    }
+
                                     buildCondition(myPK, myIds);
                                  })
                                  .catch((err) => {
@@ -314,8 +353,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
                   var query = sourceObject.queryFind(
                      {
                         columnNames: [objectColumn],
-                        where: dv.settings.objectWorkspace.filterConditions,
-                        sort: dv.settings.objectWorkspace.sortFields || []
+                        where: dc.settings.objectWorkspace.filterConditions,
+                        sort: dc.settings.objectWorkspace.sortFields || []
                      },
                      req.user.data
                   );
