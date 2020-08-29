@@ -258,8 +258,9 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
                   // add bind items data as a filter to wheres
                   if (value) {
                      wheres.rules.push({
+                        alias: fieldLink.alias, // ABObjectQuery
                         key: Object.keys(params)[0],
-                        rule: "equals",
+                        rule: fieldLink.alias ? "contains" : "equals", // NOTE: If object is query, then use "contains" because ABOBjectQuery return JSON
                         value: fieldLink.getRelationValue(
                            dataCollectionLink.__dataCollection.getItem(value)
                         )
