@@ -230,6 +230,11 @@ function parseQueryCondition(_where, object, req, res, cb) {
                         // I need to pull out the PK from the filter Query:
                         parseColumn = sourceObject.PK(); // 'id';
 
+                        // custom index
+                        if (field.indexField) {
+                           parseColumn = field.indexField.columnName;
+                        }
+
                         // make this the queryColumn:
                         objectColumn =
                            sourceObject.dbTableName(true) + "." + parseColumn;
@@ -241,6 +246,11 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
                         // my .PK is what is used on our filter
                         newKey = object.PK(); // 'id';
+
+                        // custom index
+                        if (field.indexField) {
+                           newKey = field.indexField.columnName;
+                        }
 
                         // I need to pull out the linkedField's columnName
                         parseColumn = linkedField.columnName;
@@ -254,6 +264,20 @@ function parseQueryCondition(_where, object, req, res, cb) {
                      case "many:many":
                         // we need the .PK of our linked column out of the given query
                         parseColumn = sourceObject.PK(); // 'id';
+
+                        // custom index
+                        if (
+                           field.indexField &&
+                           field.indexField.object.id == sourceObject.id
+                        ) {
+                           parseColumn = field.indexField.columnName;
+                        } else if (
+                           field.indexField2 &&
+                           field.indexField2.object.id == sourceObject.id
+                        ) {
+                           parseColumn = field.indexField2.columnName;
+                        }
+
                         objectColumn =
                            sourceObject.dbTableName(true) + "." + parseColumn;
 
@@ -271,6 +295,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
                               var joinTableName = field.joinTableName(true);
 
                               var parseName = object.name;
+
                               linkTableQuery
                                  .select(parseName)
                                  .from(joinTableName)
@@ -284,6 +309,20 @@ function parseQueryCondition(_where, object, req, res, cb) {
                                     myIds = _.uniq(myIds);
 
                                     var myPK = object.PK(); // 'id';
+
+                                    // custom index
+                                    if (
+                                       field.indexField &&
+                                       field.indexField.object.id == object.id
+                                    ) {
+                                       myPK = field.indexField.columnName;
+                                    } else if (
+                                       field.indexField2 &&
+                                       field.indexField2.object.id == object.id
+                                    ) {
+                                       myPK = field.indexField2.columnName;
+                                    }
+
                                     buildCondition(myPK, myIds);
                                  })
                                  .catch((err) => {
