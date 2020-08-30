@@ -1115,7 +1115,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                var complexValidations = [];
                fieldValidations.forEach((f) => {
                   // init each ui to have the properties (app and fields) of the object we are editing
-                  f.filter.applicationLoad(App);
+                  f.filter.applicationLoad(CurrentObject.application);
                   f.filter.fieldsLoad(CurrentObject.fields());
                   // now we can set the value because the fields are properly initialized
                   f.filter.setValue(f.validationRules);
