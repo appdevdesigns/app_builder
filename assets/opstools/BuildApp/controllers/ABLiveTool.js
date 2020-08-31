@@ -854,8 +854,7 @@ steal(
                            body: {
                               type: "clean",
                               rows: [tree, manageUsers]
-                           },
-                           height: 430
+                           }
                         };
 
                         $$("amp_accordion_" + self.containerDomID).addView(
