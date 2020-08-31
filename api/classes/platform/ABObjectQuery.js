@@ -878,10 +878,7 @@ module.exports = class ABClassQuery extends ABClassObject {
                   " as '{displayPrefix}.{displayName}'"
                )
                   .replace(/{prefix}/g, f.dbPrefix())
-                  .replace(
-                     /{columnName}/g,
-                     fieldIndex ? fieldIndex.columnName : f.columnName
-                  )
+                  .replace(/{columnName}/g, f.columnName)
                   .replace(/{displayPrefix}/g, f.alias ? f.alias : obj.name)
                   .replace(/{displayName}/g, f.relationName());
             }
@@ -895,10 +892,7 @@ module.exports = class ABClassQuery extends ABClassObject {
                   .replace(/{linkDbName}/g, objLink.dbSchemaName())
                   .replace(/{linkTableName}/g, objLink.dbTableName())
                   .replace(/{linkColumnName}/g, fieldLink.columnName)
-                  .replace(
-                     /{columnName}/g,
-                     fieldIndex ? fieldIndex.columnName : objLink.PK()
-                  );
+                  .replace(/{columnName}/g, objLink.PK());
             }
 
             // 1:1
@@ -915,10 +909,7 @@ module.exports = class ABClassQuery extends ABClassObject {
                      " as '{displayPrefix}.{displayName}'"
                   )
                      .replace(/{prefix}/g, f.dbPrefix())
-                     .replace(
-                        /{columnName}/g,
-                        fieldIndex ? fieldIndex.columnName : f.columnName
-                     )
+                     .replace(/{columnName}/g, f.columnName)
                      .replace(/{displayPrefix}/g, f.alias ? f.alias : obj.name)
                      .replace(/{displayName}/g, f.relationName());
                } else {
