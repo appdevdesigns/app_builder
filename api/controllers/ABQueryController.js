@@ -232,7 +232,10 @@ module.exports = {
                let qClass = q.toABClass();
 
                ABMigration.createQuery(qClass)
-                  .catch(error)
+                  .catch((err) => {
+                     if (err.code == "ER_DUP_FIELDNAME") next();
+                     else error(err);
+                  })
                   .then(() => {
                      next(q);
                   });

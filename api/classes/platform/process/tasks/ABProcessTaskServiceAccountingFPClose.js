@@ -30,11 +30,12 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
     * do()
     * this method actually performs the action for this task.
     * @param {obj} instance  the instance data of the running process
+    * @param {Knex.Transaction?} trx - [optional]
     * @return {Promise}
     *      resolve(true/false) : true if the task is completed.
     *                            false if task is still waiting
     */
-   do(instance) {
+   do(instance, trx) {
       this.fpObject = this.application.objects((o) => o.id == this.objectFP)[0];
       this.glObject = this.application.objects((o) => o.id == this.objectGL)[0];
 
@@ -211,9 +212,9 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
 
                               // link to the next FP
                               if (fieldGLlink) {
-                                 newGL[fieldGLlink.columnName] = this.nextFP[
-                                    this.fpObject.PK()
-                                 ];
+                                 newGL[
+                                    fieldGLlink.columnName
+                                 ] = fieldGLlink.getRelationValue(this.nextFP);
                               }
 
                               // set Starting & Running Balance
@@ -314,7 +315,7 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
 
                      this.fpObject
                         .modelAPI()
-                        .update(nextFpID, values)
+                        .update(nextFpID, values, trx)
                         .catch(fail)
                         .then((updatedNextFP) => {
                            // Broadcast the create

@@ -124,7 +124,7 @@ module.exports = class ABFieldString extends ABFieldStringCore {
                                  if (exists) currCol.alter();
                               })
                               .then(() => {
-                                 next();
+                                 return next();
                               })
                               .catch((err) => {
                                  // Skip duplicate unique key

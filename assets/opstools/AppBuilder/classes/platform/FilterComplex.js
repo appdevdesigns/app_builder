@@ -261,6 +261,7 @@ module.exports = class FilterComplex extends FilterComplexCore {
 
    setValue(settings) {
       super.setValue(settings);
+      if (!settings) return;
 
       if ($$(this.ids.querybuilder)) {
          let qbSettings = _.cloneDeep(settings);
