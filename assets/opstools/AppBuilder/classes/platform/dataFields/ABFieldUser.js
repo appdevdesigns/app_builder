@@ -239,15 +239,15 @@ module.exports = class ABFieldUser extends ABFieldUserCore {
             });
             if (obj[field.columnName]) {
                var removeIcon = editable
-                  ? '<a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>'
+                  ? ' <a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>'
                   : "";
                var profileImage =
-                  '<i style="opacity: 0.6;" class="fa fa-user"></i>';
+                  '<i style="opacity: 0.6;" class="fa fa-user"></i> ';
                if (field.settings.isShowProfileImage && imageId) {
                   profileImage =
                      "<img src='/opsportal/image/UserProfile/" +
                      imageId +
-                     "' style='border-radius:3px; margin:3px;' width=28 height=28 />";
+                     "' style='border-radius:100%; object-fit: cover; margin: 0 5px 0 -10px;' width='28' height='28' />";
                }
                if (!field.settings.isShowUsername) {
                   myText = "";
