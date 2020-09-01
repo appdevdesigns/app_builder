@@ -315,10 +315,10 @@ function parseQueryCondition(_where, object, req, res, cb) {
                               field.object.id
                            )}.${field.object.PK()}`;
 
-                           parseColumn = field.datasourceLink.PK();
+                           parseColumn = field.object.PK();
 
                            queryColumn = `${QueryObj.objectAlias(
-                              field.datasourceLink.id
+                              field.object.id
                            )}.${parseColumn}`;
                         }
                         // ABObject
