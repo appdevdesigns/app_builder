@@ -37,6 +37,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
          allowDelete: params.allowDelete != null ? params.allowDelete : true,
          detailsView: params.detailsView || null,
          editView: params.editView || null,
+         trackView: params.trackView || null,
          isEditable: params.isEditable != null ? params.isEditable : true,
          massUpdate: params.massUpdate != null ? params.massUpdate : true,
          configureHeaders:
@@ -51,6 +52,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
          isTreeDatable: params.isTreeDatable || 0 // if true webix.treedatable, otherwise webix.datatable
       };
+      this._settings = settings;
 
       var L = this.Label;
       var labels = {
@@ -103,17 +105,17 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             settings.summaryColumns.length > 0 ||
             settings.countColumns.length > 0, // show footer when there are summary columns
          tooltip: {
-            id: ids.tooltip,
+            // id: ids.tooltip,
             template: function(obj, common) {
                return _logic.toolTip(obj, common);
             },
             on: {
                // When showing a larger image preview the tooltip sometime displays part of the image off the screen...this attempts to fix that problem
                onBeforeRender: function() {
-                  _logic.toolTipOnBeforeRender();
+                  _logic.toolTipOnBeforeRender(this.getNode());
                },
                onAfterRender: function(data) {
-                  _logic.toolTipOnAfterRender();
+                  _logic.toolTipOnAfterRender(this.getNode());
                }
             }
          },
@@ -123,6 +125,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                var skippable = [
                   "appbuilder_select_item",
                   "appbuilder_view_detail",
+                  "appbuilder_view_track",
                   "appbuilder_view_edit",
                   "appbuilder_trash"
                ];
@@ -168,7 +171,8 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
                      var editor = {
                         row: row,
-                        column: col
+                        column: col,
+                        config: null
                      };
                      _logic.onAfterEditStop(state, editor);
                   } else {
@@ -225,6 +229,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                // if we resize the delete column we want to resize the last column but Webix will not allow since the column is split
                var rightSplitItems = [
                   "appbuilder_view_detail",
+                  "appbuilder_view_track",
                   "appbuilder_view_edit",
                   "appbuilder_trash"
                ];
@@ -272,6 +277,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                var skippable = [
                   "appbuilder_select_item",
                   "appbuilder_view_detail",
+                  "appbuilder_view_track",
                   "appbuilder_view_edit",
                   "appbuilder_trash"
                ];
@@ -282,6 +288,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                var skippable = [
                   "appbuilder_select_item",
                   "appbuilder_view_detail",
+                  "appbuilder_view_track",
                   "appbuilder_view_edit",
                   "appbuilder_trash"
                ];
@@ -317,7 +324,12 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
       }
 
       // Our init() function for setting up our UI
-      this.init = (options) => {
+      this.init = (options, accessLevel) => {
+         if (!accessLevel) {
+            // if no access level is passed we are going to not change anything
+            accessLevel = 2;
+         }
+
          // WORKAROUND : Where should we define this ??
          // For include PDF.js
          webix.codebase = "";
@@ -342,6 +354,11 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
          webix.extend(DataTable, webix.ProgressBar);
 
+         DataTable.config.accessLevel = accessLevel;
+         if (accessLevel < 2) {
+            DataTable.define("editable", false);
+         }
+
          let customDisplays = (data) => {
             if (!CurrentObject || !DataTable.data) return;
 
@@ -362,12 +379,16 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                index++;
             });
 
+            var editable = settings.isEditable;
+            if (DataTable.config.accessLevel < 2) {
+               editable = false;
+            }
             CurrentObject.customDisplays(
                data,
                App,
                DataTable,
                displayRecords,
-               settings.isEditable
+               editable
             );
          };
 
@@ -435,6 +456,8 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             } else if (e.target.className.indexOf("eye") > -1) {
                // if this was our view icon:
                // alert("view");
+            } else if (e.target.className.indexOf("track") > -1) {
+               App.actions.openObjectTrack(CurrentObject, id.row);
             } else if (e.target.className.indexOf("trash") > -1) {
                // if this was our trash icon:
 
@@ -605,10 +628,15 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
          onAfterColumnDrop: function(sourceId, targetId, event) {
             CurrentObject.fieldReorder(sourceId, targetId)
                .then(() => {
+                  var DataTable = $$(ids.component);
                   // reset each column after a drop so we do not have multiple fillspace and minWidth settings
+                  var editiable = settings.isEditable;
+                  if (DataTable.config.accessLevel < 2) {
+                     editiable = false;
+                  }
                   var columnHeaders = CurrentObject.columnHeaders(
                      true,
-                     settings.isEditable
+                     editiable
                   );
                   columnHeaders.forEach(function(col) {
                      if (col.id == sourceId && col.fillspace == true) {
@@ -619,7 +647,6 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
                   _logic.callbacks.onColumnOrderChange(CurrentObject);
                   // freeze columns:
-                  var DataTable = $$(ids.component);
                   let frozenColumnID =
                      settings.frozenColumnID != null
                         ? settings.frozenColumnID
@@ -659,23 +686,26 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
 
             // if you don't edit an empty cell we just need to move on
             if (
-               (state.old == null && state.value == "") ||
-               (state.old == "" && state.value == "")
+               (state.old == null && state.value === "") ||
+               (state.old === "" && state.value === "")
             ) {
                DataTable.clearSelection();
                return false;
             }
 
-            switch (editor.config.editor) {
-               case "number":
-                  state.value = parseInt(state.value);
-                  break;
-               case "datetime":
-                  state.value = state.value.getTime();
-                  state.old = state.old.getTime();
-                  break;
-               default:
-               // code block
+            if (editor.config) {
+               switch (editor.config.editor) {
+                  case "number":
+                     state.value = parseFloat(state.value);
+                     break;
+                  case "datetime":
+                     state.value = state.value.getTime();
+                     if (state && state.old && state.old.getTime)
+                        state.old = state.old.getTime();
+                     break;
+                  default:
+                  // code block
+               }
             }
 
             if (state.value != state.old) {
@@ -860,6 +890,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             var skippable = [
                "appbuilder_select_item",
                "appbuilder_view_detail",
+               "appbuilder_view_track",
                "appbuilder_view_edit",
                "appbuilder_trash"
             ];
@@ -903,101 +934,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             PopupHeaderEditComponent.objectLoad(object);
 
             // grouping
-            if (settings.groupBy) {
-               // map: {
-               //     votes:["votes", "sum"],
-               //     title:["year"]
-               // }
-               let groupMap = {};
-               CurrentObject.fields().forEach((f) => {
-                  // if (f.columnName == settings.groupBy) return;
-
-                  switch (f.key) {
-                     case "number":
-                        groupMap[f.columnName] = [f.columnName, "sum"];
-                        break;
-                     case "calculate":
-                     case "formula":
-                        groupMap[f.columnName] = [
-                           f.columnName,
-                           function(prop, listData) {
-                              if (!listData) return 0;
-
-                              let sum = 0;
-
-                              listData.forEach((r) => {
-                                 sum += f.format(r) * 1;
-                              });
-
-                              return sum;
-                           }
-                        ];
-                        break;
-                     case "connectObject":
-                        groupMap[f.columnName] = [
-                           f.columnName,
-                           function(prop, listData) {
-                              if (!listData || !listData.length) return 0;
-
-                              let count = 0;
-
-                              listData.forEach((r) => {
-                                 var valRelation = r[f.relationName()];
-
-                                 // array
-                                 if (valRelation && valRelation.length != null)
-                                    count += valRelation.length;
-                                 // object
-                                 else if (valRelation) count += 1;
-                              });
-
-                              return count;
-                           }
-                        ];
-                        break;
-                     default:
-                        groupMap[f.columnName] = [
-                           f.columnName,
-                           function(prop, listData) {
-                              if (!listData || !listData.length) return 0;
-
-                              let count = 0;
-
-                              listData.forEach((r) => {
-                                 var val = prop(r);
-
-                                 // // "false" to boolean
-                                 // if (f.key == "boolean") {
-
-                                 //     try {
-                                 //         val = JSON.parse(val || 0);
-                                 //     }
-                                 //     catch (err) {
-                                 //         val = false;
-                                 //     }
-                                 // }
-
-                                 // count only exists data
-                                 if (val) {
-                                    count += 1;
-                                 }
-                              });
-
-                              return count;
-                           }
-                        ];
-                        break;
-                  }
-               });
-
-               // set group definition
-               DataTable.define("scheme", {
-                  $group: {
-                     by: settings.groupBy,
-                     map: groupMap
-                  }
-               });
-            }
+            // _logic.grouping(settings.groupBy);
 
             // supressed this because it seems to be making an extra call?
             // _logic.refresh();
@@ -1012,13 +949,26 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             let DataTable = $$(this.ui.id);
             CurrentDatacollection = datacollection;
             if (CurrentDatacollection) {
-               CurrentDatacollection.bind(DataTable);
+               if (
+                  CurrentDatacollection.datacollectionLink &&
+                  CurrentDatacollection.fieldLink
+               ) {
+                  CurrentDatacollection.bind(
+                     DataTable,
+                     CurrentDatacollection.datacollectionLink,
+                     CurrentDatacollection.fieldLink
+                  );
+               } else {
+                  CurrentDatacollection.bind(DataTable);
+               }
                CurrentDatacollection.on("initializingData", () => {
                   _logic.busy();
                });
                CurrentDatacollection.on("initializedData", () => {
+                  _logic.grouping();
                   _logic.ready();
                });
+               _logic.grouping();
             } else DataTable.unbind();
          },
 
@@ -1066,15 +1016,21 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             if (!CurrentObject) return;
 
             var DataTable = $$(ids.component);
+            var accessLevel = DataTable.config.accessLevel;
             DataTable.define("leftSplit", 0);
             DataTable.define("rightSplit", 0);
             // DataTable.clearAll();
+
+            var editable = settings.isEditable;
+            if (DataTable.config.accessLevel < 2) {
+               editable = false;
+            }
 
             //// update DataTable structure:
             // get column list from our CurrentObject
             var columnHeaders = CurrentObject.columnHeaders(
                true,
-               settings.isEditable,
+               editable,
                settings.summaryColumns,
                settings.countColumns,
                settings.hiddenFields
@@ -1130,15 +1086,19 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                }
 
                // group header
-               if (settings.groupBy && settings.groupBy == col.id) {
+               if (
+                  settings.groupBy &&
+                  (settings.groupBy || "").indexOf(col.id) > -1
+               ) {
                   var groupField = CurrentObject.fields(
                      (f) => f.columnName == col.id
                   )[0];
                   if (groupField) {
                      col.template = function(obj, common) {
+                        // return common.treetable(obj, common) + obj.value;
                         if (obj.$group) {
-                           let rowData = {};
-                           rowData[groupField.columnName] = obj.value;
+                           let rowData = _.clone(obj);
+                           rowData[groupField.columnName] = rowData.value;
 
                            return (
                               common.treetable(obj, common) +
@@ -1155,7 +1115,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                var complexValidations = [];
                fieldValidations.forEach((f) => {
                   // init each ui to have the properties (app and fields) of the object we are editing
-                  f.filter.applicationLoad(App);
+                  f.filter.applicationLoad(CurrentObject.application);
                   f.filter.fieldsLoad(CurrentObject.fields());
                   // now we can set the value because the fields are properly initialized
                   f.filter.setValue(f.validationRules);
@@ -1183,8 +1143,18 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                      var invalidMessage = "";
                      dataTable.$view.complexValidations[key].forEach(
                         (filter) => {
+                           // convert rowData from { colName : data } to { id : data }
+                           var newData = {};
+                           (CurrentObject.fields() || []).forEach((field) => {
+                              newData[field.id] = data[field.columnName];
+                           });
+                           // for the case of "this_object" conditions:
+                           if (data.uuid) {
+                              newData["this_object"] = data.uuid;
+                           }
+
                            // use helper funtion to check if valid
-                           var ruleValid = filter.filters(data);
+                           var ruleValid = filter.filters(newData);
                            // if invalid we need to tell the field
                            if (ruleValid == false) {
                               isValid = false;
@@ -1212,7 +1182,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                // check if the previous datatable had rule popups and remove them
                if (dataTable.config.rulePops) {
                   dataTable.config.rulePops.forEach((popup) => {
-                     $$(popup).destructor();
+                     if ($$(popup)) $$(popup).destructor();
                   });
                }
                // remove any validation rules from the previous table
@@ -1233,7 +1203,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                });
             }
 
-            if (settings.massUpdate) {
+            if (settings.massUpdate && accessLevel == 2) {
                columnHeaders.unshift({
                   id: "appbuilder_select_item",
                   header: { content: "masterCheckbox", contentId: "mch" },
@@ -1258,7 +1228,22 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                });
                columnSplitRight++;
             }
-            if (settings.editView != null && !settings.hideButtons) {
+            if (settings.trackView != null && accessLevel == 2) {
+               columnHeaders.push({
+                  id: "appbuilder_view_track",
+                  header: "",
+                  width: 40,
+                  template:
+                     "<div class='track'><span class='track fa fa-history'></span></div>",
+                  css: { "text-align": "center", cursor: "pointer" }
+               });
+               columnSplitRight++;
+            }
+            if (
+               settings.editView != null &&
+               !settings.hideButtons &&
+               accessLevel == 2
+            ) {
                columnHeaders.push({
                   id: "appbuilder_view_edit",
                   header: "",
@@ -1268,7 +1253,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                });
                columnSplitRight++;
             }
-            if (settings.allowDelete) {
+            if (settings.allowDelete && accessLevel == 2) {
                columnHeaders.push({
                   id: "appbuilder_trash",
                   header: "",
@@ -1280,8 +1265,13 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             }
 
             // add fillspace to last editiable column
+            var hiddenFields = settings.hiddenFields
+               ? settings.hiddenFields.length
+               : 0;
             var lastCol =
-               columnHeaders[columnHeaders.length - 1 - columnSplitRight];
+               columnHeaders[
+                  columnHeaders.length - hiddenFields - columnSplitRight - 1
+               ];
             if (lastCol) {
                lastCol.fillspace = true;
                lastCol.minWidth = lastCol.width;
@@ -1307,6 +1297,142 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
             DataTable.refreshColumns();
 
             // }
+         },
+
+         grouping: () => {
+            if (!this._settings.groupBy) return;
+
+            let $treetable = $$(this.ui.id);
+
+            // map: {
+            //     votes:["votes", "sum"],
+            //     title:["year"]
+            // }
+            let baseGroupMap = {};
+            CurrentObject.fields().forEach((f) => {
+               // if (f.columnName == settings.groupBy) return;
+
+               switch (f.key) {
+                  case "number":
+                     baseGroupMap[f.columnName] = [f.columnName, "sum"];
+                     break;
+                  case "calculate":
+                  case "formula":
+                     baseGroupMap[f.columnName] = [
+                        f.columnName,
+                        function(prop, listData) {
+                           if (!listData) return 0;
+
+                           let sum = 0;
+
+                           listData.forEach((r) => {
+                              sum += f.format(r) * 1;
+                           });
+
+                           return sum;
+                        }
+                     ];
+                     break;
+                  case "connectObject":
+                     baseGroupMap[f.columnName] = [
+                        f.columnName,
+                        function(prop, listData) {
+                           if (!listData || !listData.length) return 0;
+
+                           let count = 0;
+
+                           listData.forEach((r) => {
+                              var valRelation = r[f.relationName()];
+
+                              // array
+                              if (valRelation && valRelation.length != null)
+                                 count += valRelation.length;
+                              // object
+                              else if (valRelation) count += 1;
+                           });
+
+                           return count;
+                        }
+                     ];
+                     break;
+                  default:
+                     baseGroupMap[f.columnName] = [
+                        f.columnName,
+                        function(prop, listData) {
+                           if (!listData || !listData.length) return 0;
+
+                           let count = 0;
+
+                           listData.forEach((r) => {
+                              var val = prop(r);
+
+                              // // "false" to boolean
+                              // if (f.key == "boolean") {
+
+                              //     try {
+                              //         val = JSON.parse(val || 0);
+                              //     }
+                              //     catch (err) {
+                              //         val = false;
+                              //     }
+                              // }
+
+                              // count only exists data
+                              if (val) {
+                                 count += 1;
+                              }
+                           });
+
+                           return count;
+                        }
+                     ];
+                     break;
+               }
+            });
+
+            // set group definition
+            // DataTable.define("scheme", {
+            //    $group: {
+            //       by: settings.groupBy,
+            //       map: groupMap
+            //    }
+            // });
+
+            // NOTE: https://snippet.webix.com/e3a2bf60
+            let groupBys = (this._settings.groupBy || "")
+               .split(",")
+               .map((g) => g.trim());
+            // Reverse the array NOTE: call .group from child to root
+            groupBys = groupBys.reverse();
+            groupBys.forEach((colName, gIndex) => {
+               let by;
+               let groupMap = _.clone(baseGroupMap);
+
+               // Root
+               if (gIndex == groupBys.length - 1) {
+                  by = colName;
+               }
+               // Sub groups
+               else {
+                  by = (row) => {
+                     let byValue = row[colName];
+                     for (let i = gIndex + 1; i < groupBys.length; i++) {
+                        byValue = `${row[groupBys[i]]} - ${byValue}`;
+                     }
+                     return byValue;
+                  };
+
+                  // remove parent group data
+                  groupBys.forEach((gColName) => {
+                     if (gColName != colName) groupMap[gColName] = [gColName];
+                  });
+               }
+
+               $treetable.data.group({
+                  by: by,
+                  map: groupMap
+               });
+            });
          },
 
          /**
@@ -1408,8 +1534,8 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
           *
           * Add visibility "hidden" to all tooltips before render so we can move to a new location without the visual jump
           */
-         toolTipOnBeforeRender: function() {
-            var node = $$(ids.tooltip).getNode();
+         toolTipOnBeforeRender: function(node) {
+            // var node = $$(ids.tooltip).getNode();
             node.style.visibility = "hidden";
          },
 
@@ -1418,8 +1544,8 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
           *
           * If the tooltip is displaying off the screen we want to try to reposition it for a better experience
           */
-         toolTipOnAfterRender: function() {
-            var node = $$(ids.tooltip).getNode();
+         toolTipOnAfterRender: function(node) {
+            // var node = $$(ids.tooltip).getNode();
             if (node.firstChild != null && node.firstChild.nodeName == "IMG") {
                setTimeout(function() {
                   var imgBottom =

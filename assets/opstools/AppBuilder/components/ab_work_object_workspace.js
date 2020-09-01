@@ -14,6 +14,9 @@ const ABWorkspaceDatatable = require("./ab_work_object_workspace_datatable");
 const ABWorkspaceKanBan = require("./ab_work_object_workspace_kanban");
 const ABWorkspaceGantt = require("./ab_work_object_workspace_gantt");
 
+const ABWorkspaceIndex = require("./ab_work_object_workspace_index");
+const ABWorkspaceTrack = require("./ab_work_object_workspace_track");
+
 const ABPopupDefineLabel = require("./ab_work_object_workspace_popupDefineLabel");
 const ABPopupFilterDataTable = require("./ab_work_object_workspace_popupFilterDataTable");
 const ABPopupFrozenColumns = require("./ab_work_object_workspace_popupFrozenColumns");
@@ -68,6 +71,7 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
             addFields: L("ab.object.toolbar.addFields", "*Add field"),
             import: L("ab.object.toolbar.import", "*Import"),
             export: L("ab.object.toolbar.export", "*Export"),
+            addIndex: L("ab.object.toolbar.addIndex", "*Add Index"),
             confirmDeleteTitle: L(
                "ab.object.delete.title",
                "*Delete data field"
@@ -87,6 +91,8 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
 
       // default settings
       settings = settings || {};
+      if (settings.trackView == null) settings.trackView = true;
+
       if (settings.allowDelete == null) settings.allowDelete = true;
 
       if (settings.isInsertable == null) settings.isInsertable = true;
@@ -115,6 +121,9 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
          buttonRowNew: this.unique(idBase + "_buttonRowNew"),
          buttonSort: this.unique(idBase + "_buttonSort"),
 
+         listIndex: this.unique(idBase + "_listIndex"),
+         buttonIndex: this.unique(idBase + "_buttonIndex"),
+
          datatable: this.unique(idBase + "_datatable"),
          error: this.unique(idBase + "_error"),
          error_msg: this.unique(idBase + "_error_msg"),
@@ -141,6 +150,9 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
 
       var Gantt = new ABWorkspaceGantt(App, idBase);
       hashViews["gantt"] = Gantt;
+
+      let CustomIndex = new ABWorkspaceIndex(App, idBase);
+      let Track = new ABWorkspaceTrack(App, idBase);
 
       // Various Popups on our page:
       var PopupDefineLabelComponent = new ABPopupDefineLabel(App, idBase);
@@ -243,167 +255,194 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
          },
          margin: 0,
          padding: 0,
-         cols: [
-            { responsive: "hide" },
+         rows: [
             {
-               view: view,
-               id: ids.buttonAddField,
-               label: labels.component.addFields,
-               icon: "fa fa-plus",
-               css: "webix_transparent",
-               type: "icon",
-               hidden: !settings.isFieldAddable,
-               // minWidth: 115,
-               // autowidth: true,
-               click: function() {
-                  _logic.toolbarAddFields(this.$view);
-               }
+               cols: [
+                  { responsive: "hide" },
+                  {
+                     view: view,
+                     id: ids.buttonAddField,
+                     label: labels.component.addFields,
+                     icon: "fa fa-plus",
+                     css: "webix_transparent",
+                     type: "icon",
+                     hidden: !settings.isFieldAddable,
+                     // minWidth: 115,
+                     // autowidth: true,
+                     click: function() {
+                        _logic.toolbarAddFields(this.$view);
+                     }
+                  },
+                  { responsive: "hide" },
+                  {
+                     view: view,
+                     id: ids.buttonFieldsVisible,
+                     label: labels.component.hideFields,
+                     icon: "fa fa-eye-slash",
+                     css: "webix_transparent",
+                     type: "icon",
+                     // minWidth: 105,
+                     // autowidth: true,
+                     badge: null,
+                     click: function() {
+                        _logic.toolbarFieldsVisible(this.$view);
+                     }
+                  },
+                  { responsive: "hide" },
+                  {
+                     view: view,
+                     id: ids.buttonFilter,
+                     label: labels.component.filterFields,
+                     icon: "fa fa-filter",
+                     css: "webix_transparent",
+                     type: "icon",
+                     // minWidth: 70,
+                     // autowidth: true,
+                     badge: null,
+                     click: function() {
+                        _logic.toolbarFilter(this.$view);
+                     }
+                  },
+                  { responsive: "hide" },
+                  {
+                     view: view,
+                     id: ids.buttonSort,
+                     label: labels.component.sortFields,
+                     icon: "fa fa-sort",
+                     css: "webix_transparent",
+                     type: "icon",
+                     // minWidth: 60,
+                     // autowidth: true,
+                     badge: null,
+                     click: function() {
+                        _logic.toolbarSort(this.$view);
+                     }
+                  },
+                  { responsive: "hide" },
+                  {
+                     view: view,
+                     id: ids.buttonFrozen,
+                     label: labels.component.frozenColumns,
+                     icon: "fa fa-thumb-tack",
+                     css: "webix_transparent",
+                     type: "icon",
+                     // minWidth: 75,
+                     // autowidth: true,
+                     badge: null,
+                     click: function() {
+                        _logic.toolbarFrozen(this.$view);
+                     }
+                  },
+                  { responsive: "hide" },
+                  {
+                     view: view,
+                     id: ids.buttonLabel,
+                     label: labels.component.defineLabel,
+                     icon: "fa fa-crosshairs",
+                     css: "webix_transparent",
+                     type: "icon",
+                     // minWidth: 75,
+                     // autowidth: true,
+                     click: function() {
+                        _logic.toolbarDefineLabel(this.$view);
+                     }
+                  },
+                  { responsive: "hide" },
+                  // {
+                  //  view: view,
+                  //  label: labels.component.permission,
+                  //  icon: "lock",
+                  //  type: "icon",
+                  //  // autowidth: true,
+                  //  click: function() {
+                  //      _logic.toolbarPermission(this.$view);
+                  //  }
+                  //
+                  // },
+                  {
+                     view: view,
+                     id: ids.buttonImport,
+                     label: labels.component.import,
+                     icon: "fa fa-upload",
+                     css: "webix_transparent",
+                     type: "icon",
+                     // minWidth: 80,
+                     click: function() {
+                        _logic.toolbarButtonImport();
+                     }
+                  },
+                  { responsive: "hide" },
+                  {
+                     view: view,
+                     id: ids.buttonExport,
+                     label: labels.component.export,
+                     icon: "fa fa-download",
+                     css: "webix_transparent",
+                     type: "icon",
+                     // minWidth: 80,
+                     // autowidth: true,
+                     click: function() {
+                        _logic.toolbarButtonExport(this.$view);
+                     }
+                  },
+                  { responsive: "hide" },
+                  {
+                     view: view,
+                     id: ids.buttonMassUpdate,
+                     label: labels.component.massUpdate,
+                     icon: "fa fa-pencil-square-o",
+                     css: "webix_transparent",
+                     type: "icon",
+                     // minWidth: 65,
+                     // autowidth: true,
+                     badge: null,
+                     hidden: true,
+                     click: function() {
+                        _logic.toolbarMassUpdate(this.$view);
+                     }
+                  },
+                  { responsive: "hide" },
+                  {
+                     view: view,
+                     id: ids.buttonDeleteSelected,
+                     label: labels.component.deleteSelected,
+                     icon: "fa fa-trash",
+                     css: "webix_transparent",
+                     type: "icon",
+                     // minWidth: 85,
+                     // autowidth: true,
+                     badge: null,
+                     hidden: true,
+                     click: function() {
+                        _logic.toolbarDeleteSelected(this.$view);
+                     }
+                  },
+                  { responsive: "hide" }
+               ]
             },
-            { responsive: "hide" },
             {
-               view: view,
-               id: ids.buttonFieldsVisible,
-               label: labels.component.hideFields,
-               icon: "fa fa-eye-slash",
-               css: "webix_transparent",
-               type: "icon",
-               // minWidth: 105,
-               // autowidth: true,
-               badge: null,
-               click: function() {
-                  _logic.toolbarFieldsVisible(this.$view);
-               }
-            },
-            { responsive: "hide" },
-            {
-               view: view,
-               id: ids.buttonFilter,
-               label: labels.component.filterFields,
-               icon: "fa fa-filter",
-               css: "webix_transparent",
-               type: "icon",
-               // minWidth: 70,
-               // autowidth: true,
-               badge: null,
-               click: function() {
-                  _logic.toolbarFilter(this.$view);
-               }
-            },
-            { responsive: "hide" },
-            {
-               view: view,
-               id: ids.buttonSort,
-               label: labels.component.sortFields,
-               icon: "fa fa-sort",
-               css: "webix_transparent",
-               type: "icon",
-               // minWidth: 60,
-               // autowidth: true,
-               badge: null,
-               click: function() {
-                  _logic.toolbarSort(this.$view);
-               }
-            },
-            { responsive: "hide" },
-            {
-               view: view,
-               id: ids.buttonFrozen,
-               label: labels.component.frozenColumns,
-               icon: "fa fa-thumb-tack",
-               css: "webix_transparent",
-               type: "icon",
-               // minWidth: 75,
-               // autowidth: true,
-               badge: null,
-               click: function() {
-                  _logic.toolbarFrozen(this.$view);
-               }
-            },
-            { responsive: "hide" },
-            {
-               view: view,
-               id: ids.buttonLabel,
-               label: labels.component.defineLabel,
-               icon: "fa fa-crosshairs",
-               css: "webix_transparent",
-               type: "icon",
-               // minWidth: 75,
-               // autowidth: true,
-               click: function() {
-                  _logic.toolbarDefineLabel(this.$view);
-               }
-            },
-            { responsive: "hide" },
-            // {
-            //  view: view,
-            //  label: labels.component.permission,
-            //  icon: "lock",
-            //  type: "icon",
-            //  // autowidth: true,
-            //  click: function() {
-            //      _logic.toolbarPermission(this.$view);
-            //  }
-            //
-            // },
-            {
-               view: view,
-               id: ids.buttonImport,
-               label: labels.component.import,
-               icon: "fa fa-upload",
-               css: "webix_transparent",
-               type: "icon",
-               // minWidth: 80,
-               click: function() {
-                  _logic.toolbarButtonImport();
-               }
-            },
-            { responsive: "hide" },
-            {
-               view: view,
-               id: ids.buttonExport,
-               label: labels.component.export,
-               icon: "fa fa-download",
-               css: "webix_transparent",
-               type: "icon",
-               // minWidth: 80,
-               // autowidth: true,
-               click: function() {
-                  _logic.toolbarButtonExport(this.$view);
-               }
-            },
-            { responsive: "hide" },
-            {
-               view: view,
-               id: ids.buttonMassUpdate,
-               label: labels.component.massUpdate,
-               icon: "fa fa-pencil-square-o",
-               css: "webix_transparent",
-               type: "icon",
-               // minWidth: 65,
-               // autowidth: true,
-               badge: null,
-               hidden: true,
-               click: function() {
-                  _logic.toolbarMassUpdate(this.$view);
-               }
-            },
-            { responsive: "hide" },
-            {
-               view: view,
-               id: ids.buttonDeleteSelected,
-               label: labels.component.deleteSelected,
-               icon: "fa fa-trash",
-               css: "webix_transparent",
-               type: "icon",
-               // minWidth: 85,
-               // autowidth: true,
-               badge: null,
-               hidden: true,
-               click: function() {
-                  _logic.toolbarDeleteSelected(this.$view);
-               }
-            },
-            { responsive: "hide" }
+               css: { "background-color": "#747d84 !important" },
+               cols: [
+                  {
+                     view: view,
+                     id: ids.buttonIndex,
+                     label: labels.component.addIndex,
+                     icon: "fa fa-plus-circle",
+                     css: "webix_transparent",
+                     type: "icon",
+                     click: () => {
+                        CustomIndex.open(CurrentObject);
+                     }
+                  },
+                  {
+                     id: ids.listIndex,
+                     cols: []
+                  },
+                  {
+                     responsive: "hide"
+                  }
+               ]
+            }
          ]
       };
 
@@ -537,6 +576,11 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
          Gantt.init();
 
          CurrentDatacollection.init();
+
+         CustomIndex.init({
+            onChange: _logic.refreshIndexes
+         });
+         Track.init();
 
          DataTable.datacollectionLoad(CurrentDatacollection);
          KanBan.datacollectionLoad(CurrentDatacollection);
@@ -820,6 +864,14 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                                  );
                               })
                               .catch((err) => {
+                                 if (err && err.message) {
+                                    webix.alert({
+                                       type: "alert-error",
+                                       title: "Could not delete",
+                                       text: err.message
+                                    });
+                                 }
+
                                  OP.Error.log("Error trying to delete field", {
                                     error: err,
                                     fields: field
@@ -1208,6 +1260,8 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
             DataTable.refreshHeader();
             _logic.refreshToolBarView();
 
+            _logic.refreshIndexes();
+
             // $$(ids.component).setValue(ids.selectedObject);
             $$(ids.selectedObject).show(true, false);
 
@@ -1296,25 +1350,9 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                CurrentDatacollection.loadData(0);
             } else {
                CurrentDatacollection.loadData(0, 30).catch((err) => {
-                  var message = err.toString();
-                  if (typeof err == "string") {
-                     try {
-                        var jErr = JSON.parse(err);
-                        if (jErr.data && jErr.data.sqlMessage) {
-                           message = jErr.data.sqlMessage;
-                        }
-                     } catch (e) {}
-                  }
-
-                  $$(ids.error).show();
-                  $$(ids.error_msg).define("label", message);
-                  $$(ids.error_msg).refresh();
-
-                  webix.alert({
-                     title: "Error loading object Values ",
-                     ok: "fix it",
-                     text: message,
-                     type: "alert-error"
+                  webix.message({
+                     type: "error",
+                     text: err.message
                   });
 
                   console.error(err);
@@ -1399,12 +1437,41 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
             $$(ids.viewMenu).clearAll();
             $$(ids.viewMenu).define("data", submenu);
             $$(ids.viewMenu).refresh();
+         },
+
+         refreshIndexes: () => {
+            let indexes = CurrentObject.indexes() || [];
+
+            // clear indexes list
+            webix.ui([], $$(ids.listIndex));
+
+            indexes.forEach((index) => {
+               _logic.addNewIndex(index);
+            });
+         },
+
+         addNewIndex: (index) => {
+            $$(ids.listIndex).addView({
+               view: view,
+               label: index.name,
+               icon: "fa fa-key",
+               css: "webix_transparent",
+               type: "icon",
+               width: 160,
+               click: () => {
+                  CustomIndex.open(CurrentObject, index);
+               }
+            });
          }
       };
       this._logic = _logic;
 
       // Expose any globally accessible Actions:
-      this.actions({});
+      this.actions({
+         openObjectTrack: (CurrentObject, rowId) => {
+            Track.open(CurrentObject, rowId);
+         }
+      });
 
       //
       // Define our external interface methods:

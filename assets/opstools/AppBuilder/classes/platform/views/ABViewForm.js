@@ -753,7 +753,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
       };
 
       // make sure each of our child views get .init() called
-      var _init = (options) => {
+      var _init = (options, accessLevel) => {
          // register our callbacks:
          if (options) {
             for (var c in _logic.callbacks) {
@@ -761,11 +761,15 @@ module.exports = class ABViewForm extends ABViewFormCore {
             }
          }
 
-         component.init(options);
+         component.init(options, accessLevel);
 
          var Form = $$(ids.component);
          if (Form) {
             webix.extend(Form, webix.ProgressBar);
+         }
+
+         if (accessLevel < 2) {
+            Form.disable();
          }
 
          // bind a data collection to form component
@@ -850,8 +854,20 @@ module.exports = class ABViewForm extends ABViewFormCore {
                      // check each rule that was stored previously on the element
                      fieldValidating.$view.complexValidations.forEach(
                         (filter) => {
+                           let object = dc.datasource;
+                           let data = this.getValues();
+                           // convert rowData from { colName : data } to { id : data }
+                           var newData = {};
+                           (object.fields() || []).forEach((field) => {
+                              newData[field.id] = data[field.columnName];
+                           });
+                           // for the case of "this_object" conditions:
+                           if (data.uuid) {
+                              newData["this_object"] = data.uuid;
+                           }
+
                            // use helper funtion to check if valid
-                           var ruleValid = filter.filters(this.getValues());
+                           var ruleValid = filter.filters(newData);
                            // if invalid we need to tell the field
                            if (ruleValid == false) {
                               isValid = false;
@@ -868,6 +884,39 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   formField.refresh();
                });
             }
+         }
+
+         // init DC in record rules
+         if (
+            this.settings &&
+            this.settings.recordRules &&
+            this.settings.recordRules.length
+         ) {
+            this.settings.recordRules.forEach((rule) => {
+               if (
+                  !rule ||
+                  !rule.actionSettings ||
+                  !rule.actionSettings.valueRules ||
+                  !rule.actionSettings.valueRules.fieldOperations ||
+                  !rule.actionSettings.valueRules.fieldOperations.length
+               )
+                  return;
+               rule.actionSettings.valueRules.fieldOperations.forEach((op) => {
+                  if (op.valueType != "exist") return;
+
+                  let pullDataDC = this.application.datacollections(
+                     (dc) => dc.id == op.value
+                  )[0];
+
+                  if (
+                     pullDataDC &&
+                     pullDataDC.dataStatus ==
+                        pullDataDC.dataStatusFlag.notInitial
+                  ) {
+                     pullDataDC.loadData();
+                  }
+               });
+            });
          }
 
          // _onShow();
@@ -910,6 +959,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   var defaultRowData = {};
                   field.defaultValue(defaultRowData);
                   field.setValue($$(comp.ui.id), defaultRowData);
+
+                  if (comp.logic.refresh) comp.logic.refresh(defaultRowData);
                });
                var normalFields = this.fieldComponents(
                   (comp) =>
@@ -948,6 +999,9 @@ module.exports = class ABViewForm extends ABViewFormCore {
 
                   // set value to each components
                   if (f.field()) f.field().setValue($$(comp.ui.id), rowData);
+
+                  if (comp.logic && comp.logic.refresh)
+                     comp.logic.refresh(rowData);
                });
             }
          },
@@ -1100,6 +1154,12 @@ module.exports = class ABViewForm extends ABViewFormCore {
     * @param {ABDatacollection} dcLink [optional]
     */
    getFormValues(formView, obj, dcLink) {
+      // get the fields that are on this form
+      var visibleFields = [];
+      var loopForm = formView.getValues(function(obj) {
+         visibleFields.push(obj.config.name);
+      });
+
       // get update data
       var formVals = formView.getValues();
 
@@ -1112,7 +1172,22 @@ module.exports = class ABViewForm extends ABViewFormCore {
          if (vComponent == null) return;
 
          if (f.field())
-            formVals[f.field().columnName] = vComponent.logic.getValue();
+            formVals[f.field().columnName] = vComponent.logic.getValue(
+               formVals
+            );
+      });
+
+      // remove connected fields if they were not on the form and they are present in the formVals because it is a datacollection
+      obj.fields().forEach((f) => {
+         if (
+            f.key == "connectObject" &&
+            visibleFields.indexOf(f.columnName) == -1 &&
+            formVals[f.columnName]
+         ) {
+            delete formVals[f.columnName];
+            if (formVals[f.columnName + "__relation"])
+               delete formVals[f.columnName + "__relation"];
+         }
       });
 
       // clear undefined values or empty arrays
@@ -1241,6 +1316,9 @@ module.exports = class ABViewForm extends ABViewFormCore {
 
       // get update data
       var formVals = this.getFormValues(formView, obj, dv.datacollectionLink);
+
+      // update value from the record rule (pre-update)
+      this.doRecordRulesPre(formVals);
 
       // validate data
       if (!this.validateData(formView, obj, formVals)) {

@@ -64,18 +64,32 @@ module.exports = class ABViewFormDatepicker extends ABViewFormDatepickerCore {
 
       component.ui.id = ids.component;
       component.ui.view = "datepicker";
+      if (!field) return component;
+
+      // Ignore date - Only time picker
+      if (field.settings.dateFormat == 1) {
+         component.ui.type = "time";
+      }
+
+      // Date & Time picker
+      if (
+         field.key == "datetime" &&
+         field.settings &&
+         field.settings.timeFormat &&
+         field.settings.timeFormat != 1
+      ) {
+         component.ui.timepicker = true;
+      }
 
       // allows entering characters in datepicker input, false by default
       component.ui.editable = true;
 
+      // default value
+      if (component.ui.value && !(component.ui.value instanceof Date)) {
+         component.ui.value = new Date(component.ui.value);
+      }
+
       if (field != null) {
-         component.ui.timepicker = this.settings.timepicker;
-
-         // default value
-         if (component.ui.value && !(component.ui.value instanceof Date)) {
-            component.ui.value = new Date(component.ui.value);
-         }
-
          component.ui.format = field.getFormat();
       }
 

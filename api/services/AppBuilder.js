@@ -397,7 +397,8 @@ module.exports = {
        * @return {string}
        */
       toSQLDate: function(date) {
-         return moment(date).format("YYYY-MM-DD 00:00:00");
+         return moment(date).format("YYYY-MM-DD");
+         // return moment(date).format("YYYY-MM-DD 00:00:00");
       },
 
       /**
@@ -409,8 +410,17 @@ module.exports = {
        * @return {string}
        */
       toSQLDateTime: function(date) {
-         return moment(date).format("YYYY-MM-DD HH:mm:ss");
+         return moment(date)
+            .utc()
+            .format("YYYY-MM-DD HH:mm:ss");
       },
+
+      /**
+       * AppBuilder.rules.SQLDateRegExp
+       *
+       * property is a regular expression to validate SQL Date format
+       */
+      SQLDateRegExp: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
 
       /**
        * AppBuilder.rules.SQLDateTimeRegExp
@@ -3213,7 +3223,7 @@ module.exports = {
 
          ABApplication.find(cond)
             .then((list) => {
-               list.forEach((l) => {
+               (list || []).forEach((l) => {
                   var listMA = l.toABClass().mobileApps();
 
                   //// NOTE: at this point each listMA entry is an instance of ABMobileApp

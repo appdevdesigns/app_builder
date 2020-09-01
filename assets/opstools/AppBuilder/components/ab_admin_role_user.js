@@ -69,21 +69,15 @@ module.exports = class AB_Work_Admin_Role_User extends ABComponent {
                }
             },
             {
-               cols: [
-                  { fillspace: true },
-                  {
-                     id: ids.addUser,
-                     view: "button",
-                     css: "webix_transparent",
-                     type: "icon",
-                     icon: "fa fa-plus",
-                     label: "Add a user",
-                     width: 130,
-                     click: () => {
-                        UserAdd.show();
-                     }
-                  }
-               ]
+               id: ids.addUser,
+               view: "button",
+               css: "webix_primary",
+               type: "icon",
+               icon: "fa fa-plus",
+               label: "Add a user",
+               click: () => {
+                  UserAdd.show();
+               }
             }
          ]
       };

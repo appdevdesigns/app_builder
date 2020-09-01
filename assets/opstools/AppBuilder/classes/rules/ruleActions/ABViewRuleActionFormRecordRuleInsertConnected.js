@@ -79,35 +79,34 @@ module.exports = class ABViewRuleActionFormRecordRuleInsertConnected extends Upd
       var newObjectValues = {};
 
       // update them according to our rules
-      return this.processUpdateObject({}, newObjectValues).then(() => {
-         if (newObjectValues.newRecords) {
-            // now add our .id to the proper field in newObjectValues
-            var connectedObjectField = connObj.fields((f) => {
-               return f.id == connectionField.settings.linkColumn;
-            })[0];
-            if (connectedObjectField == null)
-               return Promise.reject("No connected object field");
+      this.processUpdateObject({}, newObjectValues);
 
-            var newRecords = {};
-            newObjectValues.newRecords.forEach((r) => {
-               r[connectedObjectField.columnName] = options.data.id;
-               // perform the update/insert
-               return model.create(r);
-            });
-         } else {
-            // now add our .id to the proper field in newObjectValues
-            var connectedObjectField = connObj.fields((f) => {
-               return f.id == connectionField.settings.linkColumn;
-            })[0];
-            if (connectedObjectField == null)
-               return Promise.reject("No connected object field");
+      if (newObjectValues.newRecords) {
+         // now add our .id to the proper field in newObjectValues
+         let connectedObjectField = connObj.fields((f) => {
+            return f.id == connectionField.settings.linkColumn;
+         })[0];
+         if (connectedObjectField == null)
+            return Promise.reject("No connected object field");
 
-            newObjectValues[connectedObjectField.columnName] = options.data.id;
-
+         newObjectValues.newRecords.forEach((r) => {
+            r[connectedObjectField.columnName] = options.data.id;
             // perform the update/insert
-            return model.create(newObjectValues);
-         }
-      });
+            return model.create(r);
+         });
+      } else {
+         // now add our .id to the proper field in newObjectValues
+         let connectedObjectField = connObj.fields((f) => {
+            return f.id == connectionField.settings.linkColumn;
+         })[0];
+         if (connectedObjectField == null)
+            return Promise.reject("No connected object field");
+
+         newObjectValues[connectedObjectField.columnName] = options.data.id;
+
+         // perform the update/insert
+         return model.create(newObjectValues);
+      }
    }
 
    /**

@@ -304,40 +304,25 @@ module.exports = class ABViewRule {
       });
    }
 
+   processPre(options = {}) {
+      let isValid = this.isValid(options.data);
+      if (!isValid) return;
+
+      let currentAction = this.currentAction();
+      if (!currentAction) return;
+
+      currentAction.processUpdateObject({}, options.data);
+   }
+
    // process
    // Take the provided data and process this rule
    // @param {obj} options
    // @return {Promise}
    process(options) {
       var currentAction = this.currentAction();
+      if (!currentAction) return Promise.resolve();
 
-      var id = "hiddenQB_" + webix.uid();
-
-      // if our data passes the QueryRules then tell Action to process
-      var ui = {
-         id: id,
-         hidden: true,
-         view: "querybuilder"
-      };
-      var hiddenQB = webix.ui(ui);
-
-      var QBCondition = currentAction.condition();
-
-      if (this.objectQB) {
-         this.objectQB.cleanRules(QBCondition[0], QBCondition[1], false);
-      }
-
-      // hiddenQB.setValue(QBCondition);
-      hiddenQB.setValue({
-         query: QBCondition[0] || {},
-         fields: QBCondition[1] || []
-      });
-
-      var QBHelper = hiddenQB.getFilterHelper();
-      var isValid = QBHelper(options.data);
-
-      hiddenQB.destructor(); // remove the QB
-
+      let isValid = this.isValid(options.data);
       if (isValid) {
          return currentAction.process(options);
       } else {
@@ -355,6 +340,7 @@ module.exports = class ABViewRule {
          // store our Query Rules
          this.selectedAction = settings.selectedAction;
          var selectedAction = this.currentAction();
+         if (!selectedAction) return;
          selectedAction.stashCondition(settings.queryRules || {});
 
          // if our UI components are present, populate them properly:
@@ -376,7 +362,10 @@ module.exports = class ABViewRule {
       if (this.selectedAction) {
          settings.selectedAction = this.selectedAction;
          settings.queryRules = this.objectQB.getValue();
-         settings.actionSettings = this.currentAction().toSettings();
+         let currentAction = this.currentAction();
+         if (currentAction) {
+            settings.actionSettings = currentAction.toSettings();
+         }
       }
 
       return settings;
@@ -393,5 +382,79 @@ module.exports = class ABViewRule {
          this.objectQB.setValue(currAction.condition());
          currAction.qbFixAfterShow();
       }
+   }
+
+   isValid(data = {}) {
+      var id = "hiddenQB_" + webix.uid();
+
+      // if our data passes the QueryRules then tell Action to process
+      var ui = {
+         id: id,
+         hidden: true,
+         view: "querybuilder"
+      };
+      var hiddenQB = webix.ui(ui);
+
+      let currentAction = this.currentAction();
+      var QBCondition = currentAction.condition();
+
+      if (this.objectQB) {
+         this.objectQB.cleanRules(QBCondition[0], QBCondition[1], false);
+      }
+
+      let query = QBCondition[0] || {},
+         fields = QBCondition[1] || [];
+
+      let convertToNumber = (text = "") => {
+         // if we have multiple rules we need to check if value is already a number before converting.
+         if (typeof text == "number") return text;
+
+         return parseFloat(text.replace(/[^0-9.]/g, ""));
+      };
+
+      // Fix string data in number type
+      // NOTE: "1000" > "99" = false    >_<!
+      fields
+         .filter(
+            (f) =>
+               f.type == "number" ||
+               f.type == "calculate" ||
+               f.type == "formula"
+         )
+         .forEach((f) => {
+            try {
+               // filter conditions
+               if (query && query.rules && Array.isArray(query.rules)) {
+                  query.rules.forEach((r) => {
+                     if (r.key != f.id) return;
+
+                     r.value = convertToNumber(r.value);
+                  });
+               }
+
+               // row data
+               if (data[f.id] && typeof data[f.id] === "string") {
+                  data[f.id] = convertToNumber(data[f.id]);
+               }
+            } catch (e) {}
+         });
+
+      // hiddenQB.setValue(QBCondition);
+      hiddenQB.setValue({
+         query: query,
+         fields: fields
+      });
+
+      var QBHelper = hiddenQB.getFilterHelper();
+      var isValid = QBHelper(data);
+
+      hiddenQB.destructor(); // remove the QB
+
+      return isValid;
+   }
+
+   get isPreProcess() {
+      let currentAction = this.currentAction();
+      return currentAction.isPreProcess || false;
    }
 };

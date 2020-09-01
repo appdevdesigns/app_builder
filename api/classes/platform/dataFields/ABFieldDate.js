@@ -56,18 +56,7 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
                   var currCol;
 
                   // Need to use date time type to support timezone
-                  currCol = t.dateTime(this.columnName);
-
-                  // // create a column that has date/time type
-                  // if (this.settings.includeTime == true) {
-
-                  // 	currCol = t.dateTime(this.columnName);
-
-                  // 	// create a column that has date type
-                  // } else {
-
-                  // 	currCol = t.date(this.columnName);
-                  // }
+                  currCol = t.date(this.columnName);
 
                   // field is required (not null)
                   if (this.settings.required && this.settings.default) {
@@ -81,7 +70,7 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
                      this.settings.default &&
                      moment(this.settings.default).isValid()
                   ) {
-                     var defaultDate = AppBuilder.rules.toSQLDateTime(
+                     var defaultDate = AppBuilder.rules.toSQLDate(
                         this.settings.default
                      );
 
@@ -146,7 +135,7 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
             anyOf: [
                {
                   type: "string",
-                  pattern: AppBuilder.rules.SQLDateTimeRegExp
+                  pattern: AppBuilder.rules.SQLDateRegExp
                },
                { type: "null" },
                {
@@ -191,15 +180,9 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
             }
             // convert to SQL date format
             else if (moment(myParameter[this.columnName]).isValid()) {
-               if (parseInt(this.settings.timeFormat) == 1) {
-                  myParameter[this.columnName] = AppBuilder.rules.toSQLDate(
-                     myParameter[this.columnName]
-                  );
-               } else {
-                  myParameter[this.columnName] = AppBuilder.rules.toSQLDateTime(
-                     myParameter[this.columnName]
-                  );
-               }
+               myParameter[this.columnName] = AppBuilder.rules.toSQLDate(
+                  myParameter[this.columnName]
+               );
             }
          }
       }
@@ -224,8 +207,6 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
       // check null
       if (!data) return data;
 
-      if (this.settings.includeTime)
-         return AppBuilder.rules.toSQLDateTime(data);
-      else return AppBuilder.rules.toSQLDate(data);
+      return AppBuilder.rules.toSQLDate(data);
    }
 };

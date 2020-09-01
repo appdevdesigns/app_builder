@@ -508,10 +508,10 @@ module.exports = class ABClassObject extends ABObjectCore {
          .then(() => this.populateFindConditions(query, options, userData))
          .then(() => {
             try {
-               sails.log.debug(
-                  "ABClassObject.queryFind - SQL:",
-                  query.toString()
-               );
+               // sails.log.debug(
+               //    "ABClassObject.queryFind - SQL:",
+               query.toString();
+               // );
             } catch (e) {
                // sails.log.debug('ABClassObject.queryFind - SQL:', query.debug() );
             }
@@ -567,10 +567,10 @@ module.exports = class ABClassObject extends ABObjectCore {
                .first();
 
             try {
-               sails.log.debug(
-                  "ABClassObject.queryCount - SQL:",
-                  query.toString()
-               );
+               // sails.log.debug(
+               //    "ABClassObject.queryCount - SQL:",
+               //    query.toString()
+               // );
             } catch (e) {
                // sails.log.debug('ABClassObject.queryFind - SQL:', query.debug() );
             }
@@ -804,7 +804,11 @@ module.exports = class ABClassObject extends ABObjectCore {
                         // @param {ObjectionJS Query} Query the query object to perform the operations.
                         var parseCondition = (condition, Query) => {
                            // 'have_no_relation' condition will be applied below
-                           if (condition.rule == "have_no_relation") return;
+                           if (
+                              condition == null ||
+                              condition.rule == "have_no_relation"
+                           )
+                              return;
 
                            // FIX: some improper inputs:
                            // if they didn't provide a .glue, then default to 'and'
@@ -939,6 +943,26 @@ module.exports = class ABClassObject extends ABObjectCore {
                                     )[0];
                                     if (inputID) condition.value = inputID.id;
                                  }
+
+                                 // DATE (not DATETIME)
+                                 else if (field.key == "date") {
+                                    condition.key = `DATE(${condition.key})`;
+                                    condition.value = `DATE("${condition.value}")`;
+                                 }
+
+                                 // Search string value of FK column
+                                 else if (
+                                    field.key == "connectObject" &&
+                                    (condition.rule == "contains" ||
+                                       condition.rule == "not_contains" ||
+                                       condition.rule == "equals" ||
+                                       condition.rule == "not_equal")
+                                 ) {
+                                    this.convertConnectFieldCondition(
+                                       field,
+                                       condition
+                                    );
+                                 }
                               }
                            }
 
@@ -1016,7 +1040,12 @@ module.exports = class ABClassObject extends ABObjectCore {
                            condition.rule = rule;
                            // basic case:  simple conversion
                            var operator = conversionHash[condition.rule];
-                           var value = quoteMe(condition.value);
+                           var value = condition.value;
+
+                           // If a function, then ignore quote. like DATE('05-05-2020')
+                           if (!RegExp("^[A-Z]+[(].*[)]$").test(value)) {
+                              value = quoteMe(value);
+                           }
 
                            // special operation cases:
                            switch (condition.rule) {
@@ -1103,9 +1132,16 @@ module.exports = class ABClassObject extends ABObjectCore {
                               case "in":
                                  operator = "IN";
 
+                                 // If condition.value is MySQL query command - (SELECT .. FROM ?)
+                                 if (
+                                    typeof condition.value == "string" &&
+                                    RegExp("^[(].*[)]$").test(condition.value)
+                                 ) {
+                                    value = condition.value;
+                                 }
                                  // if we wanted an IN clause, but there were no values sent, then we
                                  // want to make sure this condition doesn't return anything
-                                 if (
+                                 else if (
                                     Array.isArray(condition.value) &&
                                     condition.value.length > 0
                                  ) {
@@ -1127,9 +1163,16 @@ module.exports = class ABClassObject extends ABObjectCore {
                               case "not_in":
                                  operator = "NOT IN";
 
+                                 // If condition.value is MySQL query command - (SELECT .. FROM ?)
+                                 if (
+                                    typeof condition.value == "string" &&
+                                    RegExp("^[(].*[)]$").test(condition.value)
+                                 ) {
+                                    value = condition.value;
+                                 }
                                  // if we wanted a NOT IN clause, but there were no values sent, then we
                                  // want to make sure this condition returns everything (not filtered)
-                                 if (
+                                 else if (
                                     Array.isArray(condition.value) &&
                                     condition.value.length > 0
                                  ) {
@@ -1259,7 +1302,7 @@ module.exports = class ABClassObject extends ABObjectCore {
                               if (
                                  !this.viewName && // NOTE: check if this object is a query, then it includes .translations already
                                  (orderField.object.isExternal ||
-                                    field.object.isImported)
+                                    orderField.object.isImported)
                               ) {
                                  let prefix = "";
                                  if (orderField.alias) {
@@ -1671,5 +1714,79 @@ module.exports = class ABClassObject extends ABObjectCore {
       }
 
       return selectSQL;
+   }
+
+   convertConnectFieldCondition(field, condition) {
+      let getCustomKey = (f, fCustomIndex) => {
+         return "{prefix}.`{columnName}`"
+            .replace("{prefix}", f.dbPrefix())
+            .replace(
+               "{columnName}",
+               fCustomIndex ? fCustomIndex.columnName : f.object.PK()
+            );
+      };
+
+      // M:1 or 1:1 (isSource == false)
+      if (
+         (field.settings.linkType == "many" &&
+            field.settings.linkViaType == "one") ||
+         (field.settings.linkType == "one" &&
+            field.settings.linkViaType == "one" &&
+            !field.settings.isSource)
+      ) {
+         condition.key = getCustomKey(field, field.indexField);
+      }
+      // M:N
+      else if (
+         field.settings.linkType == "many" &&
+         field.settings.linkViaType == "many"
+      ) {
+         // find custom index field
+         let customIndexField;
+         if (
+            field.indexField &&
+            field.indexField.object.id == field.object.id
+         ) {
+            customIndexField = field.indexField;
+         } else if (
+            field.indexField2 &&
+            field.indexField2.object.id == field.object.id
+         ) {
+            customIndexField = field.indexField2;
+         }
+
+         // update condition.key is PK or CustomFK
+         condition.key = getCustomKey(field, customIndexField);
+
+         let fieldLink = field.fieldLink;
+         let joinTable = field.joinTableName();
+         let sourceFkName = field.object.name;
+         let targetFkName = fieldLink.object.name;
+
+         let mnOperators = {
+            contains: "LIKE",
+            not_contains: "LIKE", // not NOT LIKE because we will use IN or NOT IN at condition.rule instead
+            equals: "=",
+            not_equal: "=" // same .not_contains
+         };
+
+         // create sub-query to get values from MN table
+         condition.value = "(SELECT `{sourceFkName}` FROM `{joinTable}` WHERE `{targetFkName}` {ops} '{percent}{value}{percent}')"
+            .replace("{sourceFkName}", sourceFkName)
+            .replace("{joinTable}", joinTable)
+            .replace("{targetFkName}", targetFkName)
+            .replace("{ops}", mnOperators[condition.rule])
+            .replace("{value}", condition.value);
+
+         condition.value =
+            condition.rule == "contains" || condition.rule == "not_contains"
+               ? condition.value.replace(/{percent}/g, "%")
+               : condition.value.replace(/{percent}/g, "");
+
+         condition.rule =
+            condition.rule == "contains" || condition.rule == "equals"
+               ? "in"
+               : "not_in";
+      }
    }
 };

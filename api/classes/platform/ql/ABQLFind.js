@@ -107,13 +107,19 @@ class ABQLFind extends ABQLFindCore {
             newCond.key = cond.key;
             newCond.rule = cond.rule;
 
+            // if this is the special "this_object" reference, change this to "uuid":
+            if (newCond.key == "this_object") {
+               newCond.key = "uuid";
+            }
+
             // if this is one of our context values:
-            if (cond.rule.indexOf("context") == 0) {
+            // our context value rules will look like: [type]_context_[contains, not_contains]
+            if (cond.rule.indexOf("context") > -1) {
                newCond.value = this.task.process.processData(this.task, [
                   instance,
                   cond.value
                ]);
-               newCond.rule = cond.rule.replace("context_", "");
+               newCond.rule = cond.rule.split("context_")[1];
 
                // previous format fix:
                if (["equals", "not_equal"].indexOf(newCond.rule) == -1) {

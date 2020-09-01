@@ -44,7 +44,7 @@ module.exports = class ABTotalFooter {
 
                   // array
                   if (data) {
-                     result += parseInt(data);
+                     result += parseFloat(data); // we need to use parseFloat because numbers could be decimals
                   }
                });
 

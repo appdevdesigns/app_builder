@@ -121,9 +121,13 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
       this.init = function() {
          if ($$(ids.component)) $$(ids.component).adjust();
 
-         if ($$(ids.list)) {
-            webix.extend($$(ids.list), webix.ProgressBar);
-            $$(ids.list).adjust();
+         let $List = $$(ids.list);
+
+         if ($List) {
+            webix.extend($List, webix.ProgressBar);
+            $List.data.unsync();
+            $List.data.sync(viewList);
+            $List.adjust();
          }
 
          PopupNewPageComponent.init({
@@ -154,9 +158,11 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
             CurrentApplication = application;
 
             // this so it looks right/indented in a tree view:
-            viewList = new webix.TreeCollection();
+            viewList.clearAll();
 
             var addPage = function(page, index, parentId) {
+               if (!page) return;
+
                viewList.add(page, index, parentId);
 
                page.pages().forEach((childPage, childIndex) => {
@@ -169,9 +175,6 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
 
             // clear our list and display our objects:
             var List = $$(ids.list);
-            List.clearAll();
-            List.data.unsync();
-            List.data.sync(viewList);
             List.refresh();
             List.unselectAll();
 
@@ -540,7 +543,7 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
       ].join("");
 
       var CurrentApplication = null;
-      var viewList = null;
+      var viewList = new webix.TreeCollection();
 
       // Expose any globally accessible Actions:
       this.actions({

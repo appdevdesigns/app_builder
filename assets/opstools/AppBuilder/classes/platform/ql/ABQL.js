@@ -364,7 +364,7 @@ class ABQL extends ABQLCore {
             var Filter = new FilterComplex(null, id);
             var hashFieldIDs = this.availableProcessDataFieldsHash();
             if (this.object) {
-               Filter.objectLoad(this.object);
+               Filter.fieldsLoad(this.object.fields(), this.object);
                // NOTE: this will create default filters based upon the
                // object fields() and their types
 
@@ -378,6 +378,8 @@ class ABQL extends ABQLCore {
                      return k.object && k.object.id == this.object.id;
                   });
 
+               Filter.processFieldsLoad(foundFields);
+               /*
                (foundFields || []).forEach((processField) => {
                   var type = {};
                   if (processField.field) {
@@ -432,7 +434,8 @@ class ABQL extends ABQLCore {
                         }
                      }
                   ]);
-               });
+                  
+               }); */
             }
 
             // every time the Filter "saves" it's data, it emits this event:

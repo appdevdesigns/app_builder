@@ -22,7 +22,7 @@ module.exports = class AB_Work_Admin_User_List extends ABComponent {
          rows: [
             {
                view: "toolbar",
-               id: "myToolbar",
+               id: "myToolbarABadminUserList",
                cols: [
                   {
                      view: "label",

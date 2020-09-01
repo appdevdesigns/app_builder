@@ -107,36 +107,6 @@ function defaultTimeChange() {
          }
          break;
    }
-   refreshTimevalue();
-}
-
-function refreshTimevalue() {
-   console.log("refreshTimevalue");
-   var timeFormat = parseInt($$(ids.timeFormat).getValue());
-
-   var formatString = "";
-   switch (timeFormat) {
-      //HH:MM AM/PM
-      case 2:
-         {
-            formatString = "%h:%i %A";
-         }
-         break;
-      //HH:MM (military)
-      case 3:
-         {
-            formatString = "%H:%i";
-         }
-         break;
-      default:
-         {
-            formatString = "%h:%i %A";
-         }
-         break;
-   }
-
-   $$(ids.defaultTimeValue).define("format", formatString);
-   $$(ids.defaultTimeValue).refresh();
 }
 
 var ids = {
@@ -148,9 +118,6 @@ var ids = {
    dateFormat: "date-format",
    defaultDate: "default-date",
    defaultDateValue: "default-date-value",
-   timeFormat: "time-format",
-   defaultTime: "default-time",
-   defaultTimeValue: "default-time-value",
 
    // validation
    validateCondition: "ab-date-validate-condition",
@@ -185,12 +152,8 @@ var ABFieldDateComponent = new ABFieldComponent({
             id: ids.dateFormat,
             label: L("ab.dataField.date.dateFormat", "*Date Format"),
             labelWidth: 110,
-            value: 1,
+            value: 2,
             options: [
-               {
-                  id: 1,
-                  value: L("ab.dataField.date.ignoreDate", "*Ignore Date")
-               },
                { id: 2, value: "dd/mm/yyyy" },
                { id: 3, value: "mm/dd/yyyy" },
                { id: 4, value: "M D, yyyy" },
@@ -483,69 +446,6 @@ var ABFieldDateComponent = new ABFieldComponent({
             label: L("ab.dataField.date.endDate", "*End Date"),
             labelWidth: 100,
             hidden: true
-         },
-         {
-            view: "richselect",
-            name: "timeFormat",
-            id: ids.timeFormat,
-            label: L("ab.dataField.date.timeFormat", "*Time Format"),
-            labelWidth: 110,
-            value: 1,
-            options: [
-               {
-                  id: 1,
-                  value: L("ab.dataField.date.ignoreTime", "*Ignore Time")
-               },
-               { id: 2, value: "HH:MM AM/PM" },
-               { id: 3, value: "HH:MM (military)" }
-            ],
-            on: {
-               onChange: (newVal, oldVal) => {
-                  refreshTimevalue();
-               }
-            }
-         },
-         {
-            cols: [
-               {
-                  view: "richselect",
-                  name: "defaultTime",
-                  id: ids.defaultTime,
-                  label: L("ab.dataField.date.defaultTime", "*Default Time"),
-                  labelWidth: 110,
-                  value: 1,
-                  options: [
-                     { id: 1, value: L("ab.common.none", "*None") },
-                     {
-                        id: 2,
-                        value: L(
-                           "ab.dataField.date.currentTime",
-                           "*Current Time"
-                        )
-                     },
-                     {
-                        id: 3,
-                        value: L(
-                           "ab.dataField.date.specificTime",
-                           "*Specific Time"
-                        )
-                     }
-                  ],
-                  on: {
-                     onChange: (newVal, oldVal) => {
-                        defaultTimeChange();
-                     }
-                  }
-               },
-               {
-                  view: "datepicker",
-                  name: "defaultTimeValue",
-                  type: "time",
-                  id: ids.defaultTimeValue,
-                  gravity: 0.5,
-                  disabled: true
-               }
-            ]
          }
       ];
    },
@@ -569,15 +469,11 @@ var ABFieldDateComponent = new ABFieldComponent({
          $$(ids.defaultDateValue).setValue(
             new Date(values.settings.defaultDateValue)
          );
-         $$(ids.defaultTimeValue).setValue(
-            new Date(values.settings.defaultTimeValue)
-         );
       },
 
       show: function(ids) {
          // dateDisplayRefresh();
          refreshDateValue();
-         refreshTimevalue();
       }
 
       // dateDisplay: (date, settings) => {
@@ -633,9 +529,9 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
       var config = super.columnHeader(options);
 
       // if (this.settings.includeTime)
-      config.editor = "datetime";
+      // config.editor = "datetime";
       // else
-      // 	config.editor = 'date';
+      config.editor = "date";
 
       // allows entering characters in datepicker input, false by default
       config.editable = true;
@@ -689,10 +585,7 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
       // .common() is used to create the display in the list
       formComponentSetting.common = () => {
          return {
-            key: "datepicker",
-            settings: {
-               // timepicker: this.settings.includeTime
-            }
+            key: "datepicker"
          };
       };
 

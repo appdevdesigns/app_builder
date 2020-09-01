@@ -200,6 +200,11 @@ module.exports = class ABViewChart extends ABViewChartCore {
          view.settings.columnValue2 = $$(ids.columnValue2).getValue();
          this.populateFieldOptions2(ids, view);
       }
+
+      // UPDATE charts when parent properties are changed
+      view.views().forEach((v) => {
+         v.parent.refreshData();
+      });
    }
 
    static populateDataview(ids, view) {
@@ -333,8 +338,8 @@ module.exports = class ABViewChart extends ABViewChartCore {
       };
 
       // make sure each of our child views get .init() called
-      var _init = (options) => {
-         container.init(options);
+      var _init = (options, accessLevel) => {
+         container.init(options, accessLevel);
 
          var currentComponent = $$(ids.component);
          if (currentComponent) {

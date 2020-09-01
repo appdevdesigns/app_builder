@@ -31,6 +31,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
          fixSelect: this.unique("fixSelect"),
 
          filterPanel: this.unique("filterPanel"),
+         preventPopulate: this.unique("preventPopulate"),
          sortPanel: this.unique("sortPanel"),
 
          buttonFilter: this.unique("buttonFilter"),
@@ -217,6 +218,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
                                     },
                                     {
                                        id: ids.buttonSort,
+                                       css: "webix_primary",
                                        view: "button",
                                        name: "buttonSort",
                                        label: L(
@@ -256,6 +258,21 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
                                        }
                                     }
                                  ]
+                              },
+                              {
+                                 id: ids.preventPopulate,
+                                 view: "checkbox",
+                                 name: "preventPopulate",
+                                 label: L(
+                                    "ab.component.datacollection.preventPopulate",
+                                    "*Do not populate related data:"
+                                 ),
+                                 labelWidth: 210,
+                                 on: {
+                                    onChange: (newv, oldv) => {
+                                       this._logic.save();
+                                    }
+                                 }
                               },
                               {
                                  id: ids.fixSelect,
@@ -360,50 +377,16 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
             this._application = application;
 
             let ids = this.ids;
-            let datasources = [];
 
-            // Objects
-            var objects = application.objects().map((obj) => {
-               return {
-                  id: obj.id,
-                  value: obj.label,
-                  isQuery: false,
-                  icon: "fa fa-database"
-               };
-            });
-            datasources = datasources.concat(objects);
+            this._logic.refreshDataSourceOptions();
 
-            // Queries
-            var queries = application.queries().map((q) => {
-               return {
-                  id: q.id,
-                  value: q.label,
-                  isQuery: true,
-                  icon: "fa fa-filter",
-                  disabled: q.isDisabled()
-               };
-            });
-            datasources = datasources.concat(queries);
-
-            datasources.unshift({
-               id: "",
-               value: L("ab.datacollection.selectSource", "*Select a source")
-            });
-
-            $$(ids.dataSource).define("options", {
-               body: {
-                  scheme: {
-                     $init: function(obj) {
-                        if (obj.disabled) obj.$css = "disabled";
-                     }
-                  },
-                  data: datasources
-               }
-            });
-
-            $$(ids.dataSource).refresh();
-
-            this.FilterComponent.applicationLoad(this._application);
+            if (this.FilterComponent) {
+               this.FilterComponent.applicationLoad(this._application);
+            } else {
+               console.error(
+                  ".applicationLoad() called before .initPopupEditors"
+               );
+            }
 
             this._logic.listBusy();
 
@@ -509,6 +492,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
             // 	$$(ids.sortPanel).show();
             // }
 
+            this._logic.refreshDataSourceOptions();
             $$(ids.dataSource).define("value", settings.datasourceID);
             $$(ids.linkDatacollection).define(
                "value",
@@ -517,13 +501,63 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
             $$(ids.linkField).define("value", settings.linkFieldID);
             $$(ids.loadAll).define("value", settings.loadAll);
             $$(ids.fixSelect).define("value", settings.fixSelect);
+            $$(ids.preventPopulate).define("value", settings.preventPopulate);
 
             $$(ids.dataSource).refresh();
             $$(ids.linkDatacollection).refresh();
             $$(ids.linkField).refresh();
             $$(ids.loadAll).refresh();
+            $$(ids.preventPopulate).refresh();
             $$(ids.fixSelect).refresh();
             $$(ids.list).openAll();
+         },
+
+         refreshDataSourceOptions: () => {
+            if (!this._application) return;
+
+            let ids = this.ids;
+            let datasources = [];
+
+            // Objects
+            var objects = this._application.objects().map((obj) => {
+               return {
+                  id: obj.id,
+                  value: obj.label,
+                  isQuery: false,
+                  icon: "fa fa-database"
+               };
+            });
+            datasources = datasources.concat(objects);
+
+            // Queries
+            var queries = this._application.queries().map((q) => {
+               return {
+                  id: q.id,
+                  value: q.label,
+                  isQuery: true,
+                  icon: "fa fa-filter",
+                  disabled: q.isDisabled()
+               };
+            });
+            datasources = datasources.concat(queries);
+
+            datasources.unshift({
+               id: "",
+               value: L("ab.datacollection.selectSource", "*Select a source")
+            });
+
+            $$(ids.dataSource).define("options", {
+               body: {
+                  scheme: {
+                     $init: function(obj) {
+                        if (obj.disabled) obj.$css = "disabled";
+                     }
+                  },
+                  data: datasources
+               }
+            });
+
+            $$(ids.dataSource).refresh();
          },
 
          busy: () => {
@@ -559,6 +593,9 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
             this._datacollection.settings.objectWorkspace.filterConditions = this.FilterComponent.getValue();
             this._datacollection.settings.objectWorkspace.sortFields = this.PopupSortFieldComponent.getValue();
             this._datacollection.settings.loadAll = $$(ids.loadAll).getValue();
+            this._datacollection.settings.preventPopulate = $$(
+               ids.preventPopulate
+            ).getValue();
             this._datacollection.settings.fixSelect = $$(
                ids.fixSelect
             ).getValue();

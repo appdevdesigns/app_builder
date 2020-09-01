@@ -330,9 +330,9 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
       };
 
       // make sure each of our child views get .init() called
-      var _init = (options) => {
+      var _init = (options, parentAccessLevel) => {
          // populate .views to webix.dashboard
-         container.init(options);
+         container.init(options, parentAccessLevel);
       };
 
       var _logic = {

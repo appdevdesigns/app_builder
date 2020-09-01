@@ -26,9 +26,6 @@ module.exports = class AB_Work_Admin_User_Form extends ABComponent {
                borderless: true,
                type: "space",
                cols: [FormInfo.ui, FormRole.ui]
-            },
-            {
-               fillspace: true
             }
          ]
       };

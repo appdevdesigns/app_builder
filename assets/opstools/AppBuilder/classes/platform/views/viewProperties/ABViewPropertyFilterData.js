@@ -18,8 +18,8 @@ var getRule = (object, App, idBase) => {
    return FilterRule;
 };
 
-var rowFilter = null;
-var rowFilterForm = null;
+// var rowFilter = null;
+// var rowFilterForm = null;
 
 module.exports = class ABViewPropertyFilterData extends ABViewProperty {
    constructor(App, idBase) {
@@ -30,6 +30,8 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
 
       this.App = App;
       this.idBase = idBase;
+      this.rowFilter = null;
+      this.rowFilterForm = null;
    }
 
    /**
@@ -290,8 +292,9 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
                   ABViewPropertyFilterData.default.userFilterPosition
             );
             $$(ids.globalToolbar).setValue(
-               settings.isGlobalToolbar ||
-                  ABViewPropertyFilterData.default.isGlobalToolbar
+               typeof settings.isGlobalToolbar != "undefined"
+                  ? settings.isGlobalToolbar
+                  : ABViewPropertyFilterData.default.isGlobalToolbar
             );
 
             $$(ids.filterGlobal).setValue(
@@ -315,17 +318,19 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
 
          getSettings() {
             var settings = this.settings || {};
-            settings.filterOption = JSON.parse(
-               $$(ids.filterOptionRadio).getValue() || 0
+            settings.filterOption = parseInt(
+               $$(ids.filterOptionRadio).getValue()
             );
             settings.queryRules = [];
 
             switch (settings.filterOption) {
+               case 0: // Disable User filters
+                  settings.isGlobalToolbar = 0;
+                  break;
                case 1: // Enable User filters
                   settings.userFilterPosition = $$(ids.filterUser).getValue();
 
-                  settings.isGlobalToolbar =
-                     $$(ids.globalToolbar).getValue() || false;
+                  settings.isGlobalToolbar = $$(ids.globalToolbar).getValue();
                   break;
                case 2: // Use a filter menu
                   instance.queryRules.forEach((r) => {
@@ -448,14 +453,15 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
 
       settings = settings || {};
 
-      settings.filterOption = JSON.parse(
-         settings.filterOption || ABViewPropertyFilterData.default.filterOption
-      );
+      settings.filterOption =
+         typeof settings.filterOption != "undefined"
+            ? settings.filterOption
+            : ABViewPropertyFilterData.default.filterOption;
 
-      settings.isGlobalToolbar = JSON.parse(
-         settings.isGlobalToolbar ||
-            ABViewPropertyFilterData.default.isGlobalToolbar
-      );
+      settings.isGlobalToolbar =
+         typeof settings.isGlobalToolbar != "undefined"
+            ? settings.isGlobalToolbar
+            : ABViewPropertyFilterData.default.isGlobalToolbar;
 
       // (settings.queryRules || []).forEach(qr => {
 
@@ -501,9 +507,15 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
       // 	});
       // }
 
-      if (rowFilter) rowFilter.fieldsLoad(object.fields());
+      if (this.rowFilter) {
+         this.rowFilter.applicationLoad(object.application);
+         this.rowFilter.fieldsLoad(object.fields());
+      }
 
-      if (rowFilterForm) rowFilterForm.fieldsLoad(object.fields());
+      if (this.rowFilterForm) {
+         this.rowFilterForm.applicationLoad(object.application);
+         this.rowFilterForm.fieldsLoad(object.fields());
+      }
    }
 
    viewLoad(view) {
@@ -523,12 +535,15 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
       this.App = App;
       this.idBase = idBase;
 
-      rowFilter = new RowFilter(App, idBase + "_filter");
-      rowFilterForm = new RowFilter(App, idBase + "_filter_form");
+      this.rowFilter = new RowFilter(App, idBase + "_filter");
+      this.rowFilterForm = new RowFilter(App, idBase + "_filter_form");
 
       if (this.object) {
-         rowFilter.fieldsLoad(this.object.fields());
-         rowFilterForm.fieldsLoad(this.object.fields());
+         this.rowFilter.applicationLoad(this.object.application);
+         this.rowFilter.fieldsLoad(this.object.fields());
+
+         this.rowFilterForm.applicationLoad(this.object.application);
+         this.rowFilterForm.fieldsLoad(this.object.fields());
       }
 
       let ids = {
@@ -539,13 +554,14 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
          ),
          globalFilterForm: App.unique(idBase + "_globalFilterForm"),
          filterMenutoolbar: App.unique(idBase + "_filterMenuToolbar"),
-         resetFilterButton: App.unique(idBase + "_resetFilterButton")
+         resetFilterButton: App.unique(idBase + "_resetFilterButton"),
+         component: App.unique(idBase + "_filterData_popup")
       };
 
       let instance = this;
 
       // hide filter form
-      rowFilterForm.ui.hidden = true;
+      this.rowFilterForm.ui.hidden = true;
 
       let _ui = {
          id: ids.filterPanel,
@@ -583,7 +599,7 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
                   }
                ]
             },
-            rowFilterForm.ui,
+            this.rowFilterForm.ui,
             {
                view: "toolbar",
                id: ids.filterMenutoolbar,
@@ -611,9 +627,10 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
       let init = (options) => {
          this.filter_popup = webix.ui({
             view: "popup",
+            id: ids.component,
             width: 800,
             hidden: true,
-            body: rowFilter.ui
+            body: this.rowFilter.ui
          });
 
          // register callbacks:
@@ -621,9 +638,9 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
             logic.callbacks[c] = options[c] || logic.callbacks[c];
          }
 
-         rowFilter.init({
+         this.rowFilter.init({
             onChange: () => {
-               let filterRules = rowFilter.getValue().rules || [];
+               let filterRules = this.rowFilter.getValue().rules || [];
 
                // if ($$(ids.buttonFilter)) {
                // 	$$(ids.buttonFilter).define('badge', filterRules.length || null);
@@ -632,32 +649,34 @@ module.exports = class ABViewPropertyFilterData extends ABViewProperty {
 
                // be notified when there is a change in the filter
                logic.triggerCallback((rowData) => {
-                  return rowFilter.isValid(rowData);
+                  return this.rowFilter.isValid(rowData);
                }, filterRules);
             }
          });
 
-         rowFilterForm.init({
+         this.rowFilterForm.init({
             onChange: () => {
-               let filterRules = rowFilterForm.getValue().rules || [];
+               let filterRules = this.rowFilterForm.getValue().rules || [];
 
                // be notified when there is a change in the filter
                logic.triggerCallback((rowData) => {
-                  return rowFilterForm.isValid(rowData);
+                  return this.rowFilterForm.isValid(rowData);
                }, filterRules);
             }
          });
 
          $$(ids.filterPanel).hide();
-         if ($$(rowFilterForm.ui.id)) $$(rowFilterForm.ui.id).hide();
+         if ($$(this.rowFilterForm.ui.id)) $$(this.rowFilterForm.ui.id).hide();
          $$(ids.filterMenutoolbar).hide();
          $$(ids.globalFilterFormContainer).hide();
 
          switch (this.settings.filterOption) {
+            case 0:
+               break;
             case 1:
                switch (this.settings.userFilterPosition) {
                   case "form":
-                     $$(rowFilterForm.ui.id).show();
+                     $$(this.rowFilterForm.ui.id).show();
                      $$(ids.filterPanel).show();
                      break;
                   case "toolbar":

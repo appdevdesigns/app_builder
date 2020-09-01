@@ -169,16 +169,27 @@ module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
 
                   // bind a data collection to the display grid
                   datacollection.unbind($datatable);
-                  datacollection.bind($datatable);
 
-                  $datatable.adjust();
-
-                  // load data
                   if (
-                     datacollection.dataStatus ==
-                     datacollection.dataStatusFlag.notInitial
-                  )
-                     datacollection.loadData();
+                     datacollection.datacollectionLink &&
+                     datacollection.fieldLink
+                  ) {
+                     datacollection.bind(
+                        $datatable,
+                        datacollection.datacollectionLink,
+                        datacollection.fieldLink
+                     );
+                  } else {
+                     datacollection.bind($datatable);
+                     $datatable.adjust();
+
+                     // load data
+                     if (
+                        datacollection.dataStatus ==
+                        datacollection.dataStatusFlag.notInitial
+                     )
+                        datacollection.loadData();
+                  }
                }
             } else {
                this._logic.clearWorkspace();

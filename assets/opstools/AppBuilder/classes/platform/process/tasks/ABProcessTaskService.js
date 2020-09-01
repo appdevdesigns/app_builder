@@ -1,5 +1,9 @@
 const ABProcessTaskServiceCore = require("../../../core/process/tasks/ABProcessTaskServiceCore.js");
 
+const AccountingBatchProcessing = require("./ABProcessTaskServiceAccountingBatchProcessing.js");
+const AccountingFPClose = require("./ABProcessTaskServiceAccountingFPClose.js");
+const AccountingFPYearClose = require("./ABProcessTaskServiceAccountingFPYearClose.js");
+const AccountingJEArchive = require("./ABProcessTaskServiceAccountingJEArchive.js");
 const ABProcessTaskServiceQuery = require("./ABProcessTaskServiceQuery.js");
 
 function L(key, altText) {
@@ -32,6 +36,46 @@ module.exports = class ABProcessTaskService extends ABProcessTaskServiceCore {
          elements: [
             {
                view: "button",
+               label: L(
+                  "ab.process.task.service.accountingBatch",
+                  "*Accounting: Process Batch"
+               ),
+               click: () => {
+                  this.switchTo("accountingBatch", id);
+               }
+            },
+            {
+               view: "button",
+               label: L(
+                  "ab.process.task.service.accountingFPClose",
+                  "*Accounting: Fiscal Period Close"
+               ),
+               click: () => {
+                  this.switchTo("accountingFPClose", id);
+               }
+            },
+            {
+               view: "button",
+               label: L(
+                  "ab.process.task.service.accountingFPYearClose",
+                  "*Accounting: Fiscal Period Year Close"
+               ),
+               click: () => {
+                  this.switchTo("accountingFPYearClose", id);
+               }
+            },
+            {
+               view: "button",
+               label: L(
+                  "ab.process.task.service.accountingJEArchive",
+                  "*Accounting: Journal Entry Archive"
+               ),
+               click: () => {
+                  this.switchTo("accountingJEArchive", id);
+               }
+            },
+            {
+               view: "button",
                label: L("ab.process.task.service.query", "*Query Task"),
                click: () => {
                   this.switchTo("query", id);
@@ -62,6 +106,38 @@ module.exports = class ABProcessTaskService extends ABProcessTaskServiceCore {
       // create an instance of the desired child
       var child = null;
       switch (classType) {
+         case "accountingBatch":
+            child = new AccountingBatchProcessing(
+               myValues,
+               this.process,
+               this.application
+            );
+            break;
+
+         case "accountingFPClose":
+            child = new AccountingFPClose(
+               myValues,
+               this.process,
+               this.application
+            );
+            break;
+
+         case "accountingFPYearClose":
+            child = new AccountingFPYearClose(
+               myValues,
+               this.process,
+               this.application
+            );
+            break;
+
+         case "accountingJEArchive":
+            child = new AccountingJEArchive(
+               myValues,
+               this.process,
+               this.application
+            );
+            break;
+
          case "query":
             child = new ABProcessTaskServiceQuery(
                myValues,

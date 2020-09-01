@@ -113,5 +113,28 @@ module.exports = {
 
       var knex = ABMigration.connection(field.object.connName);
       return field.migrateDrop(knex);
+   },
+
+   createIndex: function(index) {
+      var knex = ABMigration.connection(index.object.connName);
+      return index.migrateCreate(knex);
+   },
+
+   dropIndex: function(index) {
+      var knex = ABMigration.connection(index.object.connName);
+      return index.migrateDrop(knex);
+   },
+
+   /**
+    * @method createTransaction
+    * create Knex.Transaction
+    * @param {function} - callback
+    *
+    * @return {Promise} - resolve(Knex.Transaction)
+    */
+   createTransaction: function(callback) {
+      let knex = ABMigration.connection();
+      return knex.transaction(callback);
    }
+
 };

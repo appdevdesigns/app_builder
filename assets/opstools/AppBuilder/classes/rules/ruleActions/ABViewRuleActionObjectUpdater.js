@@ -779,12 +779,6 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
                filterConditions ||
                ABViewRuleActionObjectUpdaterDefaults.filterConditions;
 
-            // // Clone ABObject
-            // var objectCopy = dataView.datasource.clone();
-            // if (objectCopy) {
-            // 	objectCopy.objectWorkspace.filterConditions = filterConditions;
-            // }
-
             // Populate data to popups
             // FilterComponent.objectLoad(objectCopy);
             FilterComponent.fieldsLoad(
@@ -928,293 +922,291 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
     * Perform the specified update actions on the provided objectToUpdate
     * @param {obj} options  Additional information required to make updates.
     * @param {obj} objectToUpdate  The object to make the updates on.
-    * @return {Promise}   true if an update took place, false if no updates.
+    * @return {boolean}   true if an update took place, false if no updates.
     */
    processUpdateObject(options, objectToUpdate) {
-      return new Promise((resolve, reject) => {
-         var isUpdated = false;
+      // return new Promise((resolve, reject) => {
+      var isUpdated = false;
 
-         this.valueRules = this.valueRules || {};
-         this.valueRules.fieldOperations =
-            this.valueRules.fieldOperations || [];
+      this.valueRules = this.valueRules || {};
+      this.valueRules.fieldOperations = this.valueRules.fieldOperations || [];
 
-         var allPromises = [];
+      // var allPromises = [];
 
-         // for each of our operations
-         this.valueRules.fieldOperations.forEach((op) => {
-            // op = {
-            // 	fieldID:'zzzzz',
-            //	value: 'xxx',
-            //	op: 'set',
-            //  type:'',
-            //  queryField: '', // id of ABField
-            //  selectBy:'',   ['select-one', 'filter-select-one', 'filter-select-all']
-            //  valueType: "", ['custom', 'exist']
-            // 	filterConditions: { // array of filters to apply to the data table
-            //		glue: 'and',
-            // 		rules: []
-            //  }
-            // }
+      // for each of our operations
+      this.valueRules.fieldOperations.forEach((op) => {
+         // op = {
+         // 	fieldID:'zzzzz',
+         //	value: 'xxx',
+         //	op: 'set',
+         //  type:'',
+         //  queryField: '', // id of ABField
+         //  selectBy:'',   ['select-one', 'filter-select-one', 'filter-select-all']
+         //  valueType: "", ['custom', 'exist']
+         // 	filterConditions: { // array of filters to apply to the data table
+         //		glue: 'and',
+         // 		rules: []
+         //  }
+         // }
 
-            var field = this.getUpdateObjectField(op.fieldID);
-            if (field) {
-               var value = op.value;
+         var field = this.getUpdateObjectField(op.fieldID);
+         if (!field) return;
 
-               if (value == "ab-current-user") value = OP.User.username();
+         var value = op.value;
 
-               // in the case of a connected Field, we use op.value to get the
-               // datacollection, and find it's currently selected value:
-               if (field.key == "connectObject" || op.valueType == "exist") {
-                  // NOTE: 30 May 2018 :current decision from Ric is to limit this
-                  // to only handle 1:x connections where we update the current obj
-                  // with the PK of the value from the DC.
-                  //
-                  // In the future, if we want to handle the other options,
-                  // we need to modify this to handle the M:x connections where
-                  // we insert our PK into the value from the DC.
+         if (value == "ab-current-user") value = OP.User.username();
 
-                  // op.value is the ABDatacollection.id we need to find
-                  var dataCollection = this.currentForm.application.datacollections(
-                     (dc) => dc.id == op.value
-                  )[0];
+         // in the case of a connected Field, we use op.value to get the
+         // datacollection, and find it's currently selected value:
+         if (field.key == "connectObject" || op.valueType == "exist") {
+            // NOTE: 30 May 2018 :current decision from Ric is to limit this
+            // to only handle 1:x connections where we update the current obj
+            // with the PK of the value from the DC.
+            //
+            // In the future, if we want to handle the other options,
+            // we need to modify this to handle the M:x connections where
+            // we insert our PK into the value from the DC.
 
-                  // we don't want to mess with the dataView directly since it might
-                  // be used by other parts of the system and this refresh might reset
-                  // it's cursor.
-                  // var clonedDataCollection = dataView.filteredClone(op.filterConditions);
+            // op.value is the ABDatacollection.id we need to find
+            var dataCollection = this.currentForm.application.datacollections(
+               (dc) => dc.id == op.value
+            )[0];
 
-                  // loop through rules to find "same-as-field" or "not-same-as-field"
-                  // adjust operator and switch key value to actual value when found
-                  var filterConditions = _.cloneDeep(op.filterConditions);
-                  if (filterConditions && filterConditions.rules) {
-                     filterConditions.rules
-                        .filter((r) => {
-                           return (
-                              r.rule == "same_as_field" ||
-                              r.rule == "not_same_as_field"
-                           );
-                        })
-                        .forEach((item) => {
-                           var valueField = this.currentForm.datacollection.datasource.fields(
-                              (f) => {
-                                 return f.id == item.value;
-                              }
-                           )[0];
-                           if (valueField.key == "connectObject") {
-                              item.value = valueField.format(this._formData);
-                           } else {
-                              item.value = this._formData[
-                                 valueField.columnName
-                              ];
+            // we don't want to mess with the dataView directly since it might
+            // be used by other parts of the system and this refresh might reset
+            // it's cursor.
+            // var clonedDataCollection = dataView.filteredClone(op.filterConditions);
+
+            // loop through rules to find "same-as-field" or "not-same-as-field"
+            // adjust operator and switch key value to actual value when found
+            var filterConditions = _.cloneDeep(op.filterConditions);
+            if (filterConditions && filterConditions.rules) {
+               filterConditions.rules
+                  .filter((r) => {
+                     return (
+                        r.rule == "same_as_field" ||
+                        r.rule == "not_same_as_field"
+                     );
+                  })
+                  .forEach((item) => {
+                     var valueField = this.currentForm.datacollection.datasource.fields(
+                        (f) => {
+                           return f.id == item.value;
+                        }
+                     )[0];
+                     if (valueField.key == "connectObject") {
+                        item.value = valueField.format(this._formData);
+                     } else {
+                        item.value = this._formData[valueField.columnName];
+                     }
+
+                     if (item.rule == "not_same_as_field") {
+                        item.rule = "not equals";
+                     } else {
+                        item.rule = "equals";
+                     }
+                  });
+            }
+
+            let clonedDataCollection = dataCollection.filteredClone(
+               filterConditions
+            );
+
+            switch (op.selectBy) {
+               // the 'select-one' is getting the currently set cursor on this data collection
+               // and using that value.
+               // TODO: rename to 'select-cursor'
+               case "select-one":
+               default:
+                  value = clonedDataCollection.getCursor(); // dataView.getItem(dataView.getCursor());
+
+                  if (value) {
+                     // NOTE: webix documentation issue: .getCursor() is supposed to return
+                     // the .id of the item.  However it seems to be returning the {obj}
+
+                     if (op.valueType == "exist") {
+                        var fieldWithValue = clonedDataCollection.datasource.fields(
+                           (f) => {
+                              return f.id == op.queryField;
                            }
+                        )[0];
 
-                           if (item.rule == "not_same_as_field") {
-                              item.rule = "not equals";
-                           } else {
-                              item.rule = "equals";
-                           }
-                        });
+                        if (fieldWithValue)
+                           value = value[fieldWithValue.columnName];
+                     } else if (value.id) {
+                        value = value.id;
+                     }
                   }
 
-                  var connectedPromise = dataCollection
-                     .filteredClone(filterConditions)
-                     .then(function(clonedDataCollection) {
-                        switch (op.selectBy) {
-                           // the 'select-one' is getting the currently set cursor on this data collection
-                           // and using that value.
-                           // TODO: rename to 'select-cursor'
-                           case "select-one":
-                           default:
-                              value = clonedDataCollection.getCursor(); // dataView.getItem(dataView.getCursor());
+                  // QUESTION: if value returns undefined should we do something else?
+                  switch (op.op) {
+                     case "set":
+                        // if we are setting a connection we do not want to pass the full object because
+                        // batch creates payload gets too large
+                        objectToUpdate[field.columnName] = {};
+                        objectToUpdate[field.columnName].id =
+                           value[field.datasourceLink.PK()];
+                        objectToUpdate[field.columnName][
+                           field.datasourceLink.PK()
+                        ] = value[field.datasourceLink.PK()];
 
-                              if (value) {
-                                 // NOTE: webix documentation issue: .getCursor() is supposed to return
-                                 // the .id of the item.  However it seems to be returning the {obj}
+                        field.datasourceLink
+                           .fields(
+                              (f) =>
+                                 f.key == "combined" || f.key == "AutoIndex"
+                           )
+                           .forEach((f) => {
+                              objectToUpdate[field.columnName][f.columnName] =
+                                 value[f.columnName];
+                           });
 
-                                 if (op.valueType == "exist") {
-                                    var fieldWithValue = clonedDataCollection.datasource.fields(
-                                       (f) => {
-                                          return f.id == op.queryField;
-                                       }
-                                    )[0];
+                        break;
+                  }
+                  break;
 
-                                    if (fieldWithValue)
-                                       value = value[fieldWithValue.columnName];
-                                 } else if (value.id) {
-                                    value = value.id;
-                                 }
+               // attempt to filter this data collection by the given filterConditions
+               case "filter-select-all":
+                  var newValues = [];
+
+                  var currRow = clonedDataCollection.getFirstRecord();
+                  while (currRow) {
+                     // do something there
+
+                     switch (clonedDataCollection.sourceType) {
+                        // case: datacollection is an object
+                        // we want to set our field to this values
+                        case "object":
+                           newValues.push(currRow.id);
+                           break;
+
+                        // case: datacollection is a query
+                        // our field is a pointer to an object. we want to pull out that object
+                        // from the query data.
+                        case "query":
+                           var fieldWithValue = clonedDataCollection.datasource.fields(
+                              (f) => {
+                                 return f.id == op.queryField;
                               }
+                           )[0];
 
-                              // QUESTION: if value returns undefined should we do something else?
-                              switch (op.op) {
-                                 case "set":
-                                    objectToUpdate[field.columnName] = value;
-                                    break;
+                           var newValue = currRow[fieldWithValue.columnName];
+
+                           if (typeof newValue == "undefined") {
+                              newValue = currRow[fieldWithValue.relationName()];
+
+                              if (Array.isArray(newValue)) {
+                                 newValue = newValue.map((v) => {
+                                    return v.id ? v.id : v;
+                                 });
+                              } else if (newValue.id) {
+                                 newValue = newValue.id;
                               }
-                              break;
+                           }
 
-                           // attempt to filter this data collection by the given filterConditions
-                           case "filter-select-all":
-                              var newValues = [];
+                           newValues = _.uniq(newValues.concat(newValue));
 
-                              var currRow = clonedDataCollection.getFirstRecord();
-                              while (currRow) {
-                                 // do something there
-
-                                 switch (clonedDataCollection.sourceType) {
-                                    // case: datacollection is an object
-                                    // we want to set our field to this values
-                                    case "object":
-                                       newValues.push(currRow.id);
-                                       break;
-
-                                    // case: datacollection is a query
-                                    // our field is a pointer to an object. we want to pull out that object
-                                    // from the query data.
-                                    case "query":
-                                       var fieldWithValue = clonedDataCollection.datasource.fields(
-                                          (f) => {
-                                             return f.id == op.queryField;
-                                          }
-                                       )[0];
-
-                                       var newValue =
-                                          currRow[fieldWithValue.columnName];
-
-                                       if (typeof newValue == "undefined") {
-                                          newValue =
-                                             currRow[
-                                                fieldWithValue.relationName()
-                                             ];
-
-                                          if (Array.isArray(newValue)) {
-                                             newValue = newValue.map((v) => {
-                                                return v.id ? v.id : v;
-                                             });
-                                          } else {
-                                             if (newValue.id)
-                                                newValue = newValue.id;
-                                          }
-                                       }
-
-                                       newValues = _.uniq(
-                                          newValues.concat(newValue)
-                                       );
-
-                                       break;
-                                 }
-
-                                 currRow = clonedDataCollection.getNextRecord(
-                                    currRow
-                                 );
-                              }
-
-                              // QUESTION: if value returns undefined should we do something else?
-                              switch (op.op) {
-                                 case "set":
-                                    if (field.linkType() == "one") {
-                                       var updates = [];
-                                       newValues.forEach((v) => {
-                                          var objectToUpdateClone = _.cloneDeep(
-                                             objectToUpdate
-                                          );
-                                          objectToUpdateClone[
-                                             field.columnName
-                                          ] = v;
-                                          updates.push(objectToUpdateClone);
-                                       });
-                                       objectToUpdate.newRecords = updates;
-                                    } else {
-                                       objectToUpdate[
-                                          field.columnName
-                                       ] = newValues;
-                                    }
-                                    break;
-                              }
-                              break;
-
-                           case "filter-select-one":
-                              newValues = [];
-
-                              value = clonedDataCollection.getFirstRecord();
-
-                              if (value) {
-                                 // case: datacollection is a query
-                                 // our field is a pointer to an object. we want to pull out that object
-                                 // from the query data.
-                                 if (
-                                    clonedDataCollection.sourceType ==
-                                       "query" ||
-                                    (op.valueType == "exist" && op.queryField)
-                                 ) {
-                                    var fieldWithValue = clonedDataCollection.datasource.fields(
-                                       (f) => {
-                                          return f.id == op.queryField;
-                                       }
-                                    )[0];
-
-                                    var newValue =
-                                       value[fieldWithValue.columnName];
-
-                                    if (typeof newValue == "undefined") {
-                                       newValue =
-                                          value[fieldWithValue.relationName()];
-                                       if (Array.isArray(newValue)) {
-                                          newValue = newValue[0];
-                                       }
-                                       if (newValue.id) newValue = newValue.id;
-                                    }
-
-                                    value = newValue;
-                                 }
-                                 // case: datacollection is an object
-                                 // we want to set our field to this values
-                                 else if (
-                                    clonedDataCollection.sourceType == "object"
-                                 ) {
-                                    // NOTE: webix documentation issue: .getCursor() is supposed to return
-                                    // the .id of the item.  However it seems to be returning the {obj}
-                                    if (value.id) value = value.id;
-                                 }
-                              }
-
-                              // QUESTION: if value returns undefined should we do something else?
-                              switch (op.op) {
-                                 case "set":
-                                    objectToUpdate[field.columnName] = value;
-                                    break;
-                              }
-                              break;
-                        }
-
-                        isUpdated = true;
-                     });
-
-                  allPromises.push(connectedPromise);
-               } else {
-                  var setPromise = new Promise((resolve, reject) => {
-                     switch (op.op) {
-                        case "set":
-                           objectToUpdate[field.columnName] = value;
                            break;
                      }
 
-                     isUpdated = true;
+                     currRow = clonedDataCollection.getNextRecord(currRow);
+                  }
 
-                     resolve(isUpdated);
-                  });
+                  // QUESTION: if value returns undefined should we do something else?
+                  switch (op.op) {
+                     case "set":
+                        if (field.linkType() == "one") {
+                           var updates = [];
+                           newValues.forEach((v) => {
+                              var objectToUpdateClone = _.cloneDeep(
+                                 objectToUpdate
+                              );
+                              objectToUpdateClone[field.columnName] = v;
+                              updates.push(objectToUpdateClone);
+                           });
+                           objectToUpdate.newRecords = updates;
+                        } else {
+                           objectToUpdate[field.columnName] = newValues;
+                        }
+                        break;
+                  }
+                  break;
 
-                  allPromises.push(setPromise);
+               case "filter-select-one":
+                  newValues = [];
 
-                  // console.log("finished");
-               }
+                  value = clonedDataCollection.getFirstRecord();
+
+                  if (value) {
+                     // case: datacollection is a query
+                     // our field is a pointer to an object. we want to pull out that object
+                     // from the query data.
+                     if (
+                        clonedDataCollection.sourceType == "query" ||
+                        (op.valueType == "exist" && op.queryField)
+                     ) {
+                        var fieldWithValue = clonedDataCollection.datasource.fields(
+                           (f) => {
+                              return f.id == op.queryField;
+                           }
+                        )[0];
+
+                        var newValue = value[fieldWithValue.columnName];
+
+                        if (typeof newValue == "undefined") {
+                           newValue = value[fieldWithValue.relationName()];
+                           if (Array.isArray(newValue)) {
+                              newValue = newValue[0];
+                           }
+                           if (newValue.id) newValue = newValue.id;
+                        }
+
+                        value = newValue;
+                     }
+                     // case: datacollection is an object
+                     // we want to set our field to this values
+                     else if (clonedDataCollection.sourceType == "object") {
+                        // NOTE: webix documentation issue: .getCursor() is supposed to return
+                        // the .id of the item.  However it seems to be returning the {obj}
+                        if (value.id) value = value.id;
+                     }
+                  }
+
+                  // QUESTION: if value returns undefined should we do something else?
+                  switch (op.op) {
+                     case "set":
+                        objectToUpdate[field.columnName] = value;
+                        break;
+                  }
+                  break;
             }
-         });
 
-         Promise.all(allPromises).then(() => {
-            resolve(isUpdated);
-         });
+            isUpdated = true;
+
+            // allPromises.push(connectedPromise);
+         } else {
+            // var setPromise = new Promise((resolve, reject) => {
+            switch (op.op) {
+               case "set":
+                  objectToUpdate[field.columnName] = value;
+                  break;
+            }
+
+            isUpdated = true;
+
+            //    resolve(isUpdated);
+            // });
+
+            // allPromises.push(setPromise);
+
+            // console.log("finished");
+         }
       });
+
+      return isUpdated;
+      // Promise.all(allPromises).then(() => {
+      //    resolve(isUpdated);
+      // });
+      // });
    }
 
    // process
@@ -1225,27 +1217,26 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
       this._formData = options.data;
 
       return new Promise((resolve, reject) => {
-         this.processUpdateObject({}, options.data).then((isUpdated) => {
-            if (!isUpdated) {
-               resolve();
-            } else {
-               // get the model from the provided Form Obj:
-               var dv = options.form.datacollection;
-               if (!dv) return resolve();
+         let isUpdated = this.processUpdateObject({}, options.data);
+         if (!isUpdated) {
+            resolve();
+         } else {
+            // get the model from the provided Form Obj:
+            var dv = options.form.datacollection;
+            if (!dv) return resolve();
 
-               var model = dv.model;
-               model
-                  .update(options.data.id, options.data)
-                  .catch((err) => {
-                     OP.Error.log(
-                        "!!! ABViewRuleActionFormRecordRuleUpdate.process(): update error:",
-                        { error: err, data: options.data }
-                     );
-                     reject(err);
-                  })
-                  .then(resolve);
-            }
-         });
+            var model = dv.model;
+            model
+               .update(options.data.id, options.data)
+               .catch((err) => {
+                  OP.Error.log(
+                     "!!! ABViewRuleActionFormRecordRuleUpdate.process(): update error:",
+                     { error: err, data: options.data }
+                  );
+                  reject(err);
+               })
+               .then(resolve);
+         }
       });
    }
 

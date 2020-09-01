@@ -121,6 +121,17 @@ OP.Model.extend(
          });
       },
 
+      objectTrack: function(
+         objectId = "",
+         rowId = "",
+         levelName = "",
+         username = ""
+      ) {
+         return OP.Comm.Service.get({
+            url: `/app_builder/object/${objectId}/track?rowId=${rowId}&levelName=${levelName}&username=${username}`
+         });
+      },
+
       // ** Views
 
       /**

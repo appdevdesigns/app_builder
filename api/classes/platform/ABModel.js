@@ -2,11 +2,74 @@ const ABModelCore = require("../core/ABModelCore");
 const Model = require("objection").Model;
 
 const _ = require("lodash");
+const uuid = require("uuid/v4");
 
 var __ModelPool = {}; // reuse any previously created Model connections
 // to minimize .knex bindings (and connection pools!)
 
 module.exports = class ABModel extends ABModelCore {
+   /**
+    * @method create
+    * performs an update operation
+    * @param {obj} values
+    *    A hash of the new values for this entry.
+    * @param {Knex.Transaction?} trx - [optional]
+    *
+    * @return {Promise} resolved with the result of the find()
+    */
+   create(values, trx = null) {
+      values = this.object.requestParams(values);
+
+      if (values[this.object.PK()] == null) {
+         values[this.object.PK()] = uuid();
+      }
+
+      let validationErrors = this.object.isValidData(values);
+      if (validationErrors.length > 0) {
+         return Promise.reject(validationErrors);
+      }
+
+      return new Promise((resolve, reject) => {
+         // get a Knex Query Object
+         let query = this.modelKnex().query();
+
+         // Used by knex.transaction, the transacting method may be chained to any query and
+         // passed the object you wish to join the query as part of the transaction for.
+         if (trx) query = query.transacting(trx);
+
+         var PK = this.object.PK();
+
+         // update our value
+         query
+            .insert(values)
+            .catch(reject)
+            .then((returnVals) => {
+               // make sure we get a fully updated value for
+               // the return value
+               this.findAll({
+                  where: {
+                     glue: "and",
+                     rules: [
+                        {
+                           key: PK,
+                           rule: "equals",
+                           value: returnVals[PK]
+                        }
+                     ]
+                  },
+                  offset: 0,
+                  limit: 1,
+                  populate: true
+               })
+                  .then((rows) => {
+                     // this returns an [] so pull 1st value:
+                     resolve(rows[0]);
+                  })
+                  .catch(reject);
+            });
+      });
+   }
+
    /**
     * @method findAll
     * performs a data find with the provided condition.
@@ -91,12 +154,18 @@ module.exports = class ABModel extends ABModelCore {
     *		the primary key for this update operation.
     * @param {obj} values
     *		A hash of the new values for this entry.
+    * @param {Knex.Transaction?} trx - [optional]
+    *
     * @return {Promise} resolved with the result of the find()
     */
-   update(id, values) {
+   update(id, values, trx = null) {
       return new Promise((resolve, reject) => {
          // get a Knex Query Object
          let query = this.modelKnex().query();
+
+         // Used by knex.transaction, the transacting method may be chained to any query and
+         // passed the object you wish to join the query as part of the transaction for.
+         if (trx) query = query.transacting(trx);
 
          var PK = this.object.PK();
 
@@ -130,6 +199,121 @@ module.exports = class ABModel extends ABModelCore {
                   .catch(reject);
             });
       });
+   }
+
+   /**
+    * @method relate()
+    * connect an object to another object via it's defined relation.
+    *
+    * this operation is ADDITIVE. It only appends additional relations.
+    *
+    * @param {string} id
+    *       the uuid of this object that is relating to these values
+    * @param {string} field
+    *       a reference to the object.fields() that we are connecting to
+    *       can be either .uuid or .columnName
+    * @param {array} values
+    *       one or more values to create a connection to.
+    *       these can be either .uuid values, or full {obj} values.
+    * @param {Knex.Transaction?} trx - [optional]
+    *
+    * @return {Promise}
+    */
+   relate(id, fieldRef, value, trx = null) {
+      function errorReturn(message) {
+         var error = new Error(message);
+         return Promise.reject(error);
+      }
+      if (typeof id == undefined)
+         return errorReturn("ABModel.relate(): missing id");
+      if (typeof fieldRef == undefined)
+         return errorReturn("ABModel.relate(): missing fieldRef");
+      if (typeof value == undefined)
+         return errorReturn("ABModel.relate(): missing value");
+
+      var abField = this.object.fields(
+         (f) => f.id == fieldRef || f.columnName == fieldRef
+      )[0];
+      if (!abField)
+         return errorReturn(
+            "ABModel.relate(): unknown field reference[" + fieldRef + "]"
+         );
+
+      var dl = abField.datasourceLink;
+      if (!dl)
+         return errorReturn(
+            `ABModel.relate(): provided field[${fieldRef}] could not resolve its object`
+         );
+
+      let indexField = abField.indexField;
+
+      // M:N case
+      if (
+         abField.settings.linkType == "many" &&
+         abField.settings.linkViaType == "many" &&
+         (indexField == null || indexField.object.id != dl.id)
+      ) {
+         indexField = abField.indexField2;
+      }
+
+      var fieldPK = indexField ? indexField.columnName : dl.PK();
+
+      // which is correct?
+      // var relationName = abField.relationName();
+      let relationName = AppBuilder.rules.toFieldRelationFormat(
+         abField.columnName
+      );
+
+      // now parse the provided value param and create an array of
+      // primaryKey entries for our abField:
+      var useableValues = [];
+      if (!Array.isArray(value)) value = [value];
+      value.forEach((v) => {
+         if (typeof v == "object") {
+            var val = v[fieldPK];
+            if (val) {
+               useableValues.push(val);
+            }
+            // Q: is !val an error, or a possible null that can't
+            // Q: should I kill things here and report an error?
+         } else {
+            useableValues.push(v);
+         }
+      });
+
+      return new Promise((resolve, reject) => {
+         this.modelKnex()
+            .query()
+            .findById(id)
+            .then((objInstance) => {
+               let relateQuery = objInstance
+                  .$relatedQuery(relationName)
+                  .alias(
+                     "#column#_#relation#"
+                        .replace("#column#", abField.columnName)
+                        .replace("#relation#", relationName)
+                  ) // FIX: SQL syntax error because alias name includes special characters
+                  .relate(useableValues);
+
+               // Used by knex.transaction, the transacting method may be chained to any query and
+               // passed the object you wish to join the query as part of the transaction for.
+               if (trx) relateQuery = relateQuery.transacting(trx);
+
+               return relateQuery;
+            })
+            .then(resolve)
+            .catch(reject);
+      });
+      // let objInstance = this.modelKnex()
+      //    .query()
+      //    .findById(id);
+      // return objInstance.$relatedQuery(relationName).relate(useableValues);
+
+      // let query = this.modelKnex().query();
+      // return query
+      //    .relatedQuery(relationName)
+      //    .for(id)
+      //    .relate(useableValues);
    }
 
    modelDefaultFields() {
@@ -498,6 +682,12 @@ module.exports = class ABModel extends ABModelCore {
                      )[0];
                      if (desiredOption) condition.value = desiredOption.id;
                   }
+
+                  // DATE (not DATETIME)
+                  else if (field.key == "date") {
+                     condition.key = `DATE(${condition.key})`;
+                     condition.value = `DATE("${condition.value}")`;
+                  }
                }
             }
 
@@ -571,7 +761,12 @@ module.exports = class ABModel extends ABModelCore {
             condition.rule = rule;
             // basic case:  simple conversion
             var operator = conversionHash[condition.rule];
-            var value = quoteMe(condition.value);
+            var value = condition.value;
+
+            // If a function, then ignore quote. like DATE('05-05-2020')
+            if (!RegExp("^[A-Z]+[(].*[)]$").test(value)) {
+               value = quoteMe(value);
+            }
 
             // special operation cases:
             switch (condition.rule) {
@@ -875,7 +1070,7 @@ module.exports = class ABModel extends ABModelCore {
             relationNames.push("translations");
          }
 
-         if (relationNames.length > 0) console.log(relationNames);
+         // if (relationNames.length > 0) console.log(relationNames);
          query.eager(`[${relationNames.join(", ")}]`, {
             // if the linked object's PK is uuid, then exclude .id
             unselectId: (builder) => {
@@ -902,7 +1097,7 @@ module.exports = class ABModel extends ABModelCore {
                // TODO: move to ABOBjectExternal.js
                if (
                   !this.object.viewName && // NOTE: check if this object is a query, then it includes .translations already
-                  (orderField.object.isExternal || field.object.isImported)
+                  (orderField.object.isExternal || orderField.object.isImported)
                ) {
                   let prefix = "";
                   if (orderField.alias) {

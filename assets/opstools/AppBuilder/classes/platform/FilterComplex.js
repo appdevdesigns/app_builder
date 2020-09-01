@@ -261,9 +261,11 @@ module.exports = class FilterComplex extends FilterComplexCore {
 
    setValue(settings) {
       super.setValue(settings);
+      if (!settings) return;
 
       if ($$(this.ids.querybuilder)) {
          let qbSettings = _.cloneDeep(settings);
+         /*
          // Convert .key from UUID to COLUMN NAME
          // because ABModel returns row data with column name
          let convertToColName = (cond = {}) => {
@@ -272,7 +274,7 @@ module.exports = class FilterComplex extends FilterComplexCore {
                   (f) => f.id == cond.key
                )[0];
 
-               if (field) cond.key = field.columnName;
+               if (field && field.columnName) cond.key = field.columnName;
             }
 
             if (cond.rules && cond.rules.length) {
@@ -281,6 +283,7 @@ module.exports = class FilterComplex extends FilterComplexCore {
          };
 
          convertToColName(qbSettings);
+         */
          $$(this.ids.querybuilder).setValue(qbSettings);
 
          // Update custom value
@@ -302,6 +305,7 @@ module.exports = class FilterComplex extends FilterComplexCore {
       if ($$(this.ids.querybuilder)) {
          let settings = _.cloneDeep($$(this.ids.querybuilder).getValue() || {});
 
+         /*
          // Convert .key from COLUMN NAME to UUID
          let convertToUUID = (cond = {}) => {
             if (cond.key) {
@@ -318,6 +322,7 @@ module.exports = class FilterComplex extends FilterComplexCore {
          };
 
          convertToUUID(settings);
+*/
 
          this.condition = settings;
       }
@@ -343,7 +348,12 @@ module.exports = class FilterComplex extends FilterComplexCore {
          // Set filters
          el.config.filters.clearAll();
          (this.filtersToQB() || []).forEach((filter) => {
-            filter.id = Object.keys(filter.type)[0] + "_" + filter.id;
+            let type = Object.keys(filter.type)[0];
+            // make sure to only update the filter.id 1x
+            if (filter.id.indexOf(type) == -1) {
+               filter.id = type + "_" + filter.id;
+            }
+
             el.config.filters.add(filter);
          });
       }
@@ -449,16 +459,18 @@ module.exports = class FilterComplex extends FilterComplexCore {
    }
 
    popUp() {
-      let ui = {
-         id: this.ids.popup,
-         view: "popup",
-         position: "center",
-         height: 500,
-         width: 1000,
-         body: this.ui
-      };
+      if (!this.myPopup) {
+         let ui = {
+            id: this.ids.popup,
+            view: "popup",
+            position: "center",
+            height: 500,
+            width: 1000,
+            body: this.ui
+         };
 
-      this.myPopup = webix.ui(ui);
+         this.myPopup = webix.ui(ui);
+      }
 
       if (this.application) {
          this.applicationLoad(this.application);
@@ -466,6 +478,11 @@ module.exports = class FilterComplex extends FilterComplexCore {
       if (this.fields) {
          this.fieldsLoad(this.fields);
       }
+
+      // NOTE: do this, before the .setValue() operation, as we need to have
+      // our fields and filters defined BEFORE a setValue() is performed.
+      this.uiInit();
+
       if (this.condition) {
          this.setValue(this.condition);
       }

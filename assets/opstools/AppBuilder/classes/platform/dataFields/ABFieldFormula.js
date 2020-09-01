@@ -236,7 +236,7 @@ module.exports = class ABFieldFormula extends ABFieldFormulaCore {
     */
    formComponent() {
       // not support in the form widget
-      return null;
+      return super.formComponent("fieldreadonly");
    }
 
    detailComponent() {
@@ -251,3 +251,4 @@ module.exports = class ABFieldFormula extends ABFieldFormulaCore {
       return detailComponentSetting;
    }
 };
+

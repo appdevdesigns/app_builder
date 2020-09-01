@@ -150,7 +150,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
                   ],
                   on: {
                      onChange: (newValue, oldValue) => {
-                        ABFieldConnectComponent.logic.selectLinkType(newValue, oldValue);
+                        ABFieldConnectComponent.logic.selectLinkType(
+                           newValue,
+                           oldValue
+                        );
                      }
                   }
                },
@@ -198,7 +201,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
                   ],
                   on: {
                      onChange: (newV, oldV) => {
-                        ABFieldConnectComponent.logic.selectLinkViaType(newV, oldV);
+                        ABFieldConnectComponent.logic.selectLinkViaType(
+                           newV,
+                           oldV
+                        );
                      }
                   }
                },
@@ -249,6 +255,11 @@ var ABFieldConnectComponent = new ABFieldComponent({
                "*Select index field"
             ),
             options: []
+            // on: {
+            //    onChange: () => {
+            //       ABFieldConnectComponent.logic.updateColumnName();
+            //    }
+            // }
          },
          {
             id: ids.indexField2,
@@ -330,6 +341,8 @@ var ABFieldConnectComponent = new ABFieldComponent({
             )
          );
 
+         // keep the column name element to use when custom index is checked
+         ABFieldConnectComponent._$columnName = $$(pass_ids.columnName);
          ABFieldConnectComponent.logic.updateCustomIndex();
       },
 
@@ -438,6 +451,8 @@ var ABFieldConnectComponent = new ABFieldComponent({
                $$(ids.indexField2).show();
             }
          }
+
+         // ABFieldConnectComponent.logic.updateColumnName();
       },
 
       updateCustomIndex: () => {
@@ -446,7 +461,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
          let linkViaType = $$(ids.linkViaType).getValue();
 
          let sourceObject = null; // object stores index column
-         let indexLinkFields = null; // the index fields of link object M:N
+         let linkIndexes = null; // the index fields of link object M:N
 
          $$(ids.indexField2).define("options", []);
          $$(ids.indexField2).refresh();
@@ -474,18 +489,28 @@ var ABFieldConnectComponent = new ABFieldComponent({
             )[0];
 
             // Populate the second index fields
-            indexLinkFields = linkObject.indexFields();
-            if (indexLinkFields && indexLinkFields.length > 0) {
-               $$(ids.indexField2).define(
-                  "options",
-                  indexLinkFields.map((f) => {
-                     return {
-                        id: f.id,
-                        value: `${linkObject.label} - ${f.label}`
-                     };
-                  })
-               );
-            }
+            let linkIndexFields = [];
+            linkIndexes = linkObject.indexes((idx) => idx.unique);
+            (linkIndexes || []).forEach((idx) => {
+               (idx.fields || []).forEach((f) => {
+                  if (
+                     (!f ||
+                        !f.settings ||
+                        !f.settings.required ||
+                        linkIndexFields.filter((opt) => opt.id == f.id)
+                           .length) &&
+                     f.key != "AutoIndex" &&
+                     f.key != "combined"
+                  )
+                     return;
+
+                  linkIndexFields.push({
+                     id: f.id,
+                     value: f.label
+                  });
+               });
+            });
+            $$(ids.indexField2).define("options", linkIndexFields);
             $$(ids.indexField2).refresh();
          }
 
@@ -497,10 +522,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
             return;
          }
 
-         let indexFields = sourceObject.indexFields();
+         let indexes = sourceObject.indexes((idx) => idx.unique);
          if (
-            (!indexFields || indexFields.length < 1) &&
-            (!indexLinkFields || indexLinkFields.length < 1)
+            (!indexes || indexes.length < 1) &&
+            (!linkIndexes || linkIndexes.length < 1)
          ) {
             $$(ids.isCustomFK).hide();
             $$(ids.indexField).define("options", []);
@@ -508,20 +533,64 @@ var ABFieldConnectComponent = new ABFieldComponent({
             return;
          }
 
-         $$(ids.isCustomFK).show();
-         $$(ids.indexField).define(
-            "options",
-            indexFields.map((f) => {
-               return {
+         let indexFields = [];
+         (indexes || []).forEach((idx) => {
+            (idx.fields || []).forEach((f) => {
+               if (
+                  (!f ||
+                     !f.settings ||
+                     !f.settings.required ||
+                     indexFields.filter((opt) => opt.id == f.id).length) &&
+                  f.key != "AutoIndex" &&
+                  f.key != "combined"
+               )
+                  return;
+
+               indexFields.push({
                   id: f.id,
-                  value: `${sourceObject.label} - ${f.label}`
-               };
-            })
-         );
+                  value: f.label,
+                  field: f
+               });
+            });
+         });
+         $$(ids.indexField).define("options", indexFields);
          $$(ids.indexField).refresh();
+
+         if (indexFields && indexFields.length) {
+            $$(ids.isCustomFK).show();
+         }
 
          ABFieldConnectComponent.logic.checkCustomFK();
       }
+
+      // updateColumnName: () => {
+      //    let isChecked = $$(ids.isCustomFK).getValue();
+      //    let indexFieldId = $$(ids.indexField).getValue();
+      //    let indexFieldOpt = (
+      //       $$(ids.indexField).getList().config.data || []
+      //    ).filter((opt) => opt.id == indexFieldId)[0];
+
+      //    if (isChecked && indexFieldOpt && indexFieldOpt.field) {
+      //       // Disable & Update the column name
+      //       if (ABFieldConnectComponent._$columnName) {
+      //          let linkObjectId = $$(ids.linkObject).getValue();
+      //          let linkObject = ABFieldConnectComponent.CurrentApplication.objects(
+      //             (o) => o.id == linkObjectId
+      //          )[0];
+      //          if (linkObject) {
+      //             ABFieldConnectComponent._$columnName.setValue(
+      //                `${linkObject.name}.${indexFieldOpt.field.columnName}`
+      //             );
+      //          }
+      //          ABFieldConnectComponent._$columnName.disable();
+      //       }
+      //    } else {
+      //       // Enable the column name element
+      //       if (ABFieldConnectComponent._$columnName) {
+      //          ABFieldConnectComponent._$columnName.enable();
+      //       }
+      //    }
+      // }
    }
 });
 
@@ -598,6 +667,40 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
    ///
    /// Working with Actual Object Values:
    ///
+
+   /**
+    * @method pullRelationValues
+    *
+    * On the Web client, we want our returned relation values to be
+    * ready for Webix objects that require a .text field.
+    *
+    * @param {*} row
+    * @return {array}
+    */
+   pullRelationValues(row) {
+      var selectedData = [];
+
+      var data = super.pullRelationValues(row);
+      var linkedObject = this.datasourceLink;
+
+      if (data && linkedObject) {
+         // if this select value is array
+         if (data.map) {
+            selectedData = data.map(function(d) {
+               // display label in format
+               if (d) d.text = d.text || linkedObject.displayData(d);
+
+               return d;
+            });
+         } else if (data.id) {
+            selectedData = data;
+            selectedData.text =
+               selectedData.text || linkedObject.displayData(selectedData);
+         }
+      }
+
+      return selectedData;
+   }
 
    // return the grid column header definition for this instance of ABFieldConnect
    columnHeader(options) {
@@ -937,7 +1040,8 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          // Pull linked object data
          linkedModel
             .findAll({
-               where: where
+               where: where,
+               populate: false
             })
             .then((result) => {
                // cache linked object data

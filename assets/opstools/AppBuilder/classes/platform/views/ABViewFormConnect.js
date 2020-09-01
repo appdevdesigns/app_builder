@@ -365,20 +365,6 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
          ABViewFormConnectPropertyComponentDefaults.objectWorkspace
             .filterConditions;
 
-      // // Clone ABObject
-      // var field = view.field();
-      // var linkedObj = field.datasourceLink;
-      // if (linkedObj &&
-      // 	linkedObj.objectWorkspace &&
-      // 	linkedObj.objectWorkspace.filterConditions) {
-      // 	filterConditions = linkedObj.objectWorkspace.filterConditions;
-      // }
-      // var objectCopy = linkedObj.clone();
-      // if (objectCopy) {
-      // 	objectCopy.objectWorkspace = view.settings.objectWorkspace;
-      // 	filterConditions = objectCopy.objectWorkspace.filterConditions || ABViewFormConnectPropertyComponentDefaults.objectWorkspace.filterConditions;
-      // }
-
       if (
          view.settings.objectWorkspace &&
          view.settings.objectWorkspace.filterConditions

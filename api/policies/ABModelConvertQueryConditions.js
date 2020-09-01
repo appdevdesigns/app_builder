@@ -123,7 +123,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
             var err = new Error("Unknown Query ID in condition.");
             err.condition = cond;
-            cb(err);
+            cb();
          } else {
             var queryColumn;
             // {string} this is the 'tablename'.'colname' of the data to return
@@ -198,41 +198,47 @@ function parseQueryCondition(_where, object, req, res, cb) {
                   cb(err);
                   return;
                } else {
-                  // get the linked field:
-                  // var linkedField = field.fieldLink;
-
                   // based upon the type of link:
                   var linkCase = field.linkType() + ":" + field.linkViaType();
                   switch (linkCase.toLowerCase()) {
                      case "one:one":
                      case "one:many":
                         // this field is used in final filter condition
-                        newKey = field.columnName;
+                        // let newKey = "";
 
                         // Johnny
                         // there are Query cases where we need to make sure the field is identified by
                         // it's dbTableName as well, to prevent 'Unknown Column' Errors.
                         // adding in the dbTableName since I think it will be safe in all situations ... maybe ..
                         if (object.objectAlias) {
-                           newKey =
-                              object.objectAlias(field.object.id) +
-                              "." +
-                              newKey;
-                        } else {
+                           newKey = `${object.objectAlias(
+                              field.object.id
+                           )}.${field.object.PK()}`;
+
+                           parseColumn = field.object.PK(); // ABObjectQuery compares with uuid
+
+                           // make this the queryColumn:
+                           queryColumn = `${QueryObj.objectAlias(
+                              field.object.id
+                           )}.${parseColumn}`;
+                        }
+                        // ABObject
+                        else {
                            var dbTableName = field.object.dbTableName(true);
                            if (dbTableName) {
-                              newKey = dbTableName + "." + newKey;
+                              newKey = `${dbTableName}.${field.columnName}`;
                            }
+
+                           parseColumn = field.indexField
+                              ? field.indexField.columnName
+                              : linkedObject.PK();
+
+                           // make this the queryColumn:
+                           queryColumn = `${QueryObj.objectAlias(
+                              linkedObject.id
+                           )}.${parseColumn}`;
                         }
 
-                        // I need to pull out the PK from the filter Query:
-                        parseColumn = linkedObject.PK(); // 'id';
-
-                        // make this the queryColumn:
-                        queryColumn =
-                           QueryObj.objectAlias(linkedObject.id) +
-                           "." +
-                           parseColumn;
                         continueSingle(
                            newKey,
                            parseColumn,
@@ -242,29 +248,38 @@ function parseQueryCondition(_where, object, req, res, cb) {
                         break;
 
                      case "many:one":
-                        // this field is used in final filter condition
-                        newKey = field.relationName();
-
+                        // ABObjectQuery
                         if (object.objectAlias) {
-                           newKey =
-                              object.objectAlias(field.object.id) +
-                              "." +
-                              newKey;
-                        } else {
-                           var dbTableName = field.object.dbTableName(true);
+                           newKey = `${object.objectAlias(
+                              field.object.id
+                           )}.${field.object.PK()}`;
+
+                           parseColumn = field.object.PK();
+
+                           queryColumn = `${QueryObj.objectAlias(
+                              field.object.id
+                           )}.${parseColumn}`;
+                        }
+                        // ABObject
+                        else {
+                           newKey = field.indexField
+                              ? field.indexField.columnName
+                              : field.object.PK();
+
+                           let dbTableName = field.object.dbTableName(true);
                            if (dbTableName) {
-                              newKey = dbTableName + "." + newKey;
+                              newKey = `${dbTableName}.${newKey}`;
                            }
+
+                           parseColumn = field.indexField
+                              ? field.indexField.columnName
+                              : field.object.PK();
+
+                           queryColumn = `${QueryObj.objectAlias(
+                              field.object.id
+                           )}.${parseColumn}`;
                         }
 
-                        // I need to pull out the PK from the filter Query:
-                        parseColumn = linkedObject.PK(); // 'id';
-
-                        // make this the queryColumn:
-                        queryColumn =
-                           QueryObj.objectAlias(linkedObject.id) +
-                           "." +
-                           parseColumn;
                         continueSingle(
                            newKey,
                            parseColumn,
@@ -292,58 +307,94 @@ function parseQueryCondition(_where, object, req, res, cb) {
                      //     break;
 
                      case "many:many":
-                        // we need the .PK of our linked column out of the given query
-                        parseColumn = linkedObject.PK(); // 'id';
-                        queryColumn =
-                           QueryObj.objectAlias(linkedObject.id) +
-                           "." +
-                           parseColumn;
+                        // ABObjectQuery
+                        if (object.objectAlias) {
+                           newKey = `${object.objectAlias(
+                              field.object.id
+                           )}.${field.object.PK()}`;
 
-                        processQueryValues(
+                           parseColumn = field.object.PK();
+
+                           queryColumn = `${QueryObj.objectAlias(
+                              field.object.id
+                           )}.${parseColumn}`;
+                        }
+                        // ABObject
+                        else {
+                           newKey = field.object.PK();
+
+                           let dbTableName = field.object.dbTableName(true);
+                           if (dbTableName) {
+                              newKey = `${dbTableName}.${newKey}`;
+                           }
+
+                           parseColumn = field.object.PK();
+
+                           queryColumn = `${QueryObj.objectAlias(
+                              field.object.id
+                           )}.${parseColumn}`;
+                        }
+
+                        continueSingle(
+                           newKey,
                            parseColumn,
                            queryColumn,
-                           (err, ids) => {
-                              if (err) {
-                                 cb(err);
-                                 return;
-                              }
-
-                              // then we need to get which of our PK is stored in the linkTable for those linked entries
-                              var linkTableQuery = ABMigration.connection().queryBuilder();
-                              var joinTableName = field.joinTableName(true);
-
-                              // var parseName = object.name;
-                              var parseName = field.object.name;
-                              linkTableQuery
-                                 .select(parseName)
-                                 .distinct()
-                                 .from(joinTableName)
-                                 .where(linkedObject.name, "IN", ids)
-                                 .then((data) => {
-                                    var myIds = data
-                                       .map((d) => {
-                                          return d[parseName];
-                                       })
-                                       .filter((d) => d != null);
-                                    myIds = _.uniq(myIds);
-
-                                    var myPK = object.PK(); // 'id';
-
-                                    // if it is a query, then add alias
-                                    if (object.objectAlias)
-                                       myPK =
-                                          object.objectAlias(field.object.id) +
-                                          "." +
-                                          field.object.PK(); // 'alias'.'id';
-
-                                    buildCondition(myPK, myIds);
-                                 })
-                                 .catch((err) => {
-                                    cb(err);
-                                 });
-                           }
+                           linkCase
                         );
                         break;
+                     // case "many:many":
+                     //    // we need the .PK of our linked column out of the given query
+                     //    parseColumn = linkedObject.PK(); // 'id';
+                     //    queryColumn =
+                     //       QueryObj.objectAlias(linkedObject.id) +
+                     //       "." +
+                     //       parseColumn;
+
+                     //    processQueryValues(
+                     //       parseColumn,
+                     //       queryColumn,
+                     //       (err, ids) => {
+                     //          if (err) {
+                     //             cb(err);
+                     //             return;
+                     //          }
+
+                     //          // then we need to get which of our PK is stored in the linkTable for those linked entries
+                     //          var linkTableQuery = ABMigration.connection().queryBuilder();
+                     //          var joinTableName = field.joinTableName(true);
+
+                     //          // var parseName = object.name;
+                     //          var parseName = field.object.name;
+                     //          linkTableQuery
+                     //             .select(parseName)
+                     //             .distinct()
+                     //             .from(joinTableName)
+                     //             .where(linkedObject.name, "IN", ids)
+                     //             .then((data) => {
+                     //                var myIds = data
+                     //                   .map((d) => {
+                     //                      return d[parseName];
+                     //                   })
+                     //                   .filter((d) => d != null);
+                     //                myIds = _.uniq(myIds);
+
+                     //                var myPK = object.PK(); // 'id';
+
+                     //                // if it is a query, then add alias
+                     //                if (object.objectAlias)
+                     //                   myPK =
+                     //                      object.objectAlias(field.object.id) +
+                     //                      "." +
+                     //                      field.object.PK(); // 'alias'.'id';
+
+                     //                buildCondition(myPK, myIds);
+                     //             })
+                     //             .catch((err) => {
+                     //                cb(err);
+                     //             });
+                     //       }
+                     //    );
+                     //    break;
                   }
                }
             }

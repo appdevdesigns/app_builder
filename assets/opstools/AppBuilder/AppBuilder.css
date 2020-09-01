@@ -160,6 +160,9 @@ label {
 .webix_dark .webix_icon_btn {
 	opacity: 0.4;
 }
+.ab_amp .webix_dark .webix_icon_btn {
+   opacity: 1;
+}
 .webix_el_button button {
 	/* font-size: 14px; */
 }
@@ -232,6 +235,10 @@ label {
 	background-color: transparent;
 	color: white;
 }
+.ab_amp .webix_dark .webix_view {
+	background-color: white;
+	color: inherit;
+}
 .webix_dark .webix_list-x .webix_list_item {
 	border-right: 0;
 }
@@ -239,9 +246,9 @@ label {
 	line-height: 32px;
 }
 .webix_tree_checkbox {
-	margin: 0 5px 0 0;
-	height: 20px;
-	width: 20px;
+	margin: 5px 6px 0 0 !important;
+	height: 14px;
+	width: 14px;
 }
 .ab-menu-left .webix_scroll_cont {
 	text-align: left;
@@ -388,7 +395,7 @@ label {
 	position: relative;
 }
 .ab-layout-header > .ab-component-tools {
-	right: 0px;	
+	right: 0px;
 }
 
 .transparent {
@@ -500,7 +507,7 @@ label {
 	box-shadow: inset 0 -3px #1ca1c1;
 }
 .webix_all_tabs .webix_item_tab, .webix_el_tabbar .webixtype_bottom .webix_tab_more_icon, .webix_el_tabbar .webixtype_icon .webix_tab_more_icon, .webix_el_tabbar .webixtype_iconTop .webix_tab_more_icon, .webix_el_tabbar .webixtype_image .webix_tab_more_icon {
-	box-shadow: inset 0px 1px 3px rgba(0,0,0,0.25);	
+	box-shadow: inset 0px 1px 3px rgba(0,0,0,0.25);
 	background: #ebedf0;
 }
 .ab-tab-back:hover, .ab-tab-next:hover, .ab-tab-up:hover, .ab-tab-down:hover {
@@ -1029,4 +1036,216 @@ label {
 }
 .webix_qb_buttons button {
    height: auto;
+}
+.no-margin {
+   margin: 0 !important;
+}
+.ab_amp .fa-stack { font-size: 0.65em; }
+.ab_amp i { vertical-align: middle; }
+.ab_amp.lightgray { background: #EEE }
+.ab_amp .webixLineTree:hover { cursor: pointer; }
+.ab_amp .accessLevel .fa-stack { vertical-align: top; margin-top: 3px; }
+.ab_amp .accessLevel:hover .fa-stack { transform: scale(1.25, 1.25) }
+.ab_amp .externalLink { color: #CCC; float: right; margin-top: 5px; }
+.ab_amp .externalLink:hover { color: #666 !important; }
+.ab_amp .webix_accordionitem .webix_accordionitem_button, .ab_amp .webix_accordionitem.collapsed .webix_accordionitem_button { float: left !important }
+.ab_amp .webix_accordionitem .webix_accordionitem_button { transform: rotate(180deg); }
+.ab_amp .webix_accordionitem.collapsed .webix_accordionitem_button { transform: rotate(-90deg); }
+.ab_amp .webix_accordionitem_header { background-color: #1CA1C1 !important }
+.ab_amp .webix_accordionitem_header.collapsed { background-color: white !important }
+.ab_amp .webix_danger_inverse button { border: 1px solid #ff4938; color: #ff4938; background: white; }
+.ab_amp .webix_danger_inverse .webix_icon_btn { color: #ff4938 }
+.ab_amp .webix_danger_inverse:hover button { background-color: #ff4938; color: #fff }
+.ab_amp .webix_danger_inverse:hover .webix_icon_btn { color: #fff }
+div.amp {
+   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+   background: rgb(28, 161, 193, 0.4);
+   /* padding: 5px 0; */
+   display: inline-block;
+   right: 0;
+   top: 75px;
+   border-top-left-radius: 10px;
+   border-bottom-left-radius: 10px;
+   color: white;
+   font-size: 16px;
+   transition: 0.25s all;
+   position: absolute;
+   width: 40px;
+   white-space: nowrap;
+   overflow: hidden;
+   height: 32px;
+   z-index: 100;
+   display: flex;
+}
+div.amp div {
+   padding: 5px 10px;
+}
+div.amp div:first-child {
+   background: rgba(255,255,255,0.2);
+   border-right: 1px solid rgba(255,255,255,0.4);
+   padding: 5px 10px;
+}
+div.amp:hover {
+   width: 212px !important;
+   cursor: pointer;
+   background: rgb(28, 161, 193) !important;
+}
+div.amp:hover .fa-unlock-alt {
+   display: inline-block !important;
+}
+div.amp:hover .fa-lock {
+   display: none !important;
+}
+div.amp .fa-unlock-alt, div.amp .fa-lock {
+   transform: scale(1.25, 1.25);
+   text-shadow: 0px -1px 0px rgba(0,0,0,0.2);
+}
+div.amp .fa-unlock-alt {
+   display: none;
+}
+.ampWindow .webix_toolbar.webix_dark {
+   background: #444 !important;
+}
+/* .accessLevel-0::before {
+   content: "";
+   width: 100%;
+   height: 100%;
+   background: rgba(233, 30, 30, 0.4);
+   display: block;
+   position: absolute;
+}
+.accessLevel-1::before {
+   content: "";
+   width: 100%;
+   height: 100%;
+   background: rgba(33, 150, 243, 0.4);
+   display: block;
+   position: absolute;
+}
+.accessLevel-2::before {
+   content: "";
+   width: 100%;
+   height: 100%;
+   background: rgba(76, 175, 80, 0.4);
+   display: block;
+   position: absolute;
+} */
+.ab-csv-importer .row-pass {
+	background-color: #b4e8b6;
+}
+.ab-csv-importer .row-fail {
+	background-color: #e4b0ad;
+}
+.ab-csv-importer .row-warn {
+	background-color: #f9d59f;
+}
+.ab-csv-importer .cell-invalid {
+	background-color: #e9ab4d;
+}
+.transparentBG .webix_el_tabbar+.webix_multiview {
+   background: transparent !important;
+}
+.webix_hcell .fa {
+    opacity: 0.4;
+}
+.ab-widget-header .webix_template {
+   padding: 0 10px;
+}
+.ab-layout-header .webix_template {
+   padding: 0;
+   line-height: 30px;
+}
+.ab-widget-header .webix_template div {
+   line-height: 30px;
+}
+.ab-widget-header .webix_template div .fa, .ab-layout-header .fa {
+   vertical-align: middle;
+}
+#offlinePrompt, #connectionPrompt {
+   line-height: 30px;
+   color: white;
+   background: #F44336;
+   font-size: 14px;
+   text-align: center;
+   transition: all 1s;
+   text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+   overflow: hidden;
+}
+#connectionPrompt {
+   background: #F44336;
+}
+#countdown {
+  height: 20px;
+  width: 20px;
+  text-align: center;
+  display: inline-block;
+  line-height: 20px;
+  position: relative;
+  bottom: 2px;
+  font-size: 9px;
+}
+
+#countdown-number {
+  color: white;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+}
+
+#countdown svg {
+  width: 20px;
+  height: 20px;
+  transform: rotateY(-180deg) rotateZ(-90deg);
+  position: absolute;
+  margin-left: -20px;
+}
+
+#countdown svg circle {
+  stroke-dasharray: 56px;
+  stroke-dashoffset: 0px;
+  stroke-linecap: round;
+  stroke-width: 2px;
+  stroke: white;
+  fill: none;
+  animation: countdown 30s linear infinite forwards;
+}
+
+@keyframes countdown {
+  from {
+    stroke-dashoffset: 0px;
+  }
+  to {
+    stroke-dashoffset: 56px;
+  }
+}
+#reloadPrompt {
+   position: absolute;
+   z-index: 200000;
+   top: 0;
+   bottom: 0;
+   left: 0;
+   right: 0;
+   background: rgba(0,0,0,0.7);
+   display: flex;
+}
+#reloadPrompt div {
+   background: #F44336;
+   width: 250px;
+   border: 3px solid white;
+   margin: auto auto;
+   padding: 20px;
+   text-align: center;
+   border-radius: 10px;
+   color: white;
+   text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+}
+.reloadPage {
+   background: rgba(0,0,0,0.2);
+   border: none;
+   padding: 5px 10px;
+   border-radius: 5px;
+   margin-top: 10px;
+}
+.reloadPage:hover {
+   background: rgba(0,0,0,0.4);
 }

@@ -191,6 +191,8 @@ module.exports = {
       var appID = req.param("appID");
       var appInfo = req.body.translations;
       var appIsAdmin = JSON.parse(req.body.isAdminApp || false);
+      var appIsAccessMangaged = JSON.parse(req.body.isAccessManaged || false);
+      var appAccessManagers = req.body.accessManagers;
 
       if (!appID) {
          return res.AD.error("Not found", 404);
@@ -205,6 +207,8 @@ module.exports = {
             return new Promise((next, err) => {
                let appValues = {
                   isAdminApp: appIsAdmin,
+                  isAccessManaged: appIsAccessMangaged,
+                  accessManagers: appAccessManagers,
                   json: {
                      translations: appInfo
                   }

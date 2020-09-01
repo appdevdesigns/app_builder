@@ -49,6 +49,10 @@ module.exports = {
    "delete /app_builder/application/:appID/object/:objID":
       "app_builder/ABObjectController.excludeObject",
 
+   /* Object tracking */
+   "get /app_builder/object/:objectId/track":
+      "app_builder/ABTrackController.find",
+
    /* Application Views */
    "put /app_builder/application/:appID/view":
       "app_builder/ABApplicationController.viewSave",
@@ -214,6 +218,12 @@ module.exports = {
    "delete /app_builder/migrate/object/:objID/field/:fieldID":
       "app_builder/ABMigrationController.dropField",
 
+   "post /app_builder/migrate/object/:objID/index/:indexID":
+      "app_builder/ABMigrationController.createIndex",
+
+   "delete /app_builder/migrate/object/:objID/index/:indexID":
+      "app_builder/ABMigrationController.dropIndex",
+
    /* Model Services */
    // app_builder/model/application/:appID/object/:objID
    // get  url   // find   the object data
@@ -226,6 +236,9 @@ module.exports = {
 
    "post /app_builder/model/application/:appID/object/:objID":
       "app_builder/ABModelController.create",
+
+   "post /app_builder/model/application/:appID/object/:objID/batch":
+      "app_builder/ABModelController.batchCreate",
 
    "put /app_builder/model/application/:appID/object/:objID/:id":
       "app_builder/ABModelController.update",

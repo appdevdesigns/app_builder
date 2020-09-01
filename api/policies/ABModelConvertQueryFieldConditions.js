@@ -18,6 +18,7 @@ const ABFieldDate = require(path.join(
    "dataFields",
    "ABFieldDate.js"
 ));
+const ABFieldUser = require("../classes/platform/dataFields/ABFieldUser");
 
 module.exports = function(req, res, next) {
    // our QB Conditions look like:
@@ -159,7 +160,7 @@ function parseQueryCondition(_where, object, req, res, cb) {
 
             var err = new Error("Unknown Query ID in condition.");
             err.condition = cond;
-            cb(err);
+            cb();
          } else {
             var queryColumn;
             // {string} this is the 'tablename'.'colname' of the data to return
@@ -240,17 +241,20 @@ function parseQueryCondition(_where, object, req, res, cb) {
                   // .then((data)=>{
 
                   sails.log.info(".... query data : ", data);
-                  var values = data.map((d) => {
-                     // let result = d[queryField.columnName];
-                     let result = d[columnName];
+                  var values = data
+                     .map((d) => {
+                        // let result = d[queryField.columnName];
+                        let result = d[columnName];
+                        if (!result) return null;
 
-                     // Convert SQL data time format
-                     if (result && queryField instanceof ABFieldDate) {
-                        return queryField.toSQLFormat(result);
-                     } else {
-                        return result;
-                     }
-                  });
+                        // Convert SQL data time format
+                        if (queryField instanceof ABFieldDate) {
+                           return queryField.toSQLFormat(result);
+                        } else {
+                           return result;
+                        }
+                     })
+                     .filter((val) => val);
 
                   // modify the condition to be the IN condition
                   // convert cond into an IN or NOT IN
@@ -264,6 +268,29 @@ function parseQueryCondition(_where, object, req, res, cb) {
                      not_in: "not_in"
                   };
                   cond.rule = convert[cond.rule];
+
+                  // Multiple users, then return id of user array
+                  if (
+                     queryField instanceof ABFieldUser &&
+                     queryField.settings.isMultiple
+                  ) {
+                     let users = [];
+
+                     (values || []).forEach((u) => {
+                        if (typeof u == "string") {
+                           try {
+                              u = JSON.parse(u);
+                           } catch (e) {}
+                        }
+
+                        (u || [])
+                           .map((u) => u.id || u)
+                           .forEach((username) => users.push(username));
+                     });
+
+                     values = users;
+                  }
+
                   cond.value = _.uniq(values); // use _.uniq() to only return unique values (no duplicates)
 
                   sails.log.info(".... new Condition:", cond);

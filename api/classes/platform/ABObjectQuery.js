@@ -21,7 +21,10 @@ module.exports = class ABClassQuery extends ABClassObject {
          else this._objects[obj.alias] = new ABClassObject(obj, application);
       });
 
-      this.viewName = attributes.viewName;
+      this.viewName = attributes.viewName || "";
+      // knex does not like .(dot) in table and column names
+      // https://github.com/knex/knex/issues/2762
+      this.viewName = this.viewName.replace(/[^a-zA-Z0-9_ ]/gi, "");
 
       /*
 		{
@@ -825,7 +828,29 @@ module.exports = class ABClassQuery extends ABClassObject {
       //}
       let externalTrans = {};
 
-      this.fields().forEach((f) => {
+      let fields = this.fields();
+
+      // Add custom index fields
+      (Object.keys(this._objects) || []).forEach((alias) => {
+         let obj = this._objects[alias];
+         let indexes = obj.indexes();
+
+         (indexes || []).forEach((idx) => {
+            (idx.fields || []).forEach((idxFld) => {
+               let existsIndexField =
+                  this.fields((qFld) => qFld.id == idxFld.id).length > 0;
+
+               // Add index field to generate to MySQL view
+               if (!existsIndexField) {
+                  let cloneField = _.clone(idxFld, false);
+                  cloneField.alias = alias;
+                  fields.push(cloneField);
+               }
+            });
+         });
+      });
+
+      (fields || []).forEach((f) => {
          if (!f || f.key == "calculate" || f.key == "TextFormula")
             // TODO: ignore calculated fields
             return;
@@ -913,7 +938,12 @@ module.exports = class ABClassQuery extends ABClassObject {
                   selectField = connectColFormat
                      .replace(/{linkDbName}/g, objLink.dbSchemaName())
                      .replace(/{linkTableName}/g, objLink.dbTableName())
-                     .replace(/{linkColumnName}/g, fieldLink.columnName)
+                     .replace(
+                        /{linkColumnName}/g,
+                        fieldIndex
+                           ? fieldIndex.columnName
+                           : fieldLink.columnName
+                     )
                      .replace(/{columnName}/g, objLink.PK());
                }
             }
@@ -1486,5 +1516,11 @@ module.exports = class ABClassQuery extends ABClassObject {
    selectFormulaFields(query) {
       // Query does not need to generate formula field.
       // It should be created in CREATE VIEW command
+   }
+
+   convertConnectFieldCondition(field, condition) {
+      condition.key = `${condition.alias}.${field.relationName()}`;
+
+      return condition;
    }
 };

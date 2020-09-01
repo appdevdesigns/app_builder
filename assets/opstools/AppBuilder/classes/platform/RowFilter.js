@@ -152,6 +152,7 @@ module.exports = class RowFilter extends RowFilterCore {
 
       // internal list of Webix IDs to reference our UI components.
       let ids = (this.ids = {
+         component: this.unique(idBase + "_rowFilter"),
          filterForm: this.unique(idBase + "_rowFilter_form"),
          addNewFilter: this.unique(idBase + "_rowFilter_addNewFilter"),
 
@@ -168,7 +169,6 @@ module.exports = class RowFilter extends RowFilterCore {
          queryFieldComboField: this.unique(
             idBase + "_rowFilter_queryFieldComboField"
          ),
-
          fieldMatch: this.unique(idBase + "_rowFilter_fieldMatchCombo"),
 
          dataCollection: this.unique(idBase + "_rowFilter_dataCollection"),
@@ -339,6 +339,14 @@ module.exports = class RowFilter extends RowFilterCore {
                         value: "less",
                         options: [
                            {
+                              value: labels.component.equalListCondition,
+                              id: "equals"
+                           },
+                           {
+                              value: labels.component.notEqualListCondition,
+                              id: "not_equal"
+                           },
+                           {
                               value: labels.component.beforeCondition,
                               id: "less"
                            },
@@ -476,6 +484,10 @@ module.exports = class RowFilter extends RowFilterCore {
                            {
                               value: labels.component.equalListCondition,
                               id: "equals"
+                           },
+                           {
+                              value: labels.component.notEqualListCondition,
+                              id: "not_equal"
                            }
                         ]
                            .concat(instance.queryFieldOptions)
@@ -877,7 +889,8 @@ module.exports = class RowFilter extends RowFilterCore {
          batchName = field.key;
          if (field.id == "this_object") batchName = "query";
          // Special this object query
-         else if (batchName == "LongText") batchName = "string";
+         else if (batchName == "LongText" || batchName == "combined")
+            batchName = "string";
          else if (field.key == "formula") batchName = "number";
          var isQueryField =
             this._QueryFields.filter((f) => {
@@ -978,13 +991,17 @@ module.exports = class RowFilter extends RowFilterCore {
 
       _logic.onChangeRule = (rule, $viewCond, notify = false) => {
          switch (rule) {
-            // If want to call notify or call .onChange(), then pass notify is true.
-            // case 'contains':
-            // case 'not_contains':
-            // case 'equals':
-            // case 'not_equal':
-            // 	_logic.onChange();
-            // 	break;
+            case "contains":
+            case "not_contains":
+            case "equals":
+            case "not_equal":
+               // For "connect_fields" search by CUSTOM index value
+               if (batchName == "query") {
+                  $viewCond.$$(ids.inputValue).showBatch("string");
+               }
+               // If want to call notify or call .onChange(), then pass notify is true.
+               // _logic.onChange();
+               break;
 
             case "is_current_user":
             case "is_not_current_user":
@@ -1225,7 +1242,14 @@ module.exports = class RowFilter extends RowFilterCore {
 
                // Convert date format
                if (value instanceof Date) {
-                  value = value.toISOString();
+                  let dateField = this._Fields.filter(
+                     (f) => f.id == fieldId
+                  )[0];
+                  if (dateField) {
+                     value = dateField.exportValue(value);
+                  } else {
+                     value = value.toISOString();
+                  }
                }
 
                config_settings.rules.push({
@@ -1244,6 +1268,7 @@ module.exports = class RowFilter extends RowFilterCore {
 
       // webix UI definition:
       this.ui = {
+         id: ids.component,
          rows: [
             {
                view: "form",

@@ -97,7 +97,7 @@ module.exports = class ABViewLayout extends ABViewLayoutCore {
 
       /** UI */
       var _ui = Object.assign(component.ui, {});
-      _ui.type = "space";
+      _ui.type = "form";
 
       this.views().forEach((v, index) => {
          _ui.cols[index] = {
@@ -105,7 +105,8 @@ module.exports = class ABViewLayout extends ABViewLayoutCore {
                // Add action buttons
                {
                   type: "template",
-                  height: 33,
+                  css: "ab-layout-header",
+                  height: 30,
                   template: _logic.templateButton({
                      icon: v.icon,
                      label: v.label
@@ -125,6 +126,10 @@ module.exports = class ABViewLayout extends ABViewLayoutCore {
             ]
          };
       });
+
+      if (this.views().length == 0) {
+         _ui.cols[0] = {};
+      }
 
       return {
          ui: _ui,
@@ -148,8 +153,10 @@ module.exports = class ABViewLayout extends ABViewLayoutCore {
       var LayoutView = _logic.currentEditObject();
       LayoutView.addColumn();
 
+      var includeSubViews = true; // we ask later on down the save if we should save subviews...we do this time
+
       // trigger a save()
-      this.propertyEditorSave(ids, LayoutView);
+      this.propertyEditorSave(ids, LayoutView, includeSubViews);
    }
 
    /**
@@ -210,18 +217,17 @@ module.exports = class ABViewLayout extends ABViewLayoutCore {
 
       this.views().forEach((v) => {
          this.viewComponents[v.id] = v.component(App, idPrefix);
-
          _ui.cols.push(this.viewComponents[v.id].ui);
       });
 
       // make sure each of our child views get .init() called
-      var _init = (options) => {
+      var _init = (options, accessLevel) => {
          this.views().forEach((v) => {
             var component = this.viewComponents[v.id];
 
             // initial sub-component
             if (component && component.init) {
-               component.init();
+               component.init(options, accessLevel);
             }
          });
       };

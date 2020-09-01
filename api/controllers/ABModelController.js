@@ -257,10 +257,28 @@ function updateRelationValues(object, id, updateRelationParams) {
 
          // Normal relations
          else {
+            let needToClear = true;
+
+            // If link column is in the table, then will not need to clear connect data
+            if (
+               updateRelationParams[colName] &&
+               field &&
+               field.settings &&
+               // 1:M
+               ((field.settings.linkType == "one" &&
+                  field.settings.linkViaType == "many") ||
+                  // 1:1 isSource = true
+                  (field.settings.linkType == "one" &&
+                     field.settings.linkViaType == "one" &&
+                     field.settings.isSource))
+            ) {
+               needToClear = false;
+            }
+
             // Clear relations
-            updateTasks.push(() => {
-               return clearRelate(object, colName, id);
-            });
+            if (needToClear) {
+               updateTasks.push(() => clearRelate(object, colName, id));
+            }
 
             // convert relation data to array
             if (!Array.isArray(updateRelationParams[colName])) {
@@ -440,9 +458,65 @@ function updateTranslationsValues(object, id, translations, isInsert) {
 }
 
 module.exports = {
-   create: function(req, res) {
-      newPendingTransaction();
+   batchCreate: function(req, res) {
       var allParams = req.allParams();
+      sails.log.verbose(
+         "ABModelController.batchCreate(): allParams:",
+         allParams
+      );
+
+      let result = {};
+
+      // log error into a variable
+      let errorRows = {};
+      let onError = (rowIndex, error) => {
+         errorRows[rowIndex] = error;
+      };
+
+      var batch = allParams.batch;
+      var batchCreate = [];
+      if (batch && Array.isArray(batch)) {
+         batch.forEach((newRecord) => {
+            batchCreate.push(
+               new Promise((resolve, reject) => {
+                  this.create(
+                     req,
+                     null,
+                     null,
+                     newRecord.data,
+                     (newRow) => {
+                        result[newRecord.id] = newRow;
+                        resolve(newRow);
+                     },
+                     (errorResponse) => {
+                        onError(newRecord.id, errorResponse);
+                        resolve();
+                     }
+                  );
+               })
+            );
+         });
+         Promise.all(batchCreate)
+            // .catch((error) => {
+            //    res.AD.error(error);
+            // })
+            .then((data) => {
+               res.AD.success({
+                  data: result,
+                  errors: errorRows // Return error messages of each rows
+               });
+            });
+      }
+   },
+
+   create: function(req, res, callbacks, batchRecord, resolve, reject) {
+      newPendingTransaction();
+      var allParams;
+      if (batchRecord) {
+         allParams = batchRecord;
+      } else {
+         allParams = req.allParams();
+      }
       sails.log.verbose("ABModelController.create(): allParams:", allParams);
 
       var createParams; // used in several process steps below:
@@ -546,13 +620,23 @@ module.exports = {
                   .insert(createParams)
                   .then(
                      (newObj) => {
+                        let rowId = newObj[object.PK()];
+
+                        // track logging
+                        ABTrack.logInsert({
+                           objectId: object.id,
+                           rowId,
+                           username: req.user.data.username,
+                           data: createParams
+                        });
+
                         // return the parameters of connectObject data field values
                         var updateRelationParams = object.requestRelationParams(
                            allParams
                         );
                         var updateTasks = updateRelationValues(
                            object,
-                           newObj[object.PK()],
+                           rowId,
                            updateRelationParams
                         );
 
@@ -719,13 +803,13 @@ module.exports = {
 
                // now send the error message:
                resolvePendingTransaction();
-               res.AD.error(errorResponse);
+               if (res) {
+                  res.AD.error(errorResponse);
+               } else {
+                  reject(errorResponse);
+               }
                return;
             }
-
-            // return a Successful operation:
-            resolvePendingTransaction();
-            res.AD.success(newItem);
 
             // We want to broadcast the change from the server to the client so all datacollections can properly update
             // Build a payload that tells us what was updated
@@ -740,6 +824,15 @@ module.exports = {
                "ab.datacollection.create",
                payload
             );
+
+            // return a Successful operation:
+            resolvePendingTransaction();
+            if (res) {
+               updateConnectedFields(object, newItem);
+               res.AD.success(newItem);
+            } else {
+               resolve(newItem);
+            }
          }
       );
 
@@ -1042,11 +1135,13 @@ console.error(err);
                      })
                      .catch((err) => {
                         resolvePendingTransaction();
+                        console.log(err);
                         res.AD.error(err);
                      });
                })
                .catch((err) => {
                   resolvePendingTransaction();
+                  console.log(err);
                   res.AD.error(err);
                });
          })
@@ -1222,6 +1317,14 @@ console.error(err);
                   .delete()
                   .where(object.PK(), "=", id)
                   .then((countRows) => {
+                     // track logging
+                     ABTrack.logDelete({
+                        objectId: object.id,
+                        rowId: id,
+                        username: req.user.data.username,
+                        data: oldItem
+                     });
+
                      resolvePendingTransaction();
                      numRows = countRows;
                      next();
@@ -1262,13 +1365,13 @@ console.error(err);
                   payload
                );
 
-               // // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
-               // updateConnectedFields(object, oldItem[0]);
-               // if (relatedItems.length) {
-               //     relatedItems.forEach((r) => {
-               //         updateConnectedFields(r.object, r.items);
-               //     });
-               // }
+               // Using the data from the oldItem and relateditems we can update all instances of it and tell the client side it is stale and needs to be refreshed
+               updateConnectedFields(object, oldItem[0]);
+               if (relatedItems.length) {
+                  relatedItems.forEach((r) => {
+                     updateConnectedFields(r.object, r.items);
+                  });
+               }
                next();
             }
          ],
@@ -1534,6 +1637,18 @@ console.error(err);
                .where(object.PK(), id)
                .then(
                   (values) => {
+                     // track logging
+                     ABTrack.logUpdate({
+                        objectId: object.id,
+                        rowId: id,
+                        username: req.user.data.username,
+                        data: Object.assign(
+                           updateParams,
+                           updateRelationParams,
+                           transParams
+                        )
+                     });
+
                      // create a new query when use same query, then new data are created duplicate
                      var updateTasks = updateRelationValues(
                         object,
@@ -1588,6 +1703,7 @@ console.error(err);
                                     .then(() => {
                                        resolvePendingTransaction();
                                        res.AD.success(result);
+                                       updateConnectedFields(object, result);
 
                                        // We want to broadcast the change from the server to the client so all datacollections can properly update
                                        // Build a payload that tells us what was updated

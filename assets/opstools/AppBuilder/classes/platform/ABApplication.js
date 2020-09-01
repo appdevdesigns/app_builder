@@ -8,6 +8,7 @@ let ABViewManager = require("./ABViewManager");
 let ABViewPage = require("./views/ABViewPage");
 
 const ABDefinition = require("./ABDefinition");
+const ABRole = require("./ABRole");
 
 const ABProcessTaskManager = require("../core/process/ABProcessTaskManager");
 const ABProcessParticipant = require("./process/ABProcessParticipant");
@@ -16,6 +17,9 @@ const ABProcessLane = require("./process/ABProcessLane");
 const ABProcess = require("./ABProcess");
 
 var _AllApplications = [];
+
+var _AllUserRoles = [];
+// an array of {id:, lable:} of the ABRoles the current User has assigned
 
 var dfdReady = null;
 
@@ -155,6 +159,50 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
                   }
                });
          });
+      });
+   }
+
+   /**
+    * @function initRoles
+    * Get roles of current user so we can use them in access level management
+    *
+    * @return {Promise}
+    */
+   static initRoles() {
+      return new Promise((resolve, reject) => {
+         var __Roles = [];
+         var __UserRoles = [];
+
+         async.series(
+            [
+               function(next) {
+                  ABRole.rolesOfUser(window.OP.User.username())
+                     .then((list) => {
+                        list.forEach(function(l) {
+                           __UserRoles.push({
+                              id: l.id,
+                              label: l.label
+                           });
+                        });
+                        _AllUserRoles = __UserRoles;
+                        next();
+                     })
+                     .catch((err) => {
+                        AD.error.log(
+                           "ABLiveTool: Error loading roles of user",
+                           {
+                              error: err
+                           }
+                        );
+                        next(err);
+                     });
+               }
+            ],
+            function(err) {
+               if (err) reject(err);
+               else resolve();
+            }
+         );
       });
    }
 
@@ -309,6 +357,14 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
       return _.cloneDeep(value);
    }
 
+   userRoles(roles) {
+      if (roles) {
+         _AllUserRoles = roles;
+         return;
+      }
+      return _AllUserRoles;
+   }
+
    /// ABApplication data methods
 
    /**
@@ -393,6 +449,8 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
       return this.Model.staticData.updateInfo(this.id, {
          isAdminApp: values.isAdminApp,
+         isAccessManaged: values.isAccessManaged,
+         accessManagers: values.accessManagers,
          translations: values.json.translations
       });
    }
@@ -671,6 +729,20 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    }
 
    ///
+   /// Object Tracks
+   ///
+   objectTrack(objectId, rowId) {
+      return new Promise((resolve, reject) => {
+         this.Model.staticData
+            .objectTrack(objectId, rowId)
+            .catch(reject)
+            .then((data) => {
+               resolve(data);
+            });
+      });
+   }
+
+   ///
    /// Fields
    ///
 
@@ -751,10 +823,11 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     *
     * @param {ABView} view
     * @param {Boolean} includeSubViews
+    * @param {Boolean} ignoreUiUpdate
     *
     * @return {Promise}
     */
-   viewSave(view, includeSubViews = false) {
+   viewSave(view, includeSubViews = false, updateUi = true) {
       // var isIncluded = (this.pages(function (p) { return p.id == page.id }).length > 0);
       // if (!isIncluded) {
       // 	this._pages.push(page);
@@ -771,7 +844,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
             // Trigger a update event to the live display page
             let rootPage = view.pageRoot();
-            if (rootPage) {
+            if (rootPage && updateUi) {
                AD.comm.hub.publish("ab.interface.update", {
                   rootPageId: rootPage.id
                });

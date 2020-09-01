@@ -393,24 +393,23 @@ module.exports = class ABViewRuleActionFormRecordRuleUpdateConnected extends ABV
          // @param {obj} item  the item to update
          // @param {fn}  cb    a callback function when update is complete.
          var updateIt = (item, cb) => {
-            this.processUpdateObject({}, item).then((isUpdated) => {
-               if (!isUpdated) {
-                  cb();
-               } else {
-                  model
-                     .update(item.id, item)
-                     .catch((err) => {
-                        OP.Error.log(
-                           "!!! ABViewRuleActionFormRecordRuleUpdateConnected.process(): update error:",
-                           { error: err, data: options.data }
-                        );
-                        cb(err);
-                     })
-                     .then(() => {
-                        cb();
-                     });
-               }
-            });
+            let isUpdated = this.processUpdateObject({}, item);
+            if (!isUpdated) {
+               cb();
+            } else {
+               model
+                  .update(item.id, item)
+                  .catch((err) => {
+                     OP.Error.log(
+                        "!!! ABViewRuleActionFormRecordRuleUpdateConnected.process(): update error:",
+                        { error: err, data: options.data }
+                     );
+                     cb(err);
+                  })
+                  .then(() => {
+                     cb();
+                  });
+            }
          };
 
          // now figure out which elements belong to this object
