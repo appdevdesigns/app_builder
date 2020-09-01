@@ -828,7 +828,29 @@ module.exports = class ABClassQuery extends ABClassObject {
       //}
       let externalTrans = {};
 
-      this.fields().forEach((f) => {
+      let fields = this.fields();
+
+      // Add custom index fields
+      (Object.keys(this._objects) || []).forEach((alias) => {
+         let obj = this._objects[alias];
+         let indexes = obj.indexes();
+
+         (indexes || []).forEach((idx) => {
+            (idx.fields || []).forEach((idxFld) => {
+               let existsIndexField =
+                  this.fields((qFld) => qFld.id == idxFld.id).length > 0;
+
+               // Add index field to generate to MySQL view
+               if (!existsIndexField) {
+                  let cloneField = _.clone(idxFld, false);
+                  cloneField.alias = alias;
+                  fields.push(cloneField);
+               }
+            });
+         });
+      });
+
+      (fields || []).forEach((f) => {
          if (!f || f.key == "calculate" || f.key == "TextFormula")
             // TODO: ignore calculated fields
             return;
