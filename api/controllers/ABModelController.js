@@ -345,22 +345,24 @@ function updateConnectedFields(object, newData, oldData) {
          items = items.concat(oldItems);
       }
 
-      // filter array to only show unique items
-      items = _.uniqBy(items, field.object.PK());
-      // parse through all items and broadcast a "stale" action so we can tell the client side the data may have updated
-      items.forEach((i) => {
-         // Make sure you put the payload together just like before
-         var payload = {
-            objectId: field.object.id, // get the fields object id
-            data: i // pass the whole item
-         };
-         // Broadcast the payload and let the clientside figure out what to do next
-         sails.sockets.broadcast(
-            field.object.id,
-            "ab.datacollection.stale",
-            payload
-         );
-      });
+      if (field) {
+         // filter array to only show unique items
+         items = _.uniqBy(items, field.object.PK());
+         // parse through all items and broadcast a "stale" action so we can tell the client side the data may have updated
+         items.forEach((i) => {
+            // Make sure you put the payload together just like before
+            var payload = {
+               objectId: field.object.id, // get the fields object id
+               data: i // pass the whole item
+            };
+            // Broadcast the payload and let the clientside figure out what to do next
+            sails.sockets.broadcast(
+               field.object.id,
+               "ab.datacollection.stale",
+               payload
+            );
+         });
+      }
    });
 }
 
@@ -2074,3 +2076,4 @@ console.error(err);
       });
    }
 };
+
