@@ -17,7 +17,7 @@ branches:
 
 before_install:
     - docker swarm init
-    - git clone https://github.com/echu888/travis-appbuilder.git
+    - git clone https://github.com/appdevdesigns/travis-appbuilder.git
     - cd travis-appbuilder
     - scripts/installer.sh
 
