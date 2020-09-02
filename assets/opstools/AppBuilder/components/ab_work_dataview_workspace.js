@@ -179,6 +179,24 @@ module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
                         datacollection.datacollectionLink,
                         datacollection.fieldLink
                      );
+                     $datatable.adjust();
+
+                     // load data of parent DC, then our dc will trigger ."dataFeed"
+                     let datacollectionLink = datacollection.datacollectionLink;
+                     if (
+                        datacollectionLink.dataStatus ==
+                        datacollectionLink.dataStatusFlag.notInitial
+                     ) {
+                        datacollectionLink.loadData();
+                     }
+                     // refresh cursor of parent DC
+                     else if (
+                        datacollection.dataStatus ==
+                        datacollection.dataStatusFlag.notInitial
+                     ) {
+                        datacollectionLink.setCursor(null);
+                        datacollectionLink.setStaticCursor();
+                     }
                   } else {
                      datacollection.bind($datatable);
                      $datatable.adjust();
