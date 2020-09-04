@@ -183,7 +183,11 @@ module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
 
                      // load data of parent DC, then our dc will trigger ."dataFeed"
                      let datacollectionLink = datacollection.datacollectionLink;
-                     if (
+
+                     // when parent dc does not set fix cursor
+                     if (!datacollectionLink.settings.fixSelect) {
+                        datacollection.loadData();
+                     } else if (
                         datacollectionLink.dataStatus ==
                         datacollectionLink.dataStatusFlag.notInitial
                      ) {

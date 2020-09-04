@@ -491,6 +491,8 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
          let boundComp = $$(comId);
          if (boundComp && boundComp.showProgress)
             boundComp.showProgress({ type: "icon" });
+
+         if (boundComp.data && boundComp.data.unsync) boundComp.data.unsync();
       });
 
       addRowToTree(this.__datasource.joins());
@@ -499,6 +501,7 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
       (this.__bindComponentIds || []).forEach((comId) => {
          let boundComp = $$(comId);
          if (boundComp && boundComp.hideProgress) boundComp.hideProgress();
+         boundComp.define("data", this.__treeCollection);
       });
    }
 };
