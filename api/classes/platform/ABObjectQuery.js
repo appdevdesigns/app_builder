@@ -417,8 +417,13 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
       let fields = this.fields();
 
       // Add custom index fields
-      (Object.keys(this._objects) || []).forEach((alias) => {
-         let obj = this._objects[alias];
+      (Object.keys(this.alias2Obj) || []).forEach((alias) => {
+         var objID = this.alias2Obj[alias];
+         var obj = this.objects().find((o) => o.id == objID);
+         if (!obj) {
+            return;
+         }
+
          let indexes = obj.indexes();
 
          (indexes || []).forEach((idx) => {
@@ -451,6 +456,13 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
             let fieldIndex = f.indexField;
             let fieldIndex2 = f.indexField2;
             let baseColumnName = obj.PK();
+
+            if (!fieldLink) {
+               sails.log.error(
+                  `!!! connected.field[${f.id}] did not have a fieldLink`,
+                  f
+               );
+            }
 
             // custom index
             if (fieldIndex && fieldIndex.object.id == obj.id) {
