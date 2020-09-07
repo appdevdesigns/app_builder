@@ -582,11 +582,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                allUpdates.push(
                   this.brObject
                      .modelAPI()
-                     .update(
-                        balanceRecord[this.brObject.PK()],
-                        balanceRecord,
-                        this._dbTransaction
-                     )
+                     .update(brID, balanceRecord, this._dbTransaction)
                );
             });
 
