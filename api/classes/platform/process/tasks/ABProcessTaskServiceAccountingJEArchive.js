@@ -346,6 +346,11 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                         });
 
                         if (Object.keys(jeArchiveValues).length > 1) {
+                           // call .requestParams to set default values and reformat value properly
+                           jeArchiveValues = this.jeArchiveObject.requestParams(
+                              jeArchiveValues
+                           );
+
                            this.log(instance, "Creating JE Archive ...");
                            this.log(instance, JSON.stringify(jeArchiveValues));
 

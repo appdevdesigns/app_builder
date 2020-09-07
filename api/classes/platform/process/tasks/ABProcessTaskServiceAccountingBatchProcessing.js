@@ -575,6 +575,9 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                balanceRecord["Credit"] = totalCredit;
                balanceRecord["Debit"] = totalDebit;
 
+               // call .requestParams to set default values and reformat value properly
+               balanceRecord = this.brObject.requestParams(balanceRecord);
+
                // now perform the UPDATE
                allUpdates.push(
                   this.brObject
