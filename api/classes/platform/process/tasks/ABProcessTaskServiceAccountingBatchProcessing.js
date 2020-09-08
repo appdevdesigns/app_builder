@@ -237,7 +237,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      updateValue,
                      this._dbTransaction
                   )
-                  .then(() => {
+                  .then((updatedJE) => {
                      resolve();
                   })
                   .catch(reject);
@@ -454,6 +454,13 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                .modelAPI()
                .create(balValues)
                .then((newEntry) => {
+                  // Broadcast
+                  sails.sockets.broadcast(
+                     this.brObject.id,
+                     "ab.datacollection.create",
+                     newEntry
+                  );
+
                   resolve(newEntry);
                })
                .catch((err) => {

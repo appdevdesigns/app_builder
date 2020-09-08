@@ -351,20 +351,47 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                               jeArchiveValues
                            );
 
-                           this.log(instance, "Creating JE Archive ...");
-                           this.log(instance, JSON.stringify(jeArchiveValues));
-
                            tasks.push(
-                              this.jeArchiveObject
-                                 .modelAPI()
-                                 .create(jeArchiveValues, trx)
+                              () =>
+                                 new Promise((ok, no) => {
+                                    this.log(
+                                       instance,
+                                       "Creating JE Archive ..."
+                                    );
+                                    this.log(
+                                       instance,
+                                       JSON.stringify(jeArchiveValues)
+                                    );
+
+                                    this.jeArchiveObject
+                                       .modelAPI()
+                                       .create(jeArchiveValues, trx)
+                                       .catch(no)
+                                       .then((newJeArchive) => {
+                                          // Broadcast
+                                          sails.sockets.broadcast(
+                                             this.jeArchiveObject.id,
+                                             "ab.datacollection.create",
+                                             newJeArchive
+                                          );
+
+                                          ok();
+                                       });
+                                 })
                            );
                         }
                      });
 
-                     Promise.all(tasks)
-                        .catch(bad)
-                        .then(() => next());
+                     // Promise.all(tasks)
+                     //    .catch(bad)
+                     //    .then(() => next());
+
+                     tasks.push(() => next());
+
+                     // create JE archive sequentially
+                     tasks.reduce((promiseChain, currTask) => {
+                        return promiseChain.then(currTask);
+                     }, Promise.resolve([]));
                   })
             )
             // Remove JEs
@@ -389,7 +416,15 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                         .then(() => next());
                   })
             )
+            // finish out the Process Task
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     this.stateCompleted(instance);
+                     this.log(instance, "JE Archive process successfully");
+                     next(true);
+                  })
+            )
       );
    }
 };
-
