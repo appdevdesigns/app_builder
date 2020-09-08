@@ -519,7 +519,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
                // runningBalance = startingBalance
                // totalCredit, totalDebit = 0;
-               let runningBalance = parseFloat(
+               let startingBalance = parseFloat(
                   balanceRecord["Starting Balance"]
                      ? balanceRecord["Starting Balance"]
                      : 0
@@ -542,42 +542,6 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                         journalEntry["Credit"] ? journalEntry["Credit"] : 0
                      );
 
-                     // lookup the Account type from the journalEntry
-                     var accountType = this.lookupAccountType(journalEntry);
-
-                     // #Fix: for account 3991, we must use the "Equity" type, not
-                     // what is on the journalEntry
-                     if (
-                        acct3991 &&
-                        balanceRecord[this.brAccountField.columnName] ==
-                           this.brAccountField.getRelationValue(acct3991)
-                     ) {
-                        accountType = "equity";
-                     }
-
-                     switch (accountType) {
-                        // case: "asset" || "expense"
-                        case "assets":
-                        case "expenses":
-                           // runningBalance = runningBalance - JE.credit + JE.debit
-                           runningBalance +=
-                              journalEntry["Debit"] - journalEntry["Credit"];
-                           break;
-
-                        // case: Liabilities, Equity, Income
-                        case "liabilities":
-                        case "equity":
-                        case "income":
-                           // runningBalance = runningBalance - JE.debit + JE.credit
-                           runningBalance +=
-                              journalEntry["Credit"] - journalEntry["Debit"];
-                           break;
-
-                        default:
-                           // Q: what to do if a JE didn't return an expected Account Type?
-                           break;
-                     }
-
                      // totalCredit += JE.credit
                      totalCredit += journalEntry["Credit"];
 
@@ -586,8 +550,58 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                   }
                );
 
+               //// lookup the Account type from the journalEntry
+               // var accountType = this.lookupAccountType(journalEntry);
+
+               let accountType;
+               // #Fix: for account 3991, we must use the "Equity" type, not
+               // what is on the journalEntry
+               if (
+                  acct3991 &&
+                  balanceRecord[this.brAccountField.columnName] ==
+                     this.brAccountField.getRelationValue(acct3991)
+               ) {
+                  accountType = "equity";
+               }
+               //// lookup the Account type from the balance
+               else {
+                  let accountObject = this.brAccountField.datasourceLink;
+                  let categoryOptions = accountObject
+                     .fields((f) => f.columnName == "Category")[0]
+                     .options();
+                  let account =
+                     balanceRecord[this.brAccountField.relationName()];
+                  let categoryOption = categoryOptions.find(
+                     (o) => o.id == account["Category"]
+                  );
+                  accountType = (categoryOption
+                     ? categoryOption.text
+                     : ""
+                  ).toLowerCase();
+               }
+
+               switch (accountType) {
+                  // case: "asset" || "expense"
+                  case "assets":
+                  case "expenses":
+                     balanceRecord["Running Balance"] =
+                        startingBalance + totalDebit - totalCredit;
+                     break;
+
+                  // case: Liabilities, Equity, Income
+                  case "liabilities":
+                  case "equity":
+                  case "income":
+                     balanceRecord["Running Balance"] =
+                        startingBalance - totalDebit + totalCredit;
+                     break;
+
+                  default:
+                     // Q: what to do if a JE didn't return an expected Account Type?
+                     break;
+               }
+
                // update BalanceRecord
-               balanceRecord["Running Balance"] = runningBalance;
                balanceRecord["Credit"] = totalCredit;
                balanceRecord["Debit"] = totalDebit;
 
