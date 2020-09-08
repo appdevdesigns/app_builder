@@ -539,6 +539,18 @@ steal(
                      buildAccessAccordion: function(role) {
                         var self = this;
 
+                        // if a role cannot be found it may have been deleted
+                        // do not show the settings in accordion of removed roles
+                        // Should we remove/clean up the role settings here???
+                        if (self.roles) {
+                           var findRole = self.roles.find((r) => {
+                              return r.id === role;
+                           });
+                           if (!findRole) {
+                              return false;
+                           }
+                        }
+
                         var manageUsers = {
                            rows: [
                               {
@@ -847,7 +859,11 @@ steal(
                                  var header = self.roles.find((r) => {
                                     return r.id === role;
                                  });
-                                 return header.value;
+                                 if (header && header.value) {
+                                    return header.value;
+                                 } else {
+                                    return "";
+                                 }
                               }
                            },
                            collapsed: true,
