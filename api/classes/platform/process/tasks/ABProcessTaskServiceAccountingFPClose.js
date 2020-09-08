@@ -318,7 +318,7 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                         .update(nextFpID, values, trx)
                         .catch(fail)
                         .then((updatedNextFP) => {
-                           // Broadcast the create
+                           // Broadcast
                            sails.sockets.broadcast(
                               this.fpObject.id,
                               "ab.datacollection.update",
