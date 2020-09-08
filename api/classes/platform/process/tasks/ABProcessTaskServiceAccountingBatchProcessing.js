@@ -515,22 +515,31 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
             // for each balanceRecord
             (allBalanceRecords || []).forEach((balanceRecord) => {
+               let brID = balanceRecord[this.brObject.PK()];
+
                // runningBalance = startingBalance
                // totalCredit, totalDebit = 0;
-               var runningBalance = balanceRecord["Starting Balance"];
-               var totalCredit = parseFloat(balanceRecord["Credit"] || 0);
-               var totalDebit = parseFloat(balanceRecord["Debit"] || 0);
-               let brID = balanceRecord[this.brObject.PK()];
+               let runningBalance = parseFloat(
+                  balanceRecord["Starting Balance"]
+                     ? balanceRecord["Starting Balance"]
+                     : 0
+               );
+               let totalCredit = parseFloat(
+                  balanceRecord["Credit"] ? balanceRecord["Credit"] : 0
+               );
+               let totalDebit = parseFloat(
+                  balanceRecord["Debit"] ? balanceRecord["Debit"] : 0
+               );
 
                // for each JournalEntry
                (this.balanceRecordsProcessed[brID] || []).forEach(
                   (journalEntry) => {
                      // prevent working with data as a string or with NULL values
                      journalEntry["Debit"] = parseFloat(
-                        journalEntry["Debit"] || 0
+                        journalEntry["Debit"] ? journalEntry["Debit"] : 0
                      );
                      journalEntry["Credit"] = parseFloat(
-                        journalEntry["Credit"] || 0
+                        journalEntry["Credit"] ? journalEntry["Credit"] : 0
                      );
 
                      // lookup the Account type from the journalEntry
