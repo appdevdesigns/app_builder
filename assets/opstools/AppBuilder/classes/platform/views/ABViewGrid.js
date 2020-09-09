@@ -876,6 +876,7 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                this.filterHelper.objectLoad(CurrentObject);
                this.filterHelper.viewLoad(this);
                exportPopup.objectLoad(CurrentObject);
+               exportPopup.dataCollectionLoad(dv);
                exportPopup.setGridComponent($$(DataTable.ui.id));
                exportPopup.setHiddenFields(
                   this.settings.objectWorkspace.hiddenFields
