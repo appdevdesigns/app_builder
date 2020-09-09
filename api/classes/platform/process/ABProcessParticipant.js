@@ -34,11 +34,11 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
    /**
     * @method exportIDs()
     * export any relevant .ids for the necessary operation of this application.
-    * @return {array}
-    *         any relevalt ABDefinition IDs
+    * @param {array} ids
+    *        the array of ids to store our relevant .ids into
     */
-   exportIDs() {
-      return [this.id];
+   exportIDs(ids) {
+      ids.push(this.id);
    }
 
    users() {

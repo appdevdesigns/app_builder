@@ -125,6 +125,23 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
       return linkObject;
    }
 
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @param {array} ids
+    *        the array of ids to store our relevant .ids into
+    */
+   exportIDs(ids) {
+      super.exportIDs(ids);
+
+      // include datasource with this:
+      // Q?: so, when exporting ids ... do we ensure we gather all connected fields?
+      var connObj = this.datasourceLink;
+      if (connObj) {
+         connObj.exportIDs(ids);
+      }
+   }
+
    ///
    /// DB Migrations
    ///

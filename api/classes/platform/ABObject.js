@@ -67,18 +67,19 @@ module.exports = class ABClassObject extends ABObjectCore {
    /**
     * @method exportIDs()
     * export any relevant .ids for the necessary operation of this application.
-    * @return {array}
-    *         any relevalt ABDefinition IDs
+    * @param {array} ids
+    *         the array of relevant ids to store our .ids into.
     */
-   exportIDs() {
-      var myIDs = [this.id];
+   exportIDs(ids) {
+      // make sure we don't get into an infinite loop:
+      if (ids.indexOf(this.id) > -1) return;
+
+      ids.push(this.id);
 
       // include my fields:
       this.fields(null, true).forEach((f) => {
-         myIDs = myIDs.concat(f.exportIDs());
+         f.exportIDs(ids);
       });
-
-      return myIDs;
    }
 
    ///
