@@ -46,18 +46,19 @@ module.exports = class ABProcess extends ABProcessCore {
    /**
     * @method exportIDs()
     * export any relevant .ids for the necessary operation of this application.
-    * @return {array}
-    *         any relevalt ABDefinition IDs
+    * @param {array} ids
+    *        the array of ids to store our relevant .ids into.
     */
-   exportIDs() {
-      var myIDs = [this.id];
+   exportIDs(ids) {
+      // make sure we don't get into an infinite loop:
+      if (ids.indexOf(this.id) > -1) return;
 
-      // start with Objects:
+      ids.push(this.id);
+
+      // store our elements:
       this.elements().forEach((e) => {
-         myIDs = myIDs.concat(e.exportIDs());
+         e.exportIDs(ids);
       });
-
-      return myIDs;
    }
 
    /**

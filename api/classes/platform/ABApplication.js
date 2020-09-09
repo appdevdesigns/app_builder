@@ -122,35 +122,40 @@ module.exports = class ABClassApplication extends ABApplicationCore {
    /**
     * @method exportIDs()
     * export any relevant .ids for the necessary operation of this application.
-    * @return {array}
-    *         any relevalt ABDefinition IDs
+    * @param {array} ids
+    *         the array of ids to insert any relevant .ids into
     */
-   exportIDs() {
-      var myIDs = [this.id];
+   exportIDs(ids) {
+      // make sure we don't get into an infinite loop:
+      if (ids.indexOf(this.id) > -1) return;
+
+      ids.push(this.id);
 
       // start with Objects:
       this.objectsIncluded().forEach((o) => {
-         myIDs = myIDs.concat(o.exportIDs());
+         o.exportIDs(ids);
       });
 
       // Queries
       this.queriesIncluded().forEach((q) => {
-         myIDs = myIDs.concat(q.exportIDs());
+         q.exportIDs(ids);
       });
 
       // Datacollections
       // NOTE: currently the server doesn't make instances of DataCollections
       // so we manually parse the related info here:
       this.datacollectionIDs.forEach((dID) => {
+         if (ids.indexOf(dID) > -1) return;
+
          var def = this.definitionForID(dID);
          if (def) {
-            myIDs.push(dID);
+            ids.push(dID);
             if (def.settings.datasourceID) {
                var object = this.objects((o) => {
                   return o.id == def.settings.datasourceID;
                })[0];
                if (object) {
-                  myIDs = myIDs.concat(object.exportIDs());
+                  object.exportIDs(ids);
                }
             }
          }
@@ -158,41 +163,40 @@ module.exports = class ABClassApplication extends ABApplicationCore {
 
       // Processes
       this.processes().forEach((p) => {
-         myIDs = myIDs.concat(p.exportIDs());
+         p.exportIDs(ids);
       });
 
       // Pages
       // NOTE: currently the server doesn't make instances of ABViews
       // so we manually parse the object data here:
       var parseView = (view) => {
-         var ids = [view.id];
+         if (ids.indexOf(view.id) > -1) return;
+         ids.push(view.id);
          (view.pageIDs || []).forEach((pid) => {
             var pdef = this.definitionForID(pid);
             if (pdef) {
-               ids = ids.concat(parseView(pdef));
+               parseView(pdef);
             }
          });
 
          (view.viewIDs || []).forEach((vid) => {
             var vdef = this.definitionForID(vid);
             if (vdef) {
-               ids = ids.concat(parseView(vdef));
+               parseView(vdef);
             }
          });
-
-         return ids;
       };
 
       var pageIDs = this._pages.map((p) => p.id);
       (pageIDs || []).forEach((pid) => {
          var pdef = this.definitionForID(pid);
          if (pdef) {
-            myIDs = myIDs.concat(parseView(pdef));
+            parseView(pdef);
          }
       });
 
       // return only unique entries:
-      return _.uniq(myIDs);
+      ids = _.uniq(ids);
    }
 
    ///

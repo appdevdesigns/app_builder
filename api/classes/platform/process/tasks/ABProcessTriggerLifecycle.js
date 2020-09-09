@@ -28,19 +28,17 @@ module.exports = class ABProcessTaskTriggerLifecycle extends ABProcessTriggerLif
    /**
     * @method exportIDs()
     * export any relevant .ids for the necessary operation of this application.
-    * @return {array}
-    *         any relevalt ABDefinition IDs
+    * @param {array} ids
+    *        the array of ids to store our relevant .ids into
     */
-   exportIDs() {
-      var myIDs = super.exportIDs();
+   exportIDs(ids) {
+      super.exportIDs(ids);
 
       if (this.objectID && this.objectID != "objID.??") {
          var object = this.application.objects((o) => o.id == this.objectID)[0];
          if (object) {
-            myIDs = myIDs.concat(object.exportIDs());
+            object.exportIDs(ids);
          }
       }
-
-      return myIDs;
    }
 };

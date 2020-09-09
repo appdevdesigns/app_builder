@@ -48,7 +48,8 @@ module.exports = {
          }
 
          // gathering all the Definition, IDs:
-         var ids = Application.exportIDs();
+         var ids = [];
+         Application.exportIDs(ids);
 
          // for a thorough list, there will be duplicate ids, so lets only include
          // unique entries:
