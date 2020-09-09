@@ -140,6 +140,15 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 
          // find linked object
          let linkObject = this.datasourceLink;
+         if (!linkObject) {
+            sails.log.error(
+               `ABFieldConnect.migrateCreate(): could not resolve .datasourceLink for Object[${
+                  this.object.name
+               }][${this.object.id}].Field[${this.label}][${
+                  this.id
+               }] : settings[${JSON.stringify(this.settings, null, 4)}]`
+            );
+         }
          let linkKnex = ABMigration.connection(linkObject.connName);
 
          let linkTableName = linkObject.dbTableName(true);
@@ -147,7 +156,13 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          if (!linkField) {
             // !!! This is an internal Error that is our fault:
             var missingFieldLink = new Error(
-               `MigrateCreate():Unable to find linked field for object[${this.object.label}]->field[${this.label}][${this.id}]`
+               `MigrateCreate():Unable to find linked field for object[${
+                  this.object.label
+               }]->field[${this.label}][${this.id}] : settings[${JSON.stringify(
+                  this.settings,
+                  null,
+                  4
+               )}]`
             );
             missingFieldLink.field = this.toObj();
             reject(missingFieldLink);
@@ -903,5 +918,3 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
       return result;
    }
 };
-
-

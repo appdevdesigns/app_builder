@@ -41,10 +41,10 @@ module.exports = {
          }
 
          if (!Application) {
-            var Error = new Error("Not Found");
-            Error.code = 404;
-            Error.detailMsg = `AppBuilderExport.appToJSON(): Can't find Application ID [${appID}]`;
-            return reject(Error);
+            var error = new Error("Not Found");
+            error.code = 404;
+            error.detailMsg = `AppBuilderExport.appToJSON(): Can't find Application ID [${appID}]`;
+            return reject(error);
          }
 
          // gathering all the Definition, IDs:
@@ -72,6 +72,8 @@ module.exports = {
    appFromJSON: function(data) {
       var Application = ABSystemObject.getApplication();
       var hashSaved = {};
+      var allObjects = [];
+
       return new Promise((resolve, reject) => {
          Promise.resolve()
             .then(() => {
@@ -101,22 +103,29 @@ module.exports = {
                return Promise.all(allSaves);
             })
             .then(() => {
-               // now load all the Objects, and do a .migrageCreate() on them:
-               var allMigrates = [];
+               // create instances of all objects first.
                (data.definitions || [])
                   .filter((d) => d.type == "object")
                   .forEach((o) => {
-                     hashSaved[o.id] = o;
                      var object = Application.objectNew(o.json);
-                     allMigrates.push(
-                        ABMigration.createObject(object).catch((err) => {
-                           console.log(`>>>>>>>>>>>>>>>>>>>>>>
+                     allObjects.push(object);
+                  });
+            })
+            .then(() => {
+               // now load all the Objects, and do a .migrageCreate() on them:
+               // NOTE: there is a timing issue with ABFieldConnect fields.
+
+               var allMigrates = [];
+               (allObjects || []).forEach((object) => {
+                  allMigrates.push(
+                     ABMigration.createObject(object).catch((err) => {
+                        console.log(`>>>>>>>>>>>>>>>>>>>>>>
 ABMigration.createObject() error:
 ${err.toString()}
 >>>>>>>>>>>>>>>>>>>>>>`);
-                        })
-                     );
-                  });
+                     })
+                  );
+               });
 
                return Promise.all(allMigrates);
             })

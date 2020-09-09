@@ -74,7 +74,7 @@ module.exports = class ABClassObject extends ABObjectCore {
       var myIDs = [this.id];
 
       // include my fields:
-      this.fields().forEach((f) => {
+      this.fields(null, true).forEach((f) => {
          myIDs = myIDs.concat(f.exportIDs());
       });
 
