@@ -929,9 +929,17 @@ function loadDefinitionCallbacks(next) {
 
                pending.push(AppBuilder.updateNavView(pApp, options));
             } else {
+               if (typeof def.myAppID == "undefined") {
+                  sails.log(
+                     `${key} :: Page[${def.id}] did not define a .myAppID, not configuring a NavBar view for this.`
+                  );
+                  return;
+               }
+
                var err = new Error(
                   `${key} :: Error:Could not find Application[${def.myAppID}] for Page[${def.id}]`
                );
+
                sails.log.error(err);
 
                //// TODO: better way to respond to this failed operation!

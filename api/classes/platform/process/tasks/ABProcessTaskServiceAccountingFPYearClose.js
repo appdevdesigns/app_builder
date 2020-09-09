@@ -664,6 +664,12 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                      Promise.all(tasks).then(() => next());
                   })
             )
+            // Final step
+            .then(() => {
+               this.log(instance, "I'm done.");
+               this.stateCompleted(instance);
+               return Promise.resolve(true);
+            })
       );
    }
 };
