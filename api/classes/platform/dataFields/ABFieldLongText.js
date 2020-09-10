@@ -66,7 +66,7 @@ module.exports = class ABFieldLongText extends ABFieldLongTextCore {
                      .then((exists) => {
                         // create one if it doesn't exist:
                         if (!exists) {
-                           knex.schema
+                           return knex.schema
                               .table(tableName, (t) => {
                                  t.json("translations");
                               })
@@ -93,7 +93,7 @@ module.exports = class ABFieldLongText extends ABFieldLongTextCore {
                   knex.schema
                      .hasColumn(tableName, this.columnName)
                      .then((exists) => {
-                        knex.schema
+                        return knex.schema
                            .table(tableName, (t) => {
                               var currCol = t
                                  .text(this.columnName, "longtext")
