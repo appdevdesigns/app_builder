@@ -64,6 +64,21 @@ module.exports = class ABClassObject extends ABObjectCore {
    /// Instance Methods
    ///
 
+   ///
+   /// Import/Export Services
+   ///
+
+   /**
+    * @method applyConnectFields()
+    * reapply the connectFields we "stashed" earlier.
+    */
+   applyConnectFields() {
+      (this._stashConnectFields || []).forEach((f) => {
+         this._fields.push(f);
+      });
+      this._stashConnectFields = [];
+   }
+
    /**
     * @method exportIDs()
     * export any relevant .ids for the necessary operation of this application.
@@ -79,6 +94,22 @@ module.exports = class ABClassObject extends ABObjectCore {
       // include my fields:
       this.fields(null, true).forEach((f) => {
          f.exportIDs(ids);
+      });
+   }
+
+   /**
+    * @method stashConnectFields()
+    * internally "stash" the connectFields away so we don't reference them.
+    * We do this during an import, so we can create the base Object Tables
+    * before we create connections between them.
+    */
+   stashConnectFields() {
+      this._stashConnectFields = [];
+      (this.connectFields() || []).forEach((f) => {
+         this._stashConnectFields.push(f);
+         this._fields = this.fields(function(o) {
+            return o.id != f.id;
+         });
       });
    }
 
@@ -125,6 +156,9 @@ module.exports = class ABClassObject extends ABObjectCore {
                   sails.log.verbose("... creating!!!");
                   return knex.schema
                      .createTable(tableName, (t) => {
+                        //// NOTE: the table is NOT YET CREATED here
+                        //// we can just modify the table definition
+
                         // Use .uuid to be primary key instead
                         // t.increments('id').primary();
                         t.string("uuid").primary();
@@ -136,14 +170,25 @@ module.exports = class ABClassObject extends ABObjectCore {
                         t.charset("utf8");
                         t.collate("utf8_unicode_ci");
 
+                        // Adding a new field to store various item properties in JSON (ex: height)
+                        t.text("properties");
+                     })
+                     .then(() => {
+                        //// NOTE: NOW the table is created
+                        //// let's go add our Fields to it:
                         var fieldUpdates = [];
 
                         this.fields().forEach((f) => {
-                           fieldUpdates.push(f.migrateCreate(knex));
+                           fieldUpdates.push(
+                              f.migrateCreate(knex).catch((err) => {
+                                 console.error(
+                                    `field[${f.label}].migrateCreate(): error:`,
+                                    err
+                                 );
+                                 throw err;
+                              })
+                           );
                         });
-
-                        // Adding a new field to store various item properties in JSON (ex: height)
-                        fieldUpdates.push(t.text("properties"));
 
                         return Promise.all(fieldUpdates);
                      })

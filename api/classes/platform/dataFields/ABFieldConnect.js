@@ -418,7 +418,9 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                  );
                            }
 
-                           if (exists) linkCol.alter();
+                           // NOTE: if this doesn't properly catch then
+                           // wrap in try {} catch(e) {}
+                           if (exists) return linkCol.alter();
                         })
                         .then(() => {
                            next();

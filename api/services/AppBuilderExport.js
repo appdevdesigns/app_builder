@@ -105,6 +105,8 @@ module.exports = {
             })
             .then(() => {
                // create instances of all objects first.
+               // this way we make sure our connectFields can reference other
+               // objects properly.
                (data.definitions || [])
                   .filter((d) => d.type == "object")
                   .forEach((o) => {
@@ -115,12 +117,16 @@ module.exports = {
             .then(() => {
                // now load all the Objects, and do a .migrageCreate() on them:
                // NOTE: there is a timing issue with ABFieldConnect fields.
+               // We have to 1st, create ALL the object tables before we can
+               // create connections between them.
 
                var allMigrates = [];
                (allObjects || []).forEach((object) => {
+                  object.stashConnectFields(); // effectively ignores connectFields
                   allMigrates.push(
                      ABMigration.createObject(object).catch((err) => {
                         console.log(`>>>>>>>>>>>>>>>>>>>>>>
+Pass 1: creating objects WITHOUT connectFields:
 ABMigration.createObject() error:
 ${err.toString()}
 >>>>>>>>>>>>>>>>>>>>>>`);
@@ -129,6 +135,39 @@ ${err.toString()}
                });
 
                return Promise.all(allMigrates);
+            })
+            .then(() => {
+               // Now that all the tables are created, we can go back
+               // and create the connections between them:
+
+               var allConnections = [];
+
+               // reapply connectFields to all objects BEFORE doing any
+               // .createField() s
+               (allObjects || []).forEach((object) => {
+                  object.applyConnectFields(); // reapply connectFields
+               });
+
+               (allObjects || []).forEach((object) => {
+                  (object.connectFields() || []).forEach((f) => {
+                     allConnections.push(
+                        ABMigration.createField(f).catch((err) => {
+                           console.log(`>>>>>>>>>>>>>>>>>>>>>>
+Pass 2: creating connectFields:
+ABMigration.createObject() error:
+${err.toString()}
+>>>>>>>>>>>>>>>>>>>>>>`);
+                        })
+                     );
+                  });
+               });
+
+               return Promise.all(allConnections).then(() => {
+                  // Now make sure knex has the latest object data
+                  (allObjects || []).forEach((object) => {
+                     ABMigration.refreshObject(object);
+                  });
+               });
             })
             .then(() => {
                // now save all the rest:
