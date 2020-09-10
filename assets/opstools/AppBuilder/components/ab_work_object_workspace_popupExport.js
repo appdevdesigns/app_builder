@@ -55,6 +55,7 @@ module.exports = class ABWorkObjectPopupExport extends ABComponent {
       };
 
       var _currentObject = null,
+         _dataCollection = null,
          _grid = null,
          _filename,
          _hiddenFields = [];
@@ -71,6 +72,10 @@ module.exports = class ABWorkObjectPopupExport extends ABComponent {
 
       // internal business logic
       var _logic = (this._logic = {
+         dataCollectionLoad: function(dc) {
+            _dataCollection = dc;
+         },
+
          objectLoad: function(object) {
             _currentObject = object;
          },
@@ -106,80 +111,121 @@ module.exports = class ABWorkObjectPopupExport extends ABComponent {
 
             let columns = {};
 
-            // template of report
-            if (_currentObject) {
-               _currentObject.fields().forEach((f) => {
-                  // hidden fields
-                  if (_hiddenFields.indexOf(f.columnName) > -1) return;
+            Promise.resolve()
+               .then(
+                  () =>
+                     new Promise((next, err) => {
+                        let dc = _dataCollection;
+                        if (
+                           !dc ||
+                           (dc.settings.loadAll &&
+                              dc.dataStatus != dc.dataStatusFlag.notInitial)
+                        )
+                           // Loaded all already
+                           return next();
 
-                  columns[f.columnName] = {
-                     template: (rowData) => {
-                        return f.format(rowData);
-                     }
-                  };
-               });
-            }
+                        // Load all data
+                        dc.reloadData(0, null)
+                           .catch(err)
+                           .then(() => {
+                              dc.settings.loadAll = true;
+                              next();
+                           });
+                     })
+               )
+               // client filter data
+               .then(
+                  () =>
+                     new Promise((next, err) => {
+                        // template of report
+                        if (_currentObject) {
+                           _currentObject.fields().forEach((f) => {
+                              // hidden fields
+                              if (_hiddenFields.indexOf(f.columnName) > -1)
+                                 return;
 
-            switch (name) {
-               case "CSV":
-                  webix.csv.delimiter.cols = ",";
+                              columns[f.columnName] = {
+                                 template: (rowData) => {
+                                    return f.format(rowData);
+                                 }
+                              };
+                           });
+                        }
 
-                  fnExport = webix.toCSV(_grid, {
-                     filename:
-                        _filename ||
-                        (_currentObject ? _currentObject.label : null),
-                     columns: columns
-                  });
-                  break;
-               case "Excel":
-                  fnExport = webix.toExcel(_grid, {
-                     filename:
-                        _filename ||
-                        (_currentObject ? _currentObject.label : null),
-                     name:
-                        _filename ||
-                        (_currentObject ? _currentObject.label : null),
-                     columns: columns,
-                     filterHTML: true
-                  });
-                  break;
-               case "PDF":
-                  fnExport = webix.toPDF(_grid, {
-                     filename:
-                        _filename ||
-                        (_currentObject ? _currentObject.label : null),
-                     filterHTML: true
-                  });
-                  break;
-               case "PNG":
-                  fnExport = webix.toPNG(_grid, {
-                     filename:
-                        _filename ||
-                        (_currentObject ? _currentObject.label : null)
-                  });
-                  break;
-            }
+                        switch (name) {
+                           case "CSV":
+                              webix.csv.delimiter.cols = ",";
 
-            fnExport
-               .catch((err) => {
-                  OP.Error.log("System could not export " + name, {
-                     error: err
-                  });
-               })
-               .fail((err) => {
-                  OP.Error.log("System could not export " + name, {
-                     error: err
-                  });
-               })
-               .then(() => {
-                  $$(ids.popupExport).hide();
-               });
+                              fnExport = webix.toCSV(_grid, {
+                                 filename:
+                                    _filename ||
+                                    (_currentObject
+                                       ? _currentObject.label
+                                       : null),
+                                 columns: columns
+                              });
+                              break;
+                           case "Excel":
+                              fnExport = webix.toExcel(_grid, {
+                                 filename:
+                                    _filename ||
+                                    (_currentObject
+                                       ? _currentObject.label
+                                       : null),
+                                 name:
+                                    _filename ||
+                                    (_currentObject
+                                       ? _currentObject.label
+                                       : null),
+                                 columns: columns,
+                                 filterHTML: true
+                              });
+                              break;
+                           case "PDF":
+                              fnExport = webix.toPDF(_grid, {
+                                 filename:
+                                    _filename ||
+                                    (_currentObject
+                                       ? _currentObject.label
+                                       : null),
+                                 filterHTML: true
+                              });
+                              break;
+                           case "PNG":
+                              fnExport = webix.toPNG(_grid, {
+                                 filename:
+                                    _filename ||
+                                    (_currentObject
+                                       ? _currentObject.label
+                                       : null)
+                              });
+                              break;
+                        }
+
+                        fnExport
+                           .catch((err) => {
+                              OP.Error.log("System could not export " + name, {
+                                 error: err
+                              });
+                           })
+                           .fail((err) => {
+                              OP.Error.log("System could not export " + name, {
+                                 error: err
+                              });
+                           })
+                           .then(() => {
+                              $$(ids.popupExport).hide();
+                           });
+                        next();
+                     })
+               );
          }
       });
 
       // Expose any globally accessible Actions:
       this.actions({});
 
+      this.dataCollectionLoad = _logic.dataCollectionLoad;
       this.objectLoad = _logic.objectLoad;
       this.setGridComponent = _logic.setGridComponent;
       this.setFilename = _logic.setFilename;

@@ -158,7 +158,7 @@ module.exports = class ABField extends ABFieldCore {
                });
             })
 
-            // drop the column
+            // drop foreign key of the column (if exists)
             .then(
                (isColumnExists) =>
                   new Promise((next, err) => {
@@ -167,6 +167,20 @@ module.exports = class ABField extends ABFieldCore {
                      knex.schema
                         .table(tableName, (t) => {
                            t.dropForeign(this.columnName);
+                        })
+                        .then(() => next(isColumnExists))
+                        .catch((error) => next(isColumnExists));
+                  })
+            )
+
+            // drop the column
+            .then(
+               (isColumnExists) =>
+                  new Promise((next, err) => {
+                     if (!isColumnExists) return next();
+
+                     knex.schema
+                        .table(tableName, (t) => {
                            t.dropColumn(this.columnName);
                         })
                         .then(next)

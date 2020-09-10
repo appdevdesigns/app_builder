@@ -320,9 +320,18 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
 
                         // TODO : should check duplicate column
 
-                        // NOTO : include random number to prevent duplicate column names
-                        var rand = Math.floor(Math.random() * 1000);
-                        var linkColumnName = _currentObject.name + rand;
+                        // 1:1, 1:M, M:1 should have same column name
+                        let linkColumnName = field.columnName;
+
+                        // M:N should have different column name into the join table
+                        if (
+                           field.settings.linkType == "many" &&
+                           field.settings.linkViaType == "many"
+                        ) {
+                           // NOTE : include random number to prevent duplicate column names
+                           let rand = Math.floor(Math.random() * 1000);
+                           linkColumnName = _currentObject.name + rand;
+                        }
 
                         linkCol = linkObject.fieldNew({
                            // id: OP.Util.uuid(),

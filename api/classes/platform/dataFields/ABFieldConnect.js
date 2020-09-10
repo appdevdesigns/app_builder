@@ -633,29 +633,40 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          }
          // M:1,  1:M,  1:1
          else {
-            // drop foreign key
-            knex.schema
-               .table(tableName, (t) => {
-                  let tasks = [];
+            let tasks = [];
 
-                  tasks.push(
-                     t.dropForeign(
-                        this.columnName,
-                        getConstraintName(this.object.name, this.columnName)
-                     )
-                  );
-                  tasks.push(t.dropIndex(this.columnName));
-                  tasks.push(t.dropUnique(this.columnName));
-
-                  return Promise.all(tasks);
+            // Drop Unique
+            tasks.push(
+               knex.schema.table(tableName, (t) => {
+                  t.dropUnique(this.columnName);
                })
+            );
+
+            // Drop Index
+            tasks.push(
+               knex.schema.table(tableName, (t) => {
+                  t.dropIndex(this.columnName);
+               })
+            );
+
+            // Drop Foreign key
+            tasks.push(
+               knex.schema.table(tableName, (t) => {
+                  t.dropForeign(
+                     this.columnName,
+                     getConstraintName(this.object.name, this.columnName)
+                  );
+               })
+            );
+
+            Promise.all(tasks)
                .then(() => {
-                  // drop column
+                  // Drop column
                   super.migrateDrop(knex).then(() => resolve(), reject);
                })
                //	always pass, becuase ignore not found index errors.
                .catch((err) => {
-                  // drop column
+                  // Drop column
                   super.migrateDrop(knex).then(() => resolve(), reject);
                });
          }
