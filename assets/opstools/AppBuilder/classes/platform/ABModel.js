@@ -37,6 +37,18 @@ function triggerEvent(action, object, data) {
    });
 }
 
+function errorPopup(error) {
+   // Show the pop up
+   if (error && error.data && error.data.error == "READONLY") {
+      webix.alert({
+         title: "Your action is blocked",
+         ok: "Ok",
+         text: error.data.message || "",
+         type: "alert-warning"
+      });
+   }
+}
+
 // Start listening for server events for object updates and call triggerEvent as the callback
 io.socket.on("ab.datacollection.create", function(msg) {
    triggerEvent("create", { id: msg.objectId }, msg.data);
@@ -148,7 +160,10 @@ module.exports = class ABModel extends ABModelCore {
                // trigger a create event
                // triggerEvent('create', this.object, data);
             })
-            .catch(reject);
+            .catch((err) => {
+               errorPopup(err);
+               reject(err);
+            });
       });
    }
 
@@ -170,7 +185,10 @@ module.exports = class ABModel extends ABModelCore {
                // trigger a delete event
                // triggerEvent('delete', this.object, id);
             })
-            .catch(reject);
+            .catch((err) => {
+               errorPopup(err);
+               reject(err);
+            });
       });
    }
 
@@ -372,7 +390,10 @@ module.exports = class ABModel extends ABModelCore {
                // trigger a update event
                // triggerEvent('update', this.object, data);
             })
-            .catch(reject);
+            .catch((err) => {
+               errorPopup(err);
+               reject(err);
+            });
       });
    }
 };
