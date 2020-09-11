@@ -221,10 +221,12 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         knex,
                         indexField.object.tableName,
                         indexField.columnName
-                     ).then((result) => {
-                        indexType = result;
-                        next(null, exists);
-                     });
+                     )
+                        .then((result) => {
+                           indexType = result;
+                           next(null, exists);
+                        })
+                        .catch(next);
                   },
                   // create a column
                   (exists, next) => {
@@ -296,10 +298,12 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         knex,
                         indexField.object.tableName,
                         indexField.columnName
-                     ).then((result) => {
-                        indexType = result;
-                        next(null, exists);
-                     });
+                     )
+                        .then((result) => {
+                           indexType = result;
+                           next(null, exists);
+                        })
+                        .catch(next);
                   },
                   // create a column
                   (exists, next) => {
@@ -383,10 +387,12 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         knex,
                         indexField.object.tableName,
                         indexField.columnName
-                     ).then((result) => {
-                        indexType = result;
-                        next(null, exists);
-                     });
+                     )
+                        .then((result) => {
+                           indexType = result;
+                           next(null, exists);
+                        })
+                        .catch(next);
                   },
                   // create a column
                   (exists, next) => {
