@@ -335,7 +335,12 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                  );
                            }
 
-                           t.unique(this.columnName);
+                           // Set unique name to prevent ER_TOO_LONG_IDENT error
+                           let uniqueName = `AB_${tableName.substring(
+                              0,
+                              25
+                           )}_${this.columnName.substring(0, 25)}_UNIQUE`;
+                           t.unique(this.columnName, uniqueName);
 
                            if (exists) linkCol.alter();
                         })
