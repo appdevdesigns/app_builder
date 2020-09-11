@@ -466,7 +466,10 @@ module.exports = class ABObject extends ABObjectCore {
       if (!labelData && this.fields().length > 0) {
          var defaultField = this.fields((f) => f.fieldUseAsLabel())[0];
          if (defaultField) labelData = "{" + defaultField.id + "}";
-         else labelData = "ID: " + rowData.id; // show id of row
+         else
+            labelData = `${OP.Util.isUuid(rowData.id) ? "ID: " : ""}${
+               rowData.id
+            }`; // show id of row
       }
 
       // get column ids in {colId} template
@@ -485,7 +488,10 @@ module.exports = class ABObject extends ABObjectCore {
       }
 
       // if label is empty, then show .id
-      if (!labelData.trim()) labelData = "ID: " + rowData.id; // show id of row
+      if (!labelData.trim())
+         labelData = labelData = `${OP.Util.isUuid(rowData.id) ? "ID: " : ""}${
+            rowData.id
+         }`; // show id of row
 
       return labelData;
    }
