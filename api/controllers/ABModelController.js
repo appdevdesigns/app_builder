@@ -1379,8 +1379,20 @@ console.error(err);
          ],
          function(err) {
             if (err) {
-               if (!(err instanceof ValidationError)) {
-                  resolvePendingTransaction();
+               resolvePendingTransaction();
+
+               // This object does not allow to update or delete (blocked by MySQL.Trigger)
+               if (
+                  err.code == "ER_SIGNAL_EXCEPTION" &&
+                  err.sqlState == "45000"
+               ) {
+                  let errResponse = {
+                     error: "READONLY",
+                     message: err.sqlMessage
+                  };
+
+                  res.AD.error(errResponse);
+               } else if (!(err instanceof ValidationError)) {
                   ADCore.error.log("Error performing delete!", {
                      error: err
                   });
@@ -1737,7 +1749,7 @@ console.error(err);
                         //// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
 
                         // return an invalid values response:
-                        var errorResponse = {
+                        let errorResponse = {
                            error: "E_VALIDATION",
                            invalidAttributes: {}
                         };
@@ -1753,8 +1765,20 @@ console.error(err);
                         }
 
                         res.AD.error(errorResponse);
+                     }
+                     // This object does not allow to update or delete (blocked by MySQL.Trigger)
+                     else if (
+                        err.code == "ER_SIGNAL_EXCEPTION" &&
+                        err.sqlState == "45000"
+                     ) {
+                        let errResponse = {
+                           error: "READONLY",
+                           message: err.sqlMessage
+                        };
+
+                        res.AD.error(errResponse);
                      } else {
-                        var errorResponse = {
+                        let errorResponse = {
                            error: "E_VALIDATION",
                            invalidAttributes: {}
                         };
