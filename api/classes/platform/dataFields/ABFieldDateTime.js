@@ -182,7 +182,7 @@ module.exports = class ABFieldDateTime extends ABFieldDateTimeCore {
    }
 
    getDefaultValue() {
-      if (!this.settings.defaultDateValue && this.settings.defaultTimeValue)
+      if (!this.settings.defaultDateValue && !this.settings.defaultTimeValue)
          return null;
 
       let result = moment().utc();

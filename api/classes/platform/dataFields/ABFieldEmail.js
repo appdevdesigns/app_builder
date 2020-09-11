@@ -51,7 +51,9 @@ module.exports = class ABFieldEmail extends ABFieldEmailCore {
          knex.schema.hasColumn(tableName, this.columnName).then((exists) => {
             return knex.schema
                .table(tableName, (t) => {
-                  var currCol = t.string(this.columnName);
+                  var currCol = t.string(this.columnName, 254);
+                  // Technically we are limited to 254 characters in an email:
+                  // https://stackoverflow.com/questions/386294/what-is-the-maximum-length-of-a-valid-email-address
 
                   // default value
                   if (this.settings.default)
