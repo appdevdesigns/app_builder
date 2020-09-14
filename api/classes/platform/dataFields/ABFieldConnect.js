@@ -347,7 +347,13 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         .then(() => {
                            next();
                         })
-                        .catch(next);
+                        // .catch(next);
+                        .catch((err) => {
+                           if (err.code != "ER_DUP_FIELDNAME") {
+                              console.error("[1:1]", err);
+                           }
+                           next(err);
+                        });
                   }
                ],
                (err) => {
@@ -436,7 +442,13 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         .then(() => {
                            next();
                         })
-                        .catch(next);
+                        // .catch(next);
+                        .catch((err) => {
+                           if (err.code != "ER_DUP_FIELDNAME") {
+                              console.error("[M:1]", err);
+                           }
+                           next(err);
+                        });
                   }
                ],
                (err) => {
@@ -595,6 +607,14 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                      resolve();
                   })
                   .catch((err) => {
+                     var ignoreCodes = [
+                        "ER_DUP_FIELDNAME",
+                        "ER_TABLE_EXISTS_ERROR"
+                     ];
+                     if (ignoreCodes.indexOf(err.code) == -1) {
+                        console.error("[M:N]", err);
+                     }
+
                      // If the table exists, skip the error
                      if (err.code == "ER_TABLE_EXISTS_ERROR") resolve();
                      else reject(err);
