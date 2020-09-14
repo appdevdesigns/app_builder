@@ -176,18 +176,34 @@ module.exports = class ABClassObject extends ABObjectCore {
                      .then(() => {
                         //// NOTE: NOW the table is created
                         //// let's go add our Fields to it:
-                        var fieldUpdates = [];
+                        let fieldUpdates = [];
 
-                        this.fields().forEach((f) => {
-                           fieldUpdates.push(
-                              f.migrateCreate(knex).catch((err) => {
-                                 console.error(
-                                    `field[${f.label}].migrateCreate(): error:`,
-                                    err
-                                 );
-                                 throw err;
-                              })
-                           );
+                        function migrateIt(f) {
+                           return f.migrateCreate(knex).catch((err) => {
+                              console.error(
+                                 `field[${f.label}].migrateCreate(): error:`,
+                                 err
+                              );
+                              throw err;
+                           });
+                        }
+
+                        let normalFields = this.fields(
+                           (f) => f && f.key != "connectObject"
+                        );
+
+                        let connectFields = this.connectFields();
+
+                        normalFields.forEach((f) => {
+                           fieldUpdates.push(migrateIt(f));
+                        });
+
+                        this.indexes().forEach((idx) => {
+                           fieldUpdates.push(migrateIt(idx));
+                        });
+
+                        connectFields.forEach((f) => {
+                           fieldUpdates.push(migrateIt(f));
                         });
 
                         return Promise.all(fieldUpdates);
@@ -229,7 +245,8 @@ module.exports = class ABClassObject extends ABObjectCore {
          // - perform the corrections here, or alert the USER in the UI and expect them to
          //   make the changes manually?
 
-         var fieldDrops = [];
+         let fieldDrops = [];
+
          this.fields().forEach((f) => {
             fieldDrops.push(f.migrateDrop(knex));
          });
