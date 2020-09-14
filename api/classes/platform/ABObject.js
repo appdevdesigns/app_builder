@@ -118,20 +118,31 @@ module.exports = class ABClassObject extends ABObjectCore {
                         t.charset("utf8");
                         t.collate("utf8_unicode_ci");
 
-                        let fieldAndIndexUpdates = [];
+                        let updateTasks = [];
 
-                        this.fields().forEach((f) => {
-                           fieldAndIndexUpdates.push(f.migrateCreate(knex));
+                        let normalFields = this.fields(
+                           (f) => f && f.key != "connectObject"
+                        );
+                        let connectFields = this.fields(
+                           (f) => f && f.key == "connectObject"
+                        );
+
+                        normalFields.forEach((f) => {
+                           updateTasks.push(f.migrateCreate(knex));
                         });
 
                         this.indexes().forEach((idx) => {
-                           fieldAndIndexUpdates.push(idx.migrateCreate(knex));
+                           updateTasks.push(idx.migrateCreate(knex));
+                        });
+
+                        connectFields.forEach((f) => {
+                           updateTasks.push(f.migrateCreate(knex));
                         });
 
                         // Adding a new field to store various item properties in JSON (ex: height)
-                        fieldAndIndexUpdates.push(t.text("properties"));
+                        updateTasks.push(t.text("properties"));
 
-                        return Promise.all(fieldAndIndexUpdates);
+                        return Promise.all(updateTasks);
                      })
                      .then(resolve)
                      .catch(reject);
@@ -170,16 +181,13 @@ module.exports = class ABClassObject extends ABObjectCore {
          // - perform the corrections here, or alert the USER in the UI and expect them to
          //   make the changes manually?
 
-         let fieldAndIndexDrops = [];
+         let fieldDrops = [];
+
          this.fields().forEach((f) => {
-            fieldAndIndexDrops.push(f.migrateDrop(knex));
+            fieldDrops.push(f.migrateDrop(knex));
          });
 
-         this.indexes().forEach((idx) => {
-            fieldAndIndexDrops.push(idx.migrateDrop(knex));
-         });
-
-         Promise.all(fieldAndIndexDrops)
+         Promise.all(fieldDrops)
             .then(function() {
                knex.schema
                   .dropTableIfExists(tableName)
