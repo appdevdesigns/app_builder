@@ -318,10 +318,12 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                            }
 
                            // Set unique name to prevent ER_TOO_LONG_IDENT error
-                           let uniqueName = `AB_${tableName.substring(
+                           let uniqueName = `AB_${this.object
+                              .dbTableName(false)
+                              .substring(0, 25)}_${this.columnName.substring(
                               0,
                               25
-                           )}_${this.columnName.substring(0, 25)}_UNIQUE`;
+                           )}_UNIQUE`;
                            t.unique(this.columnName, uniqueName);
 
                            if (exists) linkCol.alter();
