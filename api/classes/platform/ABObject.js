@@ -118,16 +118,20 @@ module.exports = class ABClassObject extends ABObjectCore {
                         t.charset("utf8");
                         t.collate("utf8_unicode_ci");
 
-                        var fieldUpdates = [];
+                        let fieldAndIndexUpdates = [];
 
                         this.fields().forEach((f) => {
-                           fieldUpdates.push(f.migrateCreate(knex));
+                           fieldAndIndexUpdates.push(f.migrateCreate(knex));
+                        });
+
+                        this.indexes().forEach((idx) => {
+                           fieldAndIndexUpdates.push(idx.migrateCreate(knex));
                         });
 
                         // Adding a new field to store various item properties in JSON (ex: height)
-                        fieldUpdates.push(t.text("properties"));
+                        fieldAndIndexUpdates.push(t.text("properties"));
 
-                        return Promise.all(fieldUpdates);
+                        return Promise.all(fieldAndIndexUpdates);
                      })
                      .then(resolve)
                      .catch(reject);
@@ -166,12 +170,16 @@ module.exports = class ABClassObject extends ABObjectCore {
          // - perform the corrections here, or alert the USER in the UI and expect them to
          //   make the changes manually?
 
-         var fieldDrops = [];
+         let fieldAndIndexDrops = [];
          this.fields().forEach((f) => {
-            fieldDrops.push(f.migrateDrop(knex));
+            fieldAndIndexDrops.push(f.migrateDrop(knex));
          });
 
-         Promise.all(fieldDrops)
+         this.indexes().forEach((idx) => {
+            fieldAndIndexDrops.push(idx.migrateDrop(knex));
+         });
+
+         Promise.all(fieldAndIndexDrops)
             .then(function() {
                knex.schema
                   .dropTableIfExists(tableName)
