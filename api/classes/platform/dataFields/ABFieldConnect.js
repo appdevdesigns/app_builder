@@ -245,8 +245,6 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                     )
                                  );
                            }
-
-                           if (exists) linkCol.alter();
                         })
                         .then(() => {
                            next();
@@ -329,8 +327,6 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                               28
                            )}_UNIQUE`;
                            t.unique(this.columnName, uniqueName);
-
-                           if (exists) linkCol.alter();
                         })
                         .then(() => {
                            next();
@@ -403,8 +399,6 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                     )
                                  );
                            }
-
-                           if (exists) linkCol.alter();
                         })
                         .then(() => {
                            next();
