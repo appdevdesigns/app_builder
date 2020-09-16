@@ -12,6 +12,13 @@ function getScopeObject() {
    return ABObjectCache.get(SCOPE_OBJECT_ID);
 }
 
+function getRolesField() {
+   let objectScope = getScopeObject();
+   if (!objectScope) return null;
+
+   return objectScope.fields((f) => f.columnName == "roles")[0];
+}
+
 let ABScopeController = {
    // GET /app_builder/scope
    find: function(req, res) {
@@ -118,7 +125,8 @@ let ABScopeController = {
 
    // PUT /app_builder/role/:roleID/scope/:id'
    import: function(req, res) {
-      req.params["objID"] = ABSystemObject.getObjectScopeId();
+      let scopeObjectId = ABSystemObject.getObjectScopeId();
+      req.params["objID"] = scopeObjectId;
       let roleID = req.param("roleID");
 
       Promise.resolve()
@@ -131,11 +139,19 @@ let ABScopeController = {
                new Promise((next, err) => {
                   if (!scope) return next();
 
-                  let exists = (scope.roles || []).filter(
-                     (r) => (r.id || r) == roleID
-                  )[0];
+                  // Get linked role field
+                  let fieldRole = getRolesField();
+                  if (!fieldRole) return next(scope);
+
+                  // Pull roles
+                  let roles = scope[fieldRole.relationName()] || [];
+                  let exists = roles.find(
+                     (r) => (r.uuid || r.id || r) == roleID
+                  );
+
+                  // Add new role
                   if (!exists) {
-                     req.body.roles = scope.roles || [];
+                     req.body.roles = roles || [];
                      req.body.roles.push(roleID);
                   }
 
@@ -173,8 +189,16 @@ let ABScopeController = {
                new Promise((next, err) => {
                   if (!scope) return next();
 
-                  req.body.roles = (scope.roles || []).filter(
-                     (r) => (r.id || r) != roleID
+                  // Get linked role field
+                  let fieldRole = getRolesField();
+                  if (!fieldRole) return next(scope);
+
+                  // Pull roles
+                  let roles = scope[fieldRole.relationName()] || [];
+
+                  // Remove role
+                  req.body.roles = roles.filter(
+                     (r) => (r.uuid || r.id || r) != roleID
                   );
 
                   next(scope);

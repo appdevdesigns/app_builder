@@ -1204,6 +1204,19 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
             /** Prepare Data */
             let parsedData = [];
+            function escapeHtml(text) {
+               var map = {
+                  "&": "&amp;",
+                  "<": "&lt;",
+                  ">": "&gt;",
+                  '"': "&quot;",
+                  "'": "&#039;"
+               };
+
+               return text.replace(/[&<>"']/g, function(m) {
+                  return map[m];
+               });
+            }
 
             (_dataRows || []).forEach((row, index) => {
                let rowValue = {
@@ -1223,7 +1236,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      }
                      rowValue[f.columnIndex] = dateFormat;
                   } else {
-                     rowValue[f.columnIndex] = data; // array to object
+                     rowValue[f.columnIndex] = escapeHtml(data); // array to object
                   }
                });
 

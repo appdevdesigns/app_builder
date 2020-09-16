@@ -16,27 +16,32 @@ module.exports = class ABIndex extends ABIndexCore {
       let tableName = this.object.dbTableName();
       let columnNames = this.fields.map((f) => f.columnName);
 
-      return Promise.resolve()
-         .then(() =>
-            knex.schema.table(tableName, (table) => {
-               // Create new Unique to table
-               if (this.unique) {
-                  table.unique(columnNames, this.uniqueName);
-               }
-               // Create new Index
-               else {
-                  table.index(columnNames, indexName);
-               }
-            })
-         )
-         .then(() =>
-            // Create new index with Non_unique = 0
-            knex.schema.raw(
-               `ALTER TABLE ${tableName} ADD UNIQUE INDEX ${indexName}(${knex.client
-                  .formatter()
-                  .columnize(columnNames)})`
+      return (
+         Promise.resolve()
+            // Clear Index
+            .then(() => this.migrateDrop(knex))
+            .then(() =>
+               knex.schema.table(tableName, (table) => {
+                  // Create new Unique to table
+                  if (this.unique) {
+                     // ALTER TABLE {tableName} ADD UNIQUE {indexName} ({columnNames})
+                     // table.unique(columnNames, this.uniqueName);
+
+                     // Create Unique & Index
+                     knex.schema.raw(
+                        `ALTER TABLE ${tableName} ADD UNIQUE INDEX ${indexName}(${knex.client
+                           .formatter()
+                           .columnize(columnNames)})`
+                     );
+                  }
+                  // Create new Index
+                  else {
+                     // ALTER TABLE {tableName} ADD INDEX {indexName} ({columnNames})
+                     table.index(columnNames, indexName);
+                  }
+               })
             )
-         );
+      );
    }
 
    migrateDrop(knex) {
@@ -44,24 +49,36 @@ module.exports = class ABIndex extends ABIndexCore {
 
       let indexName = this.indexName;
       let tableName = this.object.dbTableName();
-      let columnNames = this.fields.map((f) => f.columnName);
+      // let columnNames = this.fields.map((f) => f.columnName);
 
       return new Promise((resolve, reject) => {
          knex.schema
-            .table(tableName, (table) => {
-               // Drop Unique
-               if (this.unique) {
-                  table.dropUnique(columnNames, this.uniqueName);
-               }
-
-               // Drop Index
-               table.dropIndex(columnNames, indexName);
-            })
+            .raw(`ALTER TABLE ${tableName} DROP INDEX \`${indexName}\``)
+            .then(() => resolve())
             .catch((err) => {
-               console.error(err);
-               resolve();
-            })
-            .then(() => resolve());
+               // Not exists
+               if (err.code == "ER_CANT_DROP_FIELD_OR_KEY") return resolve();
+
+               reject(err);
+            });
       });
+
+      // return new Promise((resolve, reject) => {
+      //    knex.schema
+      //       .table(tableName, (table) => {
+      //          // Drop Unique
+      //          if (this.unique) {
+      //             table.dropUnique(columnNames, this.uniqueName);
+      //          }
+
+      //          // Drop Index
+      //          table.dropIndex(columnNames, indexName);
+      //       })
+      //       .catch((err) => {
+      //          console.error(err);
+      //          resolve();
+      //       })
+      //       .then(() => resolve());
+      // });
    }
 };

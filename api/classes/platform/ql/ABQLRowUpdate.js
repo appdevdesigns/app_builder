@@ -95,6 +95,9 @@ class ABQLRowUpdate extends ABQLRowUpdateCore {
             var PK = context.object.PK();
             var id = context.data[PK];
 
+            // call .requestParams to set default values and reformat value properly
+            updateParams = context.object.requestParams(updateParams);
+
             // Perform the update.
             context.object
                .modelAPI()
