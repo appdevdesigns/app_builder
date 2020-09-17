@@ -175,7 +175,10 @@ module.exports = class ABField extends ABFieldCore {
                         })
                         .then(next)
                         .catch((error) => {
-                           if (error.code == "ER_CANT_DROP_FIELD_OR_KEY") {
+                           if (
+                              error.code == "ER_CANT_DROP_FIELD_OR_KEY" ||
+                              error.code == "ER_DROP_INDEX_FK"
+                           ) {
                               next();
                            } else {
                               err(error);
