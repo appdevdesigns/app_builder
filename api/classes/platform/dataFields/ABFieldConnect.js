@@ -288,6 +288,10 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                        this.columnName
                                     )
                                  );
+                           } else {
+                              console.error(
+                                 `[1:M] object[${this.object.label}]->Field[${this.label}][${this.id}] skipping reference column creation: !linkObject.isExternal[${linkObject.isExternal}] && this.connName[${this.connName}] == linkObject.connName[${linkObject.connName}]`
+                              );
                            }
                         })
                         .then(() => {
@@ -363,6 +367,10 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                        this.columnName
                                     )
                                  );
+                           } else {
+                              console.error(
+                                 `[1:1] object[${this.object.label}]->Field[${this.label}][${this.id}] skipping reference column creation: !linkObject.isExternal[${linkObject.isExternal}] && this.connName[${this.connName}] == linkObject.connName[${linkObject.connName}]`
+                              );
                            }
 
                            // Set unique name to prevent ER_TOO_LONG_IDENT error
@@ -463,6 +471,10 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                        linkColumnName
                                     )
                                  );
+                           } else {
+                              console.error(
+                                 `[M:1] object[${this.object.label}]->Field[${this.label}][${this.id}] skipping linkCol creation: !isExternal[${this.object.isExternal}]  && connName[${this.connName}] == linkObj.connName[${linkObject.connName}]`
+                              );
                            }
                         })
                         .then(() => {
@@ -613,6 +625,10 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                               .inTable(linkTableName)
                               .withKeyName(targetFkName)
                               .onDelete("SET NULL");
+                        } else {
+                           console.error(
+                              `[M:N] object[${this.object.label}]->Field[${this.label}][${this.id}] skipping linkCol creation: !this.object.isExternal[${this.object.isExternal}] && !linkObject.isExternal[${linkObject.isExternal}] && connName[${this.connName}] == linkObj.connName[${linkObject.connName}]`
+                           );
                         }
 
                         // // create columns
