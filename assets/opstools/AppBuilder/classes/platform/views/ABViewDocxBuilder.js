@@ -601,6 +601,9 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                                     field.datasourceLink
                                        .fields((f) => f.key != "connectObject")
                                        .forEach((f) => {
+                                          v[`${f.columnName}_ORIGIN`] =
+                                             v[f.columnName];
+
                                           v[f.columnName] = f.format(v, {
                                              languageCode: this.languageCode
                                           });
@@ -995,6 +998,29 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                                                 }
                                              }
                                           );
+                                       }
+                                       // ์NOTE : Custom filter
+                                       else if (tag.indexOf("?") > -1) {
+                                          let result = scope;
+                                          let prop = tag.split("?")[0];
+                                          let condition = tag.split("?")[1];
+                                          if (prop && condition) {
+                                             let data = scope[prop];
+                                             if (data) {
+                                                if (!Array.isArray(data))
+                                                   data = [data];
+
+                                                return data.filter((d) =>
+                                                   eval(
+                                                      condition.replace(
+                                                         /\./g,
+                                                         "d."
+                                                      )
+                                                   )
+                                                );
+                                             }
+                                          }
+                                          return result;
                                        } else if (tag === ".") {
                                           return scope;
                                        } else {
