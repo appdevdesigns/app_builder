@@ -532,6 +532,7 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 
             let reportValues = {};
             let images = {};
+            let summaries = {}; // { varName: sum number, ..., varName2: number2 }
 
             Promise.resolve()
                // Get current cursor
@@ -601,6 +602,9 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                                     field.datasourceLink
                                        .fields((f) => f.key != "connectObject")
                                        .forEach((f) => {
+                                          v[`${f.columnName}_ORIGIN`] =
+                                             v[f.columnName];
+
                                           v[f.columnName] = f.format(v, {
                                              languageCode: this.languageCode
                                           });
@@ -888,44 +892,77 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                                                    : false;
                                              }
                                           );
-                                       } else if (tag.indexOf("$sum|") == 0) {
-                                          let prop = (
-                                             tag.split("|")[1] || ""
-                                          ).trim();
+                                       }
+                                       // Mark number to add to a variable
+                                       else if (tag.indexOf("|$sum?") > -1) {
+                                          let prop = tag.split("|$sum?")[0];
+                                          let varName = tag.split("|$sum?")[1];
 
-                                          let sum = 0;
-                                          (scope["data"] || []).forEach(
-                                             (childItem) => {
-                                                if (!childItem[prop]) return;
-
-                                                let number = childItem[prop];
-                                                if (typeof number == "string") {
-                                                   number = number.replace(
-                                                      /[^\d.]/g, // return only number and dot
-                                                      ""
-                                                   );
-                                                }
-
-                                                try {
-                                                   sum += parseFloat(
-                                                      number || 0
-                                                   );
-                                                } catch (e) {}
-                                             }
-                                          );
-
-                                          // Print number with commas
-                                          if (sum) {
-                                             sum = sum
-                                                .toString()
-                                                .replace(
-                                                   /\B(?=(\d{3})+(?!\d))/g,
-                                                   ","
-                                                );
+                                          let number = scope[prop];
+                                          if (typeof number == "string") {
+                                             number = number.replace(
+                                                /[^\d.]/g, // return only number and dot
+                                                ""
+                                             );
                                           }
 
-                                          return sum;
+                                          if (summaries[varName] == null)
+                                             summaries[varName] = 0.0;
+
+                                          summaries[varName] += parseFloat(
+                                             number
+                                          );
+
+                                          return scope[prop];
                                        }
+                                       // Show sum value ^
+                                       else if (tag.indexOf("$sum?") == 0) {
+                                          let varName = tag.replace(
+                                             "$sum?",
+                                             ""
+                                          );
+
+                                          return summaries[varName] || 0;
+                                       }
+                                       // // Sum number of .data (Grouped query)
+                                       // else if (tag.indexOf("$sum|") == 0) {
+                                       //    let prop = (
+                                       //       tag.split("|")[1] || ""
+                                       //    ).trim();
+
+                                       //    let sum = 0;
+                                       //    (scope["data"] || []).forEach(
+                                       //       (childItem) => {
+                                       //          if (!childItem[prop]) return;
+
+                                       //          let number = childItem[prop];
+                                       //          if (typeof number == "string") {
+                                       //             number = number.replace(
+                                       //                /[^\d.]/g, // return only number and dot
+                                       //                ""
+                                       //             );
+                                       //          }
+
+                                       //          try {
+                                       //             sum += parseFloat(
+                                       //                number || 0
+                                       //             );
+                                       //          } catch (e) {}
+                                       //       }
+                                       //    );
+
+                                       //    // Print number with commas
+                                       //    if (sum) {
+                                       //       sum = sum
+                                       //          .toString()
+                                       //          .replace(
+                                       //             /\B(?=(\d{3})+(?!\d))/g,
+                                       //             ","
+                                       //          );
+                                       //    }
+
+                                       //    return sum;
+                                       // }
                                        // NOTE: AppBuilder custom filter of another data source
                                        else if (tag.indexOf("$") == 0) {
                                           let props = tag
@@ -995,6 +1032,29 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                                                 }
                                              }
                                           );
+                                       }
+                                       // ์NOTE : Custom filter
+                                       else if (tag.indexOf("?") > -1) {
+                                          let result = scope;
+                                          let prop = tag.split("?")[0];
+                                          let condition = tag.split("?")[1];
+                                          if (prop && condition) {
+                                             let data = scope[prop];
+                                             if (data) {
+                                                if (!Array.isArray(data))
+                                                   data = [data];
+
+                                                return data.filter((d) =>
+                                                   eval(
+                                                      condition.replace(
+                                                         /\./g,
+                                                         "d."
+                                                      )
+                                                   )
+                                                );
+                                             }
+                                          }
+                                          return result;
                                        } else if (tag === ".") {
                                           return scope;
                                        } else {
