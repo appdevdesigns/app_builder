@@ -95,6 +95,10 @@ module.exports = class ABClassObject extends ABObjectCore {
       this.fields(null, true).forEach((f) => {
          f.exportIDs(ids);
       });
+
+      this.indexes().forEach((i) => {
+         i.exportIDs(ids);
+      });
    }
 
    /**

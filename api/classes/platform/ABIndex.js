@@ -5,6 +5,24 @@ module.exports = class ABIndex extends ABIndexCore {
       super(attributes, object);
    }
 
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this ABIndex.
+    * @param {array} ids
+    *         the array of relevant ids to store our .ids into.
+    */
+   exportIDs(ids) {
+      // make sure we don't get into an infinite loop:
+      if (ids.indexOf(this.id) > -1) return;
+
+      ids.push(this.id);
+
+      // include my fields:
+      (this.fields || []).forEach((f) => {
+         if (f.exportIDs) f.exportIDs(ids);
+      });
+   }
+
    ///
    /// DB Migrations
    ///
