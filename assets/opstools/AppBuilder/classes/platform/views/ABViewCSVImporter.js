@@ -1883,6 +1883,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                     });
                                     if (numDone == total) {
                                        uiCleanUp();
+                                       $$(ids.importButton).disable();
                                     }
                                     resolve();
                                  });
