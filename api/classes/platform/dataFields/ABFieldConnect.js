@@ -100,36 +100,6 @@ function getConstraintName(tableName, columnName) {
 module.exports = class ABFieldConnect extends ABFieldConnectCore {
    constructor(values, object) {
       super(values, object);
-
-      try {
-         //// Special Debugging to identify misconfigured link settings:
-
-         // find linked object
-         let linkObject = this.datasourceLink;
-         if (!linkObject) {
-            sails.log.error(
-               `ABFieldConnect.migrateCreate(): could not resolve .datasourceLink for Object[${
-                  this.object.name
-               }][${this.object.id}].Field[${this.label}][${
-                  this.id
-               }] : settings[${JSON.stringify(this.settings, null, 4)}]`
-            );
-         }
-
-         let linkField = this.fieldLink;
-         if (!linkField) {
-            // !!! This is an internal Error that is our fault:
-            sails.log.error(
-               `MigrateCreate():Unable to find linked field for object[${
-                  this.object.label
-               }]->field[${this.label}][${this.id}] : settings[${JSON.stringify(
-                  this.settings,
-                  null,
-                  4
-               )}]`
-            );
-         }
-      } catch (err) {}
    }
 
    ///
