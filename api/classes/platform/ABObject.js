@@ -80,6 +80,27 @@ module.exports = class ABClassObject extends ABObjectCore {
    }
 
    /**
+    * @method applyIndexes()
+    * reapply the indexes we "stashed" earlier.
+    */
+   applyIndexes() {
+      (this._stashIndexes || []).forEach((f) => {
+         this._indexes.push(f);
+      });
+      this._stashIndexes = [];
+   }
+
+   /**
+    * @method getStashedIndexes()
+    * return the array of stashed indexes.
+    * @return {array} [...{ABIndex}] or {null}
+    */
+   getStashedIndexes() {
+      if (!this._stashIndexes) return null;
+      return this._stashIndexes;
+   }
+
+   /**
     * @method exportIDs()
     * export any relevant .ids for the necessary operation of this application.
     * @param {array} ids
@@ -114,6 +135,33 @@ module.exports = class ABClassObject extends ABObjectCore {
          this._fields = this.fields(function(o) {
             return o.id != f.id;
          });
+      });
+   }
+
+   /**
+    * @method stashIndexFieldsWithConnection()
+    * internally "stash" these indexs away so we don't reference them.
+    * We do this during an import, so that the connectFields are
+    * created 1st before we try to create an index on them.
+    */
+   stashIndexFieldsWithConnection() {
+      this._stashIndexes = [];
+      // console.log("::: StashIndexFieldsWithConnection():");
+      // console.log(`    indexes:`, this.indexes());
+      (this.indexes() || []).forEach((indx) => {
+         // console.log("       indx:", indx);
+         var hasConnect =
+            (indx.fields || []).filter((f) => f.key == "connectObject").length >
+            0;
+         if (hasConnect) {
+            sails.log(
+               `:::: STASHING INDEX O[${this.label}].I[${indx.indexName}]`
+            );
+            this._stashIndexes.push(indx);
+            this._indexes = this.indexes(function(o) {
+               return o.id != indx.id;
+            });
+         }
       });
    }
 

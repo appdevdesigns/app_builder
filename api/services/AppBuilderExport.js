@@ -125,6 +125,7 @@ module.exports = {
                var allMigrates = [];
                (allObjects || []).forEach((object) => {
                   object.stashConnectFields(); // effectively ignores connectFields
+                  object.stashIndexFieldsWithConnection();
                   allMigrates.push(
                      ABMigration.createObject(object).catch((err) => {
                         console.log(`>>>>>>>>>>>>>>>>>>>>>>
@@ -164,7 +165,30 @@ ${err.toString()}
                   });
                });
 
-               return Promise.all(allConnections).then(() => {
+               return Promise.all(allConnections);
+            })
+            .then(() => {
+               // OK, now we can finish up with the Indexes that were
+               // based on connectFields:
+
+               var allIndexes = [];
+               var allUpdates = [];
+
+               (allObjects || []).forEach((object) => {
+                  var stashed = object.getStashedIndexes();
+                  if (stashed && stashed.length > 0) {
+                     allIndexes = allIndexes.concat(stashed);
+                     object.applyIndexes();
+                  }
+               });
+
+               (allIndexes || []).forEach((indx) => {
+                  if (indx) {
+                     allUpdates.push(ABMigration.createIndex(indx));
+                  }
+               });
+
+               return Promise.all(allUpdates).then(() => {
                   // Now make sure knex has the latest object data
                   (allObjects || []).forEach((object) => {
                      ABMigration.refreshObject(object);
