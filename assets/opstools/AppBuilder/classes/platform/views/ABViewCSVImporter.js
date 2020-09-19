@@ -1681,8 +1681,10 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                webix.alert({
                   title: "Invalid Data",
                   ok: "Okay",
-                  text:
-                     "One or more items failed validation. Doubleclick record to correct or uncheck record to exclude from import."
+                  text: L(
+                     "ab.components.csvImporter.invalidData",
+                     "*The highlighted row has invalid data. Please edit in the window or update the CSV and try again."
+                  )
                });
 
                return Promise.resolve();
@@ -1800,8 +1802,10 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      webix.alert({
                         title: "Invalid Data",
                         ok: "Okay",
-                        text:
-                           "One or more connected records referenced an unknown item."
+                        text: L(
+                           "ab.components.csvImporter.invalidData",
+                           "*The highlighted row has invalid data. Please edit in the window or update the CSV and try again."
+                        )
                      });
                      uiCleanUp();
 
@@ -1874,6 +1878,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                                     });
                                     if (numDone == total) {
                                        uiCleanUp();
+                                       $$(ids.importButton).disable();
                                     }
                                     resolve();
                                  });

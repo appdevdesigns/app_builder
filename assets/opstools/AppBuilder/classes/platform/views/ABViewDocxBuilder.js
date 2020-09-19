@@ -532,6 +532,7 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 
             let reportValues = {};
             let images = {};
+            let summaries = {}; // { varName: sum number, ..., varName2: number2 }
 
             Promise.resolve()
                // Get current cursor
@@ -554,7 +555,7 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                      if (dcCursor) {
                         let treeCursor = dc.getCursor(true);
                         dataList.push(_.merge({}, dcCursor, treeCursor));
-                     } else dataList = dc.getData();
+                     } else dataList = _.cloneDeep(dc.getData());
 
                      // update property names to column labels to match format names in docx file
                      let mlFields = obj.multilingualFields();
@@ -568,6 +569,8 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                         let val = null;
 
                         targetData.id = baseData.id;
+                        targetData[`${field.columnName}_ORIGIN`] =
+                           baseData[field.columnName]; // Keep origin value for compare value with custom index
 
                         // Translate multilinguage fields
                         if (mlFields.length) {
@@ -587,9 +590,32 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                            // If field is connected field, then
                            // {
                            //		fieldName: {Object} or [Array]
-                           //		fieldName_label: "Value1, Value2"
                            // }
                            val = baseData[field.columnName];
+
+                           if (val && val.forEach) {
+                              val.forEach((v) => {
+                                 if (v == null) return;
+
+                                 // format relation data
+                                 if (field.datasourceLink) {
+                                    field.datasourceLink
+                                       .fields((f) => f.key != "connectObject")
+                                       .forEach((f) => {
+                                          v[`${f.columnName}_ORIGIN`] =
+                                             v[f.columnName];
+
+                                          v[f.columnName] = f.format(v, {
+                                             languageCode: this.languageCode
+                                          });
+                                       });
+                                 }
+
+                                 // Keep ABObject to relation data
+                                 if (v && typeof v == "object")
+                                    v._object = field.datasourceLink;
+                              });
+                           }
                            // TODO
                            // data[label + '_label'] = field.format(baseData);
                         } else {
@@ -600,8 +626,11 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 
                         // Set value to report with every languages of label
                         fieldLabels.forEach((label) => {
-                           if (val) targetData[label] = val;
-                           else if (!targetData[label]) targetData[label] = "";
+                           if (val) {
+                              targetData[label] = val;
+                           } else if (!targetData[label]) {
+                              targetData[label] = "";
+                           }
                         });
 
                         // normalize child items
@@ -624,6 +653,9 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 
                      dataList.forEach((data) => {
                         let resultData = {};
+
+                        // Keep id of ABObject into .scope of DOCX templater
+                        resultData._object = obj;
 
                         // For support label of columns every languages
                         obj.fields().forEach((f) => {
@@ -860,54 +892,104 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                                                    : false;
                                              }
                                           );
-                                       } else if (tag.indexOf("$sum|") == 0) {
-                                          let prop = (
-                                             tag.split("|")[1] || ""
-                                          ).trim();
+                                       }
+                                       // Mark number to add to a variable
+                                       else if (tag.indexOf("|$sum?") > -1) {
+                                          let prop = tag.split("|$sum?")[0];
+                                          let varName = tag.split("|$sum?")[1];
 
-                                          let sum = 0;
-                                          (scope["data"] || []).forEach(
-                                             (childItem) => {
-                                                if (!childItem[prop]) return;
-
-                                                let number = childItem[prop];
-                                                if (typeof number == "string") {
-                                                   number = number.replace(
-                                                      /[^\d.]/g, // return only number and dot
-                                                      ""
-                                                   );
-                                                }
-
-                                                try {
-                                                   sum += parseFloat(
-                                                      number || 0
-                                                   );
-                                                } catch (e) {}
-                                             }
-                                          );
-
-                                          // Print number with commas
-                                          if (sum) {
-                                             sum = sum
-                                                .toString()
-                                                .replace(
-                                                   /\B(?=(\d{3})+(?!\d))/g,
-                                                   ","
-                                                );
+                                          let number = scope[prop];
+                                          if (typeof number == "string") {
+                                             number = number.replace(
+                                                /[^\d.]/g, // return only number and dot
+                                                ""
+                                             );
                                           }
 
-                                          return sum;
+                                          if (summaries[varName] == null)
+                                             summaries[varName] = 0.0;
+
+                                          summaries[varName] += parseFloat(
+                                             number
+                                          );
+
+                                          return scope[prop];
                                        }
+                                       // Show sum value ^
+                                       else if (tag.indexOf("$sum?") == 0) {
+                                          let varName = tag.replace(
+                                             "$sum?",
+                                             ""
+                                          );
+
+                                          return summaries[varName] || 0;
+                                       }
+                                       // // Sum number of .data (Grouped query)
+                                       // else if (tag.indexOf("$sum|") == 0) {
+                                       //    let prop = (
+                                       //       tag.split("|")[1] || ""
+                                       //    ).trim();
+
+                                       //    let sum = 0;
+                                       //    (scope["data"] || []).forEach(
+                                       //       (childItem) => {
+                                       //          if (!childItem[prop]) return;
+
+                                       //          let number = childItem[prop];
+                                       //          if (typeof number == "string") {
+                                       //             number = number.replace(
+                                       //                /[^\d.]/g, // return only number and dot
+                                       //                ""
+                                       //             );
+                                       //          }
+
+                                       //          try {
+                                       //             sum += parseFloat(
+                                       //                number || 0
+                                       //             );
+                                       //          } catch (e) {}
+                                       //       }
+                                       //    );
+
+                                       //    // Print number with commas
+                                       //    if (sum) {
+                                       //       sum = sum
+                                       //          .toString()
+                                       //          .replace(
+                                       //             /\B(?=(\d{3})+(?!\d))/g,
+                                       //             ","
+                                       //          );
+                                       //    }
+
+                                       //    return sum;
+                                       // }
                                        // NOTE: AppBuilder custom filter of another data source
                                        else if (tag.indexOf("$") == 0) {
                                           let props = tag
                                              .replace("$", "")
                                              .split("|");
                                           let propSource = props[0].trim();
-                                          let propFilter = props[1].trim();
+                                          let propFilter = props[1].trim(); // column name of ABFieldConnect
 
                                           if (!propSource || !propFilter)
                                              return "";
+
+                                          // Pull Index field of connect field
+                                          let indexColName;
+                                          let obj = scope._object;
+                                          if (obj) {
+                                             let connectedField = obj.fields(
+                                                (f) =>
+                                                   f.columnName == propFilter
+                                             )[0];
+                                             if (connectedField) {
+                                                let indexField =
+                                                   connectedField.indexField;
+                                                indexColName = indexField
+                                                   ? indexField.columnName
+                                                   : null;
+                                             }
+                                          }
 
                                           let sourceVals =
                                              reportValues[propSource];
@@ -917,21 +999,62 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                                           )
                                              sourceVals = [sourceVals];
 
+                                          let getVal = (data) => {
+                                             return (
+                                                data[
+                                                   `${indexColName}_ORIGIN`
+                                                ] || // Pull origin data to compare by custom index
+                                                data[indexColName] ||
+                                                data.id ||
+                                                data
+                                             );
+                                          };
+
                                           return (sourceVals || []).filter(
                                              function(item) {
+                                                // Pull data of parent to compare
                                                 let comparer =
                                                    scope[propFilter];
+
                                                 if (Array.isArray(comparer))
                                                    return (
                                                       comparer.filter(
                                                          (c) =>
-                                                            (c.id || c) ==
-                                                            item.id
+                                                            getVal(c) ==
+                                                            getVal(item)
                                                       ).length > 0
                                                    );
-                                                else return item.id == comparer;
+                                                else {
+                                                   return (
+                                                      getVal(item) ==
+                                                      getVal(comparer)
+                                                   );
+                                                }
                                              }
                                           );
+                                       }
+                                       // ์NOTE : Custom filter
+                                       else if (tag.indexOf("?") > -1) {
+                                          let result = scope;
+                                          let prop = tag.split("?")[0];
+                                          let condition = tag.split("?")[1];
+                                          if (prop && condition) {
+                                             let data = scope[prop];
+                                             if (data) {
+                                                if (!Array.isArray(data))
+                                                   data = [data];
+
+                                                return data.filter((d) =>
+                                                   eval(
+                                                      condition.replace(
+                                                         /\./g,
+                                                         "d."
+                                                      )
+                                                   )
+                                                );
+                                             }
+                                          }
+                                          return result;
                                        } else if (tag === ".") {
                                           return scope;
                                        } else {
