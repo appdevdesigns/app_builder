@@ -39,23 +39,51 @@ module.exports = class ABIndex extends ABIndexCore {
             // Clear Index
             .then(() => this.migrateDrop(knex))
             .then(() =>
-               knex.schema.table(tableName, (table) => {
+               knex.schema.alterTable(tableName, (table) => {
                   // Create new Unique to table
                   if (this.unique) {
                      // ALTER TABLE {tableName} ADD UNIQUE {indexName} ({columnNames})
                      // table.unique(columnNames, this.uniqueName);
 
-                     // Create Unique & Index
-                     knex.schema.raw(
-                        `ALTER TABLE ${tableName} ADD UNIQUE INDEX ${indexName}(${knex.client
-                           .formatter()
-                           .columnize(columnNames)})`
+                     sails.log(
+                        `::: INDEX.UNIQUE Table[${tableName}] Column[${columnNames.join(
+                           ", "
+                        )}] Index[${indexName}] `
                      );
+                     // Create Unique & Index
+                     return knex.schema
+                        .raw(
+                           `ALTER TABLE ${tableName} ADD UNIQUE INDEX ${indexName}(${knex.client
+                              .formatter()
+                              .columnize(columnNames)})`
+                        )
+                        .catch((err) => {
+                           sails.log.error(
+                              `ABIndex.migrateCreate() Unique: Table[${tableName}] Column[${columnNames.join(
+                                 ", "
+                              )}] Index[${indexName}] `,
+                              err
+                           );
+                           // throw err;
+                        });
                   }
                   // Create new Index
                   else {
+                     sails.log(
+                        `::: INDEX Table[${tableName}] Column[${columnNames.join(
+                           ", "
+                        )}] Index[${indexName}] `
+                     );
                      // ALTER TABLE {tableName} ADD INDEX {indexName} ({columnNames})
-                     table.index(columnNames, indexName);
+                     return table.index(columnNames, indexName).catch((err) => {
+                        sails.log.error(
+                           `ABIndex.migrateCreate(): INDEX : Table[${tableName}] Column[${columnNames.join(
+                              ", "
+                           )}] Index[${indexName}] `,
+                           err
+                        );
+                        // throw err;
+                     });
                   }
                })
             )

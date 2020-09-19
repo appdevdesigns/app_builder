@@ -158,6 +158,17 @@ module.exports = class ABClassObject extends ABObjectCore {
                // if it doesn't exist, then create it and any known fields:
                if (!exists) {
                   sails.log.verbose("... creating!!!");
+
+                  function migrateIt(f) {
+                     return f.migrateCreate(knex).catch((err) => {
+                        console.error(
+                           `field[${f.label}].migrateCreate(): error:`,
+                           err
+                        );
+                        throw err;
+                     });
+                  }
+
                   return knex.schema
                      .createTable(tableName, (t) => {
                         //// NOTE: the table is NOT YET CREATED here
@@ -182,34 +193,33 @@ module.exports = class ABClassObject extends ABObjectCore {
                         //// let's go add our Fields to it:
                         let fieldUpdates = [];
 
-                        function migrateIt(f) {
-                           return f.migrateCreate(knex).catch((err) => {
-                              console.error(
-                                 `field[${f.label}].migrateCreate(): error:`,
-                                 err
-                              );
-                              throw err;
-                           });
-                        }
-
                         let normalFields = this.fields(
                            (f) => f && f.key != "connectObject"
                         );
-
-                        let connectFields = this.connectFields();
 
                         normalFields.forEach((f) => {
                            fieldUpdates.push(migrateIt(f));
                         });
 
+                        return Promise.all(fieldUpdates);
+                     })
+                     .then(() => {
+                        // Now Create our indexes
+
+                        let fieldUpdates = [];
                         this.indexes().forEach((idx) => {
                            fieldUpdates.push(migrateIt(idx));
                         });
+                        return Promise.all(fieldUpdates);
+                     })
+                     .then(() => {
+                        // finally create any connect Fields
 
+                        let fieldUpdates = [];
+                        let connectFields = this.connectFields();
                         connectFields.forEach((f) => {
                            fieldUpdates.push(migrateIt(f));
                         });
-
                         return Promise.all(fieldUpdates);
                      })
                      .then(resolve)

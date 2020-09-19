@@ -83,7 +83,9 @@ module.exports = {
                (data.definitions || [])
                   .filter(
                      (d) =>
-                        ["object", "field", "application"].indexOf(d.type) > -1
+                        ["object", "field", "index", "application"].indexOf(
+                           d.type
+                        ) > -1
                   )
                   .forEach((def) => {
                      hashSaved[def.id] = def;
