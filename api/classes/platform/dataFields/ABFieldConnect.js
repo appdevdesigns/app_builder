@@ -151,9 +151,401 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
    /**
     * @function migrateCreate
     * perform the necessary sql actions to ADD this column to the DB table.
-    * @param {knex} knex the Knex connection.
+    * @param {knex} knex the Knex connection for this field's object
     */
    migrateCreate(knex) {
+      return new Promise((resolve, reject) => {
+         //
+         // Prepare Initial link values.
+         //
+
+         let tableName = this.object.dbTableName(true);
+         // {string} tableName
+         // The sql table name this field belongs in.
+
+         // find linked object
+         let linkObject = this.datasourceLink;
+         // {ABObject} linkObject
+         // the ABObject this field connects to.
+
+         if (!linkObject) {
+            // can't continue if we can't figure out our linkObject.
+            // This is a mis-configuration issue and we need to bail.
+
+            var errorMissingLinkObject = new Error(
+               `ABFieldConnect.migrateCreate(): could not resolve .datasourceLink for Object[${
+                  this.object.label
+               }][${this.object.id}].Field[${this.label}][${
+                  this.id
+               }] : settings[${JSON.stringify(this.settings, null, 4)}]`
+            );
+            return reject(errorMissingLinkObject);
+         }
+
+         let linkKnex = ABMigration.connection(linkObject.connName);
+         // {Knex} linkKnex
+         // the Knex connection that handles the interactions for the linkObject.
+
+         let linkTableName = linkObject.dbTableName(true);
+         // {string} linkTableName
+         // The sql table name for out linkObject.
+
+         let linkField = this.fieldLink;
+         // {ABField} linkField
+         // the corresponding ABFieldConnect in our linkObject that represents
+         // this link.
+
+         if (!linkField) {
+            // !!! This is an internal Error that is our fault:
+            var missingFieldLink = new Error(
+               `MigrateCreate():Unable to find linked field for object[${
+                  this.object.label
+               }]->field[${this.label}][${this.id}] : settings[${JSON.stringify(
+                  this.settings,
+                  null,
+                  4
+               )}]`
+            );
+            missingFieldLink.field = this.toObj();
+            reject(missingFieldLink);
+            return;
+         }
+
+         // TODO : should check duplicate column
+         let linkColumnName = linkField.columnName;
+         // {string} linkColumnName
+         // the corresponding sql table column name of our linked field.
+
+         // pull FK
+         let linkFK = linkObject.PK();
+         // {string} linkFK
+         // this is the column name of the ForeignKey in our linkObject.
+         // by default we assume it is the Primary Key (.PK()) of the linkObject.
+
+         let indexField = this.indexField;
+         // {string} indexField
+         // the ABField.id of which field in the linkObject is the column we are
+         // actually using for our foreign key.
+         // indexField can be "" or null if it is the default .PK()
+
+         if (indexField) {
+            linkFK = indexField.columnName;
+         }
+
+         let indexType = "";
+         // {string} indexType
+         // the sql type (varchar(xx), int(xx), etc... ) of the field our
+         // foreign key is linked to.
+         // When making a field to hold the foreignKey value, it must match the
+         // linked object FK exactly.
+
+         let indexType2 = "";
+         // {string} indexType2
+         // same as indexType, however in the case of M:N connections, we create
+         // a join table and need to create 2 columns for each table. This is
+         // the sql type for the 2nd column.
+
+         //
+         // Now Figure out our linkType
+         //
+
+         let linkType = `${this.settings.linkType}:${this.settings.linkViaType}`;
+         // {string} case
+         // a string representation of what kind of link we are creating:
+         // ["one:one", "one:many", "many:one", "many:many"]
+
+         switch (linkType) {
+            case "one:one":
+               // in a 1:1 link, each row in this object can link to only 1
+               // row in the linkObject.
+               // the.settings.isSource == true  indicates that this field's
+               // object is the one to hold the other object's FK:
+               if (!this.settings.isSource) {
+                  // we don't have to do anything if we are ! source
+                  return resolve();
+               }
+
+               // Before we create the column (and create a constraint)
+               // make sure the linked field is indexed.
+               this.migrateVerifyLinkedIndex(this)
+                  .then(() => {
+                     // now we need to create the column based on this field.
+                     return this.migrateCreateColumnForField(this);
+                  })
+                  .then(() => {
+                     // On a 1:1 link, these columns need to be unique values:
+                     return this.migrateSetUniqueColumnForField(this);
+                  })
+                  .then(resolve)
+                  .catch(reject);
+               break;
+
+            case "one:many":
+               // in a 1:M link, this table, will contain the FK of the linked
+               // table.
+
+               // Before we create the column (and create a constraint)
+               // make sure the linked field is indexed.
+               this.migrateVerifyLinkedIndex(this)
+                  .then(() => {
+                     // now we need to create the column based on this field.
+                     return this.migrateCreateColumnForField(this);
+                  })
+                  .then(resolve)
+                  .catch(reject);
+               break;
+
+            case "many:one":
+               // in a M:1 link, the linkField's table will contain the FK of
+               // my table.
+
+               // Before we create the column (and create a constraint)
+               // make sure the linked field is indexed.
+               this.migrateVerifyLinkedIndex(linkField)
+                  .then(() => {
+                     // now we need to create the column based on this field.
+                     return this.migrateCreateColumnForField(linkField);
+                  })
+                  .then(resolve)
+                  .catch(reject);
+               break;
+
+            case "many:many":
+               break;
+         }
+         // 1:1
+      });
+   }
+
+   /*
+    * migrateVerifyLinkedIndex()
+    * given a ABField definition, verify it's linked Field has an index
+    * created on it.
+    * Linked fields are required to have some form of index before we
+    * create a constraint based upon them.
+    * @param {ABFieldConnect} field
+    *        the ABFieldConnect that represents the field the constraint
+    *        is ON.
+    * @return {Promise}
+    */
+   migrateVerifyLinkedIndex(field) {
+      // find linked object
+      let linkObject = field.datasourceLink;
+      // {ABObject} linkObject
+      // the ABObject this field connects to.
+
+      let linkTableName = linkObject.dbTableName(true);
+      // {string} linkTableName
+      // The sql table name for our linkObject.
+
+      let linkKnex = ABMigration.connection(linkObject.connName);
+      // {Knex} linkKnex
+      // the Knex connection that handles the interactions for the linkObject.
+
+      let linkField = this.fieldLink;
+      // {ABField} linkField
+      // the corresponding ABFieldConnect in our linkObject that represents
+      // this link.
+
+      let columnType;
+      let indexType;
+      return new Promise((resolve, reject) => {
+         Promise.resolve()
+            .then(() => {
+               return linkKnex.schema
+                  .raw(
+                     `SHOW COLUMNS FROM ${linkField.object.tableName} LIKE '${linkField.columnName}';`
+                  )
+                  .then((data) => {
+                     let rows = data[0];
+                     if (rows[0]) {
+                        columnType = rows[0].Type;
+                        indexType = rows[0].Key;
+                     }
+                  });
+            })
+            .then(() => {
+               // skip this if index exists
+               if (indexType) return;
+
+               // Don't mess with External Objects
+               if (
+                  !linkObject.isExternal &&
+                  field.object.connName == linkObject.connName
+               ) {
+                  sails.log(`MigrateCreate(): object[${field.object.label}]->field[${field.label}][${field.id}] : is linked to a field that has NOT been INDEXed.
+
+Attempting to INDEX ${linkTableName}.${linkField.columnName} now ...`);
+                  return linkKnex.schema.alterTable(linkTableName, (t) => {
+                     t.index([linkField.columnName]);
+                  });
+               } else {
+                  sails.log
+                     .error(`MigrateCreate(): object[${field.object.label}]->field[${field.label}][${field.id}] : is linked to a field that has NOT been INDEXed.
+
+That field seems to be either external[${linkObject.isExternal}] or not in the same connName[${field.object.connName}/${linkObject.connName}]
+
+Skipping!!!
+
+`);
+               }
+            })
+            .then(resolve)
+            .catch(reject);
+      });
+   }
+
+   /*
+    * migrateCreateColumnForField()
+    * given a ABField definition, create the table.column for this field.
+    * @param {ABFieldConnect} field
+    *        the ABFieldConnect that represents the table.column to create
+    * @return {Promise}
+    */
+   migrateCreateColumnForField(field) {
+      let knex = ABMigration.connection(field.object.connName);
+      // {Knex} knex
+      // the Knex sql object represented by this field's object.
+
+      let tableName = field.object.dbTableName(true);
+      // {string} tableName
+      // the sql tablename of the table this field is in
+
+      let columnName = field.columnName;
+      // {string} columnName
+      // the sql column name of the column we are creating
+
+      let indexField = field.indexField;
+      // {string} indexField
+      // the ABField.id of which field in the linkObject is the column we are
+      // actually using for our foreign key.
+      // indexField can be "" or null if it is the default .PK()
+
+      let linkObject = field.datasourceLink;
+      // {ABObject} linkObject
+      // the ABObject this field connects to.
+
+      let linkTableName = linkObject.dbTableName(true);
+      // {string} linkTableName
+      // The sql table name for our linkObject.
+
+      let linkFK = linkObject.PK();
+      // {string} linkFK
+      // this is the column name of the ForeignKey in our linkObject.
+      // by default we assume it is the Primary Key (.PK()) of the linkObject.
+
+      if (indexField) {
+         // but if an indexField is given, linkFK points to that column
+         linkFK = indexField.columnName;
+      }
+
+      return Promise.resolve()
+         .then(() => {
+            // STEP 1: check to see if table.column already exists
+            return knex.schema.hasColumn(tableName, columnName);
+         })
+         .then((exists) => {
+            if (exists) return;
+            // if the column already exists, we can stop here.
+
+            // else we continue to create it:
+            // STEP 2: decifer the expected columnType
+            return this.getIndexColumnType(knex, indexField).then(
+               (indexType) => {
+                  // STEP 3: create the column:
+                  return knex.schema.table(tableName, (t) => {
+                     var linkCol = this.setNewColumnSchema(
+                        t,
+                        columnName,
+                        indexType,
+                        linkFK
+                     );
+
+                     // NOTE: federated table does not support reference column
+                     if (
+                        !linkObject.isExternal &&
+                        field.object.connName == linkObject.connName
+                     ) {
+                        linkCol
+                           .references(linkFK)
+                           .inTable(linkTableName)
+                           .onDelete("SET NULL")
+                           .withKeyName(
+                              getConstraintName(field.object.name, columnName)
+                           );
+                     } else {
+                        sails.log.error(
+                           `[1:1] object[${field.object.label}]->Field[${field.label}][${field.id}] skipping reference column creation: !linkObject.isExternal[${linkObject.isExternal}] && this.connName[${field.object.connName}] == linkObject.connName[${linkObject.connName}]`
+                        );
+                     }
+                  });
+               }
+            );
+         });
+   }
+
+   /*
+    * migrateSetUniqueColumnForField()
+    * given a ABField definition, set a unique constraint on that column.
+    * @param {ABFieldConnect} field
+    *        the ABFieldConnect that represents the table.column to set the
+    *        constraint on.
+    * @return {Promise}
+    */
+   migrateSetUniqueColumnForField(field) {
+      let knex = ABMigration.connection(field.object.connName);
+      // {Knex} knex
+      // the Knex sql object represented by this field's object.
+
+      let tableName = field.object.dbTableName(true);
+      // {string} tableName
+      // the sql tablename of the table this field is in
+
+      let columnName = field.columnName;
+      // {string} columnName
+      // the sql column name of the column we are creating
+
+      return knex.schema.table(tableName, (t) => {
+         // Set unique name to prevent ER_TOO_LONG_IDENT error
+         let uniqueName = `${field.object
+            .dbTableName(false)
+            .substring(0, 28)}_${columnName.substring(0, 28)}_UNIQUE`;
+         t.unique(columnName, uniqueName);
+      });
+   }
+
+   /*
+    * migrateAddConstraint()
+    * establish a ON DELETE constraint between two ABFieldConnect entries
+    * @param {obj} fields
+    *        And object that contains two ABFieldConnect entries
+    *        fields.from : {ABFieldConnect}
+    *                      the table.column the constraint is being assigned
+    *                      to.
+    *        fields.to   : {ABFieldConnect}
+    *                      the remote table.column that triggers the constraint
+    * @return {Promise}
+    */
+   migrateAddConstraint(fields) {
+      var field = fields.from;
+      var linkField = fields.to;
+
+      let knex = ABMigration.connection(field.object.connName);
+      // {Knex} knex
+      // the Knex sql object represented by this field's object.
+
+      let tableName = field.object.dbTableName(true);
+      // {string} tableName
+      // the sql tablename of the table this field is in
+
+      let columnName = field.columnName;
+      // {string} columnName
+      // the sql column name of the column we are creating
+
+      ///// LEFT OFF HERE:
+   }
+
+   migrateCreateOld(knex) {
       return new Promise((resolve, reject) => {
          let tableName = this.object.dbTableName(true);
 
@@ -957,7 +1349,27 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
       };
    }
 
-   getIndexColumnType(knex, tableName, columnName) {
+   getIndexColumnType(knex, indexField) {
+      if (!indexField) return Promise.resolve();
+
+      return new Promise((resolve, reject) => {
+         knex.schema
+            .raw(
+               `SHOW COLUMNS FROM ${indexField.object.tableName} LIKE '${indexField.columnName}';`
+            )
+            .then((data) => {
+               let indexType;
+               let rows = data[0];
+               if (rows[0]) {
+                  indexType = rows[0].Type;
+               }
+
+               resolve(indexType);
+            });
+      });
+   }
+
+   getIndexColumnTypeOld(knex, tableName, columnName) {
       return new Promise((resolve, reject) => {
          knex.schema
             .raw(`SHOW COLUMNS FROM ${tableName} LIKE '${columnName}';`)
