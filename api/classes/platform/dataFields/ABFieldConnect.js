@@ -246,7 +246,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                            // NOTE: federated table does not support reference column
                            if (
                               !linkObject.isExternal &&
-                              this.connName == linkObject.connName
+                              this.object.connName == linkObject.connName
                            ) {
                               linkCol
                                  .references(linkFK)
@@ -325,7 +325,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                            // NOTE: federated table does not support reference column
                            if (
                               !linkObject.isExternal &&
-                              this.connName == linkObject.connName
+                              this.object.connName == linkObject.connName
                            ) {
                               linkCol
                                  .references(linkFK)
@@ -429,7 +429,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                            // NOTE: federated table does not support reference column
                            if (
                               !this.object.isExternal &&
-                              this.connName == linkObject.connName
+                              this.object.connName == linkObject.connName
                            ) {
                               linkCol
                                  .references(linkFK)
@@ -582,7 +582,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         if (
                            !this.object.isExternal &&
                            !linkObject.isExternal &&
-                           this.connName == linkObject.connName
+                           this.object.connName == linkObject.connName
                         ) {
                            linkCol
                               .references(linkFK)

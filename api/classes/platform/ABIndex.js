@@ -23,6 +23,26 @@ module.exports = class ABIndex extends ABIndexCore {
       });
    }
 
+   /*
+   isExist(knex) {
+      return new Promise((resolve, reject) => {
+         let indexName = this.indexName;
+         let tableName = this.object.dbTableName();
+
+         knex.schema
+            .raw(
+               `SHOW INDEXES FROM ${tableName} WHERE \`Key_name\` = '${indexName}';`
+            )
+            .catch(reject)
+            .then((data) => {
+               let exists = (data[0] || []).length > 0;
+
+               resolve(exists);
+            });
+      });
+   }
+   */
+
    ///
    /// DB Migrations
    ///
