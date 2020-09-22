@@ -5,6 +5,24 @@ module.exports = class ABIndex extends ABIndexCore {
       super(attributes, object);
    }
 
+   isExist(knex) {
+      return new Promise((resolve, reject) => {
+         let indexName = this.indexName;
+         let tableName = this.object.dbTableName();
+
+         knex.schema
+            .raw(
+               `SHOW INDEXES FROM ${tableName} WHERE \`Key_name\` = '${indexName}';`
+            )
+            .catch(reject)
+            .then((data) => {
+               let exists = (data[0] || []).length > 0;
+
+               resolve(exists);
+            });
+      });
+   }
+
    ///
    /// DB Migrations
    ///
@@ -16,32 +34,25 @@ module.exports = class ABIndex extends ABIndexCore {
       let tableName = this.object.dbTableName();
       let columnNames = this.fields.map((f) => f.columnName);
 
-      return (
-         Promise.resolve()
-            // Clear Index
-            .then(() => this.migrateDrop(knex))
-            .then(() =>
-               knex.schema.table(tableName, (table) => {
-                  // Create new Unique to table
-                  if (this.unique) {
-                     // ALTER TABLE {tableName} ADD UNIQUE {indexName} ({columnNames})
-                     // table.unique(columnNames, this.uniqueName);
+      return Promise.resolve()
+         .then(() => this.isExist(knex))
+         .then((exists) => {
+            if (exists) return Promise.resolve();
 
-                     // Create Unique & Index
-                     knex.schema.raw(
-                        `ALTER TABLE ${tableName} ADD UNIQUE INDEX ${indexName}(${knex.client
-                           .formatter()
-                           .columnize(columnNames)})`
-                     );
-                  }
-                  // Create new Index
-                  else {
-                     // ALTER TABLE {tableName} ADD INDEX {indexName} ({columnNames})
-                     table.index(columnNames, indexName);
-                  }
-               })
-            )
-      );
+            if (this.unique) {
+               // Create Unique & Index
+               return knex.schema.raw(
+                  `ALTER TABLE ${tableName} ADD UNIQUE INDEX ${indexName}(${knex.client
+                     .formatter()
+                     .columnize(columnNames)})`
+               );
+            } else {
+               return knex.schema.table(tableName, (table) => {
+                  // ALTER TABLE {tableName} ADD INDEX {indexName} ({columnNames})
+                  table.index(columnNames, indexName);
+               });
+            }
+         });
    }
 
    migrateDrop(knex) {
