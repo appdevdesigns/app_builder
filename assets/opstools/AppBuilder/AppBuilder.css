@@ -1249,3 +1249,7 @@ div.amp .fa-unlock-alt {
 .reloadPage:hover {
    background: rgba(0,0,0,0.4);
 }
+.webix_warn .webix_button {
+    background: #ff9800 !important;
+    color: #fff !important;
+}
