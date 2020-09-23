@@ -222,6 +222,11 @@ module.exports = class ABField extends ABFieldCore {
                      .then(() => next());
                });
             })
+
+            // have the Model refresh it's objection/knex definitions:
+            .then(() => {
+               this.object.modelRefresh();
+            })
       );
    }
 

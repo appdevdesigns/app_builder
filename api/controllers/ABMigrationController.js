@@ -296,6 +296,11 @@ function simpleFieldOperation(req, res, operation) {
                res.AD.success({ good: "job" });
             })
             .catch(function(err) {
+               // make sure this field's object's model cache is reset
+               // even though it was an error, not sure just how far things
+               // went.
+               field.object.modelRefresh();
+
                ADCore.error.log("ABMigration." + operation + "() failed:", {
                   error: err,
                   field: field

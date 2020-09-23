@@ -657,7 +657,8 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          ) {
             // If the linked object is removed, it can not find join table name.
             // The join table should be removed already.
-            if (!this.datasourceLink) return resolve();
+            if (!this.datasourceLink)
+               return super.migrateDrop(knex).then(() => resolve(), reject);
 
             // drop join table
             var joinTableName = this.joinTableName();

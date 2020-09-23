@@ -558,6 +558,8 @@ module.exports = class ABField extends ABFieldCore {
                // perform any server side migrations for this Field:
 
                // but not connectObject fields:
+               // ABFieldConnect.migrateXXX() gets called from the UI popupNewDataField
+               // in order to handle the timings of the 2 fields that need to be created
                if (this.key == "connectObject") return;
 
                var fnMigrate = isAdd

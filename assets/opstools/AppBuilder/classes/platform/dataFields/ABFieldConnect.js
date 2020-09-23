@@ -643,16 +643,12 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
             super
                .destroy()
                .then(() => {
-                  var application = this.object.application;
+                  // Now we need to remove our linked Object->field
 
-                  var linkObject = application.objects(
-                     (obj) => obj.id == this.settings.linkObject
-                  )[0];
+                  var linkObject = this.datasourceLink;
                   if (!linkObject) return Promise.resolve();
 
-                  var linkField = linkObject.fields(
-                     (f) => f.id == this.settings.linkColumn
-                  )[0];
+                  var linkField = this.fieldLink;
                   if (!linkField) return Promise.resolve();
 
                   // destroy linked field
