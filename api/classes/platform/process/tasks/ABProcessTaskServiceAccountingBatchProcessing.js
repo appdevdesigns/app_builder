@@ -238,6 +238,16 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      this._dbTransaction
                   )
                   .then((updatedJE) => {
+                     // Broadcast
+                     sails.sockets.broadcast(
+                        this.jeObject.id,
+                        "ab.datacollection.update",
+                        {
+                           objectId: this.jeObject.id,
+                           data: updateValue
+                        }
+                     );
+
                      resolve();
                   })
                   .catch(reject);
@@ -452,13 +462,17 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             }
             this.brObject
                .modelAPI()
-               .create(balValues)
+               // .create(balValues, this._dbTransaction)
+               .create(balValues) // NOTE: Ignore MySQL transaction because client needs id of entry.
                .then((newEntry) => {
                   // Broadcast
                   sails.sockets.broadcast(
                      this.brObject.id,
                      "ab.datacollection.create",
-                     newEntry
+                     {
+                        objectId: this.brObject.id,
+                        data: newEntry
+                     }
                   );
 
                   resolve(newEntry);
@@ -609,10 +623,25 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                balanceRecord = this.brObject.requestParams(balanceRecord);
 
                // now perform the UPDATE
-               allUpdates.push(
-                  this.brObject
-                     .modelAPI()
-                     .update(brID, balanceRecord, this._dbTransaction)
+               allUpdates.push(new Promise((next, bad) => {
+                     this.brObject
+                        .modelAPI()
+                        .update(brID, balanceRecord, this._dbTransaction)
+                        .catch(bad)
+                        .then(() => {
+                           // Broadcast
+                           sails.sockets.broadcast(
+                              this.brObject.id,
+                              "ab.datacollection.update",
+                              {
+                                 objectId: this.brObject.id,
+                                 data: balanceRecord
+                              }
+                           );
+
+                           next();
+                        });
+                  })
                );
             });
 
@@ -657,4 +686,5 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       return type.toLowerCase();
    }
 };
+
 
