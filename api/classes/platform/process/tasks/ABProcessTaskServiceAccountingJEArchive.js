@@ -365,14 +365,19 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
 
                                     this.jeArchiveObject
                                        .modelAPI()
-                                       .create(jeArchiveValues, trx)
+                                       // .create(jeArchiveValues, trx)
+                                       .create(jeArchiveValues) // NOTE: Ignore MySQL transaction because client needs id of entry.
                                        .catch(no)
                                        .then((newJeArchive) => {
                                           // Broadcast
                                           sails.sockets.broadcast(
                                              this.jeArchiveObject.id,
                                              "ab.datacollection.create",
-                                             newJeArchive
+                                             {
+                                                objectId: this.jeArchiveObject
+                                                   .id,
+                                                data: newJeArchive
+                                             }
                                           );
 
                                           ok();
@@ -413,7 +418,21 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                         .delete()
                         .where("uuid", "IN", jeIds)
                         .catch(bad)
-                        .then(() => next());
+                        .then(() => {
+                           // Broadcast
+                           (jeIds || []).forEach((jeId) => {
+                              sails.sockets.broadcast(
+                                 this.jeObject.id,
+                                 "ab.datacollection.delete",
+                                 {
+                                    objectId: this.jeObject.id,
+                                    id: jeId
+                                 }
+                              );
+                           });
+
+                           next();
+                        });
                   })
             )
             // finish out the Process Task
@@ -428,3 +447,4 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
       );
    }
 };
+
