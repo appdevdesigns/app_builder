@@ -267,8 +267,18 @@ module.exports = class AB_Work_Object_List extends ABComponent {
             CurrentApplication = application;
 
             // get a DataCollection of all our objects
+            // FIX: when we list included objects in our Designer, the objects
+            // in this workspace need to reference the CurrentApplication as their
+            // .application
+            var includedObjects = [];
+            if (application) {
+               includedObjects = application.objectsIncluded() || [];
+               includedObjects.forEach((obj) => {
+                  obj.application = CurrentApplication;
+               });
+            }
             objectList = new webix.DataCollection({
-               data: application ? application.objectsIncluded() : []
+               data: includedObjects
             });
 
             // setup object list settings
