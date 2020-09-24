@@ -894,6 +894,8 @@ function loadDefinitionCallbacks(next) {
          if (def.key == "page" && def.isRoot === "true") {
             // var Page = ABSystemObject.getApplication().pageNew(def);
 
+            sails.log(`::: View.Page Create NavView (${def.name})`);
+
             // Find the Parent ABApplication
             var appDef = ABDefinition.definition(def.myAppID);
             if (appDef) {
