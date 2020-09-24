@@ -10,7 +10,7 @@
     "test": "make test",
     "postinstall": "node setup/setup.js",
     "postupdate": "node setup/setup.js",
-    "build": "node_modules/.bin/webpack",
+    "build": "node_modules/.bin/webpack --progress",
     "watch": "node_modules/.bin/webpack --watch --progress",
     "devInstall": "docker run -it --mount type=bind,source=\"$(pwd)\",target=/app -w /app node bash",
     "testbuild": "node_modules/.bin/webpack --config ./assets/opstools/AppBuilder/test/webpack.config.js",
