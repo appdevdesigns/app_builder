@@ -314,9 +314,7 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                      if (field.key == "connectObject") {
                         field.settings.isSource = 1;
 
-                        var linkObject = _currentApplication.objects(
-                           (obj) => obj.id == field.settings.linkObject
-                        )[0];
+                        var linkObject = field.datasourceLink;
 
                         // TODO : should check duplicate column
 
