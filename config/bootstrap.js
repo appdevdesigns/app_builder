@@ -888,7 +888,7 @@ function loadDefinitionCallbacks(next) {
          var def = prepareDefinition(values);
          var pending = [];
          // track any Async operations.
-         console.log("::: New View: ", def);
+
          // If this is a New Page, that is a Root page (def.isRoot)
          // then create the OPs portal permissions:
          if (def.key == "page" && def.isRoot === "true") {
