@@ -367,9 +367,10 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
           */
          onAfterSelect: (id) => {
             var view = $$(this.ids.list).getItem(id);
+            var viewObj = this._application.views((v) => v.id == view.id)[0];
             setTimeout(() => {
                this.App.actions.tabSwitch("interface");
-               this.App.actions.populateInterfaceWorkspace(view);
+               this.App.actions.populateInterfaceWorkspace(viewObj);
             }, 50);
          },
 
@@ -402,7 +403,16 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
              */
             var addPage = (page, index, parentId) => {
                // add to tree collection
-               this.viewList.add(page, index, parentId);
+               var branch = {
+                  id: page.viewId || page.id,
+                  label: page.label,
+                  icon: page.icon ? page.icon : "",
+                  viewIcon: page.viewIcon ? page.viewIcon() : "",
+                  datacollection: {
+                     id: page.datacollection ? page.datacollection.id : ""
+                  }
+               };
+               this.viewList.add(branch, index, parentId);
 
                // add sub-pages
                if (page instanceof ABViewDetail) {
@@ -442,9 +452,10 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
             // clear our list and display our objects:
             var List = $$(ids.list);
             List.clearAll();
-            List.data.unsync();
-            List.data.sync(this.viewList);
-            List.refresh();
+            // List.data.unsync();
+            // List.data.sync(this.viewList);
+            // List.refresh();
+            List.parse(this.viewList);
             List.unselectAll();
 
             this._logic.listReady();
