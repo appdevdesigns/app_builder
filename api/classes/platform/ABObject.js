@@ -944,7 +944,12 @@ module.exports = class ABClassObject extends ABObjectCore {
                         // translate them into query.XXXX() operations.
                         // @param {obj} condition  a QueryBuilder compatible condition object
                         // @param {ObjectionJS Query} Query the query object to perform the operations.
-                        var parseCondition = (condition, Query) => {
+                        // @param {string} glue ["and" || "or"]- needs to set .orWhere or .where inside Grouping query of knex. https://github.com/knex/knex/issues/1254
+                        var parseCondition = (
+                           condition,
+                           Query,
+                           glue = "and"
+                        ) => {
                            // 'have_no_relation' condition will be applied below
                            if (
                               condition == null ||
@@ -963,23 +968,19 @@ module.exports = class ABClassObject extends ABObjectCore {
                            // if this is a grouping condition, then decide how to group and
                            // process our sub rules:
                            if (condition.glue) {
-                              var nextCombineKey = "where";
+                              var nextCombineKey = "andWhere";
                               if (condition.glue == "or") {
                                  nextCombineKey = "orWhere";
                               }
-                              (condition.rules || []).forEach((r) => {
-                                 if (r && r.rules) {
-                                    parseCondition(r, Query);
-                                 } else {
-                                    Query[nextCombineKey](function() {
-                                       // NOTE: pass 'this' as the Query object
-                                       // so we can perform embedded queries:
-                                       // parseCondition(r, this);
 
-                                       // 'this' is changed type QueryBuilder to QueryBuilderBase
-                                       parseCondition(r, this); // Query
-                                    });
-                                 }
+                              Query[nextCombineKey](function() {
+                                 (condition.rules || []).forEach((r) => {
+                                    parseCondition(
+                                       r,
+                                       this,
+                                       condition.glue || "and"
+                                    );
+                                 });
                               });
 
                               return;
@@ -1042,7 +1043,9 @@ module.exports = class ABClassObject extends ABObjectCore {
                                              userData.languageCode
                                           );
 
-                                       Query.whereRaw(languageWhere);
+                                       if (glue == "or")
+                                          Query.orWhereRaw(languageWhere);
+                                       else Query.whereRaw(languageWhere);
                                     } else {
                                        let transCol;
                                        // If it is a query
@@ -1377,7 +1380,8 @@ module.exports = class ABClassObject extends ABObjectCore {
                                  );
 
                               // Now we add in our where
-                              Query.whereRaw(whereRaw);
+                              if (glue == "or") Query.orWhereRaw(whereRaw);
+                              else Query.whereRaw(whereRaw);
                            }
                         };
 
@@ -2015,3 +2019,4 @@ module.exports = class ABClassObject extends ABObjectCore {
       }
    }
 };
+

@@ -269,7 +269,7 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
             this.eventAdd({
                emitter: dv,
                eventName: "loadData",
-               listener: _logic.displayView
+               listener: () => _logic.displayView()
             });
 
             this.eventAdd({
@@ -339,3 +339,4 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
       return super.save(includeSubViews);
    }
 };
+
