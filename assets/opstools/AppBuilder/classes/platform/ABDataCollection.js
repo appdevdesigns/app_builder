@@ -257,14 +257,37 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
                   );
                   // add bind items data as a filter to wheres
                   if (value) {
-                     wheres.rules.push({
-                        alias: fieldLink.alias, // ABObjectQuery
-                        key: Object.keys(params)[0],
-                        rule: fieldLink.alias ? "contains" : "equals", // NOTE: If object is query, then use "contains" because ABOBjectQuery return JSON
-                        value: fieldLink.getRelationValue(
-                           dataCollectionLink.__dataCollection.getItem(value)
-                        )
-                     });
+                     wheres = {
+                        glue: "and",
+                        rules: [
+                           wheres,
+                           {
+                              glue: "and",
+                              rules: [
+                                 {
+                                    alias: fieldLink.alias, // ABObjectQuery
+                                    key: Object.keys(params)[0],
+                                    rule: fieldLink.alias
+                                       ? "contains"
+                                       : "equals", // NOTE: If object is query, then use "contains" because ABOBjectQuery return JSON
+                                    value: fieldLink.getRelationValue(
+                                       dataCollectionLink.__dataCollection.getItem(
+                                          value
+                                       )
+                                    )
+                                 }
+                              ]
+                           }
+                        ]
+                     }
+                     // wheres.rules.push({
+                     //    alias: fieldLink.alias, // ABObjectQuery
+                     //    key: Object.keys(params)[0],
+                     //    rule: fieldLink.alias ? "contains" : "equals", // NOTE: If object is query, then use "contains" because ABOBjectQuery return JSON
+                     //    value: fieldLink.getRelationValue(
+                     //       dataCollectionLink.__dataCollection.getItem(value)
+                     //    )
+                     // });
                   }
 
                   // this is the same item that was already bound...don't reload data
@@ -505,3 +528,4 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
       });
    }
 };
+
