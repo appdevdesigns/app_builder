@@ -157,6 +157,9 @@ module.exports = class FilterComplex extends FilterComplexCore {
          save: this.unique(idBase + "_save")
       });
 
+      // Set current username
+      this.Account.username = OP.User.username();
+
       // Default options list to push to all fields
       // this.queryFieldOptions = [
       //    {
@@ -490,3 +493,4 @@ module.exports = class FilterComplex extends FilterComplexCore {
       this.myPopup.show();
    }
 };
+
