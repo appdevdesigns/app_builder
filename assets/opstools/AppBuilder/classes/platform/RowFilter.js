@@ -178,6 +178,9 @@ module.exports = class RowFilter extends RowFilterCore {
          datePicker: this.unique(idBase + "_rowFilter_datePicker")
       });
 
+      // Set current username
+      this.Account.username = OP.User.username();
+
       var batchName; // we need to revert to this default when switching away from a in/by query field
 
       // Default options list to push to all fields
@@ -1415,3 +1418,4 @@ module.exports = class RowFilter extends RowFilterCore {
       logic.unblockOnChange();
    }
 };
+
