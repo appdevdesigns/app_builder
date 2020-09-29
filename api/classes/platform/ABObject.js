@@ -1901,7 +1901,7 @@ module.exports = class ABClassObject extends ABObjectCore {
                   FROM ${connectedObj.dbTableName(true)}
                   WHERE ${connectedObj.dbTableName(true)}.\`${
             linkField.columnName
-         }\` = ${this.dbTableName(true)}.${this.PK()})`;
+         }\` = ${this.dbTableName(true)}.\`${this.PK()}\`)`;
       }
       // 1:M , 1:1 isSource: true
       else if (
@@ -1917,7 +1917,7 @@ module.exports = class ABClassObject extends ABObjectCore {
                   FROM ${connectedObj.dbTableName(true)}
                   WHERE ${connectedObj.dbTableName(
                      true
-                  )}.${connectedObj.PK()} = ${this.dbTableName(true)}.\`${
+                  )}.\`${connectedObj.PK()}\` = ${this.dbTableName(true)}.\`${
             connectedField.columnName
          }\`)`;
       }
@@ -1939,7 +1939,7 @@ module.exports = class ABClassObject extends ABObjectCore {
          }\` = ${connectedObj.dbTableName(true)}.${connectedObj.PK()}
                WHERE ${joinTable}.\`${
             joinColumnNames.sourceColumnName
-         }\` = ${this.dbTableName(true)}.${this.PK()})`;
+         }\` = ${this.dbTableName(true)}.\`${this.PK()}\`)`;
       }
 
       return selectSQL;
@@ -2019,4 +2019,5 @@ module.exports = class ABClassObject extends ABObjectCore {
       }
    }
 };
+
 
