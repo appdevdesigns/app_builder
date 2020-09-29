@@ -278,6 +278,15 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
                      id: linkedData.id
                   };
 
+                  // Add custom index values
+                  let indexes = obj.indexes() || [];
+                  indexes.forEach((idx) => {
+                     (idx.fields || []).forEach((f) => {
+                        data[relationName][f.columnName] =
+                           linkedData[f.columnName];
+                     });
+                  });
+
                   // Set label of selected item
                   if (linkedData.text) {
                      data[relationName].text = linkedData.text;
@@ -312,3 +321,4 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
       };
    }
 };
+
