@@ -1016,7 +1016,7 @@ module.exports = class ABClassQuery extends ABClassObject {
                   fieldConnect.settings.linkViaType == "one" &&
                   fieldConnect.settings.isSource)
             ) {
-               whereClause = "{table}.{column} = {linkTable}.{linkId}"
+               whereClause = "{table}.`{column}` = {linkTable}.`{linkId}`"
                   .replace("{table}", f.dbPrefix())
                   .replace("{column}", fieldConnect.columnName)
                   .replace("{linkTable}", objectNumber.dbTableName(true))
@@ -1041,7 +1041,7 @@ module.exports = class ABClassQuery extends ABClassObject {
                )[0];
                if (!connectedField) return;
 
-               whereClause = "{linkTable}.{linkColumn} = {table}.{id}"
+               whereClause = "{linkTable}.`{linkColumn}` = {table}.`{id}`"
                   .replace("{linkTable}", objectNumber.dbTableName(true))
                   .replace("{linkColumn}", connectedField.columnName)
                   .replace("{table}", f.dbPrefix())
@@ -1061,13 +1061,13 @@ module.exports = class ABClassQuery extends ABClassObject {
                let fieldLink = fieldConnect.fieldLink;
                if (!fieldLink) return;
 
-               joinClause = " INNER JOIN {joinTable} ON {joinTable}.{linkObjectName} = {linkTable}.{linkColumn} "
+               joinClause = " INNER JOIN {joinTable} ON {joinTable}.`{linkObjectName}` = {linkTable}.`{linkColumn}` "
                   .replace(/{joinTable}/g, fieldConnect.joinTableName(true))
                   .replace(/{linkObjectName}/g, objectNumber.name)
                   .replace(/{linkTable}/g, objectNumber.dbTableName(true))
                   .replace(/{linkColumn}/g, objectNumber.PK());
 
-               whereClause = "{joinTable}.{joinColumn} = {table}.{id} AND {linkTable}.{column} IS NOT NULL"
+               whereClause = "{joinTable}.`{joinColumn}` = {table}.`{id}` AND {linkTable}.`{column}` IS NOT NULL"
                   .replace(/{joinTable}/g, fieldConnect.joinTableName(true))
                   .replace(/{joinColumn}/g, fieldConnect.object.name)
                   .replace(/{table}/g, f.dbPrefix())
@@ -1524,3 +1524,4 @@ module.exports = class ABClassQuery extends ABClassObject {
       return condition;
    }
 };
+
