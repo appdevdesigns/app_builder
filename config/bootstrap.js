@@ -92,7 +92,7 @@ module.exports = function(cb) {
          }
       );
    });
-   // AppBuilder.buildDirectory.init();		// start the build directory re creation
+   // AppBuilder.buildDirectory.init();      // start the build directory re creation
 };
 
 function verifyWellKnownDir(next) {
@@ -202,7 +202,7 @@ function setupPollingMCC(next) {
          })
          .catch((err) => {
             // if (err.code == 'E_SERVER_TIMEOUT') {
-            // 	delay += sails.config.appbuilder.mcc.pollFrequency;
+            //    delay += sails.config.appbuilder.mcc.pollFrequency;
             // }
 
             var errString = err.toString();
@@ -623,10 +623,10 @@ AppDev Team
       // okToSend = true;
 
       // console.log("Email to Send:", {
-      // 			notify,
-      // 			recipients,
-      // 			body
-      // 		});
+      //          notify,
+      //          recipients,
+      //          body
+      //       });
 
       if (okToSend) {
          EmailNotifications.send({
@@ -936,16 +936,14 @@ function loadDefinitionCallbacks(next) {
                   sails.log(
                      `${key} :: Page[${def.id}] did not define a .myAppID, not configuring a NavBar view for this.`
                   );
-                  return;
+               } else {
+                  var err = new Error(
+                     `${key} :: Error:Could not find Application[${def.myAppID}] for Page[${def.id}]`
+                  );
+
+                  sails.log.error(err);
+                  //// TODO: better way to respond to this failed operation!
                }
-
-               var err = new Error(
-                  `${key} :: Error:Could not find Application[${def.myAppID}] for Page[${def.id}]`
-               );
-
-               sails.log.error(err);
-
-               //// TODO: better way to respond to this failed operation!
             }
          }
 

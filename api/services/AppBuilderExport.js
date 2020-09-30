@@ -79,6 +79,9 @@ module.exports = {
          Promise.resolve()
             .then(() => {
                // Insert all the ABDefinitions for Applications, fields and objects:
+               console.log(
+                  "::: IMPORT : importing initial definitions (Application, Fields, objects)"
+               );
                var allSaves = [];
                (data.definitions || [])
                   .filter(
@@ -122,6 +125,8 @@ module.exports = {
                // We have to 1st, create ALL the object tables before we can
                // create connections between them.
 
+               console.log("::: IMPORT : creating base objects");
+
                var allMigrates = [];
                (allObjects || []).forEach((object) => {
                   object.stashConnectFields(); // effectively ignores connectFields
@@ -143,7 +148,10 @@ ${err.toString()}
                // Now that all the tables are created, we can go back
                // and create the connections between them:
 
+               console.log("::: IMPORT : creating connected fields");
+
                var allConnections = [];
+               var allRetries = [];
 
                // reapply connectFields to all objects BEFORE doing any
                // .createField() s
@@ -155,6 +163,11 @@ ${err.toString()}
                   (object.connectFields() || []).forEach((f) => {
                      allConnections.push(
                         ABMigration.createField(f).catch((err) => {
+                           var strErr = err.toString();
+                           if (strErr.indexOf("ER_LOCK_DEADLOCK") != -1) {
+                              allRetries.push(f);
+                              return;
+                           }
                            console.log(`>>>>>>>>>>>>>>>>>>>>>>
 Pass 2: creating connectFields:
 ABMigration.createObject() error:
@@ -165,11 +178,66 @@ ${err.toString()}
                   });
                });
 
-               return Promise.all(allConnections);
+               function seqRetry(cb) {
+                  // seqRetry()
+                  // a recursive function to sequencially process each of the
+                  // fields in the allRetries[].
+
+                  if (allRetries.length == 0) {
+                     cb();
+                  } else {
+                     var f = allRetries.shift();
+                     f._deadlockRetry = f._deadlockRetry || 1;
+                     console.log(
+                        `::: ER_LOCK_DEADLOCK on Field[${f.name}] ... retrying`
+                     );
+
+                     ABMigration.createField(f)
+                        .then(() => {
+                           seqRetry(cb);
+                        })
+                        .catch((err) => {
+                           var strErr = err.toString();
+                           if (strErr.indexOf("ER_LOCK_DEADLOCK") != -1) {
+                              f._deadlockRetry++;
+                              if (f._deadlockRetry < 4) {
+                                 allRetries.push(f);
+                                 seqRetry(cb);
+                              } else {
+                                 console.log(
+                                    `:::ER_LOCK_DEADLOCK too many attempts for Field[${f.name}]`
+                                 );
+                                 cb(err);
+                              }
+                              return;
+                           }
+                           console.log(`>>>>>>>>>>>>>>>>>>>>>>
+Pass 2: creating connectFields:
+ER_LOCK_DEADLOCK Retry...
+ABMigration.createObject() error:
+${err.toString()}
+>>>>>>>>>>>>>>>>>>>>>>`);
+                           cb(err);
+                        });
+                  }
+               }
+
+               return Promise.all(allConnections).then(() => {
+                  return new Promise((resolve, reject) => {
+                     seqRetry((err) => {
+                        if (err) {
+                           return reject(err);
+                        }
+                        resolve();
+                     });
+                  });
+               });
             })
             .then(() => {
                // OK, now we can finish up with the Indexes that were
                // based on connectFields:
+
+               console.log("::: IMPORT : Final Index Imports");
 
                var allIndexes = [];
                var allUpdates = [];
@@ -197,20 +265,25 @@ ${err.toString()}
             })
             .then(() => {
                // now save all the rest:
+               var numRemaining =
+                  data.definitions.length - Object.keys(hashSaved).length;
+               console.log(
+                  `::: IMPORT : insert remaining definitions #${numRemaining}`
+               );
                var allSaves = [];
                (data.definitions || []).forEach((def) => {
                   if (!hashSaved[def.id]) {
                      allSaves.push(
                         ABDefinitionModel.create(def).catch((err) => {
-                           console.log(`>>>>>>>>>>>>>>>>>>>>>>
-ABDefinitionModel.create() error:
-${err.toString()}
->>>>>>>>>>>>>>>>>>>>>>`);
-
                            if (err.toString().indexOf("already exists") > -1) {
                               // console.log("===> trying an update instead.");
                               return ABDefinitionModel.update(def.id, def);
                            }
+
+                           console.log(`>>>>>>>>>>>>>>>>>>>>>>
+ABDefinitionModel.create() error:
+${err.toString()}
+>>>>>>>>>>>>>>>>>>>>>>`);
                         })
                      );
                   }
@@ -218,6 +291,9 @@ ${err.toString()}
                return Promise.all(allSaves);
             })
             .then(() => {
+               console.log(":::");
+               console.log("::: IMPORT : Finished");
+               console.log(":::");
                resolve(data);
             });
       });
