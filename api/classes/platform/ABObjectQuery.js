@@ -457,6 +457,12 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
             let fieldIndex2 = f.indexField2;
             let baseColumnName = obj.PK();
 
+            if (!objLink) {
+               sails.log.error(
+                  `!!! connected.field[${f.id}] did not have an objLink`,
+                  f
+               );
+            }
             if (!fieldLink) {
                sails.log.error(
                   `!!! connected.field[${f.id}] did not have a fieldLink`,
@@ -508,11 +514,13 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
                f.settings.linkType == "many" &&
                f.settings.linkViaType == "one"
             ) {
-               selectField = connectColFormat
-                  .replace(/{linkDbName}/g, objLink.dbSchemaName())
-                  .replace(/{linkTableName}/g, objLink.dbTableName())
-                  .replace(/{linkColumnName}/g, fieldLink.columnName)
-                  .replace(/{columnName}/g, objLink.PK());
+               if (objLink && fieldLink) {
+                  selectField = connectColFormat
+                     .replace(/{linkDbName}/g, objLink.dbSchemaName())
+                     .replace(/{linkTableName}/g, objLink.dbTableName())
+                     .replace(/{linkColumnName}/g, fieldLink.columnName)
+                     .replace(/{columnName}/g, objLink.PK());
+               }
             }
 
             // 1:1
@@ -533,16 +541,18 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
                      .replace(/{displayPrefix}/g, f.alias ? f.alias : obj.name)
                      .replace(/{displayName}/g, f.relationName());
                } else {
-                  selectField = connectColFormat
-                     .replace(/{linkDbName}/g, objLink.dbSchemaName())
-                     .replace(/{linkTableName}/g, objLink.dbTableName())
-                     .replace(
-                        /{linkColumnName}/g,
-                        fieldIndex
-                           ? fieldIndex.columnName
-                           : fieldLink.columnName
-                     )
-                     .replace(/{columnName}/g, objLink.PK());
+                  if (objLink && fieldLink) {
+                     selectField = connectColFormat
+                        .replace(/{linkDbName}/g, objLink.dbSchemaName())
+                        .replace(/{linkTableName}/g, objLink.dbTableName())
+                        .replace(
+                           /{linkColumnName}/g,
+                           fieldIndex
+                              ? fieldIndex.columnName
+                              : fieldLink.columnName
+                        )
+                        .replace(/{columnName}/g, objLink.PK());
+                  }
                }
             }
 
@@ -551,17 +561,19 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
                f.settings.linkType == "many" &&
                f.settings.linkViaType == "many"
             ) {
-               let joinSchemaName =
-                  f.settings.isSource == true
-                     ? f.object.dbSchemaName()
-                     : fieldLink.object.dbSchemaName();
-               let joinTableName = f.joinTableName();
+               if (objLink && fieldLink) {
+                  let joinSchemaName =
+                     f.settings.isSource == true
+                        ? f.object.dbSchemaName()
+                        : fieldLink.object.dbSchemaName();
+                  let joinTableName = f.joinTableName();
 
-               selectField = connectColFormat
-                  .replace(/{linkDbName}/g, joinSchemaName)
-                  .replace(/{linkTableName}/g, joinTableName)
-                  .replace(/{linkColumnName}/g, obj.name)
-                  .replace(/{columnName}/g, objLink.name);
+                  selectField = connectColFormat
+                     .replace(/{linkDbName}/g, joinSchemaName)
+                     .replace(/{linkTableName}/g, joinTableName)
+                     .replace(/{linkColumnName}/g, obj.name)
+                     .replace(/{columnName}/g, objLink.name);
+               }
             }
 
             if (selectField)
@@ -1131,4 +1143,3 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
       return condition;
    }
 };
-

@@ -984,7 +984,7 @@ function loadDefinitionCallbacks(next) {
             pending.push(AppBuilder.removeNavView(pApp, def.name));
          } else {
             var err = new Error(
-               `${key} :: Error:Could not find Application[${def.myAppID}] for Page[${def.id}]`
+               `view.beforeDestroy :: Error:Could not find Application[${def.myAppID}] for Page[${def.id}]`
             );
             sails.log.error(err);
 
