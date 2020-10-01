@@ -262,24 +262,17 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
                         rules: [
                            wheres,
                            {
-                              glue: "and",
-                              rules: [
-                                 {
-                                    alias: fieldLink.alias, // ABObjectQuery
-                                    key: Object.keys(params)[0],
-                                    rule: fieldLink.alias
-                                       ? "contains"
-                                       : "equals", // NOTE: If object is query, then use "contains" because ABOBjectQuery return JSON
-                                    value: fieldLink.getRelationValue(
-                                       dataCollectionLink.__dataCollection.getItem(
-                                          value
-                                       )
-                                    )
-                                 }
-                              ]
+                              alias: fieldLink.alias, // ABObjectQuery
+                              key: Object.keys(params)[0],
+                              rule: fieldLink.alias ? "contains" : "equals", // NOTE: If object is query, then use "contains" because ABOBjectQuery return JSON
+                              value: fieldLink.getRelationValue(
+                                 dataCollectionLink.__dataCollection.getItem(
+                                    value
+                                 )
+                              )
                            }
                         ]
-                     }
+                     };
                      // wheres.rules.push({
                      //    alias: fieldLink.alias, // ABObjectQuery
                      //    key: Object.keys(params)[0],

@@ -1,5 +1,7 @@
-var ABModelBase = require("./ABModelBase");
-var ABGraphQuery = require("./ABQuery");
+const ABModelBase = require("./ABModelBase");
+const ABGraphQuery = require("./ABQuery");
+const ABClassApplication = require("../classes/platform/ABApplication");
+const ABDataCollection = require("../classes/platform/ABDataCollection");
 
 class ABDataview extends ABModelBase {
    static get collectionName() {
@@ -57,6 +59,13 @@ class ABDataview extends ABModelBase {
             return resolve(this);
          }
       });
+   }
+
+   toABClass(application) {
+      // Mock ABApplication
+      if (application == null) application = new ABClassApplication({});
+
+      return new ABDataCollection(this, application);
    }
 }
 

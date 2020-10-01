@@ -328,7 +328,11 @@ module.exports = {
 
    "get /process/inbox": "app_builder/ABProcessController.userInbox",
    "post /process/inbox/:uuid":
-      "app_builder/ABProcessController.userInboxUpdate"
+      "app_builder/ABProcessController.userInboxUpdate",
+
+   /* CSV Export */
+   "GET /app_builder/application/:appID/page/:pageID/view/:viewID/csv":
+      "app_builder/ABCsvController.exportCsv"
 
    /*
 
