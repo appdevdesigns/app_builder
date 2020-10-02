@@ -127,16 +127,53 @@ let generateCsv = ({ viewCsv, userData, filename, extraWhere }) => {
          .then(() => {
             let SQL;
 
+            // Convert display data to CSV file
             obj.fields().forEach((f) => {
-               if (f.key == "connectObject") return;
-
-               query.select(knex.raw(`IFNULL(\`${f.columnName}\`, '')`));
+               switch (f.key) {
+                  case "connectObject":
+                     break;
+                  case "list":
+                     query.select(
+                        knex.raw(`
+                        CASE
+                           ${(f.settings.options || [])
+                              .map((opt) => {
+                                 return `WHEN \`${f.columnName}\` = "${opt.id}" THEN "${opt.text}"`;
+                              })
+                              .join(" ")}
+                           ELSE ""
+                        END
+                     `)
+                     );
+                     break;
+                  default:
+                     query.select(knex.raw(`IFNULL(\`${f.columnName}\`, '')`));
+                     break;
+               }
             });
 
+            // Header at the first line
+            let SQLHeader = "";
+            if (viewCsv.settings.hasHeader == true) {
+               let orderedFields = [];
+               orderedFields = orderedFields.concat(
+                  obj
+                     .fields((f) => f.key != "connectObject")
+                     .map((f) => `"${f.label}"`)
+               );
+               // Connect fields ordering will show after normal fields
+               orderedFields = orderedFields.concat(
+                  obj
+                     .fields((f) => f.key == "connectObject")
+                     .map((f) => `"${f.label}"`)
+               );
+
+               // SELECT "One", "Two", "Three", "Four", "Five", "Six" UNION ALL
+               SQLHeader = `SELECT ${orderedFields.join(",")} UNION ALL`;
+            }
+
             try {
-               SQL = query.toString();
-console.log(SQL);
-               SQL = `${SQL}
+               SQL = `${SQLHeader} ${query.toString()}
             INTO OUTFILE '/var/lib/mysql-files/${filename}.csv'
             FIELDS TERMINATED BY ','
             ENCLOSED BY '"'
@@ -160,7 +197,6 @@ let ABCsvController = {
       let pageID = req.param("pageID");
       let viewID = req.param("viewID");
 
-      let extraWhere = req.body || {};
       let outputFilename;
       let filename = uuid();
 
@@ -172,7 +208,7 @@ let ABCsvController = {
                viewCsv,
                userData: req.user.data,
                filename,
-               where: extraWhere
+               extraWhere: viewCsv.settings.where
             });
          })
          .then(() => {

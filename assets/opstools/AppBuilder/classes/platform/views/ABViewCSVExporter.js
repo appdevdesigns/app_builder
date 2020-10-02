@@ -1,6 +1,10 @@
 const ABViewCSVExporterCore = require("../../core/views/ABViewCSVExporterCore");
 
+const RowFilter = require("../RowFilter");
+
 const ABViewCSVExporterPropertyComponentDefaults = ABViewCSVExporterCore.defaultValues();
+
+let FilterComponent = null;
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -35,6 +39,8 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
    //
 
    static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+      let idBase = "ABViewCSVExporter";
+
       let commonUI = super.propertyEditorDefaultElements(
          App,
          ids,
@@ -42,7 +48,37 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
          ObjectDefaults
       );
 
-      let idBase = "ABViewCSVExporter";
+      _logic.showFilterPopup = ($view) => {
+         this.filter_popup.show($view, null, { pos: "top" });
+      };
+
+      _logic.onFilterChange = () => {
+         let view = _logic.currentEditObject();
+         let filterValues = FilterComponent.getValue() || {};
+
+         let allComplete = true;
+         (filterValues.rules || []).forEach((f) => {
+            // if all 3 fields are present, we are good.
+            if (f.key && f.rule && f.value) {
+               allComplete = allComplete && true;
+            } else {
+               // else, we found an entry that wasn't complete:
+               allComplete = false;
+            }
+         });
+
+         // only perform the update if a complete row is specified:
+         if (allComplete) {
+            // we want to call .save() but give webix a chance to properly update it's
+            // select boxes before this call causes them to be removed:
+            setTimeout(() => {
+               this.propertyEditorSave(ids, view);
+            }, 10);
+         }
+      };
+
+      // create filter popups
+      this.initPopupEditors(App, ids, _logic);
 
       // _logic functions
 
@@ -76,32 +112,41 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
                      on: {
                         onChange: _logic.selectSource
                      }
+                  },
+                  {
+                     name: "hasHeader",
+                     view: "checkbox",
+                     label: L(
+                        "ab.components.csvExporter.hasHeader",
+                        "*Header on first line"
+                     ),
+                     labelWidth: App.config.labelWidthXLarge
+                  },
+                  {
+                     cols: [
+                        {
+                           view: "label",
+                           label: L(
+                              "ab.component.label.filterData",
+                              "*Filter Option:"
+                           ),
+                           css: "ab-text-bold",
+                           width: App.config.labelWidthLarge
+                        },
+                        {
+                           view: "button",
+                           name: "filterMenuButton",
+                           css: "webix_primary",
+                           label: L("ab.component.label.settings", "*Settings"),
+                           icon: "fa fa-gear",
+                           type: "icon",
+                           badge: 0,
+                           click: function() {
+                              _logic.showFilterPopup(this.$view);
+                           }
+                        }
+                     ]
                   }
-                  // ,{
-                  //    cols: [
-                  //       {
-                  //          view: "label",
-                  //          label: L(
-                  //             "ab.component.label.filterData",
-                  //             "*Filter Option:"
-                  //          ),
-                  //          css: "ab-text-bold",
-                  //          width: App.config.labelWidthLarge
-                  //       },
-                  //       {
-                  //          view: "button",
-                  //          id: ids.filterMenuButton,
-                  //          css: "webix_primary",
-                  //          label: L("ab.component.label.settings", "*Settings"),
-                  //          icon: "fa fa-gear",
-                  //          type: "icon",
-                  //          badge: 0,
-                  //          click: function() {
-                  //             // _logic.filterMenuShow(this.$view);
-                  //          }
-                  //       }
-                  //    ]
-                  // }
                ]
             }
          },
@@ -159,6 +204,10 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
       $DcSelector.define("value", view.settings.dataviewID || null);
       $DcSelector.refresh();
 
+      $$(ids.hasHeader).setValue(
+         view.settings.hasHeader ||
+            ABViewCSVExporterPropertyComponentDefaults.hasHeader
+      );
       $$(ids.buttonLabel).setValue(
          view.settings.buttonLabel ||
             ABViewCSVExporterPropertyComponentDefaults.buttonLabel
@@ -171,6 +220,19 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
          view.settings.width || ABViewCSVExporterPropertyComponentDefaults.width
       );
 
+      // Populate data to popups
+      FilterComponent.applicationLoad(view.application);
+      let dc = view.datacollection;
+      let obj = dc ? dc.datasource : null;
+      if (obj) {
+         FilterComponent.fieldsLoad(obj.fields());
+      } else {
+         FilterComponent.fieldsLoad([]);
+      }
+      FilterComponent.setValue(view.settings.where);
+
+      this.propertyBadgeNumber(ids, view);
+
       //   // when a change is made in the properties the popups need to reflect the change
       //   this.updateEventIds = this.updateEventIds || {}; // { viewId: boolean, ..., viewIdn: boolean }
       //   if (!this.updateEventIds[view.id]) {
@@ -182,12 +244,29 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
       //   }
    }
 
+   static initPopupEditors(App, ids, _logic) {
+      var idBase = "ABViewCSVExporterPropertyEditor";
+
+      FilterComponent = new RowFilter(App, idBase + "_filter");
+      FilterComponent.init({
+         // when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
+         onChange: _logic.onFilterChange
+      });
+
+      this.filter_popup = webix.ui({
+         view: "popup",
+         width: 800,
+         hidden: true,
+         body: FilterComponent.ui
+      });
+   }
+
    static propertyEditorValues(ids, view) {
       super.propertyEditorValues(ids, view);
 
       view.settings.dataviewID = $$(ids.datacollection).getValue();
-
-      // view.settings.where
+      view.settings.hasHeader = $$(ids.hasHeader).getValue();
+      view.settings.where = FilterComponent.getValue();
 
       view.settings.buttonLabel =
          $$(ids.buttonLabel).getValue() ||
@@ -200,6 +279,21 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
       view.settings.width =
          $$(ids.width).getValue() ||
          ABViewCSVExporterPropertyComponentDefaults.width;
+
+      this.propertyBadgeNumber(ids, view);
+   }
+
+   static propertyBadgeNumber(ids, view) {
+      if (view.settings.where && view.settings.where.rules) {
+         $$(ids.filterMenuButton).define(
+            "badge",
+            view.settings.where.rules.length
+         );
+         $$(ids.filterMenuButton).refresh();
+      } else {
+         $$(ids.filterMenuButton).define("badge", null);
+         $$(ids.filterMenuButton).refresh();
+      }
    }
 
    component(App, idBase) {
