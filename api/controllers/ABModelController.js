@@ -115,7 +115,6 @@ function updateRelationValues(object, id, updateRelationParams) {
             query
                .where(obj.PK(), rowId)
                .first()
-               .catch((err) => reject(err))
                .then((record) => {
                   if (record == null) return resolve();
 
@@ -139,7 +138,8 @@ function updateRelationValues(object, id, updateRelationParams) {
                      .then(() => {
                         resolve();
                      });
-               });
+               })
+               .catch((err) => reject(err));
          });
       };
 
@@ -156,7 +156,6 @@ function updateRelationValues(object, id, updateRelationParams) {
             query
                .where(obj.PK(), rowId)
                .first()
-               .catch((err) => reject(err))
                .then((record) => {
                   if (record == null) return resolve();
 
@@ -168,11 +167,12 @@ function updateRelationValues(object, id, updateRelationParams) {
                            .replace("#relation#", relationName)
                      ) // FIX: SQL syntax error because alias name includes special characters
                      .relate(value)
-                     .catch((err) => reject(err))
                      .then(() => {
                         resolve();
-                     });
-               });
+                     })
+                     .catch((err) => reject(err));
+               })
+               .catch((err) => reject(err));
          });
       };
 
@@ -210,10 +210,10 @@ function updateRelationValues(object, id, updateRelationParams) {
                      .orWhere(object.PK(), relateRowId)
                      .orWhere(sourceField.columnName, id)
                      .orWhere(sourceField.columnName, relateRowId)
-                     .catch((err) => reject(err))
                      .then(() => {
                         resolve();
-                     });
+                     })
+                     .catch((err) => reject(err));
                });
             });
 
@@ -229,10 +229,10 @@ function updateRelationValues(object, id, updateRelationParams) {
                         .update(update)
                         .clearWhere()
                         .where(object.PK(), id)
-                        .catch((err) => reject(err))
                         .then(() => {
                            resolve();
-                        });
+                        })
+                        .catch((err) => reject(err));
                   });
                });
 
@@ -246,10 +246,10 @@ function updateRelationValues(object, id, updateRelationParams) {
                         .update(update)
                         .clearWhere()
                         .where(object.PK(), relateRowId)
-                        .catch((err) => reject(err))
                         .then(() => {
                            resolve();
-                        });
+                        })
+                        .catch((err) => reject(err));
                   });
                });
             }
@@ -419,10 +419,10 @@ function updateTranslationsValues(object, id, translations, isInsert) {
             if (isInsert) {
                transKnex
                   .insert(vals)
-                  .catch(err)
                   .then(function() {
                      next();
-                  });
+                  })
+                  .catch(err);
             }
             // update
             else {
@@ -446,8 +446,8 @@ function updateTranslationsValues(object, id, translations, isInsert) {
                         transKnex
                            .update(clearVals)
                            .where(where)
-                           .catch(reject)
-                           .then(resolve);
+                           .then(resolve)
+                           .catch(reject);
                      });
                   })
                   .then(() => {
@@ -455,8 +455,8 @@ function updateTranslationsValues(object, id, translations, isInsert) {
                         transKnex
                            .update(vals)
                            .where(where)
-                           .catch(reject)
-                           .then(resolve);
+                           .then(resolve)
+                           .catch(reject);
                      });
                   })
                   .then(next)
@@ -671,9 +671,6 @@ module.exports = {
                            .reduce((promiseChain, currTask) => {
                               return promiseChain.then(currTask);
                            }, Promise.resolve([]))
-                           .catch((err) => {
-                              return Promise.reject(err);
-                           })
                            .then((values) => {
                               // // Query the new row to response to client
                               return object
@@ -699,6 +696,9 @@ module.exports = {
                                     newItem = itemLookup[0];
                                     next(null, newItem);
                                  });
+                           })
+                           .catch((err) => {
+                              return Promise.reject(err);
                            });
                      },
                      (err) => {
@@ -1194,11 +1194,11 @@ console.error(err);
             function(next) {
                AppBuilder.routes
                   .verifyAndReturnObject(req, res)
-                  .catch(next)
                   .then(function(obj) {
                      object = obj;
                      next();
-                  });
+                  })
+                  .catch(next);
             },
 
             // step #2
@@ -1691,9 +1691,6 @@ console.error(err);
                         .reduce((promiseChain, currTask) => {
                            return promiseChain.then(currTask);
                         }, Promise.resolve([]))
-                        .catch((err) => {
-                           return Promise.reject(err);
-                        })
                         .then((values) => {
                            // Query the new row to response to client
                            var query3 = object.queryFind(
@@ -1716,9 +1713,6 @@ console.error(err);
                            );
 
                            return query3
-                              .catch((err) => {
-                                 return Promise.reject(err);
-                              })
                               .then((newItem) => {
                                  let result = newItem[0];
 
@@ -1746,7 +1740,13 @@ console.error(err);
                                     .catch((err) => {
                                        return Promise.reject(err);
                                     });
+                              })
+                              .catch((err) => {
+                                 return Promise.reject(err);
                               });
+                        })
+                        .catch((err) => {
+                           return Promise.reject(err);
                         });
                   },
                   (err) => {

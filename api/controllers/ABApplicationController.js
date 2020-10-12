@@ -96,10 +96,6 @@ module.exports = {
       var forDownload = req.param("download");
 
       AppBuilderExport.appToJSON(appID)
-         .catch(function(err) {
-            console.log(err);
-            res.AD.error(err);
-         })
          .then(function(data) {
             if (forDownload) {
                res.set(
@@ -108,6 +104,10 @@ module.exports = {
                );
             }
             res.json(data);
+         })
+         .catch(function(err) {
+            console.log(err);
+            res.AD.error(err);
          });
    },
 
@@ -137,6 +137,11 @@ module.exports = {
                   try {
                      var jsonData = JSON.parse(data.toString());
                      AppBuilderExport.appFromJSON(jsonData)
+                        .then(function() {
+                           res.AD.success({ done: true });
+                           // unless we need to return the data to the browser:
+                           // res.AD.success(jsonData);
+                        })
                         .catch(function(err) {
                            console.log(
                               "ABApplicationController.jsonImport(): import error",
@@ -145,11 +150,6 @@ module.exports = {
                            err.message = `json import error : ${err.message}`;
                            res.AD.error(err, 500);
                            //res.AD.error(err);
-                        })
-                        .then(function() {
-                           res.AD.success({ done: true });
-                           // unless we need to return the data to the browser:
-                           // res.AD.success(jsonData);
                         });
                   } catch (err) {
                      console.log("jsonImport parse error", err);

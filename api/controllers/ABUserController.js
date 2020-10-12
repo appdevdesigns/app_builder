@@ -74,9 +74,9 @@ module.exports = {
       };
 
       RoleModel.queryFind(cond, req.user.data)
-         .catch(res.AD.error)
          .then((roles) => {
             res.AD.success(roles || []);
-         });
+         })
+         .catch(res.AD.error);
    }
 };
