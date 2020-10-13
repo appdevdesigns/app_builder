@@ -5,6 +5,7 @@ const AccountingFPClose = require("./ABProcessTaskServiceAccountingFPClose.js");
 const AccountingFPYearClose = require("./ABProcessTaskServiceAccountingFPYearClose.js");
 const AccountingJEArchive = require("./ABProcessTaskServiceAccountingJEArchive.js");
 const ABProcessTaskServiceQuery = require("./ABProcessTaskServiceQuery.js");
+const ABProcessTaskServiceInsertRecord = require("./ABProcessTaskServiceInsertRecord.js");
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -80,6 +81,16 @@ module.exports = class ABProcessTaskService extends ABProcessTaskServiceCore {
                click: () => {
                   this.switchTo("query", id);
                }
+            },
+            {
+               view: "button",
+               label: L(
+                  "ab.process.task.service.insertRecord",
+                  "*Insert Record Task"
+               ),
+               click: () => {
+                  this.switchTo("insertRecord", id);
+               }
             }
          ]
       };
@@ -140,6 +151,14 @@ module.exports = class ABProcessTaskService extends ABProcessTaskServiceCore {
 
          case "query":
             child = new ABProcessTaskServiceQuery(
+               myValues,
+               this.process,
+               this.application
+            );
+            break;
+
+         case "insertRecord":
+            child = new ABProcessTaskServiceInsertRecord(
                myValues,
                this.process,
                this.application
