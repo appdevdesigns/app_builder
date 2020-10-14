@@ -58,9 +58,10 @@ module.exports = class AB_Work_Interface_Workspace_Editor_Components extends ABC
             view: "window",
             id: ids.popup,
             modal: true,
-            width: 500,
-            height: 450,
+            width: 600,
+            height: 550,
             select: false,
+            resize: true,
             position: "center",
             head: {
                view: "toolbar",
