@@ -252,7 +252,7 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
 
       $fValueItems.forEach(($item) => {
          let fieldId = $item.config.fieldId;
-         let fValue = this.fieldValues[fieldId];
+         let fValue = this.fieldValues[fieldId] || {};
 
          let $setSelector = $item.queryView({ name: "setSelector" });
          $setSelector.setValue(fValue.set);

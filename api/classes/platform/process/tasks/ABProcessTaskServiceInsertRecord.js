@@ -39,21 +39,37 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
             (o) => o.id == previousElement.objectID
          )[0];
 
-      return new Promise((next, bad) => {
-         let values = this.getDataValue(instance);
+      let values = this.getDataValue(instance);
 
-         this.object
-            .modelAPI()
-            .create(values)
-            .catch(bad)
-            .then((result) => {
-               this.stateUpdate(instance, {
-                  data: result
-               });
-               this.stateCompleted(instance);
-               next(true);
+      return Promise.resolve()
+         .then(() => this.object.modelAPI().create(values))
+         .then((record) => {
+            return new Promise((next, bad) => {
+               this.object
+                  .modelAPI()
+                  .findAll({
+                     where: {
+                        glue: "and",
+                        rules: [
+                           {
+                              key: this.object.PK(),
+                              rule: "equals",
+                              value: record.uuid
+                           }
+                        ]
+                     },
+                     populate: true
+                  })
+                  .catch(bad)
+                  .then((result) => {
+                     this.stateUpdate(instance, {
+                        data: result[0]
+                     });
+                     this.stateCompleted(instance);
+                     next(true);
+                  });
             });
-      });
+         });
    }
 
    /**
@@ -110,6 +126,38 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
       let startData = this.processDataStart(instance);
       let previousData = this.processDataPrevious(instance);
 
+      let getFieldValue = (object, fieldId, sourceData) => {
+         if (!object) return null;
+
+         // Pull value of link object relation
+         // data[__relation][COLUMN_NAME]
+         if (fieldId.indexOf("|") > -1) {
+            let linkFieldIds = fieldId.split("|");
+            let field = object.fields((f) => f.id == linkFieldIds[0])[0];
+            if (!field) return null;
+
+            let objectLink = field.datasourceLink;
+            if (!objectLink) return null;
+
+            let fieldLink = objectLink.fields(
+               (f) => f.id == linkFieldIds[1]
+            )[0];
+            if (!fieldLink) return null;
+
+            let data = sourceData[field.relationName()];
+            if (!data) return null;
+
+            return data[fieldLink.columnName];
+         }
+         // Pull value of the object
+         else {
+            let field = object.fields((f) => f.id == fieldId)[0];
+            if (!field) return null;
+
+            return sourceData[field.columnName];
+         }
+      };
+
       Object.keys(this.fieldValues || {}).forEach((fieldId) => {
          let field = this.object.fields((f) => f.id == fieldId)[0];
          if (!field) return;
@@ -120,24 +168,18 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                result[field.columnName] = item.value;
                break;
             case "2": // update with root data
-               if (this.objectOfStartElem) {
-                  let fieldOfStartElem = this.objectOfStartElem.fields(
-                     (f) => f.id == item.value
-                  )[0];
-                  if (fieldOfStartElem)
-                     result[field.columnName] =
-                        startData[fieldOfStartElem.columnName];
-               }
+               result[field.columnName] = getFieldValue(
+                  this.objectOfStartElem,
+                  item.value,
+                  startData
+               );
                break;
             case "3": // update with previous data step
-               if (this.objectOfPrevElem) {
-                  let fieldOfPrevElem = this.objectOfPrevElem.fields(
-                     (f) => f.id == item.value
-                  )[0];
-                  if (fieldOfPrevElem)
-                     result[field.columnName] =
-                        previousData[fieldOfPrevElem.columnName];
-               }
+               result[field.columnName] = getFieldValue(
+                  this.objectOfPrevElem,
+                  item.value,
+                  previousData
+               );
                break;
             case "4": // formula value
                break;
