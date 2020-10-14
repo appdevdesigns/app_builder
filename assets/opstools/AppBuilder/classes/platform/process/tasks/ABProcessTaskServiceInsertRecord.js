@@ -41,6 +41,11 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             if (f.key == "connectObject") {
                let linkDS = f.datasourceLink;
                if (linkDS) {
+                  result.push({
+                     id: `${f.id}|PK`,
+                     value: `${f.label} -> [Primary Key]`
+                  });
+
                   linkDS.fields().forEach((linkF) => {
                      result.push({
                         id: `${f.id}|${linkF.id}`,
