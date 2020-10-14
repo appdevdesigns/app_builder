@@ -196,7 +196,9 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                );
                break;
             case "4": // formula value
-               result[field.columnName] = "";
+               if (item.value) {
+                  result[field.columnName] = eval(item.value);
+               }
                break;
          }
       });
