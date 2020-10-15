@@ -1,8 +1,13 @@
 const fs = require("fs");
 const path = require("path");
 const uuid = require("uuid/v4");
-const ABGraphApplication = require("app_builder/api/graphModels/ABApplication");
-const ABGraphDataCollection = require("app_builder/api/graphModels/ABDataview");
+
+const ABApplication = require(path.join(
+   "..",
+   "classes",
+   "platform",
+   "ABApplication"
+));
 
 sails.config.appbuilder.csv = sails.config.appbuilder.csv || {};
 
@@ -19,67 +24,63 @@ const CSV_OUTPUT_PATH =
  * @param {uuid} pageID
  * @param {uuid} viewID
  *
- * @return {Promise} resolve(ABView)
+ * @return {Promise} resolve(ABDefinition of the CSVView)
  */
 let getCsvWidget = ({ appID, pageID, viewID }) => {
-   let app;
-   let result;
-   return (
-      Promise.resolve()
-         // Pull the application
-         .then(() => ABGraphApplication.findOne(appID))
-         // Pull CSV widget
-         .then(
-            (application) =>
-               new Promise((next, fail) => {
-                  if (!application) return fail("Could not found application");
-                  app = application.toABClass();
+   // Question: there is nothing Async about this fn().
+   // Why are we using a Promise here?
+   return new Promise((resolve, reject) => {
+      // All we need to do here is find the definition for our CSV widget
+      // and create an instance of a DataCollection it references.
 
-                  let page = app.pages((p) => p.id == pageID)[0];
-                  if (!page) return fail("Could not found page");
+      // Find the Definition for the CSV Widget
+      let def = ABApplication.definitionForID(viewID);
+      if (!def) {
+         return reject(
+            new Error(
+               `ABCsvController:getCsvWidget(): unable to find CSV Widget with ID[${viewID}]`
+            )
+         );
+      }
 
-                  result = page.views((v) => v.id == viewID)[0];
-                  if (!result)
-                     return fail("Could not found CSV exporter widget");
+      // make a cloned copy of the Definition to work with:
+      let defCSV = JSON.parse(JSON.stringify(def));
 
-                  next();
-               })
-         )
-         // Pull Data collections
-         .then(
-            () =>
-               new Promise((next, fail) => {
-                  result.settings = result.settings || {};
-                  if (!result.settings.dataviewID) return next();
+      // do we have a valid DC defined?
+      defCSV.settings = defCSV.settings || {};
+      if (!defCSV.settings.dataviewID)
+         return reject(
+            new Error(
+               `ABCsvController:getCsvWidget(): CSV Widget [${viewID}] has not defined a DataCollection.`
+            )
+         );
 
-                  ABGraphDataCollection.find({
-                     where: { _key: result.settings.dataviewID }
-                  })
-                     .catch(fail)
-                     .then((DCs) => {
-                        (DCs || []).forEach((dc) => {
-                           if (dc) {
-                              let dcClass = dc.toABClass(app);
+      // convert string settings -> boolean
+      if (typeof defCSV.settings.hasHeader == "string")
+         defCSV.settings.hasHeader = JSON.parse(defCSV.settings.hasHeader);
 
-                              dcClass.__datasource = app.objects(
-                                 (o) => o.id == dc.settings.datasourceID
-                              )[0];
+      // create an instance of the DataCollection
+      var defDC = ABApplication.definitionForID(defCSV.settings.dataviewID);
+      if (!defDC) {
+         return reject(
+            new Error(
+               `ABCSVController:getCsvWidget():unable to find ABDataCollection for ID[${result.settings.dataviewID}]`
+            )
+         );
+      }
 
-                              app._datacollections.push(dcClass);
-                           }
-                        });
+      let app = ABApplication.applicationForID(appID);
+      if (!app)
+         return fail(new Error(`Could not find application for ID[${appID}]`));
 
-                        next();
-                     });
-               })
-         )
-         // Final
-         .then(() => Promise.resolve(result))
-   );
+      defCSV.___csv_datacollection = app.datacollectionNew(defDC);
+
+      resolve(defCSV);
+   });
 };
 
-let generateCsv = ({ viewCsv, userData, filename, extraWhere }) => {
-   let dc = viewCsv.datacollection;
+let generateCsv = ({ defCSV, userData, filename, extraWhere }) => {
+   let dc = defCSV.___csv_datacollection;
    if (!dc) return Promise.resolve();
 
    let obj = dc.datasource;
@@ -196,7 +197,7 @@ let generateCsv = ({ viewCsv, userData, filename, extraWhere }) => {
 
             // Header at the first line
             let SQLHeader = "";
-            if (viewCsv.settings.hasHeader == true) {
+            if (defCSV.settings.hasHeader == true) {
                // SELECT "One", "Two", "Three", "Four", "Five", "Six" UNION ALL
                SQLHeader = `SELECT ${obj
                   .fields()
@@ -235,13 +236,13 @@ let ABCsvController = {
 
       Promise.resolve()
          .then(() => getCsvWidget({ appID, pageID, viewID }))
-         .then((viewCsv) => {
-            outputFilename = viewCsv.settings.filename;
+         .then((defCSV) => {
+            outputFilename = defCSV.settings.filename;
             return generateCsv({
-               viewCsv,
+               defCSV,
                userData: req.user.data,
                filename,
-               extraWhere: viewCsv.settings.where
+               extraWhere: defCSV.settings.where
             });
          })
          .then(() => {
