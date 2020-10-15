@@ -81,7 +81,7 @@ module.exports = class ABViewRuleActionFormRecordRuleUpdateConnected extends ABV
       if (this.baseObject && this.baseObject.fields) {
          return this.baseObject.fields((f) => {
             return f.key == connectKey;
-         });
+         }, true);
       } else {
          return [];
       }
