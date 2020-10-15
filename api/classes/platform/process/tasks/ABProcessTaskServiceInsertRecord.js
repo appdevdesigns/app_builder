@@ -129,6 +129,8 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
       let getFieldValue = (object, fieldId, sourceData) => {
          if (!object) return null;
 
+         let columnName;
+
          // Pull value of link object relation
          // data[__relation][COLUMN_NAME]
          if (fieldId.indexOf("|") > -1) {
@@ -139,22 +141,34 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
             let objectLink = field.datasourceLink;
             if (!objectLink) return null;
 
-            let fieldLink = objectLink.fields(
-               (f) => f.id == linkFieldIds[1]
-            )[0];
-            if (!fieldLink) return null;
+            if (linkFieldIds[1] == "PK") {
+               columnName = objectLink.PK();
+            } else {
+               let fieldLink = objectLink.fields(
+                  (f) => f.id == linkFieldIds[1]
+               )[0];
+               if (!fieldLink) return null;
+
+               columnName = fieldLink.columnName;
+            }
 
             let data = sourceData[field.relationName()];
             if (!data) return null;
 
-            return data[fieldLink.columnName];
+            return data[columnName];
          }
          // Pull value of the object
          else {
-            let field = object.fields((f) => f.id == fieldId)[0];
-            if (!field) return null;
+            if (fieldId == "PK") {
+               columnName = object.PK();
+            } else {
+               let field = object.fields((f) => f.id == fieldId)[0];
+               if (!field) return null;
 
-            return sourceData[field.columnName];
+               columnName = field.columnName;
+            }
+
+            return sourceData[columnName];
          }
       };
 
@@ -182,6 +196,9 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                );
                break;
             case "4": // formula value
+               if (item.value) {
+                  result[field.columnName] = eval(item.value);
+               }
                break;
          }
       });
