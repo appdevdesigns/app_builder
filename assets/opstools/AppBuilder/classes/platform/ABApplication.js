@@ -104,10 +104,12 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
             .then((allDefinitions) => {
                let apps = [];
                // debugger;
-               allDefinitions.forEach((def) => {
-                  if (def.type == "application") {
-                     apps.push(new ABApplication(def.json));
-                  }
+               let appDefs = allDefinitions.filter((def) => {
+                  return def.type == "application";
+               });
+
+               appDefs.forEach((app) => {
+                  apps.push(new ABApplication(app.json));
                });
 
                _AllApplications = new webix.DataCollection({

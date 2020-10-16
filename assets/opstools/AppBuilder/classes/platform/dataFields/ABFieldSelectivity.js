@@ -252,6 +252,16 @@ module.exports = class ABFieldSelectivity extends ABField {
    }
 
    prepareData(data, multiple = true) {
+      if (!data && multiple) {
+         return [];
+      } else if (multiple && data && Array.isArray(data) && data.length == 0) {
+         return [];
+      } else if (!multiple && data && Array.isArray(data) && data.length == 0) {
+         return null;
+      } else if (!data && !multiple) {
+         return null;
+      }
+
       if (typeof data == "string" && data.length > 0) {
          try {
             data = JSON.parse(data);
@@ -266,6 +276,17 @@ module.exports = class ABFieldSelectivity extends ABField {
          data = data[0];
       } else if (multiple && !Array.isArray(data)) {
          data = [data];
+      }
+
+      // check to see if id is present on each item
+      if (multiple) {
+         data.forEach((d) => {
+            if (!d.id && d.uuid) {
+               d.id = d.uuid;
+            }
+         });
+      } else {
+         if (!data.id && data.uuid) data.id = data.uuid;
       }
 
       if (data == null && multiple) {
