@@ -268,6 +268,16 @@ let ABCsvController = {
                   })
                   .pipe(res);
             });
+         })
+         .catch((err) => {
+            sails.log.error(err);
+            if (err.toString().indexOf("EE_CANTCREATEFILE") != -1) {
+               err = new Error(
+                  "Database was unable to create CSV file. Please check the file permissions and try again."
+               );
+            }
+
+            res.AD.error(err, 500);
          });
    }
 };
