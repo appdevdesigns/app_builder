@@ -60,6 +60,10 @@ module.exports = class ABClassObject extends ABObjectCore {
       ABObjectCache.cache(this);
    }
 
+   currentView() {
+      return this.objectWorkspace || {};
+   }
+
    ///
    /// Instance Methods
    ///
@@ -2019,5 +2023,3 @@ module.exports = class ABClassObject extends ABObjectCore {
       }
    }
 };
-
-

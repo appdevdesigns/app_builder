@@ -39,6 +39,11 @@ var __AllQueries = {
 };
 // {obj} : a hash of all ABObjectQueriess in our system.
 
+var __AllDatacollections = {
+   /* ABDatacollection.id : ABDataCollection */
+};
+// {obj} : a hash of all ABDataCollection in our system.
+
 module.exports = class ABClassApplication extends ABApplicationCore {
    constructor(attributes) {
       super(attributes);
