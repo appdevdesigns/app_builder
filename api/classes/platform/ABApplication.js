@@ -10,6 +10,7 @@ const ABApplicationCore = require(path.join(
    "ABApplicationCore.js"
 ));
 
+const ABDataCollection = require(path.join(__dirname, "ABDataCollection"));
 const ABDefinition = require(path.join(__dirname, "ABDefinition"));
 
 const ABClassObject = require(path.join(__dirname, "ABObject"));
@@ -63,6 +64,10 @@ module.exports = class ABClassApplication extends ABApplicationCore {
          return new ABClassApplication(myDef);
       }
       return null;
+   }
+
+   static definitionForID(id) {
+      return ABDefinition.definition(id);
    }
 
    areaKey() {
