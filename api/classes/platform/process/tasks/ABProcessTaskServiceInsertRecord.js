@@ -176,6 +176,8 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
          let field = this.object.fields((f) => f.id == fieldId)[0];
          if (!field) return;
 
+         if (!this.fieldValues) return;
+
          let item = this.fieldValues[fieldId];
          switch (item.set) {
             case "1": // custom value
@@ -206,3 +208,4 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
       return result;
    }
 };
+
