@@ -149,7 +149,7 @@ let getSQL = ({ viewCsv, userData, extraWhere }) => {
                            let sourceColumnName = f.indexField
                               ? f.indexField.columnName
                               : "uuid";
-                           select = `(SELECT GROUP_CONCAT(\`uuid\` SEPARATOR ',') FROM \`${objLink.tableName}\` WHERE \`${fieldLink.columnName}\` = \`${obj.tableName}\`.\`${sourceColumnName}\`)`;
+                           select = `(SELECT GROUP_CONCAT(\`uuid\` SEPARATOR ' & ') FROM \`${objLink.tableName}\` WHERE \`${fieldLink.columnName}\` = \`${obj.tableName}\`.\`${sourceColumnName}\`)`;
                         }
                      }
                      // M:N
@@ -159,7 +159,7 @@ let getSQL = ({ viewCsv, userData, extraWhere }) => {
                      ) {
                         let joinTablename = f.joinTableName();
                         let joinColumnNames = f.joinColumnNames();
-                        select = `(SELECT GROUP_CONCAT(\`${joinColumnNames.targetColumnName}\` SEPARATOR ',') FROM \`${joinTablename}\` WHERE ${joinColumnNames.sourceColumnName} = \`uuid\`)`;
+                        select = `(SELECT GROUP_CONCAT(\`${joinColumnNames.targetColumnName}\` SEPARATOR ' & ') FROM \`${joinTablename}\` WHERE ${joinColumnNames.sourceColumnName} = \`uuid\`)`;
                      }
 
                      break;
@@ -174,6 +174,27 @@ let getSQL = ({ viewCsv, userData, extraWhere }) => {
                            ELSE ""
                         END
                      `;
+                     break;
+                  case "string":
+                  case "LongText":
+                     if (f.isMultilingual) {
+                        let transCol = (this.viewName
+                           ? "`{prefix}.translations`"
+                           : "{prefix}.translations"
+                        ).replace("{prefix}", f.dbPrefix().replace(/`/g, ""));
+
+                        let languageCode =
+                           (userData || {}).languageCode || "en";
+
+                        select = knex.raw(
+                           'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({transCol}, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({transCol}, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))'
+                              .replace(/{transCol}/g, transCol)
+                              .replace(/{languageCode}/g, languageCode)
+                              .replace(/{columnName}/g, f.columnName)
+                        );
+                     } else {
+                        select = `IFNULL(\`${f.columnName}\`, '')`;
+                     }
                      break;
                   default:
                      select = `IFNULL(\`${f.columnName}\`, '')`;
