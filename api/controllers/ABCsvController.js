@@ -1,15 +1,5 @@
-const fs = require("fs");
-const uuid = require("uuid/v4");
 const ABGraphApplication = require("app_builder/api/graphModels/ABApplication");
 const ABGraphDataCollection = require("app_builder/api/graphModels/ABDataview");
-
-sails.config.appbuilder.csv = sails.config.appbuilder.csv || {};
-
-const CSV_GENERATE_PATH =
-   sails.config.appbuilder.csv["generatePath"] || "/var/lib/mysql-files";
-
-const CSV_OUTPUT_PATH =
-   sails.config.appbuilder.csv["outputPath"] || "/var/lib/mysql-files";
 
 /**
  * @method getCsvWidget
@@ -77,7 +67,7 @@ let getCsvWidget = ({ appID, pageID, viewID }) => {
    );
 };
 
-let generateCsv = ({ viewCsv, userData, filename, extraWhere }) => {
+let getSQL = ({ viewCsv, userData, extraWhere }) => {
    let dc = viewCsv.datacollection;
    if (!dc) return Promise.resolve();
 
@@ -159,7 +149,7 @@ let generateCsv = ({ viewCsv, userData, filename, extraWhere }) => {
                            let sourceColumnName = f.indexField
                               ? f.indexField.columnName
                               : "uuid";
-                           select = `(SELECT GROUP_CONCAT(\`uuid\` SEPARATOR ',') FROM \`${objLink.tableName}\` WHERE \`${fieldLink.columnName}\` = \`${obj.tableName}\`.\`${sourceColumnName}\`)`;
+                           select = `(SELECT GROUP_CONCAT(\`uuid\` SEPARATOR ' & ') FROM \`${objLink.tableName}\` WHERE \`${fieldLink.columnName}\` = \`${obj.tableName}\`.\`${sourceColumnName}\`)`;
                         }
                      }
                      // M:N
@@ -169,7 +159,7 @@ let generateCsv = ({ viewCsv, userData, filename, extraWhere }) => {
                      ) {
                         let joinTablename = f.joinTableName();
                         let joinColumnNames = f.joinColumnNames();
-                        select = `(SELECT GROUP_CONCAT(\`${joinColumnNames.targetColumnName}\` SEPARATOR ',') FROM \`${joinTablename}\` WHERE ${joinColumnNames.sourceColumnName} = \`uuid\`)`;
+                        select = `(SELECT GROUP_CONCAT(\`${joinColumnNames.targetColumnName}\` SEPARATOR ' & ') FROM \`${joinTablename}\` WHERE ${joinColumnNames.sourceColumnName} = \`uuid\`)`;
                      }
 
                      break;
@@ -184,6 +174,27 @@ let generateCsv = ({ viewCsv, userData, filename, extraWhere }) => {
                            ELSE ""
                         END
                      `;
+                     break;
+                  case "string":
+                  case "LongText":
+                     if (f.isMultilingual) {
+                        let transCol = (this.viewName
+                           ? "`{prefix}.translations`"
+                           : "{prefix}.translations"
+                        ).replace("{prefix}", f.dbPrefix().replace(/`/g, ""));
+
+                        let languageCode =
+                           (userData || {}).languageCode || "en";
+
+                        select = knex.raw(
+                           'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({transCol}, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({transCol}, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))'
+                              .replace(/{transCol}/g, transCol)
+                              .replace(/{languageCode}/g, languageCode)
+                              .replace(/{columnName}/g, f.columnName)
+                        );
+                     } else {
+                        select = `IFNULL(\`${f.columnName}\`, '')`;
+                     }
                      break;
                   default:
                      select = `IFNULL(\`${f.columnName}\`, '')`;
@@ -205,20 +216,13 @@ let generateCsv = ({ viewCsv, userData, filename, extraWhere }) => {
 
             try {
                // SQL = `${SQLHeader} ${query.toString()}
-               SQL = `${SQLHeader} ${query.debug()}
-            INTO OUTFILE '${CSV_GENERATE_PATH}/${filename}.csv'
-            FIELDS TERMINATED BY ','
-            ENCLOSED BY '"'
-            ESCAPED BY ''
-            LINES TERMINATED BY '\n'`;
+               SQL = `${SQLHeader} ${query.debug()}`;
             } catch (e) {}
 
             return Promise.resolve(SQL);
          })
          // Execute Mysql to Generate CSV file
-         .then((SQL) => {
-            return knex.raw(SQL);
-         })
+         .then((SQL) => Promise.resolve(() => knex.raw(SQL)))
    );
 };
 
@@ -230,41 +234,50 @@ let ABCsvController = {
       let viewID = req.param("viewID");
 
       let outputFilename;
-      let filename = uuid();
 
       Promise.resolve()
          .then(() => getCsvWidget({ appID, pageID, viewID }))
-         .then((viewCsv) => {
-            outputFilename = viewCsv.settings.filename;
-            return generateCsv({
-               viewCsv,
-               userData: req.user.data,
-               filename,
-               extraWhere: viewCsv.settings.where
-            });
-         })
-         .then(() => {
-            let outputFile = `${CSV_OUTPUT_PATH}/${filename}.csv`;
+         // Generate SQL command
+         .then(
+            (viewCsv) =>
+               new Promise((next, bad) => {
+                  outputFilename = viewCsv.settings.filename;
 
-            // check exists CSV file
-            fs.access(outputFile, fs.constants.F_OK, (err) => {
-               if (err) {
-                  res.AD.success();
-                  return;
-               }
-
-               // Set res header
-               res.setHeader(
-                  "Content-disposition",
-                  `attachment; filename=${outputFilename}.csv`
-               );
-
-               // stream file to response
-               fs.createReadStream(`${CSV_OUTPUT_PATH}/${filename}.csv`)
-                  .on("error", function(err) {
-                     return res.AD.error(err, 500);
+                  getSQL({
+                     viewCsv,
+                     userData: req.user.data,
+                     extraWhere: viewCsv.settings.where
                   })
-                  .pipe(res);
+                     .catch(bad)
+                     .then((getKnexQuery) => {
+                        // Get SQL stream
+                        let knexQuery = getKnexQuery();
+                        let stream = knexQuery.stream();
+
+                        next(stream);
+                     });
+               })
+         )
+         .then((sqlStream) => {
+            if (!sqlStream) {
+               return res.AD.error("Could not connect to SQL streaming", 500);
+            }
+
+            // Set res header
+            res.setHeader(
+               "Content-disposition",
+               `attachment; filename=${outputFilename}.csv`
+            );
+
+            sqlStream.on("close", () => {
+               res.end();
+            });
+            sqlStream.on("finish", () => {
+               res.end();
+            });
+
+            sqlStream.on("data", (result) => {
+               res.write(`${Object.values(result).join(",")}\r\n`);
             });
          });
    }
