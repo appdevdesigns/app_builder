@@ -149,7 +149,7 @@ let getSQL = ({ viewCsv, userData, extraWhere }) => {
                         f.settings.linkType == "one" &&
                         f.settings.linkViaType == "many"
                      ) {
-                        select = columnName;
+                        select = `\`${columnName}\``;
                      }
                      // M:1, 1:1 (isSource = false)
                      else if (
@@ -172,7 +172,7 @@ let getSQL = ({ viewCsv, userData, extraWhere }) => {
                      ) {
                         let joinTablename = f.joinTableName();
                         let joinColumnNames = f.joinColumnNames();
-                        select = `(SELECT GROUP_CONCAT(\`${joinColumnNames.targetColumnName}\` SEPARATOR ' & ') FROM \`${joinTablename}\` WHERE ${joinColumnNames.sourceColumnName} = \`uuid\`)`;
+                        select = `(SELECT GROUP_CONCAT(\`${joinColumnNames.targetColumnName}\` SEPARATOR ' & ') FROM \`${joinTablename}\` WHERE \`${joinColumnNames.sourceColumnName}\` = \`uuid\`)`;
                      }
 
                      break;
