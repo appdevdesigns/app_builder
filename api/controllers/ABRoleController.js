@@ -335,13 +335,13 @@ let ABRoleController = {
                   .then(function(role) {
                      app.role = role.id;
                      app.save()
-                        .catch((err) => {
-                           res.AD.error(err);
-                           next(err);
-                        })
                         .then(() => {
                            res.AD.success(role);
                            next();
+                        })
+                        .catch((err) => {
+                           res.AD.error(err);
+                           next(err);
                         });
                   });
             }

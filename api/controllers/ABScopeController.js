@@ -29,10 +29,10 @@ let ABScopeController = {
 
       ScopeModel.modelAPI()
          .findAll(cond, req.user.data)
-         .catch(res.AD.error)
          .then((scopes) => {
             res.AD.success(scopes || []);
-         });
+         })
+         .catch(res.AD.error);
    },
 
    // GET /app_builder/scope/:id
@@ -58,15 +58,15 @@ let ABScopeController = {
             },
             req.user.data
          )
-            .catch((err) => {
-               if (res) res.AD.error(err);
-
-               reject(err);
-            })
             .then((scope = []) => {
                if (res) res.AD.success(scope[0]);
 
                resolve(scope[0]);
+            })
+            .catch((err) => {
+               if (res) res.AD.error(err);
+
+               reject(err);
             });
       });
    },

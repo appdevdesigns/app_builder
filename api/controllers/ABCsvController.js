@@ -263,14 +263,14 @@ let ABCsvController = {
                      userData: req.user.data,
                      extraWhere: defCSV.settings.where
                   })
-                     .catch(bad)
                      .then((getKnexQuery) => {
                         // Get SQL stream
                         let knexQuery = getKnexQuery();
                         let stream = knexQuery.stream();
 
                         next(stream);
-                     });
+                     })
+                     .catch(bad);
                })
          )
          .then((sqlStream) => {
