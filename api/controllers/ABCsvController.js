@@ -1,5 +1,7 @@
-const ABGraphApplication = require("app_builder/api/graphModels/ABApplication");
-const ABGraphDataCollection = require("app_builder/api/graphModels/ABDataview");
+const ABGraphApplication = require("../graphModels/ABApplication");
+const ABGraphDataCollection = require("../graphModels/ABDataview");
+const ABObject = require("../classes/platform/ABObject");
+const ABObjectQuery = require("../classes/platform/ABObjectQuery");
 
 /**
  * @method getCsvWidget
@@ -27,7 +29,7 @@ let getCsvWidget = ({ appID, pageID, viewID }) => {
                   let page = app.pages((p) => p.id == pageID)[0];
                   if (!page) return fail("Could not found page");
 
-                  result = page.views((v) => v.id == viewID)[0];
+                  result = page.views((v) => v.id == viewID, true)[0];
                   if (!result)
                      return fail("Could not found CSV exporter widget");
 
@@ -108,12 +110,19 @@ let getSQL = ({ viewCsv, userData, extraWhere }) => {
    // }
 
    let knex = ABMigration.connection();
-   let query = obj.model().query();
    let options = {
       where: where,
       sort: sort,
       populate: true
    };
+
+   let query;
+   if (obj instanceof ABObjectQuery) {
+      query = ABMigration.connection().queryBuilder();
+      query.from(obj.dbViewName());
+   } else {
+      query = obj.model().query();
+   }
 
    return (
       Promise.resolve()
@@ -123,11 +132,15 @@ let getSQL = ({ viewCsv, userData, extraWhere }) => {
             let SQL;
 
             // Clear SELECT fields
-            query.eager("").clearSelect();
+            if (query.eager) query = query.eager("");
+            if (query.clearEager) query = query.clearEager();
+            query = query.clearSelect();
 
             // Convert display data to CSV file
             obj.fields().forEach((f) => {
                let select;
+               let columnName = f.columnName;
+               if (f.alias) columnName = `${f.alias}.${columnName}`;
 
                switch (f.key) {
                   case "connectObject":
@@ -136,7 +149,7 @@ let getSQL = ({ viewCsv, userData, extraWhere }) => {
                         f.settings.linkType == "one" &&
                         f.settings.linkViaType == "many"
                      ) {
-                        select = f.columnName;
+                        select = columnName;
                      }
                      // M:1, 1:1 (isSource = false)
                      else if (
@@ -168,7 +181,7 @@ let getSQL = ({ viewCsv, userData, extraWhere }) => {
                         CASE
                            ${(f.settings.options || [])
                               .map((opt) => {
-                                 return `WHEN \`${f.columnName}\` = "${opt.id}" THEN "${opt.text}"`;
+                                 return `WHEN \`${columnName}\` = "${opt.id}" THEN "${opt.text}"`;
                               })
                               .join(" ")}
                            ELSE ""
@@ -178,7 +191,7 @@ let getSQL = ({ viewCsv, userData, extraWhere }) => {
                   case "string":
                   case "LongText":
                      if (f.isMultilingual) {
-                        let transCol = (this.viewName
+                        let transCol = (f.object instanceof ABObjectQuery
                            ? "`{prefix}.translations`"
                            : "{prefix}.translations"
                         ).replace("{prefix}", f.dbPrefix().replace(/`/g, ""));
@@ -190,14 +203,14 @@ let getSQL = ({ viewCsv, userData, extraWhere }) => {
                            'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({transCol}, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({transCol}, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))'
                               .replace(/{transCol}/g, transCol)
                               .replace(/{languageCode}/g, languageCode)
-                              .replace(/{columnName}/g, f.columnName)
+                              .replace(/{columnName}/g, columnName)
                         );
                      } else {
-                        select = `IFNULL(\`${f.columnName}\`, '')`;
+                        select = `IFNULL(\`${columnName}\`, '')`;
                      }
                      break;
                   default:
-                     select = `IFNULL(\`${f.columnName}\`, '')`;
+                     select = `IFNULL(\`${columnName}\`, '')`;
                      break;
                }
 
