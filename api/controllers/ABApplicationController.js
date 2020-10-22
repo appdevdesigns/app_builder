@@ -11,12 +11,12 @@ var _ = require("lodash");
 var path = require("path");
 
 module.exports = {
-   _config: {
-      model: "abapplication", // all lowercase model name
-      actions: false,
-      shortcuts: false,
-      rest: false
-   },
+   // _config: {
+   //    model: "abapplication", // all lowercase model name
+   //    actions: false,
+   //    shortcuts: false,
+   //    rest: false
+   // },
 
    /**
     * GET /app_builder/page/:action_key/role
