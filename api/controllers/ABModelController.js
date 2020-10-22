@@ -2098,16 +2098,18 @@ console.error(err);
          // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
          object
             .queryCount({ where: where, populate: false }, req.user.data)
-            .first()
-            .catch((err) => {
-               resolvePendingTransaction();
-               res.AD.error(err);
-            })
-            .then((result) => {
-               resolvePendingTransaction();
-               res.AD.success(result);
+            .then((query) => {
+               query
+                  .first()
+                  .then((result) => {
+                     resolvePendingTransaction();
+                     res.AD.success(result);
+                  })
+                  .catch((err) => {
+                     resolvePendingTransaction();
+                     res.AD.error(err);
+                  });
             });
       });
    }
 };
-
