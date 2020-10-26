@@ -747,7 +747,17 @@ module.exports = class ABClassObject extends ABObjectCore {
                            };
 
                            (scopes || []).forEach((s) => {
-                              if (!s || !s.filter) return;
+                              if (
+                                 !s ||
+                                 (s.objectIds || []).indexOf(this.id) < 0
+                              )
+                                 return;
+
+                              // no where filter - return all data
+                              if (!s.filter) {
+                                 s.filter = {};
+                                 s.filter.glue = "or";
+                              }
 
                               let scopeRule = {
                                  glue: s.filter.glue,
@@ -1810,5 +1820,3 @@ module.exports = class ABClassObject extends ABObjectCore {
       }
    }
 };
-
-
