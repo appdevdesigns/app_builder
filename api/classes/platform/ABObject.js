@@ -785,14 +785,16 @@ module.exports = class ABClassObject extends ABObjectCore {
                               scopeWhere.rules.push(scopeRule);
                            });
 
-                           let isAdmin =
+                           let isSeeAll =
                               (scopes || []).filter((s) => s.allowAll).length >
                               0;
 
-                           // Check if Admin/Anonymous
-                           if (scopeWhere.rules.length < 1) {
-                              if (isAdmin) return next(false);
-                              else return next(true);
+                           if (isSeeAll) {
+                              return next(false);
+                           }
+                           // Anonymous
+                           else if (scopeWhere.rules.length == 0) {
+                              return next(true);
                            }
                            // Process filter policies
                            else {
@@ -808,10 +810,10 @@ module.exports = class ABClassObject extends ABObjectCore {
                   })
             )
             .then(
-               (isAnonymous) =>
+               (isBlocked) =>
                   new Promise((next, err) => {
                      // If user is anonymous, then return empty data.
-                     if (isAnonymous) {
+                     if (isBlocked) {
                         query.clearWhere().whereRaw("1 = 0");
                         return next();
                      }
