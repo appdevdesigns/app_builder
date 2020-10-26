@@ -397,7 +397,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
                // set value to each components
                var vComponent = f.component(App, idPrefix);
 
-               if (vComponent.onShow) vComponent.onShow();
+               // if (vComponent.onShow) vComponent.onShow();
 
                if (vComponent.logic && vComponent.logic.setValue) {
                   vComponent.logic.setValue(val);
