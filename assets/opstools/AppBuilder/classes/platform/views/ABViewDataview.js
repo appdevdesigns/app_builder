@@ -308,6 +308,10 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
             stopPos = this._startPos + 20;
          }
 
+         if (dc.settings.loadAll) {
+            stopPos = rows.length;
+         }
+
          var dataGrid = [];
          for (var i = this._startPos; i < stopPos; i++) {
             // get the components configuation
