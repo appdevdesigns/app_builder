@@ -1,6 +1,5 @@
 const ABGraphApplication = require("../graphModels/ABApplication");
 const ABGraphDataCollection = require("../graphModels/ABDataview");
-const ABObject = require("../classes/platform/ABObject");
 const ABObjectQuery = require("../classes/platform/ABObjectQuery");
 
 /**
