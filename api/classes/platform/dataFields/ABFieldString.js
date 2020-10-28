@@ -209,7 +209,7 @@ module.exports = class ABFieldString extends ABFieldStringCore {
          // we're not multilingual, so just tack this one on:
          if (!obj[this.columnName]) {
             obj[this.columnName] = {
-               anyOf: [{ type: "string" }, { type: "null" }]
+               anyOf: [{ type: "string" }, { type: "number" }, { type: "null" }]
             };
          }
       }

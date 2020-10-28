@@ -31,6 +31,8 @@ module.exports = {
    /* Users */
    "get /app_builder/user/list": "app_builder/ABUserController.getUserList",
 
+   "get /app_builder/user/myscopes": "app_builder/ABUserController.getMyScopes",
+
    "get /app_builder/user/:user/roles":
       "app_builder/ABUserController.getRoleScopes",
 

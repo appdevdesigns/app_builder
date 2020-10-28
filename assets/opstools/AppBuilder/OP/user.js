@@ -15,6 +15,15 @@ class OPUser {
             this.userList = data;
          });
       }
+
+      // get the user's scopes
+      if (this.scopeList == null) {
+         Comm.Service.get({ url: "/app_builder/user/myscopes" }).then(
+            (data) => {
+               this.scopeList = data;
+            }
+         );
+      }
    }
 }
 
@@ -37,5 +46,9 @@ export default {
 
    userlist: function() {
       return this.__user.userList || [];
+   },
+
+   scopes: function() {
+      return this.__user.scopeList || [];
    }
 };

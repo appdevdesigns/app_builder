@@ -6,7 +6,6 @@ const ABApplication = require(path.join(
    "platform",
    "ABApplication"
 ));
-const ABObject = require("../classes/platform/ABObject");
 const ABObjectQuery = require("../classes/platform/ABObjectQuery");
 
 /**
