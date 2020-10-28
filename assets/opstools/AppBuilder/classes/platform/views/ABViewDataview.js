@@ -303,7 +303,11 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
          let stopPos = rows.length;
 
          if (this._startPos == 0) {
-            stopPos = 20;
+            if (rows.length < 20) {
+               stopPos = rows.length;
+            } else {
+               stopPos = 20;
+            }
          } else if (rows.length - this._startPos > 20) {
             stopPos = this._startPos + 20;
          }
