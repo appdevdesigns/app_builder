@@ -690,7 +690,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 
                return d;
             });
-         } else if (data.id) {
+         } else if (data.id || data.uuid) {
             selectedData = data;
             selectedData.text =
                selectedData.text || linkedObject.displayData(selectedData);
