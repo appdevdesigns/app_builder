@@ -1573,12 +1573,13 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
          },
 
          busy: () => {
-            if ($$(this.ui.id).showProgress)
+            if ($$(this.ui.id) && $$(this.ui.id).showProgress)
                $$(this.ui.id).showProgress({ type: "icon" });
          },
 
          ready: () => {
-            if ($$(this.ui.id).hideProgress) $$(this.ui.id).hideProgress();
+            if ($$(this.ui.id) && $$(this.ui.id).hideProgress)
+               $$(this.ui.id).hideProgress();
          },
 
          editable: function() {
