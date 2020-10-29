@@ -520,5 +520,9 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
          boundComp.define("data", this.__treeCollection);
       });
    }
-};
 
+   get userScopes() {
+      if (!OP || !OP.User) return [];
+      return OP.User.scopes();
+   }
+};
