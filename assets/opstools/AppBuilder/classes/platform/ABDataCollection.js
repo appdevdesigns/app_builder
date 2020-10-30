@@ -76,6 +76,60 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
          // debugger;
          this.emit("ab.datacollection.delete", msg, data);
       });
+
+      // if we pass the master datacollection and the field it is linked to
+      // we want to bind it witht hat field as second param so dataFeed is
+      // used on the slave datacollection
+      let dataCollectionLink = this.datacollectionLink;
+      let fieldLink = this.fieldLink;
+      if (dataCollectionLink && fieldLink) {
+         let dc = this.__dataCollection;
+         // the second param is the field id we bind the data to the master with
+         dc.bind(dataCollectionLink.__dataCollection, fieldLink.id);
+         // defining dataFeed allows us to query the database when the table is scrolled
+         dc.define("dataFeed", (value, params) => {
+            // copy current wheres
+            var wheres = JSON.parse(
+               JSON.stringify(this.settings.objectWorkspace.filterConditions)
+            );
+            // add bind items data as a filter to wheres
+            if (value) {
+               wheres = {
+                  glue: "and",
+                  rules: [
+                     wheres,
+                     {
+                        alias: fieldLink.alias, // ABObjectQuery
+                        key: Object.keys(params)[0],
+                        rule: fieldLink.alias ? "contains" : "equals", // NOTE: If object is query, then use "contains" because ABOBjectQuery return JSON
+                        value: fieldLink.getRelationValue(
+                           dataCollectionLink.__dataCollection.getItem(value)
+                        )
+                     }
+                  ]
+               };
+               // wheres.rules.push({
+               //    alias: fieldLink.alias, // ABObjectQuery
+               //    key: Object.keys(params)[0],
+               //    rule: fieldLink.alias ? "contains" : "equals", // NOTE: If object is query, then use "contains" because ABOBjectQuery return JSON
+               //    value: fieldLink.getRelationValue(
+               //       dataCollectionLink.__dataCollection.getItem(value)
+               //    )
+               // });
+            }
+
+            // this is the same item that was already bound...don't reload data
+            if (JSON.stringify(this.__reloadWheres) == JSON.stringify(wheres)) {
+               return;
+            } else {
+               // now that we have the modified wheres the dataCollections wheres
+               // need to be modified for subsequent loads on scroll so lets set them
+               this.reloadWheres(wheres);
+               // reload data
+               this.reloadData(0, 20);
+            }
+         });
+      }
    }
 
    loadData(start, limit = 20) {
@@ -153,7 +207,7 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
     *
     * @param {Object} component - a webix element instance
     */
-   bind(component, dataCollectionLink, fieldLink) {
+   bind(component) {
       var dc = this.__dataCollection;
 
       // prevent bind many times
@@ -240,63 +294,6 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
                      this.on("loadData", component.___AD.onDcLoadData);
                   }
                }
-            }
-            // if we pass the master datacollection and the field it is linked to
-            // we want to bind it witht hat field as second param so dataFeed is
-            // used on the slave datacollection
-            if (dataCollectionLink && fieldLink) {
-               // the second param is the field id we bind the data to the master with
-               dc.bind(dataCollectionLink.__dataCollection, fieldLink.id);
-               // defining dataFeed allows us to query the database when the table is scrolled
-               dc.define("dataFeed", (value, params) => {
-                  // copy current wheres
-                  var wheres = JSON.parse(
-                     JSON.stringify(
-                        this.settings.objectWorkspace.filterConditions
-                     )
-                  );
-                  // add bind items data as a filter to wheres
-                  if (value) {
-                     wheres = {
-                        glue: "and",
-                        rules: [
-                           wheres,
-                           {
-                              alias: fieldLink.alias, // ABObjectQuery
-                              key: Object.keys(params)[0],
-                              rule: fieldLink.alias ? "contains" : "equals", // NOTE: If object is query, then use "contains" because ABOBjectQuery return JSON
-                              value: fieldLink.getRelationValue(
-                                 dataCollectionLink.__dataCollection.getItem(
-                                    value
-                                 )
-                              )
-                           }
-                        ]
-                     };
-                     // wheres.rules.push({
-                     //    alias: fieldLink.alias, // ABObjectQuery
-                     //    key: Object.keys(params)[0],
-                     //    rule: fieldLink.alias ? "contains" : "equals", // NOTE: If object is query, then use "contains" because ABOBjectQuery return JSON
-                     //    value: fieldLink.getRelationValue(
-                     //       dataCollectionLink.__dataCollection.getItem(value)
-                     //    )
-                     // });
-                  }
-
-                  // this is the same item that was already bound...don't reload data
-                  if (
-                     JSON.stringify(this.__reloadWheres) ==
-                     JSON.stringify(wheres)
-                  ) {
-                     return;
-                  } else {
-                     // now that we have the modified wheres the dataCollections wheres
-                     // need to be modified for subsequent loads on scroll so lets set them
-                     this.reloadWheres(wheres);
-                     // reload data
-                     this.reloadData(0, 20);
-                  }
-               });
             }
          } else {
             component.data.unsync();
