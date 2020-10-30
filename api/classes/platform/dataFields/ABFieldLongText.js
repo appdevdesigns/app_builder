@@ -180,7 +180,13 @@ module.exports = class ABFieldLongText extends ABFieldLongTextCore {
       } else {
          // we're not multilingual, so just tack this one on:
          if (!obj[this.columnName]) {
-            obj[this.columnName] = { type: "string", maxLength: 5000 };
+            obj[this.columnName] = {
+               anyOf: [
+                  { type: "string", maxLength: 5000 },
+                  { type: "number" },
+                  { type: "null" }
+               ]
+            };
          }
       }
    }

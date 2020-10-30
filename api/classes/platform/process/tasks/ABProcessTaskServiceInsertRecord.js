@@ -127,7 +127,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
       let previousData = this.processDataPrevious(instance);
 
       let getFieldValue = (object, fieldId, sourceData) => {
-         if (!object) return null;
+         if (!object || !sourceData) return null;
 
          let columnName;
 
@@ -199,7 +199,16 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                break;
             case "4": // formula value
                if (item.value) {
-                  result[field.columnName] = eval(item.value);
+                  let evalValue = eval(item.value);
+
+                  if (
+                     evalValue.toString &&
+                     (field.key == "string" || field.key == "LongText")
+                  ) {
+                     evalValue = evalValue.toString();
+                  }
+
+                  result[field.columnName] = evalValue;
                }
                break;
          }

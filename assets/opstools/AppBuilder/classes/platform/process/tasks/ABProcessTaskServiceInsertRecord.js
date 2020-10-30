@@ -255,6 +255,8 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
       let $fieldValues = $$(ids.fieldValues);
       let $fValueItems = $fieldValues.getChildViews() || [];
 
+      this.fieldValues = this.fieldValues || {};
+
       $fValueItems.forEach(($item) => {
          let fieldId = $item.config.fieldId;
          let fValue = this.fieldValues[fieldId] || {};
