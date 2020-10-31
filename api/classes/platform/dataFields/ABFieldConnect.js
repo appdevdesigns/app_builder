@@ -557,11 +557,19 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         let linkCol;
                         let linkCol2;
 
-                        // custom index
                         let linkFK2 = this.datasourceLink.PK();
+
+                        // check for custom Index field
                         let indexField2 = this.indexField2;
                         if (indexField2) {
-                           linkFK2 = indexField2.columnName;
+                           // verify which Field this custom index relates to:
+                           // if my object then linkFK
+                           if (indexField2.object.id === this.object.id) {
+                              linkFK = indexField2.columnName;
+                           } else {
+                              // else linkFK2
+                              linkFK2 = indexField2.columnName;
+                           }
                         }
 
                         linkCol = this.setNewColumnSchema(
