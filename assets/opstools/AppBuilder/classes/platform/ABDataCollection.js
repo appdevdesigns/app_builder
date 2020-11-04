@@ -82,7 +82,7 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
       // used on the slave datacollection
       let dataCollectionLink = this.datacollectionLink;
       let fieldLink = this.fieldLink;
-      if (dataCollectionLink && fieldLink) {
+      if (!this.settings.loadAll && dataCollectionLink && fieldLink) {
          let dc = this.__dataCollection;
          // the second param is the field id we bind the data to the master with
          dc.bind(dataCollectionLink.__dataCollection, fieldLink.id);
