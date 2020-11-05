@@ -784,6 +784,30 @@ module.exports = class ABViewForm extends ABViewFormCore {
 
             this.eventAdd({
                emitter: dc,
+               eventName: "initializingData",
+               listener: () => {
+                  let Form = $$(ids.component);
+                  if (Form) {
+                     Form.disable();
+                     if (Form.showProgress) Form.showProgress({ type: "icon" });
+                  }
+               }
+            });
+
+            this.eventAdd({
+               emitter: dc,
+               eventName: "initializedData",
+               listener: () => {
+                  let Form = $$(ids.component);
+                  if (Form) {
+                     Form.enable();
+                     if (Form.hideProgress) Form.hideProgress();
+                  }
+               }
+            });
+
+            this.eventAdd({
+               emitter: dc,
                eventName: "ab.datacollection.update",
                listener: (msg, data) => {
                   if (!data || !data.objectId) return;

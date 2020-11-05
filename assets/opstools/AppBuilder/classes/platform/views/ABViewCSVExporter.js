@@ -4,7 +4,7 @@ const RowFilter = require("../RowFilter");
 
 const ABViewCSVExporterPropertyComponentDefaults = ABViewCSVExporterCore.defaultValues();
 
-let FilterComponent = null;
+let PropertyFilter = null;
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -54,7 +54,7 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
 
       _logic.onFilterChange = () => {
          let view = _logic.currentEditObject();
-         let filterValues = FilterComponent.getValue() || {};
+         let filterValues = PropertyFilter.getValue() || {};
 
          let allComplete = true;
          (filterValues.rules || []).forEach((f) => {
@@ -221,15 +221,15 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
       );
 
       // Populate data to popups
-      FilterComponent.applicationLoad(view.application);
+      PropertyFilter.applicationLoad(view.application);
       let dc = view.datacollection;
       let obj = dc ? dc.datasource : null;
       if (obj) {
-         FilterComponent.fieldsLoad(obj.fields());
+         PropertyFilter.fieldsLoad(obj.fields());
       } else {
-         FilterComponent.fieldsLoad([]);
+         PropertyFilter.fieldsLoad([]);
       }
-      FilterComponent.setValue(view.settings.where);
+      PropertyFilter.setValue(view.settings.where);
 
       this.propertyBadgeNumber(ids, view);
 
@@ -247,8 +247,8 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
    static initPopupEditors(App, ids, _logic) {
       var idBase = "ABViewCSVExporterPropertyEditor";
 
-      FilterComponent = new RowFilter(App, idBase + "_filter");
-      FilterComponent.init({
+      PropertyFilter = new RowFilter(App, idBase + "_filter");
+      PropertyFilter.init({
          // when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
          onChange: _logic.onFilterChange
       });
@@ -257,7 +257,7 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
          view: "popup",
          width: 800,
          hidden: true,
-         body: FilterComponent.ui
+         body: PropertyFilter.ui
       });
    }
 
@@ -266,7 +266,7 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
 
       view.settings.dataviewID = $$(ids.datacollection).getValue();
       view.settings.hasHeader = $$(ids.hasHeader).getValue();
-      view.settings.where = FilterComponent.getValue();
+      view.settings.where = PropertyFilter.getValue();
 
       view.settings.buttonLabel =
          $$(ids.buttonLabel).getValue() ||
@@ -299,21 +299,42 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
    component(App, idBase) {
       idBase = idBase || "ABCSVExporter_" + this.id;
       let ids = {
-         button: App.unique(idBase + "_button")
+         button: App.unique(idBase + "_button"),
+         buttonFilter: App.unique(idBase + "_button_filter"),
+         popupFilter: App.unique(idBase + "_popup_filter")
       };
       let labels = {
          common: App.labels,
          component: {}
       };
 
+      let ClientFilter = new RowFilter(App, idBase + "_filter");
+
       let _ui = {
+         view: "layout",
+         type: "clean",
+         borderless: true,
          cols: [
+            {
+               id: ids.buttonFilter,
+               view: "button",
+               css: "webix_transparent",
+               type: "icon",
+               icon: "fa fa-filter",
+               borderless: true,
+               width: 50,
+               label: "",
+               click: () => {
+                  _logic.showFilterPopup();
+               }
+            },
             {
                id: ids.button,
                view: "button",
                css: "webix_primary",
                type: "icon",
                icon: "fa fa-download",
+               borderless: true,
                width:
                   this.settings.width ||
                   ABViewCSVExporterPropertyComponentDefaults.width,
@@ -321,7 +342,7 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
                   this.settings.buttonLabel ||
                   ABViewCSVExporterPropertyComponentDefaults.buttonLabel,
                click: () => {
-                  downloadCsvFile();
+                  _logic.downloadCsvFile();
                }
             },
             { fillspace: true }
@@ -329,15 +350,67 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
       };
 
       // make sure each of our child views get .init() called
-      let _init = (options) => {};
+      let _init = (options) => {
+         let dc = this.datacollection;
+         if (dc) {
+            let obj = dc.datasource;
 
-      let downloadCsvFile = () => {
-         let url = `/app_builder/application/${this.application.id}/page/${
-            this.pageRoot().id
-         }/view/${this.id}/csv`;
+            ClientFilter.applicationLoad(obj ? obj.application : null);
+            ClientFilter.fieldsLoad(obj ? obj.fields() : [], obj);
+         }
 
-         window.open(url);
+         ClientFilter.init({
+            onChange: _logic.onFilterChange
+         });
+         webix.ui({
+            view: "popup",
+            id: ids.popupFilter,
+            width: 800,
+            hidden: true,
+            body: ClientFilter.ui
+         });
       };
+
+      let _logic = (this._logic = {
+         downloadCsvFile: () => {
+            let url = `/app_builder/application/${this.application.id}/page/${
+               this.pageRoot().id
+            }/view/${this.id}/csv`;
+
+            let where = ClientFilter.getValue();
+            if (where && (where.rules || []).length) {
+               var t = [];
+
+               // Convert a object to Web Query String
+               for (var a in where) {
+                  var value = where[a];
+                  if (value === null || value === undefined) value = "";
+                  if (typeof value === "object") value = JSON.stringify(value);
+                  t.push(a + "=" + encodeURIComponent(value));
+               }
+               where = t.join("&");
+
+               url = `${url}?${where}`;
+            }
+
+            window.open(url);
+         },
+         showFilterPopup: () => {
+            let $buttonFilter = $$(ids.buttonFilter);
+            let $popupFilter = $$(ids.popupFilter);
+            if (!$popupFilter) return;
+
+            $popupFilter.show($buttonFilter ? $buttonFilter.$view : null);
+         },
+         onFilterChange: () => {
+            let $buttonFilter = $$(ids.buttonFilter);
+            if (!$buttonFilter) return;
+
+            let where = ClientFilter.getValue();
+            $buttonFilter.define("badge", (where.rules || []).length || null);
+            $buttonFilter.refresh();
+         }
+      });
 
       return {
          ui: _ui,
