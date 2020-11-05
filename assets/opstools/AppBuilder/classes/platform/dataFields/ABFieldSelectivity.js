@@ -76,6 +76,9 @@ module.exports = class ABFieldSelectivity extends ABField {
          );
       }
 
+      // store the field id so we can look it up on click events later
+      settings["field"] = this.id;
+
       // Prevent render selectivity duplicate
       if (domNode.selectivity != null) {
          // Refresh selectivity settings
@@ -96,7 +99,7 @@ module.exports = class ABFieldSelectivity extends ABField {
                      options.highlighted ? " highlighted" : ""
                   }"
 								style="background-color: #eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"
-								data-item-id="${options.id}">
+								data-item-id="${options.uuid}" data-field-id="${settings.field}">
 								<i class="fa fa-user" style="color: #666; opacity: 0.6;"></i> 
 								${options.text}
 								${
@@ -114,14 +117,14 @@ module.exports = class ABFieldSelectivity extends ABField {
                      options.highlighted ? " highlighted" : ""
                   }"
 								style="background-color: ${options.hex} !important;"
-								data-item-id="${options.id}">
-								${options.text}
-								${
+								data-item-id="${options.uuid}" data-field-id="${settings.field}">
+                        ${
                            settings.editPage
                               ? ` <a class="selectivity-multiple-selected-item-edit"><i class="fa fa-edit"></i></a>`
                               : ""
                         }
-								${
+                        ${options.text}
+                        ${
                            options.removable
                               ? ` <a class="selectivity-multiple-selected-item-remove"><i class="fa fa-remove"></i></a>`
                               : ""
@@ -138,19 +141,19 @@ module.exports = class ABFieldSelectivity extends ABField {
          settings.templates = {
             singleSelectedItem: function(options) {
                return `<span class="selectivity-single-selected-item" data-item-id="${
-                  options.id
-               }">
-							${
-                        options.removable
-                           ? '<a class="selectivity-single-selected-item-remove"><i class="fa fa-remove"></i></a>'
-                           : ""
-                     }
+                  options.uuid
+               }" data-field-id="${settings.field}">
 							${
                         settings.editPage
                            ? '<a class="selectivity-single-selected-item-edit"><i class="fa fa-edit"></i></a>'
                            : ""
                      }
 							${options.text}
+                     ${
+                        options.removable
+                           ? '<a class="selectivity-single-selected-item-remove"><i class="fa fa-remove"></i></a>'
+                           : ""
+                     }
 						</span>`;
             }
          };
@@ -180,7 +183,16 @@ module.exports = class ABFieldSelectivity extends ABField {
                         let rowId = parentElm.getAttribute("data-item-id");
                         if (!rowId) return;
 
-                        instance.emit("editPage", rowId);
+                        let fieldId = parentElm.getAttribute("data-field-id");
+                        if (!fieldId) return;
+
+                        let thisField = instance.object.fields(
+                           (f) => f.id == fieldId,
+                           true
+                        )[0];
+                        if (!thisField) return;
+
+                        thisField.emit("editPage", rowId);
                      },
                      true
                   );
