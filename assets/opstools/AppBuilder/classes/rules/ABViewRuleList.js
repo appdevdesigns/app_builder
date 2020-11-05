@@ -335,17 +335,17 @@ module.exports = class ABViewRuleList {
     */
    process(options) {
       return new Promise((resolve, reject) => {
-         var numDone = 0;
-         var onDone = () => {
-            numDone++;
-            if (numDone >= this.listRules.length) {
-               resolve();
-            }
-         };
-
          let listRules = (this.listRules || []).filter(
             (rule) => !rule.isPreProcess
          );
+
+         var numDone = 0;
+         var onDone = () => {
+            numDone++;
+            if (numDone >= listRules.length) {
+               resolve();
+            }
+         };
 
          listRules.forEach((rule) => {
             rule
