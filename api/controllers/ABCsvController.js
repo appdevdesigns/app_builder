@@ -177,6 +177,14 @@ let getSQL = ({ defCSV, userData, extraWhere }) => {
                      }
 
                      break;
+                  case "formula":
+                     select = obj.convertFormulaField(f);
+                     break;
+                  case "calculate":
+                  case "TextFormula":
+                     // TODO
+                     select = null;
+                     break;
                   case "list":
                      select = `
                         CASE
@@ -223,7 +231,8 @@ let getSQL = ({ defCSV, userData, extraWhere }) => {
             if (defCSV.settings.hasHeader == true) {
                // SELECT "One", "Two", "Three", "Four", "Five", "Six" UNION ALL
                SQLHeader = `SELECT ${obj
-                  .fields()
+                  // TODO: fix .calculate and .TextFormula fields
+                  .fields((f) => f.key != "calculate" && f.key != "TextFormula")
                   .map((f) => `"${f.label}"`)
                   .join(",")} UNION ALL`;
             }
@@ -247,6 +256,11 @@ let ABCsvController = {
       let pageID = req.param("pageID");
       let viewID = req.param("viewID");
 
+      let where = req.query;
+      if (where && where.rules && typeof where.rules == "string") {
+         where.rules = JSON.parse(where.rules);
+      }
+
       let outputFilename;
 
       Promise.resolve()
@@ -260,7 +274,11 @@ let ABCsvController = {
                   getSQL({
                      defCSV,
                      userData: req.user.data,
-                     extraWhere: defCSV.settings.where
+                     // extraWhere: viewCsv.settings.where
+                     extraWhere:
+                        where && where.rules && where.rules.length
+                           ? where
+                           : null
                   })
                      .then((getKnexQuery) => {
                         // Get SQL stream
