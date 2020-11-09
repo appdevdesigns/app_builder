@@ -1152,12 +1152,17 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                            // Load all already
                            return next();
 
+                        let limit = null;
+
+                        // limit pull data to reduce time and performance loading
+                        if (dc.__dataCollection.count() > 300) limit = 300;
+
                         // Load all data
-                        dc.reloadData(0, null)
+                        dc.reloadData(0, limit)
                            .catch(err)
                            .then(() => {
                               // Should set .loadAll to this data collection ?
-                              dc.settings.loadAll = true;
+                              if (limit == null) dc.settings.loadAll = true;
 
                               next();
                            });
