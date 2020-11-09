@@ -312,14 +312,22 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
 
                      // TODO workaround : where should I add a new link field to link object
                      if (field.key == "connectObject") {
+                        let rand = Math.floor(Math.random() * 1000);
                         field.settings.isSource = 1;
 
                         var linkObject = field.datasourceLink;
 
-                        // TODO : should check duplicate column
-
                         // 1:1, 1:M, M:1 should have same column name
                         let linkColumnName = field.columnName;
+
+                        // check duplicate column
+                        if (
+                           linkObject.fields(
+                              (f) => f.columnName == linkColumnName
+                           ).length
+                        ) {
+                           linkColumnName = `${linkColumnName}${rand}`;
+                        }
 
                         // M:N should have different column name into the join table
                         if (
@@ -327,8 +335,7 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                            field.settings.linkViaType == "many"
                         ) {
                            // NOTE : include random number to prevent duplicate column names
-                           let rand = Math.floor(Math.random() * 1000);
-                           linkColumnName = _currentObject.name + rand;
+                           linkColumnName = `${_currentObject.name}${rand}`;
                         }
 
                         linkCol = linkObject.fieldNew({
