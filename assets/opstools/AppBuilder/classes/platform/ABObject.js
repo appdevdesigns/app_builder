@@ -447,7 +447,7 @@ module.exports = class ABObject extends ABObjectCore {
       var columnNameLookup = {};
 
       // get the header for each of our fields:
-      this.fields().forEach(function(f) {
+      this.fields(null, true).forEach(function(f) {
          var header = f.columnHeader({
             isObjectWorkspace: isObjectWorkspace,
             editable: isEditable
