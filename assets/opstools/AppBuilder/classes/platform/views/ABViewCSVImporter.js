@@ -1118,8 +1118,8 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   id: f.columnIndex,
                   header: f.field.label,
                   editor: editor,
-                  template: function(obj, common) {
-                     return obj[f.columnIndex].replace(/[<]/g, "&lt;");
+                  template: function(obj, common, value, col, ind) {
+                     return value.replace(/[<]/g, "&lt;");
                   },
                   minWidth: 150,
                   fillspace: true
