@@ -161,8 +161,8 @@ module.exports = class ABFieldString extends ABFieldStringCore {
       config.editor = "text";
       config.css = "textCell";
       // config.sort   = 'string'
-      config.template = function(obj, common) {
-         return obj[this.id].replace(/[<]/g, "&lt;");
+      config.template = (obj, common, value, col, ind) => {
+         return value.replace(/[<]/g, "&lt;");
       };
 
       return config;
