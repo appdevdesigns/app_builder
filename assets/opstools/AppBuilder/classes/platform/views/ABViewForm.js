@@ -1096,13 +1096,16 @@ module.exports = class ABViewForm extends ABViewFormCore {
             // clear current cursor on load
             // if (this.settings.clearOnLoad || _logic.callbacks.clearOnLoad() ) {
             if (this.settings.clearOnLoad) {
+               dc.setCursor(null);
+               _logic.displayData(null);
+            }
+            // if the cursor is cleared before or after we need to make
+            // sure the reload view button does not appear
+            if (this.settings.clearOnLoad || this.settings.clearOnSave) {
                if ($$(ids.component + "_reloadView"))
                   $$(ids.component + "_reloadView")
                      .getParentView()
                      .removeView(ids.component + "_reloadView");
-
-               dc.setCursor(null);
-               _logic.displayData(null);
             }
 
             // pull data of current cursor
