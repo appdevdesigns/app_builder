@@ -1106,7 +1106,11 @@ module.exports = class ABClassObject extends ABObjectCore {
                                  }
 
                                  // DATE (not DATETIME)
-                                 else if (field.key == "date") {
+                                 else if (
+                                    field.key == "date" &&
+                                    condition.rule != "last_days" &&
+                                    condition.rule != "next_days"
+                                 ) {
                                     condition.key = `DATE(${condition.key})`;
                                     condition.value = `DATE("${condition.value}")`;
                                  }

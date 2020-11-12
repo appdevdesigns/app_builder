@@ -1174,32 +1174,35 @@ module.exports = class ABViewGrid extends ABViewGridCore {
                      new Promise((next, err) => {
                         if (!fnFilter) return next();
 
-                        let table = $$(DataTable.ui.id);
-                        table.filter((rowData) => {
-                           // rowData is null when is not load from paging
-                           if (rowData == null) return false;
+                        // wait the data are parsed into webix.datatable
+                        setTimeout(() => {
+                           let table = $$(DataTable.ui.id);
+                           table.filter((rowData) => {
+                              // rowData is null when is not load from paging
+                              if (rowData == null) return false;
 
-                           return fnFilter(rowData);
-                        });
+                              return fnFilter(rowData);
+                           });
 
-                        if (
-                           this.settings.gridFilter.globalFilterPosition ==
-                           "single"
-                        ) {
-                           if (table.count() > 0) {
-                              table.show();
-                              table.select(table.getFirstId(), false);
-                              table.callEvent("onItemClick", [
-                                 table.getFirstId(),
-                                 "auto",
-                                 null
-                              ]);
-                           } else {
-                              table.hide();
+                           if (
+                              this.settings.gridFilter.globalFilterPosition ==
+                              "single"
+                           ) {
+                              if (table.count() > 0) {
+                                 table.show();
+                                 table.select(table.getFirstId(), false);
+                                 table.callEvent("onItemClick", [
+                                    table.getFirstId(),
+                                    "auto",
+                                    null
+                                 ]);
+                              } else {
+                                 table.hide();
+                              }
                            }
-                        }
 
-                        next();
+                           next();
+                        }, 500);
                      })
                );
          },
