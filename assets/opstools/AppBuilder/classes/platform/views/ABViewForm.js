@@ -1096,6 +1096,11 @@ module.exports = class ABViewForm extends ABViewFormCore {
             // clear current cursor on load
             // if (this.settings.clearOnLoad || _logic.callbacks.clearOnLoad() ) {
             if (this.settings.clearOnLoad) {
+               if ($$(ids.component + "_reloadView"))
+                  $$(ids.component + "_reloadView")
+                     .getParentView()
+                     .removeView(ids.component + "_reloadView");
+
                dc.setCursor(null);
                _logic.displayData(null);
             }
