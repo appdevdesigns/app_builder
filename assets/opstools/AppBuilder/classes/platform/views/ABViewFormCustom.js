@@ -1,6 +1,7 @@
 const ABViewFormCustomCore = require("../../core/views/ABViewFormCustomCore");
 
 const ABFieldImage = require("../dataFields/ABFieldImage");
+const DEFAULT_HEIGHT = 80;
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -98,15 +99,15 @@ module.exports = class ABViewFormCustom extends ABViewFormCustomCore {
       let height = 38;
       if (field instanceof ABFieldImage) {
          if (field.settings.useHeight) {
-            height = parseInt(field.settings.imageHeight) || 80;
+            height = parseInt(field.settings.imageHeight) || DEFAULT_HEIGHT;
          } else {
-            height = 80;
+            height = DEFAULT_HEIGHT + 300;
          }
       } else if (
          settings.showLabel == true &&
          settings.labelPosition == "top"
       ) {
-         height = 80;
+         height = DEFAULT_HEIGHT;
       }
 
       var template = (
@@ -180,8 +181,8 @@ module.exports = class ABViewFormCustom extends ABViewFormCustomCore {
 
          if (field instanceof ABFieldImage) {
             options.height = field.settings.useHeight
-               ? parseInt(field.settings.imageHeight) || 80
-               : 80;
+               ? parseInt(field.settings.imageHeight) || DEFAULT_HEIGHT
+               : DEFAULT_HEIGHT;
             options.width = field.settings.useWidth
                ? parseInt(field.settings.imageWidth) || newWidth
                : newWidth;
