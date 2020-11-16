@@ -464,18 +464,22 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
                                  }
                               });
                               item.label = state.value;
-                              this.updateItem(item);
+                              this.updateItem(editor.id, item);
                            }
-                           // we need to update the drag and drop tree item as well so get it first
-                           var treeItem = $$(ids.treeDnD).getItem(editor.id);
-                           // change the value (since that is what is being displayed)
-                           treeItem.value = state.value;
-                           // then change the aliasname (since that property controls the final view)
-                           treeItem.aliasname = state.value;
-                           // trigger a save so when we update the preview it has the new data to work with
-                           _logic.onChange();
-                           // tell the tree to update with new alias (this will trigger a page reorder save and the values already saved will be used to rebuild the component)
-                           $$(ids.treeDnD).updateItem(editor.id, treeItem);
+
+                           if ($$(ids.treeDnD).exists(editor.id)) {
+                              // we need to update the drag and drop tree item as well so get it first
+                              var treeItem =
+                                 $$(ids.treeDnD).getItem(editor.id) || {};
+                              // change the value (since that is what is being displayed)
+                              treeItem.value = state.value;
+                              // then change the aliasname (since that property controls the final view)
+                              treeItem.aliasname = state.value;
+                              // trigger a save so when we update the preview it has the new data to work with
+                              _logic.onChange();
+                              // tell the tree to update with new alias (this will trigger a page reorder save and the values already saved will be used to rebuild the component)
+                              $$(ids.treeDnD).updateItem(editor.id, treeItem);
+                           }
                         }
                      }
                   }

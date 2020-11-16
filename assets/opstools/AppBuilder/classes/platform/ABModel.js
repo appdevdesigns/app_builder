@@ -396,4 +396,24 @@ module.exports = class ABModel extends ABModelCore {
             });
       });
    }
+
+   /**
+    * @method batchUpdate
+    * update value to many rows on the server.
+    */
+   batchUpdate({ rowIds, values }) {
+      return new Promise((resolve, reject) => {
+         OP.Comm.Service.put({
+            url: this.object.urlRestBatch(),
+            params: {
+               rowIds,
+               values
+            }
+         })
+            .then(() => {
+               resolve(true);
+            })
+            .catch(reject);
+      });
+   }
 };

@@ -64,8 +64,43 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
          // refresh UI
          currView.emit("properties.updated", currView);
 
-         // save
          currView.settings.dataviewID = dcId;
+
+         this.propertyAvailableFields(ids, currView, { selectAll: true });
+
+         // save
+         currView.save();
+      };
+
+      _logic.listTemplate = (field, common) => {
+         let currView = _logic.currentEditObject();
+
+         let fieldComponent = field.formComponent();
+         if (fieldComponent == null)
+            return `<i class='fa fa-times'></i>  ${field.label} <div class='ab-component-form-fields-component-info'> Disable </div>`;
+
+         let componentKey = fieldComponent.common().key;
+         let formComponent = currView.application.viewAll(
+            (v) => v.common().key == componentKey
+         )[0];
+
+         return `${common.markCheckbox(field)} ${
+            field.label
+         } <div class='ab-component-form-fields-component-info'> <i class='fa fa-${
+            formComponent ? formComponent.common().icon : "fw"
+         }'></i> ${
+            formComponent ? L(formComponent.common().labelKey, "") : ""
+         } </div>`;
+      };
+
+      _logic.check = (e, fieldId) => {
+         // update UI list
+         let item = $$(ids.fields).getItem(fieldId);
+         item.selected = item.selected ? 0 : 1;
+         $$(ids.fields).updateItem(fieldId, item);
+
+         let currView = _logic.currentEditObject();
+         this.propertyEditorValues(ids, currView);
          currView.save();
       };
 
@@ -109,6 +144,39 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                on: {
                   onChange: _logic.selectSource
                }
+            }
+         },
+         {
+            view: "fieldset",
+            label: L(
+               "ab.component.csvImporter.availableFields",
+               "*Available Fields:"
+            ),
+            labelWidth: App.config.labelWidthLarge,
+            body: {
+               type: "clean",
+               padding: 10,
+               rows: [
+                  {
+                     name: "fields",
+                     view: "list",
+                     select: false,
+                     minHeight: 250,
+                     template: _logic.listTemplate,
+                     type: {
+                        markCheckbox: function(item) {
+                           return (
+                              "<span class='check webix_icon fa fa-" +
+                              (item.selected ? "check-" : "") +
+                              "square-o'></span>"
+                           );
+                        }
+                     },
+                     onClick: {
+                        check: _logic.check
+                     }
+                  }
+               ]
             }
          },
          {
@@ -194,6 +262,13 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
       $$(ids.buttonLabel).setValue(view.settings.buttonLabel);
       $$(ids.width).setValue(view.settings.width);
 
+      // compatible to previous version
+      let availableFldOptions = {};
+      if (view.settings.availableFieldIds == null) {
+         availableFldOptions.selectAll = true;
+      }
+
+      this.propertyAvailableFields(ids, view, availableFldOptions);
       this.propertyUpdateRules(ids, view);
       this.populateBadgeNumber(ids, view);
 
@@ -214,6 +289,38 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
       view.settings.dataviewID = $$(ids.datacollection).getValue();
       view.settings.buttonLabel = $$(ids.buttonLabel).getValue();
       view.settings.width = $$(ids.width).getValue();
+
+      view.settings.availableFieldIds = [];
+      let fields = $$(ids.fields).find({ selected: true });
+      (fields || []).forEach((f) => {
+         view.settings.availableFieldIds.push(f.id);
+      });
+   }
+
+   static propertyAvailableFields(ids, view, options = {}) {
+      let datacollection = view.application.datacollections(
+         (dc) => dc.id == view.settings.dataviewID
+      )[0];
+      let object = datacollection ? datacollection.datasource : null;
+
+      view.settings = view.settings || {};
+      let availableFields = view.settings.availableFieldIds || [];
+
+      // Pull field list
+      let fieldOptions = [];
+      if (object != null) {
+         fieldOptions = object.fields().map((f) => {
+            f.selected = options.selectAll
+               ? true
+               : availableFields.filter((fieldId) => f.id == fieldId).length >
+                 0;
+
+            return f;
+         });
+      }
+
+      $$(ids.fields).clearAll();
+      $$(ids.fields).parse(fieldOptions);
    }
 
    static propertyUpdateRules(ids, view) {
@@ -325,6 +432,9 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                click: () => {
                   _logic.showPopup();
                }
+            },
+            {
+               fillspace: true
             }
          ]
       };
@@ -778,6 +888,15 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             if (_currentObject) {
                fieldList =
                   _currentObject.fields((f) => {
+                     // available fields
+                     if (
+                        this.settings.availableFieldIds &&
+                        this.settings.availableFieldIds.length &&
+                        this.settings.availableFieldIds.indexOf(f.id) < 0
+                     ) {
+                        return false;
+                     }
+
                      // filter editable fields
                      let formComp = f.formComponent();
                      if (!formComp) return true;
