@@ -25,15 +25,17 @@ module.exports = class ABViewChartPie extends ABViewChartPieCore {
     */
    editorComponent(App, mode) {
       let idBase = "ABViewChartPieEditorComponent";
-      let ids = {
-         component: App.unique(idBase + "_component")
-      };
+      // let ids = {
+      //    component: App.unique(idBase + "_component")
+      // };
 
-      let baseEditor = super.editorComponent(App, mode, {
-         componentId: ids.component
-      });
+      // let baseEditor = super.editorComponent(App, mode, {
+      //    componentId: ids.component
+      // });
 
-      return baseEditor;
+      // return baseEditor;
+
+      return this.component(App, idBase);
    }
 
    //
@@ -162,7 +164,7 @@ module.exports = class ABViewChartPie extends ABViewChartPieCore {
     * @param {obj} App
     * @return {obj} UI component
     */
-   component(App) {
+   component(App, idBase) {
       let baseComp = super.component(App);
 
       // get a UI component for each of our child views
@@ -171,10 +173,21 @@ module.exports = class ABViewChartPie extends ABViewChartPieCore {
          viewComponents.push(v.component(App));
       });
 
-      var idBase = "ABViewChartPie_" + this.id;
+      idBase = idBase || "ABViewChartPie_" + this.id;
       var ids = {
          component: App.unique(idBase + "_component")
       };
+
+      let legend = null;
+      if (this.settings.isLegend == true) {
+         legend = {
+            width: this.parent.settings.labelWidth,
+            template:
+               this.settings.isLegend == true
+                  ? `<div style='font-size: ${this.settings.labelFontSize}px;'>#label#</div>`
+                  : ""
+         };
+      }
 
       var _ui = {
          id: ids.component,
@@ -185,16 +198,8 @@ module.exports = class ABViewChartPie extends ABViewChartPieCore {
                : ABViewChartPiePropertyComponentDefaults.pieType,
          value: "#value#",
          color: "#color#",
-         legend:
-            this.settings.isLegend == true
-               ? "<div style='font-size:" +
-                 this.settings.labelFontSize +
-                 "px;'>#label#</div>"
-               : "",
-         pieInnerText:
-            "<div style='font-size:" +
-            this.settings.innerFontSize +
-            "px;'>#value#</div>",
+         legend: legend,
+         pieInnerText: `<div style='font-size: ${this.settings.innerFontSize}px;'>#value#</div>`,
          shadow: 1,
          height:
             this.settings.height != null
