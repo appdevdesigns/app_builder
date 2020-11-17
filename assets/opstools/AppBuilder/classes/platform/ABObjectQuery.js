@@ -253,7 +253,7 @@ module.exports = class ABObjectQuery extends ABObjectQueryCore {
                   return (
                      common.icon(item, common) +
                      (originTemplate
-                        ? originTemplate(item, common)
+                        ? originTemplate(item, common, item[h.id])
                         : item[h.id])
                   );
                else return "";
