@@ -6,70 +6,62 @@
  */
 
 const async = require("async");
+const _ = require("lodash");
 
-const ApplicationGraph = require("../graphModels/ABApplication");
-// const RoleGraph = require("../graphModels/ABRole");
-// const ScopeGraph = require("../graphModels/ABScope");
+const ABApplication = require("../classes/platform/ABApplication");
 
 const ABModelController = require("./ABModelController");
-
-function getRoleObject() {
-   const ROLE_OBJECT_ID = ABSystemObject.getObjectRoleId();
-   return ABObjectCache.get(ROLE_OBJECT_ID);
-}
-
-function getScopeObject() {
-   const SCOPE_OBJECT_ID = ABSystemObject.getObjectScopeId();
-   return ABObjectCache.get(SCOPE_OBJECT_ID);
-}
 
 let ABRoleController = {
    // GET /app_builder/role
    find: function(req, res) {
       let cond = req.body || {};
-      let RoleModel = getRoleObject();
+      let RoleModel = ABSystemObject.getObjectRole();
 
-      if (cond.populate == null) cond.populate = true;
+      if (cond.populate == null || _.isUndefined(cond.populate))
+         cond.populate = true;
 
-      RoleModel.queryFind(cond, req.user.data)
-         .catch(res.AD.error)
+      RoleModel.modelAPI()
+         .findAll(cond, req.user.data)
          .then((roles) => {
             res.AD.success(roles || []);
-         });
+         })
+         .catch(res.AD.error);
    },
 
    // GET /app_builder/role/:id
    findOne: function(req, res) {
       let id = req.param("id");
-      let RoleModel = getRoleObject();
+      let RoleModel = ABSystemObject.getObjectRole();
 
       return new Promise((resolve, reject) => {
-         RoleModel.queryFind(
-            {
-               where: {
-                  glue: "and",
-                  rules: [
-                     {
-                        key: RoleModel.PK(),
-                        rule: "equals",
-                        value: id
-                     }
-                  ]
+         RoleModel.modelAPI()
+            .findAll(
+               {
+                  where: {
+                     glue: "and",
+                     rules: [
+                        {
+                           key: RoleModel.PK(),
+                           rule: "equals",
+                           value: id
+                        }
+                     ]
+                  },
+                  limit: 1,
+                  populate: true
                },
-               limit: 1,
-               populate: true
-            },
-            req.user.data
-         )
-            .catch((err) => {
-               if (res) res.AD.error(err);
-
-               reject(err);
-            })
+               req.user.data
+            )
             .then((role = []) => {
                if (res) res.AD.success(role[0]);
 
                resolve(role[0]);
+            })
+            .catch((err) => {
+               if (res) res.AD.error(err);
+
+               reject(err);
             });
       });
    },
@@ -93,7 +85,7 @@ let ABRoleController = {
    roleScope: function(req, res) {
       let id = req.param("id");
 
-      let ScopeModel = getScopeObject();
+      let ScopeModel = ABSystemObject.getObjectScope();
 
       let connectedField = ScopeModel.fields(
          (f) =>
@@ -115,7 +107,7 @@ let ABRoleController = {
          ]
       };
 
-      return ScopeModel.queryFind(
+      return ScopeModel.modelAPI().findAll(
          {
             where: where
          },
@@ -126,6 +118,8 @@ let ABRoleController = {
    // GET /app_builder/role/:id/users
    roleUsers: function(req, res) {
       return (
+         // Q: what happens when .findOne() rejects() the promise?
+         //    does this terminate?  or does this cause an unhandled exception?
          Promise.resolve()
             // Find role
             .then(() => ABRoleController.findOne(req))
@@ -250,15 +244,16 @@ let ABRoleController = {
 
       async.waterfall([
          function(next) {
+            debugger;
             // Find application
-            ApplicationGraph.findOne(appId)
-               .catch((err) => {
-                  res.AD.error(err);
-                  next(err);
-               })
-               .then((app) => {
-                  next(null, app);
-               });
+            var app = ABApplication.applicationForID(appId);
+            if (app) {
+               next(null, app);
+               return;
+            }
+            var err = new Error(`Unknown application id [${appId}]`);
+            res.AD.error(err);
+            next(err);
          },
          function(app, next) {
             // Get roles from action key
@@ -310,15 +305,16 @@ let ABRoleController = {
 
       async.waterfall([
          function(next) {
+            debugger;
             // Find application
-            ApplicationGraph.findOne(appId)
-               .catch((err) => {
-                  res.AD.error(err);
-                  next(err);
-               })
-               .then((record) => {
-                  next(null, record);
-               });
+            var app = ABApplication.applicationForID(appId);
+            if (app) {
+               next(null, app);
+               return;
+            }
+            var err = new Error(`Unknown application id [${appId}]`);
+            res.AD.error(err);
+            next(err);
          },
          function(app, next) {
             if (app.role) {
@@ -339,13 +335,13 @@ let ABRoleController = {
                   .then(function(role) {
                      app.role = role.id;
                      app.save()
-                        .catch((err) => {
-                           res.AD.error(err);
-                           next(err);
-                        })
                         .then(() => {
                            res.AD.success(role);
                            next();
+                        })
+                        .catch((err) => {
+                           res.AD.error(err);
+                           next(err);
                         });
                   });
             }
@@ -371,14 +367,16 @@ let ABRoleController = {
          [
             function(next) {
                // Find application
-               ApplicationGraph.findOne(appId)
-                  .catch((err) => {
-                     res.AD.error(err);
-                     next(err);
-                  })
-                  .then((app) => {
-                     next(null, app);
-                  });
+               debugger;
+               // Find application
+               var app = ABApplication.applicationForID(appId);
+               if (app) {
+                  next(null, app);
+                  return;
+               }
+               var err = new Error(`Unknown application id [${appId}]`);
+               res.AD.error(err);
+               next(err);
             },
             function(app, next) {
                if (app.role && app.role.id) {
@@ -427,14 +425,16 @@ let ABRoleController = {
       async.waterfall([
          function(next) {
             // Get application
-            ApplicationGraph.findOne(appId)
-               .catch((err) => {
-                  res.AD.error(err);
-                  next(err);
-               })
-               .then((app) => {
-                  next(null, app);
-               });
+            debugger;
+            // Find application
+            var app = ABApplication.applicationForID(appId);
+            if (app) {
+               next(null, app);
+               return;
+            }
+            var err = new Error(`Unknown application id [${appId}]`);
+            res.AD.error(err);
+            next(err);
          },
          function(app, next) {
             // Register the permission action

@@ -650,7 +650,7 @@ msgstr "(ลิ้งค์ไปยัง <b>{0}</b>)"
 #. path: app_builder
 #. code: th
 #. key: ab.object.delete.title
-msgid "Delete data field"
+msgid "Delete?"
 msgstr "ลบคอลัมน์"
 
 #. path: app_builder

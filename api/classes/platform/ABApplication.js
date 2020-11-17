@@ -1,4 +1,7 @@
+const _ = require("lodash");
 const path = require("path");
+// debugger;
+const uuidv4 = require("uuid");
 
 const ABApplicationCore = require(path.join(
    __dirname,
@@ -6,6 +9,9 @@ const ABApplicationCore = require(path.join(
    "core",
    "ABApplicationCore.js"
 ));
+
+const ABDataCollection = require(path.join(__dirname, "ABDataCollection"));
+const ABDefinition = require(path.join(__dirname, "ABDefinition"));
 
 const ABClassObject = require(path.join(__dirname, "ABObject"));
 const ABClassQuery = require(path.join(__dirname, "ABObjectQuery"));
@@ -28,9 +34,57 @@ const ABProcessTaskManager = require(path.join(
    "ABProcessTaskManager"
 ));
 
+var __AllQueries = {
+   /* ABQuery.id : ABObjectQuery */
+};
+// {obj} : a hash of all ABObjectQueriess in our system.
+
+var __AllDatacollections = {
+   /* ABDatacollection.id : ABDataCollection */
+};
+// {obj} : a hash of all ABDataCollection in our system.
+
 module.exports = class ABClassApplication extends ABApplicationCore {
    constructor(attributes) {
       super(attributes);
+   }
+
+   static applications(fn = () => true) {
+      var allDefs = ABDefinition.definitions((f) => {
+         return f.type == "application";
+      });
+      var allApps = [];
+      (allDefs || []).forEach((def) => {
+         var app = ABClassApplication.applicationForID(def.id);
+         if (app) {
+            allApps.push(app);
+         }
+      });
+
+      return allApps;
+   }
+   static applicationForID(id) {
+      var myDef = ABDefinition.definition(id);
+      if (myDef) {
+         return new ABClassApplication(myDef);
+      }
+      return null;
+   }
+
+   static definitionForID(id) {
+      return ABDefinition.definition(id);
+   }
+
+   areaKey() {
+      return _.kebabCase(`ab-${this.name}`);
+   }
+
+   actionKeyName() {
+      return `opstools.${this.validAppName()}.view`;
+   }
+
+   validAppName() {
+      return AppBuilder.rules.toApplicationNameFormat(this.name);
    }
 
    cloneDeep(value) {
@@ -46,15 +100,119 @@ module.exports = class ABClassApplication extends ABApplicationCore {
    }
 
    ///
+   /// Definition
+   ///
+
+   datacollectionsAll() {
+      // On the server, we shouldn't work directly with "datacollections".
+      // let's simply return [] for now:
+      return [];
+      /*
+      return ABDefinition.definitions((d)=>d.type == "datacollection").map((d) => {
+         return __AllDatacollections[d.id]
+            ? __AllDatacollections[d.id]
+            : this.datacollectionNew(d);
+      });
+      */
+   }
+
+   datacollectionNew(values) {
+      var dc = new ABDataCollection(values, this);
+      dc.on("destroyed", () => {
+         delete __AllDatacollections[dc.id];
+      });
+      __AllDatacollections[dc.id] = dc;
+      return dc;
+   }
+
+   definitionForID(id) {
+      return ABDefinition.definition(id);
+   }
+
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @param {array} ids
+    *         the array of ids to insert any relevant .ids into
+    */
+   exportIDs(ids) {
+      // make sure we don't get into an infinite loop:
+      if (ids.indexOf(this.id) > -1) return;
+
+      ids.push(this.id);
+
+      // start with Objects:
+      this.objectsIncluded().forEach((o) => {
+         o.exportIDs(ids);
+      });
+
+      // Queries
+      this.queriesIncluded().forEach((q) => {
+         q.exportIDs(ids);
+      });
+
+      // Datacollections
+      // NOTE: currently the server doesn't make instances of DataCollections
+      // so we manually parse the related info here:
+      this.datacollectionIDs.forEach((dID) => {
+         if (ids.indexOf(dID) > -1) return;
+
+         var def = this.definitionForID(dID);
+         if (def) {
+            ids.push(dID);
+            if (def.settings.datasourceID) {
+               var object = this.objects((o) => {
+                  return o.id == def.settings.datasourceID;
+               })[0];
+               if (object) {
+                  object.exportIDs(ids);
+               }
+            }
+         }
+      });
+
+      // Processes
+      this.processes().forEach((p) => {
+         p.exportIDs(ids);
+      });
+
+      // Pages
+      // NOTE: currently the server doesn't make instances of ABViews
+      // so we manually parse the object data here:
+      var parseView = (view) => {
+         if (ids.indexOf(view.id) > -1) return;
+         ids.push(view.id);
+         (view.pageIDs || []).forEach((pid) => {
+            var pdef = this.definitionForID(pid);
+            if (pdef) {
+               parseView(pdef);
+            }
+         });
+
+         (view.viewIDs || []).forEach((vid) => {
+            var vdef = this.definitionForID(vid);
+            if (vdef) {
+               parseView(vdef);
+            }
+         });
+      };
+
+      var pageIDs = this._pages.map((p) => p.id);
+      (pageIDs || []).forEach((pid) => {
+         var pdef = this.definitionForID(pid);
+         if (pdef) {
+            parseView(pdef);
+         }
+      });
+
+      // return only unique entries:
+      ids = _.uniq(ids);
+   }
+
+   ///
    /// Objects
    ///
-   objects(filter) {
-      filter =
-         filter ||
-         function() {
-            return true;
-         };
-
+   objects(filter = () => true) {
       return (ABObjectCache.list() || []).filter(filter);
    }
 
@@ -94,7 +252,7 @@ module.exports = class ABClassApplication extends ABApplicationCore {
    }
 
    processNew(id) {
-      var processDef = ABDefinitionModel.definitionForID(id);
+      var processDef = ABDefinition.definition(id);
       if (processDef) {
          return new ABProcess(processDef, this);
       }
@@ -112,7 +270,7 @@ module.exports = class ABClassApplication extends ABApplicationCore {
     * @return {ABProcessTask}
     */
    processElementNew(id, process) {
-      var taskDef = ABDefinitionModel.definitionForID(id);
+      var taskDef = ABDefinition.definition(id);
       // var taskDef = ABDefinition.definition(id);
       if (taskDef) {
          switch (taskDef.type) {
@@ -133,6 +291,16 @@ module.exports = class ABClassApplication extends ABApplicationCore {
       return null;
    }
 
+   queriesAll() {
+      return ABDefinition.allQueries().map((d) => {
+         return __AllQueries[d.id] ? __AllQueries[d.id] : this.queryNew(d);
+      });
+   }
+
+   queriesClear() {
+      __AllQueries = {};
+   }
+
    /**
     * @method queryNew()
     *
@@ -142,7 +310,9 @@ module.exports = class ABClassApplication extends ABApplicationCore {
     * @return {ABClassQuery}
     */
    queryNew(values) {
-      return new ABClassQuery(values, this);
+      var q = new ABClassQuery(values, this);
+      __AllQueries[q.id] = q;
+      return q;
    }
 
    /**
@@ -155,5 +325,9 @@ module.exports = class ABClassApplication extends ABApplicationCore {
     */
    mobileAppNew(values) {
       return new ABMobileApp(values, this);
+   }
+
+   uuid() {
+      return uuidv4();
    }
 };

@@ -26,6 +26,46 @@ module.exports = class ABDefinition extends ABDefinitionCore {
    ///
 
    /**
+    * @method all()
+    *
+    * return the current definitions.
+    *
+    * @param {fn} filter   an optional filter that works on the ABDefinition
+    * @return [array] of ABDefinition
+    */
+   static all(filter = () => true) {
+      return Object.keys(__AllDefinitions)
+         .map((k) => {
+            return __AllDefinitions[k];
+         })
+         .filter(filter)
+         .map((d) => {
+            return d.json;
+         });
+   }
+
+   static allObjects(f = () => true) {
+      var allObjs = ABDefinition.all((d) => {
+         return d.type == "object";
+      });
+      return allObjs.filter(f);
+   }
+
+   static allQueries(f = () => true) {
+      var allObjs = ABDefinition.all((d) => {
+         return d.type == "query";
+      });
+      return allObjs.filter(f);
+   }
+
+   static allDatacollections(f = () => true) {
+      var allObjs = ABDefinition.all((d) => {
+         return d.type == "datacollection";
+      });
+      return allObjs.filter(f);
+   }
+
+   /**
     * @method create()
     *
     * create a given ABDefinition
@@ -72,6 +112,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
          (allDefinitions || []).forEach((def) => {
             __AllDefinitions[def.id] = def;
          });
+         return allDefinitions;
       });
    }
 
@@ -88,9 +129,18 @@ module.exports = class ABDefinition extends ABDefinitionCore {
       return OP.Comm.Service.put({
          url: `/app_builder/abdefinitionmodel/${id}`,
          data: data
-      }).then((serverDef) => {
-         return (__AllDefinitions[serverDef.id] = serverDef);
-      });
+      })
+         .then((serverDef) => {
+            return (__AllDefinitions[serverDef.id] = serverDef);
+         })
+         .catch((err) => {
+            if (err.toString().indexOf("Not Found") > -1) {
+               return this.create(data);
+            }
+            // keep the error propagating:
+            console.error(err);
+            throw err;
+         });
    }
 
    static definition(id) {
@@ -99,6 +149,12 @@ module.exports = class ABDefinition extends ABDefinitionCore {
          return def.json;
       }
       return null;
+   }
+
+   static insert(def) {
+      if (def) {
+         __AllDefinitions[def.id] = def;
+      }
    }
 
    fromValues(attributes) {

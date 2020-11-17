@@ -170,34 +170,37 @@ module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
             CurrentEditor.formBusy();
 
             setTimeout(() => {
-               var values = CurrentEditor.values();
-               if (!values) {
-                  SaveButton.enable();
-                  CurrentEditor.formReady();
-                  return;
-               }
+               // var values = CurrentEditor.values();
+               CurrentEditor.values().then((values) => {
+                  if (!values) {
+                     SaveButton.enable();
+                     CurrentEditor.formReady();
+                     return;
+                  }
 
-               // this interface only creates Root Pages, or pages related to
-               var page = null;
-               if (values.useParent && values.parent) {
-                  page = values.parent;
-               } else if (values.parent) {
-                  page = values.parent.pageNew(values);
-               } else {
-                  page = CurrentApplication.pageNew(values);
-               }
+                  // this interface only creates Root Pages, or pages related to
+                  var page = null;
+                  if (values.useParent && values.parent) {
+                     page = values.parent;
+                  } else if (values.parent) {
+                     page = values.parent.pageNew(values);
+                  } else {
+                     page = CurrentApplication.pageNew(values);
+                  }
 
-               var validator = page.isValid(values);
-               if (validator.fail()) {
-                  CurrentEditor.errors(validator);
-                  return;
-               }
+                  var validator = page.isValid(values);
+                  if (validator.fail()) {
+                     CurrentEditor.errors(validator);
+                     return;
+                  }
 
-               let includeSubview = true;
+                  let includeSubview = true;
 
-               page
-                  .save(includeSubview)
-                  .then(() => {
+                  page
+                     .save(includeSubview)
+                     .then(() => {
+                        // Q: in the new ABDefinition approach, do we need to do this?
+                        /*
                      // save sub-pages sequentially
                      var subTasks = Promise.resolve();
                      page.pages().forEach((subPage) => {
@@ -205,28 +208,31 @@ module.exports = class AB_Work_Interface_List_NewPage extends ABComponent {
                            subPage.save(includeSubview)
                         );
                      });
+                     */
 
-                     _logic.callbacks.onSave(page);
+                        _logic.callbacks.onSave(page);
 
-                     BlankPage.clear();
-                     QuickPage.clear();
-                     // ReportPage.clear();
+                        BlankPage.clear();
+                        QuickPage.clear();
+                        // ReportPage.clear();
 
-                     _logic.hide();
+                        _logic.hide();
 
-                     // the CurrentApplication has changed it's values, so
-                     // refresh our editors with the curent values:
-                     _logic.applicationLoad(CurrentApplication);
+                        // the CurrentApplication has changed it's values, so
+                        // refresh our editors with the curent values:
+                        _logic.applicationLoad(CurrentApplication);
 
-                     SaveButton.enable();
-                     CurrentEditor.formReady();
-                  })
-                  .catch((err) => {
-                     // TODO: error message
+                        SaveButton.enable();
+                        CurrentEditor.formReady();
+                     })
+                     .catch((err) => {
+                        // TODO: error message
+                        console.error(err);
 
-                     SaveButton.enable();
-                     CurrentEditor.formReady();
-                  });
+                        SaveButton.enable();
+                        CurrentEditor.formReady();
+                     });
+               });
             }, 50);
          },
 

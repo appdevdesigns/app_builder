@@ -885,20 +885,20 @@ module.exports = class ABWorkQueryWorkspaceDesign extends ABComponent {
                )[0];
                if (objectLink) return resolve(objectLink);
 
-               // Find object in the current application
+               // Find object from our complete list of Objects
                objectLink = CurrentQuery.application.objects(
                   (obj) => obj.id == objectId
                )[0];
                if (objectLink) return resolve(objectLink);
 
                // Find object from database
-               CurrentQuery.application
-                  .objectGet(objectId)
-                  .catch(reject)
-                  .then((obj) => {
-                     objectLink = obj;
-                     resolve(objectLink);
-                  });
+               // CurrentQuery.application
+               //    .objectGet(objectId)
+               //    .catch(reject)
+               //    .then((obj) => {
+               //       objectLink = obj;
+               //       resolve(objectLink);
+               //    });
             });
          },
 

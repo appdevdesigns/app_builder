@@ -1350,10 +1350,26 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                CurrentDatacollection.loadData(0);
             } else {
                CurrentDatacollection.loadData(0, 30).catch((err) => {
-                  webix.message({
-                     type: "error",
-                     text: err.message
-                  });
+                  var message = err.toString();
+                  if (typeof err == "string") {
+                     try {
+                        var jErr = JSON.parse(err);
+                        if (jErr.data && jErr.data.sqlMessage) {
+                           message = jErr.data.sqlMessage;
+                        }
+                     } catch (e) {}
+                  }
+
+                  $$(ids.error).show();
+                  $$(ids.error_msg).define("label", message);
+                  $$(ids.error_msg).refresh();
+
+                  // webix.alert({
+                  //     title: "Error loading object Values ",
+                  //     ok: "fix it",
+                  //     text: message,
+                  //     type: "alert-error"
+                  // });
 
                   console.error(err);
                });

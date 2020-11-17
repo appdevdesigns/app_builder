@@ -22,7 +22,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
    do(instance, trx) {
       this.object = this.application.objects((o) => o.id == this.objectID)[0];
       if (!this.object) {
-         let errorMessage = "Could not found the object to insert record task";
+         let errorMessage = "Could not find the object to insert record task";
          this.log(instance, errorMessage);
          return Promise.reject(new Error(errorMessage));
       }
@@ -60,14 +60,14 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                      },
                      populate: true
                   })
-                  .catch(bad)
                   .then((result) => {
                      this.stateUpdate(instance, {
                         data: result[0]
                      });
                      this.stateCompleted(instance);
                      next(true);
-                  });
+                  })
+                  .catch(bad);
             });
          });
    }

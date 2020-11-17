@@ -182,19 +182,9 @@ module.exports = class ABViewKanban extends ABViewKanbanCore {
       let SourceSelector = $$(ids.datacollection);
 
       // Pull data collections to options
-      let dcOptions = view.application
-         .datacollections((dc) => dc.settings && !dc.settings.isQuery)
-         .map((dc) => {
-            return {
-               id: dc.id,
-               value: dc.label
-            };
-         });
-
-      dcOptions.unshift({
-         id: null,
-         value: "[Select]"
-      });
+      let dcOptions = view.propertyDatacollections(
+         (dc) => dc.settings && !dc.settings.isQuery
+      );
       SourceSelector.define("options", dcOptions);
       SourceSelector.define("value", datacollectionId);
       SourceSelector.refresh();

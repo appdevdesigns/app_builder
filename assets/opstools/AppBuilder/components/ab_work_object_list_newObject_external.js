@@ -11,6 +11,8 @@ const ABField = require("../classes/platform/dataFields/ABField.js");
 // const ABObject = require('../classes/ABObject.js');
 const ABFieldManager = require("../classes/core/ABFieldManager.js");
 
+const ABDefinition = require("../classes/platform/ABDefinition.js");
+
 module.exports = class AB_Work_Object_List_NewObject_External extends ABComponent {
    constructor(App) {
       super(App, "ab_work_object_list_newObject_external");
@@ -144,6 +146,7 @@ module.exports = class AB_Work_Object_List_NewObject_External extends ABComponen
                   _logic.busyEnd();
                })
                .catch((err) => {
+                  console.error(err);
                   _logic.busyEnd();
                });
          },
@@ -254,38 +257,36 @@ module.exports = class AB_Work_Object_List_NewObject_External extends ABComponen
 
             this.abExternal
                .tableImport(tableName, columns, connName)
-               .then((objectList) => {
+               .then((definitionList) => {
+                  // insert the new definitions into our live system.
+                  (definitionList || []).forEach((def) => {
+                     ABDefinition.insert(def);
+                  });
+
                   saveButton.enable();
                   _logic.busyEnd();
 
-                  if (objectList && !objectList.forEach)
-                     objectList = [objectList];
-
-                  objectList.forEach((objValue) => {
-                     var indexObj = -1,
-                        updateObj = currentApp.objectNew(objValue); // the import object
-
-                     currentApp.objects().forEach((obj, index) => {
-                        if (obj.id == objValue.id) indexObj = index;
-                     });
-
-                     // Update a object into list
-                     if (indexObj > -1) {
-                        currentApp._objects[indexObj] = updateObj;
+                  var updateObj = null;
+                  var objDef = definitionList.find((d) => d.type == "object");
+                  if (objDef) {
+                     var def = ABDefinition.definition(objDef.id);
+                     if (def) {
+                        updateObj = currentApp.objectNew(def);
                      }
-                     // Add new object to list
-                     else {
-                        currentApp._objects.push(updateObj);
-                     }
+                  }
 
-                     if (tableName == updateObj.tableName)
-                        _logic.callbacks.onDone(updateObj);
+                  currentApp.objectInsert(updateObj).then(() => {
+                     _logic.callbacks.onDone(updateObj);
                   });
-
-                  // _logic.callbacks.onDone(newObj);
                })
                .catch((err) => {
                   console.log("ERROR:", err);
+                  webix.alert({
+                     title: "Error Importing External Object",
+                     ok: "fix it",
+                     text: err.toString(),
+                     type: "alert-error"
+                  });
                   saveButton.enable();
                   _logic.busyEnd();
                });
@@ -376,28 +377,28 @@ module.exports = class AB_Work_Object_List_NewObject_External extends ABComponen
                   type: {
                      height: 40
                   },
-                  activeContent: {
-                     isvisible: {
-                        view: "checkbox",
-                        width: 30
-                     },
-                     fieldKey: {
-                        view: "combo",
-                        width: 120,
-                        options: {
-                           body: {
-                              template:
-                                 '<span class="webix_icon fa fa-#icon#" style="float: left; line-height: 30px;"></span>' +
-                                 '<span style="float: left; width: 40px;">#name#</span>',
-                              data: _logic.getTypeOptions()
-                           }
-                        }
-                     },
-                     label: {
-                        view: "text",
-                        width: 170
-                     }
-                  },
+                  // activeContent: {
+                  //    isvisible: {
+                  //       view: "checkbox",
+                  //       width: 30
+                  //    },
+                  //    fieldKey: {
+                  //       view: "combo",
+                  //       width: 120,
+                  //       options: {
+                  //          body: {
+                  //             template:
+                  //                '<span class="webix_icon fa fa-#icon#" style="float: left; line-height: 30px;"></span>' +
+                  //                '<span style="float: left; width: 40px;">#name#</span>',
+                  //             data: _logic.getTypeOptions()
+                  //          }
+                  //       }
+                  //    },
+                  //    label: {
+                  //       view: "text",
+                  //       width: 170
+                  //    }
+                  // },
                   template: (obj, common) => {
                      // For disabled columns, display strikethrough text
                      if (obj.disabled) {
@@ -414,20 +415,23 @@ module.exports = class AB_Work_Object_List_NewObject_External extends ABComponen
                      }
                      // For normal columns, display checkbox and text
                      else {
-                        return `
-                                        <span style="float: left;">${common.isvisible(
-                                           obj,
-                                           common
-                                        )}</span>
-                                        <span style="float: left;">${common.fieldKey(
-                                           obj,
-                                           common
-                                        )}</span>
-                                        <span style="float: left;">${common.label(
-                                           obj,
-                                           common
-                                        )}</span>
-                                        `;
+                        // NOTE: webix v7 removes ActiveContent
+                        // so refactor this:
+                        // return `
+                        //                 <span style="float: left;">${common.isvisible(
+                        //                    obj,
+                        //                    common
+                        //                 )}</span>
+                        //                 <span style="float: left;">${common.fieldKey(
+                        //                    obj,
+                        //                    common
+                        //                 )}</span>
+                        //                 <span style="float: left;">${common.label(
+                        //                    obj,
+                        //                    common
+                        //                 )}</span>
+                        //                 `;
+                        return `${obj.label}`;
                      }
                   }
                },

@@ -238,7 +238,7 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
 
             /* Objects */
             let dcOptions =
-               CurrentApplication.datacollections().map((dc) => {
+               CurrentApplication.datacollectionsIncluded().map((dc) => {
                   return {
                      id: dc.id,
                      value: dc.label
@@ -281,8 +281,9 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
             return new ABDataCollection(dvConfig, CurrentApplication);
          },
 
-         getFormView: (datacollection, options = {}) => {
+         getFormView: (datacollection, options = {}, parent) => {
             let formSettings = {
+               key: ABViewForm.common().key,
                label: datacollection.label + " Form",
                settings: {
                   dataviewID: datacollection.id,
@@ -309,35 +310,193 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
             }
 
             // create a new form instance
-            let newForm = new ABViewForm(formSettings, CurrentApplication);
+            let newForm = parent.viewNew(formSettings);
 
             // populate fields to a form
+            var allFieldSaves = [];
             let object = datacollection.datasource;
             if (object) {
                object.fields().forEach((f, index) => {
-                  newForm.addFieldToForm(f, index);
+                  var field = newForm.addFieldToForm(f, index);
+                  if (field) {
+                     allFieldSaves.push(field.save());
+                  }
                });
             }
 
             // Add action button to the form
-            newForm._views.push(
-               new ABViewFormButton(
-                  {
-                     label: "Form buttons",
-                     settings: {
-                        includeSave: true,
-                        includeCancel: options.includeCancel || false,
-                        includeReset: false
-                     },
-                     position: {
-                        y: object.fields().length
-                     }
-                  },
-                  CurrentApplication
-               )
-            );
+            var button = newForm.viewNew({
+               key: ABViewFormButton.common().key,
+               label: "Form buttons",
+               settings: {
+                  includeSave: true,
+                  includeCancel: options.includeCancel || false,
+                  includeReset: false
+               },
+               position: {
+                  y: object.fields().length
+               }
+            });
+            newForm._views.push(button);
+            allFieldSaves.push(button.save());
+            // newForm._views.push(
+            //    new ABViewFormButton(
+            //       {
+            //          label: "Form buttons",
+            //          settings: {
+            //             includeSave: true,
+            //             includeCancel: options.includeCancel || false,
+            //             includeReset: false
+            //          },
+            //          position: {
+            //             y: object.fields().length
+            //          }
+            //       },
+            //       CurrentApplication
+            //    )
+            // );
 
-            return newForm;
+            return Promise.all(allFieldSaves).then(() => {
+               return newForm;
+            });
+         },
+
+         createFormPage: function(Label, parent = null, useDC = null) {
+            var NewPage = null;
+            var subViewSaves = [];
+            if (!useDC) {
+               useDC = CurrentDC;
+            }
+
+            return Promise.resolve()
+               .then(() => {
+                  // Add a 'add' page
+                  NewPage = new ABViewPage(
+                     {
+                        name: Label,
+                        label: Label,
+                        settings: {
+                           type: "popup"
+                        }
+                     },
+                     CurrentApplication,
+                     parent
+                  );
+
+                  // NOTE: the order we are doing this here:
+                  // Create the object
+                  // add to the Parent's ._views
+                  // then object.save()
+                  // when all child ._views are saved, then we
+                  // perform the .save() on the Parent object.
+                  // this will create all the Items with the fewest
+                  // number of .save()s
+                  var AddPageTitle = NewPage.viewNew({
+                     key: ABViewLabel.common().key,
+                     label: Label,
+                     text: Label,
+                     settings: {
+                        format: 1
+                     }
+                  });
+                  NewPage._views.push(AddPageTitle);
+                  subViewSaves.push(AddPageTitle.save());
+               })
+               .then(() => {
+                  return _logic
+                     .getFormView(
+                        useDC,
+                        {
+                           clearOnLoad: true
+                        },
+                        NewPage
+                     )
+                     .then((AddForm) => {
+                        NewPage._views.push(AddForm);
+                        subViewSaves.push(AddForm.save());
+                     });
+               })
+               .then(() => {
+                  return Promise.all(subViewSaves).then(() => {
+                     // return the NewPage just before it should be .saved()
+                     // so the parent can add it to it's .views
+                     return NewPage;
+                  });
+               });
+         },
+
+         createMenu: function(options, Parent) {
+            var settings = {
+               key: ABViewMenu.common().key,
+               label: "Menu",
+               settings: {
+                  columnSpan: 1,
+                  rowSpan: 1,
+                  orientation: "x",
+                  buttonStyle: "ab-menu-default",
+                  menuAlignment: "ab-menu-right",
+                  menuInToolbar: 1,
+                  menuPadding: 10,
+                  menuTheme: "webix_dark",
+                  menuPosition: "right",
+                  menuTextLeft: "",
+                  menuTextCenter: "",
+                  menuTextRight: "",
+                  pages: [],
+                  order: []
+               }
+            };
+
+            if (options.label) {
+               settings.label = options.label;
+               settings.translations = [
+                  {
+                     language_code: "en",
+                     label: options.label
+                  }
+               ];
+            }
+
+            options.settings = options.settings || {};
+
+            // copy over the base options:
+            Object.keys(options).forEach((k) => {
+               if (k != "settings") {
+                  settings[k] = options[k];
+               }
+            });
+
+            // now copy over the options.settings:
+            var skipSettings = ["pages", "order"];
+            Object.keys(options.settings).forEach((k) => {
+               if (skipSettings.indexOf(k) == -1) {
+                  settings.settings[k] = options.settings[k];
+               }
+            });
+
+            (options.settings.pages || []).forEach((p) => {
+               var pEntry = {
+                  pageId: p.pageId,
+                  tabId: "",
+                  type: "page",
+                  aliasname: p.label,
+                  isChecked: true,
+                  translations: [
+                     {
+                        language_code: "en",
+                        label: p.label,
+                        aliasname: p.label
+                     }
+                  ],
+                  parent: 0,
+                  position: 0,
+                  icon: p.icon || "plus"
+               };
+               settings.settings.pages.push(pEntry);
+               settings.settings.order.push(pEntry);
+            });
+
+            return Parent.viewNew(settings);
          },
 
          getDetailView: function() {
@@ -356,566 +515,514 @@ module.exports = class AB_Work_Interface_List_NewPage_QuickPage extends ABCompon
             );
 
             // populate fields to a form
+            var allFieldSaves = [];
             var object = CurrentDC.datasource;
             if (object) {
                object.fields().forEach((f, index) => {
-                  newDetail.addFieldToView(f, index);
+                  var field = newDetail.addFieldToView(f, index);
+                  allFieldSaves.push(field.save());
                });
             }
 
-            return newDetail;
+            return Promise.all(allFieldSaves).then(() => {
+               return newDetail;
+            });
+         },
+
+         createSubTab: function(parent) {
+            var settings = {
+               key: ABViewTab.common().key,
+               label: "Tab",
+               name: "Tab",
+               settings: {
+                  height: 400,
+                  minWidth: 0,
+                  stackTabs: 0,
+                  darkTheme: 1,
+                  sidebarWidth: 200,
+                  sidebarPos: "left",
+                  iconOnTop: 0,
+                  columnSpan: 1,
+                  rowSpan: 1
+               },
+               position: {
+                  y: 2
+               }
+            };
+
+            return parent.viewNew(settings);
+         },
+
+         createTabView: function(parent, childDC) {
+            var settings = {
+               key: "viewcontainer",
+               icon: "braille",
+               tabicon: "",
+               name: childDC.label,
+               settings: {
+                  columns: 1,
+                  removable: true,
+                  movable: true
+               },
+               translations: [
+                  {
+                     language_code: "en",
+                     label: childDC.label
+                  }
+               ],
+               position: {
+                  dx: 1,
+                  dy: 1
+               }
+            };
+
+            var tabView = parent.viewNew(settings);
+
+            return Promise.resolve()
+               .then(() => {
+                  // add Menu
+                  var menu = _logic.createMenu(
+                     {
+                        name: `${childDC.label}.menu`,
+                        label: `${childDC.label}.menu`,
+                        settings: {
+                           menuTheme: "webix_dark",
+                           menuTextLeft: childDC.label,
+                           pages: [
+                              {
+                                 pageId: OP.Util.uuid(), // Q: So what really goes here? : subAddPages[datacollectionId],
+                                 label: `Add ${childDC.label}`,
+                                 icon: "plus"
+                              }
+                           ]
+                        }
+                     },
+                     tabView
+                  );
+                  tabView._views.push(menu);
+
+                  // add Grid
+                  var grid = tabView.viewNew({
+                     key: ABViewGrid.common().key,
+                     label: `${childDC.label}'s grid`,
+                     settings: {
+                        dataviewID: childDC.id,
+                        height: 300
+                     },
+                     position: {
+                        y: 1
+                     }
+                  });
+                  tabView._views.push(grid);
+
+                  var allSaves = [];
+                  allSaves.push(menu.save());
+                  allSaves.push(grid.save());
+                  return Promise.all(allSaves);
+               })
+               .then(() => {
+                  return tabView;
+               });
          },
 
          values: function() {
-            if (!CurrentDC || !CurrentDC.datasource) return null;
+            if (!CurrentDC || !CurrentDC.datasource) {
+               return Promise.resolve(() => {
+                  return null;
+               });
+            }
 
             // TODO : validate unique page's name
-
-            let pages = [],
-               views = [],
-               formValues = $$(ids.form).getValues(),
+            let formValues = $$(ids.form).getValues(),
                subValues = $$(ids.subDVs).getValues();
-
-            let addPageId = null,
-               editPageId = null,
-               viewPageId = null;
 
             let currLabel = CurrentDC.datasource.label;
 
-            // Add a 'add' page
-            if (formValues.addable) {
-               addPageId = OP.Util.uuid();
+            // Now that we need .ids, this should be a Promise chain
+            // so we can perform the necessary .save() and get the id's
+            var BasePage = null;
+            var EditPage = null;
+            var ViewPage = null;
 
-               let addForm = _logic.getFormView(CurrentDC, {
-                  clearOnLoad: true
-               });
-
-               // Add a 'add' page
-               pages.push({
-                  id: addPageId,
-                  key: ABViewPage.common().key,
-                  icon: ABViewPage.common().icon,
-                  name: `Add ${currLabel}`,
-                  settings: {
-                     type: "popup"
-                  },
-                  views: [
-                     // Title
+            return Promise.resolve()
+               .then(() => {
+                  // Create the Base Page That we will add subPages and Views to:
+                  BasePage = new ABViewPage(
                      {
+                        name: $$(ids.name)
+                           .getValue()
+                           .trim()
+                     },
+                     CurrentApplication
+                  );
+               })
+               .then(() => {
+                  // Start with the AddPage
+
+                  if (formValues.addable) {
+                     // addPageId = OP.Util.uuid();
+                     var AddPage = null;
+                     return _logic
+                        .createFormPage(`Add ${currLabel}`, BasePage)
+                        .then((newAddPage) => {
+                           AddPage = newAddPage;
+                           BasePage._pages.push(AddPage);
+                           AddPage.parent = BasePage;
+                           return AddPage.save();
+                        })
+                        .then(() => {
+                           // Add a menu to the BasePage:
+                           var menu = _logic.createMenu(
+                              {
+                                 settings: {
+                                    menuTheme: "webix_dark",
+                                    menuTextLeft: currLabel,
+                                    pages: [
+                                       {
+                                          pageId: AddPage.id,
+                                          label: `Add ${currLabel}`
+                                       }
+                                    ]
+                                 }
+                              },
+                              BasePage
+                           );
+                           BasePage._views.push(menu);
+                           return menu.save();
+                        });
+                  } //  end if addable
+               })
+               .then(() => {
+                  // Add a 'edit' page
+                  if (formValues.editable) {
+                     // editPageId = OP.Util.uuid();
+
+                     return _logic
+                        .createFormPage(`Edit ${currLabel}`, BasePage)
+                        .then((newPage) => {
+                           EditPage = newPage;
+                           BasePage._pages.push(EditPage);
+                           EditPage.parent = BasePage;
+                           return EditPage.save();
+                        });
+                  }
+               })
+               .then(() => {
+                  // View Page
+                  if (formValues.viewable) {
+                     return Promise.resolve()
+                        .then(() => {
+                           // create the View Page
+                           ViewPage = new ABViewPage(
+                              {
+                                 name: `Details of ${currLabel}`,
+                                 settings: {
+                                    type: "popup"
+                                 }
+                              },
+                              CurrentApplication
+                           );
+                        })
+                        .then(() => {
+                           // add Menu & Title
+                           var menu = _logic.createMenu(
+                              {
+                                 settings: {
+                                    menuTheme: "bg_gray",
+                                    menuTextLeft: `Details ${currLabel}`,
+                                    pages: [
+                                       {
+                                          pageId: EditPage.id,
+                                          label: `Edit ${currLabel}`
+                                       }
+                                    ]
+                                 }
+                              },
+                              ViewPage
+                           );
+                           ViewPage._views.push(menu);
+                           return menu.save();
+                        })
+                        .then(() => {
+                           // add new Detail View
+                           return _logic.getDetailView().then((newDetail) => {
+                              newDetail.position = newDetail.position || {};
+                              newDetail.position.y = 1;
+
+                              ViewPage._views.push(newDetail);
+                              newDetail.parent = ViewPage;
+                              return newDetail.save();
+                           });
+                        })
+                        .then(() => {
+                           return new Promise((resolve, reject) => {
+                              // Process Any SubValues
+                              let tabSubChildren = null;
+                              let subAddPages = {}; // { dataCollectionId: "uuid", pageId: "uuid" }
+
+                              var allKeys = Object.keys(subValues);
+                              function processKey(cb) {
+                                 // # {fn} processKey
+                                 // recursively process each subValue key and create
+                                 // the appropriate Tab or Page
+
+                                 // when finished, call the cb()
+                                 if (allKeys.length == 0) {
+                                    cb();
+                                 } else {
+                                    // get the next key
+                                    var key = allKeys.shift();
+                                    if (subValues[key]) {
+                                       let vals = key.split("|"),
+                                          datacollectionId = vals[0],
+                                          flag = vals[1]; // 'list' or 'form'
+
+                                       let childDC = CurrentApplication.datacollections(
+                                          (dc) => dc.id == datacollectionId
+                                       )[0];
+
+                                       if (
+                                          subAddPages[datacollectionId] == null
+                                       )
+                                          subAddPages[
+                                             datacollectionId
+                                          ] = OP.Util.uuid();
+
+                                       // Add grids of sub-dcs
+                                       if (flag == "list") {
+                                          if (!tabSubChildren) {
+                                             tabSubChildren = _logic.createSubTab(
+                                                ViewPage
+                                             );
+                                             tabSubChildren.____allTabViewSaves =
+                                                tabSubChildren.____allTabViewSaves ||
+                                                [];
+                                          }
+                                          _logic
+                                             .createTabView(
+                                                tabSubChildren,
+                                                childDC
+                                             )
+                                             .then((tabView) => {
+                                                tabSubChildren._views.push(
+                                                   tabView
+                                                );
+                                                tabSubChildren.____allTabViewSaves.push(
+                                                   tabView.save()
+                                                );
+                                                processKey(cb);
+                                             });
+                                       }
+                                       // Create a new page with form
+                                       else if (flag == "form") {
+                                          // add to menu
+                                          // menuSubPages.push(subAddPageId);
+
+                                          _logic
+                                             .createFormPage(
+                                                `Add ${childDC.label}`,
+                                                BasePage,
+                                                childDC
+                                             )
+                                             .then((newAddPage) => {
+                                                BasePage._pages.push(
+                                                   newAddPage
+                                                );
+                                                newAddPage.parent = BasePage;
+                                                return newAddPage.save();
+                                             })
+                                             .then(() => {
+                                                processKey(cb);
+                                             });
+                                       } else {
+                                          console.warn(
+                                             `QuickPage:value():unknown subvalue flag [${flag}] => should be ["list","form"]`
+                                          );
+                                          processKey(cb);
+                                       }
+                                    } // if (subValues[key]);
+                                    else {
+                                       processKey(cb);
+                                    }
+                                 }
+                              } // processKey
+                              processKey((err) => {
+                                 // now attach tab to ViewPage
+                                 if (tabSubChildren) {
+                                    Promise.all(
+                                       tabSubChildren.____allTabViewSaves
+                                    )
+                                       .then(() => {
+                                          ViewPage._views.push(tabSubChildren);
+                                          return tabSubChildren.save();
+                                       })
+                                       .then(() => {
+                                          resolve();
+                                       });
+                                 } else {
+                                    resolve();
+                                 }
+                              });
+                           }); // end Promise
+                        })
+                        .then(() => {
+                           // ViewPage Final Step: Add ViewPage to BasePage:
+                           BasePage._pages.push(ViewPage);
+                           ViewPage.parent = BasePage;
+                           return ViewPage.save();
+                        });
+                  }
+               })
+               .then(() => {
+                  var allSaves = [];
+                  if (formValues.showGrid) {
+                     var grid = BasePage.viewNew({
+                        key: ABViewGrid.common().key,
+                        label: currLabel,
+                        settings: {
+                           dataviewID: CurrentDC.id,
+                           height: 300,
+                           editPage: formValues.editable ? EditPage.id : null,
+                           detailsPage: formValues.viewable ? ViewPage.id : null
+                        }
+                     });
+                     BasePage._views.push(grid);
+                     allSaves.push(grid.save());
+                  }
+
+                  if (formValues.formAdd) {
+                     // add the title to the form
+                     var title = BasePage.viewNew({
                         key: ABViewLabel.common().key,
-                        icon: ABViewLabel.common().icon,
                         label: "Title",
                         text: `Add ${currLabel}`,
                         settings: {
                            format: 1
                         }
-                     },
-                     // Form
-                     addForm.toObj()
-                  ]
-               });
+                     });
+                     BasePage._views.push(title);
+                     allSaves.push(title.save());
 
-               // Add a menu
-               if (formValues.addable) {
-                  views.push({
-                     key: ABViewMenu.common().key,
-                     icon: ABViewMenu.common().icon,
-                     label: "Menu",
-                     settings: {
-                        columnSpan: 1,
-                        rowSpan: 1,
-                        orientation: "x",
-                        buttonStyle: "ab-menu-default",
-                        menuAlignment: "ab-menu-right",
-                        menuInToolbar: 1,
-                        menuPadding: 10,
-                        menuTheme: "webix_dark",
-                        menuPosition: "right",
-                        menuTextLeft: currLabel,
-                        menuTextCenter: "",
-                        menuTextRight: "",
-                        pages: [
-                           {
-                              pageId: addPageId,
-                              tabId: "",
-                              type: "page",
-                              aliasname: `Add ${currLabel}`,
-                              isChecked: true,
-                              translations: [
-                                 {
-                                    language_code: "en",
-                                    label: `Add ${currLabel}`,
-                                    aliasname: `Add ${currLabel}`
-                                 }
-                              ]
-                           }
-                        ],
-                        order: [
-                           {
-                              pageId: addPageId,
-                              tabId: "",
-                              type: "page",
-                              aliasname: `Add ${currLabel}`,
-                              isChecked: true,
-                              translations: [
-                                 {
-                                    language_code: "en",
-                                    label: `Add ${currLabel}`,
-                                    aliasname: `Add ${currLabel}`
-                                 }
-                              ],
-                              parent: 0,
-                              position: 0,
-                              icon: "plus"
-                           }
-                        ]
-                     }
-                  });
-               }
-            }
-
-            // Add a 'edit' page
-            if (formValues.editable) {
-               editPageId = OP.Util.uuid();
-
-               let editForm = _logic.getFormView(CurrentDC);
-
-               // Add a 'edit' page
-               pages.push({
-                  id: editPageId,
-                  key: ABViewPage.common().key,
-                  icon: ABViewPage.common().icon,
-                  name: `Edit ${currLabel}`,
-                  settings: {
-                     type: "popup"
-                  },
-                  views: [
-                     // Title
-                     {
-                        key: ABViewLabel.common().key,
-                        icon: ABViewLabel.common().icon,
-                        label: `Edit ${currLabel}`,
-                        text: `Edit ${currLabel}`,
-                        settings: {
-                           format: 1
-                        }
-                     },
-                     // Form
-                     editForm.toObj()
-                  ]
-               });
-            }
-
-            // View page
-            if (formValues.viewable) {
-               viewPageId = OP.Util.uuid();
-
-               let newDetail = _logic.getDetailView();
-               newDetail.position = newDetail.position || {};
-               newDetail.position.y = 1;
-
-               let viewsOfDetail = [
-                  // Menu & Title
-                  {
-                     key: ABViewMenu.common().key,
-                     icon: ABViewMenu.common().icon,
-                     label: "Menu & Title",
-                     settings: {
-                        columnSpan: 1,
-                        rowSpan: 1,
-                        orientation: "x",
-                        buttonStyle: "ab-menu-default",
-                        menuAlignment: "ab-menu-right",
-                        menuInToolbar: 1,
-                        menuPadding: 10,
-                        menuTheme: "bg_gray",
-                        menuPosition: "right",
-                        menuTextLeft: `Details ${currLabel}`,
-                        pages: [
-                           {
-                              pageId: editPageId,
-                              tabId: "",
-                              type: "page",
-                              aliasname: `Edit ${currLabel}`,
-                              isChecked: true,
-                              translations: [
-                                 {
-                                    language_code: "en",
-                                    label: `Edit ${currLabel}`,
-                                    aliasname: `Edit ${currLabel}`
-                                 }
-                              ]
-                           }
-                        ],
-                        order: [
-                           {
-                              pageId: editPageId,
-                              tabId: "",
-                              type: "page",
-                              aliasname: `Edit ${currLabel}`,
-                              isChecked: true,
-                              translations: [
-                                 {
-                                    language_code: "en",
-                                    label: `Edit ${currLabel}`,
-                                    aliasname: `Edit ${currLabel}`
-                                 }
-                              ],
-                              parent: 0,
-                              position: 0,
-                              icon: "edit"
-                           }
-                        ]
-                     },
-                     position: {
-                        y: 0
-                     }
-                  },
-                  // Detail
-                  newDetail.toObj()
-               ];
-
-               let tabSubChildren = {
-                  key: ABViewTab.common().key,
-                  icon: ABViewTab.common().icon,
-                  label: "Tab",
-                  name: "Tab",
-                  settings: {
-                     height: 400,
-                     minWidth: 0,
-                     stackTabs: 0,
-                     darkTheme: 1,
-                     sidebarWidth: 200,
-                     sidebarPos: "left",
-                     iconOnTop: 0,
-                     columnSpan: 1,
-                     rowSpan: 1
-                  },
-                  views: [],
-                  position: {
-                     y: 2
+                     allSaves.push(
+                        _logic
+                           .getFormView(
+                              CurrentDC,
+                              {
+                                 includeCancel: true
+                              },
+                              BasePage
+                           )
+                           .then((editForm) => {
+                              BasePage._views.push(editForm);
+                              return editForm.save();
+                           })
+                     );
                   }
-               };
 
-               // define sub-pages to menu
-               let subAddPages = {}; // { dataCollectionId: "uuid", pageId: "uuid" }
-               // let menuSubPages = [];
-               // if (editPageId) menuSubPages.push(editPageId);
+                  return Promise.all(allSaves);
+               })
+               .then(() => {
+                  // add a new tab into selected page
+                  if (CurrentPage && formValues.addToTab) {
+                     var tabSaves = [];
 
-               Object.keys(subValues).forEach((key, i) => {
-                  if (subValues[key]) {
-                     // Check
-                     let vals = key.split("|"),
-                        datacollectionId = vals[0],
-                        flag = vals[1]; // 'list' or 'form'
+                     (BasePage.pages() || []).forEach((p) => {
+                        CurrentPage._pages.push(p);
+                        p.parent = CurrentPage;
+                     });
 
-                     let childDC = CurrentApplication.datacollections(
-                        (dc) => dc.id == datacollectionId
+                     if (!CurrentPage._views) {
+                        CurrentPage._views = [];
+                     }
+
+                     let updateTab = CurrentPage.views(
+                        (v) => v.key == ABViewTab.common().key
                      )[0];
 
-                     if (subAddPages[datacollectionId] == null)
-                        subAddPages[datacollectionId] = OP.Util.uuid();
-
-                     // Add grids of sub-dcs
-                     if (flag == "list") {
-                        let tabView = {
-                           id: OP.Util.uuid(),
-                           key: "viewcontainer",
-                           icon: "braille",
-                           tabicon: "",
-                           name: childDC.label,
+                     if (updateTab == null) {
+                        let tabSettings = {
+                           label: "Tab",
+                           name: "Tab",
                            settings: {
-                              columns: 1,
-                              removable: true,
-                              movable: true
-                           },
-                           translations: [
-                              {
-                                 language_code: "en",
-                                 label: childDC.label
-                              }
-                           ],
-                           views: [],
-                           position: {
-                              dx: 1,
-                              dy: 1
-                           },
-                           pages: []
+                              height: 400,
+                              minWidth: 0,
+                              stackTabs: 0,
+                              darkTheme: 1,
+                              sidebarWidth: 200,
+                              sidebarPos: "left",
+                              iconOnTop: 0,
+                              columnSpan: 1,
+                              rowSpan: 1
+                           }
                         };
 
-                        tabView.views.push(
-                           // Menu & Title
-                           {
-                              key: ABViewMenu.common().key,
-                              icon: ABViewMenu.common().icon,
-                              tabicon: "",
-                              name: `${childDC.label}.menu`,
+                        updateTab = new ABViewTab(
+                           tabSettings,
+                           CurrentApplication,
+                           CurrentPage
+                        );
+
+                        CurrentPage._views.push(updateTab);
+                        tabSaves.push(updateTab.save());
+                     }
+
+                     return Promise.all(tabSaves)
+                        .then(() => {
+                           let newTabViewSetting = {
+                              name: currLabel,
+                              label: currLabel,
                               settings: {
-                                 columnSpan: 1,
-                                 rowSpan: 1,
-                                 orientation: "x",
-                                 buttonStyle: "ab-menu-default",
-                                 menuAlignment: "ab-menu-right",
-                                 menuInToolbar: 1,
-                                 menuPadding: 10,
-                                 menuTheme: "webix_dark",
-                                 menuPosition: "right",
-                                 menuTextLeft: childDC.label,
-                                 pages: [
-                                    {
-                                       pageId: subAddPages[datacollectionId],
-                                       tabId: "",
-                                       type: "page",
-                                       aliasname: `Add ${childDC.label}`,
-                                       isChecked: true,
-                                       translations: [
-                                          {
-                                             language_code: "en",
-                                             label: `Add ${childDC.label}`,
-                                             aliasname: `Add ${childDC.label}`
-                                          }
-                                       ]
-                                    }
-                                 ],
-                                 order: [
-                                    {
-                                       pageId: subAddPages[datacollectionId],
-                                       tabId: "",
-                                       type: "page",
-                                       aliasname: `Add ${childDC.label}`,
-                                       isChecked: true,
-                                       translations: [
-                                          {
-                                             language_code: "en",
-                                             label: `Add ${childDC.label}`,
-                                             aliasname: `Add ${childDC.label}`
-                                          }
-                                       ],
-                                       parent: 0,
-                                       position: 0,
-                                       icon: "plus"
-                                    }
-                                 ]
+                                 columns: "1",
+                                 removable: true,
+                                 movable: true,
+                                 height: 400
                               },
                               translations: [
                                  {
                                     language_code: "en",
-                                    label: `${childDC.label}.menu`
+                                    label: currLabel
                                  }
                               ],
                               position: {
                                  dx: 1,
                                  dy: 1
                               }
-                           },
-                           // Grid
-                           {
-                              key: ABViewGrid.common().key,
-                              icon: ABViewGrid.common().icon,
-                              label: `${childDC.label}'s grid`,
-                              settings: {
-                                 dataviewID: childDC.id,
-                                 height: 300
-                              },
-                              position: {
-                                 y: 1
-                              }
-                           }
-                        );
+                           };
+                           var tabView = new ABViewContainer(
+                              newTabViewSetting,
+                              CurrentApplication,
+                              updateTab
+                           );
+                           // Transfer all the views from the BasePage
+                           // into the tabView
+                           tabView._views = BasePage._views;
+                           updateTab._views.push(tabView);
 
-                        tabSubChildren.views.push(tabView);
-                     }
-                     // Create a new page with form
-                     else if (flag == "form") {
-                        // add to menu
-                        // menuSubPages.push(subAddPageId);
-
-                        let newForm = _logic.getFormView(childDC, {
-                           clearOnLoad: true,
-                           redirectPageId: viewPageId
+                           // Now make sure all these are Saved with the latest changes:
+                           return tabView
+                              .save()
+                              .then(() => {
+                                 return updateTab.save();
+                              })
+                              .then(() => {
+                                 return CurrentPage.save();
+                              });
+                        })
+                        .then(() => {
+                           return {
+                              useParent: true,
+                              parent: CurrentPage,
+                              label: CurrentPage.label
+                           };
                         });
-
-                        pages.push({
-                           id: subAddPages[datacollectionId],
-                           key: ABViewPage.common().key,
-                           icon: ABViewPage.common().icon,
-                           name: `Add ${childDC.label}`,
-                           settings: {
-                              type: "popup"
-                           },
-                           views: [
-                              // Title
-                              {
-                                 key: ABViewLabel.common().key,
-                                 icon: ABViewLabel.common().icon,
-                                 label: "Title",
-                                 text: `Add ${childDC.label}`,
-                                 settings: {
-                                    format: 1
-                                 }
-                              },
-                              // Form
-                              newForm.toObj()
-                           ]
-                        });
-                     }
+                  } else {
+                     // Final Step, return the definition of the BasePage:
+                     // since the ab_work_interface_list_newPage will create an
+                     // instance of it withing the CurrentApplication.
+                     return BasePage.toObj();
                   }
                });
-
-               // Menu
-               // viewsOfDetail.splice(1, 0, {
-               //    key: ABViewMenu.common().key,
-               //    icon: ABViewMenu.common().icon,
-               //    label: "Menu",
-               //    settings: {
-               //       pages: menuSubPages
-               //    },
-               //    position: {
-               //       y: 2
-               //    }
-               // });
-
-               // Tab
-               if (tabSubChildren.views && tabSubChildren.views.length)
-                  viewsOfDetail.push(tabSubChildren);
-
-               pages.push({
-                  id: viewPageId,
-                  key: ABViewPage.common().key,
-                  icon: ABViewPage.common().icon,
-                  name: `Details of ${currLabel}`,
-                  settings: {
-                     type: "popup"
-                  },
-                  views: viewsOfDetail
-               });
-            }
-
-            // Add a grid to show data of data source
-            if (formValues.showGrid) {
-               views.push({
-                  key: ABViewGrid.common().key,
-                  icon: ABViewGrid.common().icon,
-                  label: currLabel,
-                  settings: {
-                     dataviewID: CurrentDC.id,
-                     height: 300,
-                     editPage: formValues.editable ? editPageId : null,
-                     detailsPage: formValues.viewable ? viewPageId : null
-                  }
-               });
-            }
-
-            // Edit form
-            if (formValues.formAdd) {
-               // add the title to the form
-               views.push({
-                  key: ABViewLabel.common().key,
-                  icon: ABViewLabel.common().icon,
-                  label: "Title",
-                  text: `Add ${currLabel}`,
-                  settings: {
-                     format: 1
-                  }
-               });
-
-               let editForm = _logic.getFormView(CurrentDC, {
-                  includeCancel: true
-               });
-
-               // add the new form to page
-               views.push(editForm.toObj());
-            }
-
-            // add a new tab into selected page
-            if (CurrentPage && formValues.addToTab) {
-               (pages || []).forEach((p) => {
-                  CurrentPage._pages.push(CurrentPage.pageNew(p));
-               });
-
-               if (!CurrentPage._views) {
-                  CurrentPage._views = [];
-               }
-
-               let updateTab = CurrentPage.views(
-                  (v) => v.key == ABViewTab.common().key
-               )[0];
-
-               if (updateTab == null) {
-                  let tabSettings = {
-                     label: "Tab",
-                     name: "Tab",
-                     settings: {
-                        height: 400,
-                        minWidth: 0,
-                        stackTabs: 0,
-                        darkTheme: 1,
-                        sidebarWidth: 200,
-                        sidebarPos: "left",
-                        iconOnTop: 0,
-                        columnSpan: 1,
-                        rowSpan: 1
-                     },
-                     views: []
-                  };
-
-                  updateTab = new ABViewTab(
-                     tabSettings,
-                     CurrentApplication,
-                     CurrentPage
-                  );
-
-                  CurrentPage._views.push(updateTab);
-               }
-
-               let newTabViewSetting = {
-                  name: currLabel,
-                  label: currLabel,
-                  settings: {
-                     columns: "1",
-                     removable: true,
-                     movable: true,
-                     height: 400
-                  },
-                  translations: [
-                     {
-                        language_code: "en",
-                        label: currLabel
-                     }
-                  ],
-                  views: views,
-                  position: {
-                     dx: 1,
-                     dy: 1
-                  },
-                  pages: []
-               };
-
-               updateTab._views.push(
-                  new ABViewContainer(
-                     newTabViewSetting,
-                     CurrentApplication,
-                     updateTab
-                  )
-               );
-
-               return {
-                  useParent: true,
-                  parent: CurrentPage,
-                  label: CurrentPage.label
-               };
-            } else {
-               return {
-                  parent: CurrentPage, // should be either null or an {}
-                  name: $$(ids.name)
-                     .getValue()
-                     .trim(),
-                  key: ABViewPage.common().key,
-                  views: views,
-                  pages: pages
-               };
-            }
-         }
+         } // end values()
       });
 
       // Our webix UI definition:

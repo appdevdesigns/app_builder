@@ -6,107 +6,9 @@
  */
 
 module.exports = {
-   /* Application Info */
-   "get /app_builder/application": "app_builder/ABApplicationController.find",
-
-   "get /app_builder/application/info":
-      "app_builder/ABApplicationController.applicationInfo",
-
-   "get /app_builder/application/:appID":
-      "app_builder/ABApplicationController.findOne",
-
-   "post /app_builder/application":
-      "app_builder/ABApplicationController.applicationCreate",
-
-   "put /app_builder/application/:appID":
-      "app_builder/ABApplicationController.applicationUpdate",
-
-   "delete /app_builder/application/:appID":
-      "app_builder/ABApplicationController.applicationRemove",
-
-   "put /app_builder/application/:appID/info":
-      "app_builder/ABApplicationController.applicationSave",
-
-   /* Objects */
-   "get /app_builder/application/:appID/object":
-      "app_builder/ABObjectController.objectApplication",
-
-   "get /app_builder/object": "app_builder/ABObjectController.objectFind",
-
-   "get /app_builder/object/info": "app_builder/ABObjectController.objectInfo",
-
-   "get /app_builder/object/:objectId":
-      "app_builder/ABObjectController.objectFindOne",
-
-   "put /app_builder/object": "app_builder/ABObjectController.objectSave",
-
-   "delete /app_builder/object/:objectId":
-      "app_builder/ABObjectController.objectDestroy",
-
-   "put /app_builder/application/:appID/object/:objID":
-      "app_builder/ABObjectController.importObject",
-
-   "delete /app_builder/application/:appID/object/:objID":
-      "app_builder/ABObjectController.excludeObject",
-
    /* Object tracking */
    "get /app_builder/object/:objectId/track":
       "app_builder/ABTrackController.find",
-
-   /* Application Views */
-   "put /app_builder/application/:appID/view":
-      "app_builder/ABApplicationController.viewSave",
-
-   "delete /app_builder/application/:appID/view":
-      "app_builder/ABApplicationController.viewDestroy",
-
-   "put /app_builder/application/:appID/viewReorder":
-      "app_builder/ABApplicationController.viewReorder",
-
-   /* Queries */
-   "get /app_builder/application/:appID/query":
-      "app_builder/ABQueryController.queryApplication",
-
-   "get /app_builder/query": "app_builder/ABQueryController.queryFind",
-
-   "get /app_builder/query/info": "app_builder/ABQueryController.queryInfo",
-
-   "get /app_builder/query/:queryID":
-      "app_builder/ABQueryController.queryFindOne",
-
-   "put /app_builder/query": "app_builder/ABQueryController.querySave",
-
-   "delete /app_builder/query/:queryID":
-      "app_builder/ABQueryController.queryDestroy",
-
-   "put /app_builder/application/:appID/query/:queryID":
-      "app_builder/ABQueryController.importQuery",
-
-   "delete /app_builder/application/:appID/query/:queryID":
-      "app_builder/ABQueryController.excludeQuery",
-
-   /* Data views */
-   "get /app_builder/application/:appID/dataview":
-      "app_builder/ABDataviewController.dataviewApplication",
-
-   "get /app_builder/dataview": "app_builder/ABDataviewController.dataviewFind",
-
-   "get /app_builder/dataview/info":
-      "app_builder/ABDataviewController.dataviewInfo",
-
-   "get /app_builder/dataview/:dataviewId":
-      "app_builder/ABDataviewController.dataviewFindOne",
-
-   "put /app_builder/dataview": "app_builder/ABDataviewController.dataviewSave",
-
-   "delete /app_builder/dataview/:dataviewId":
-      "app_builder/ABDataviewController.dataviewDestroy",
-
-   "put /app_builder/application/:appID/dataview/:dataviewID":
-      "app_builder/ABDataviewController.importDataview",
-
-   "delete /app_builder/application/:appID/dataview/:dataviewID":
-      "app_builder/ABDataviewController.excludeDataview",
 
    /* Scopes */
    "get /app_builder/scope": "app_builder/ABScopeController.find",
@@ -135,9 +37,6 @@ module.exports = {
       "app_builder/ABUserController.getRoleScopes",
 
    /* Roles */
-   // 'get /app_builder/application/:appID/role':
-   //     'app_builder/ABRoleController.roleApplication',
-
    "get /app_builder/role": "app_builder/ABRoleController.find",
 
    "get /app_builder/role/:id": "app_builder/ABRoleController.findOne",
@@ -145,12 +44,6 @@ module.exports = {
    "put /app_builder/role": "app_builder/ABRoleController.save",
 
    "delete /app_builder/role/:id": "app_builder/ABRoleController.destroy",
-
-   // 'put /app_builder/application/:appID/role/:roleID':
-   //     'app_builder/ABRoleController.import',
-
-   // 'delete /app_builder/application/:appID/role/:roleID':
-   //     'app_builder/ABRoleController.exclude',
 
    "get /app_builder/role/:id/scope": "app_builder/ABRoleController.roleScope",
 
@@ -183,8 +76,6 @@ module.exports = {
       "app_builder/ABApplicationController.addPageRoles",
 
    /* Live display */
-   "get /app_builder/application/:appID/livepage/:pageID":
-      "app_builder/ABApplicationController.livePage",
 
    /* Import & Export */
    "get /app_builder/appJSON/:id":
@@ -192,12 +83,6 @@ module.exports = {
 
    "post /app_builder/appJSON":
       "app_builder/ABApplicationController.jsonImport",
-
-   // 'get /app_builder/application/:appID/findModels':
-   //     'app_builder/ABApplicationController.findModels',
-
-   // 'post /app_builder/application/:appID/importModel':
-   //     'app_builder/ABApplicationController.importModel',
 
    /* Migration Services */
    // app_builder/migrate/object/:objID

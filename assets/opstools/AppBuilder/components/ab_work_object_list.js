@@ -267,8 +267,18 @@ module.exports = class AB_Work_Object_List extends ABComponent {
             CurrentApplication = application;
 
             // get a DataCollection of all our objects
+            // FIX: when we list included objects in our Designer, the objects
+            // in this workspace need to reference the CurrentApplication as their
+            // .application
+            var includedObjects = [];
+            if (application) {
+               includedObjects = application.objectsIncluded() || [];
+               includedObjects.forEach((obj) => {
+                  obj.application = CurrentApplication;
+               });
+            }
             objectList = new webix.DataCollection({
-               data: application ? application.objects() : []
+               data: includedObjects
             });
 
             // setup object list settings
@@ -534,7 +544,7 @@ module.exports = class AB_Work_Object_List extends ABComponent {
                return;
             }
 
-            let objects = CurrentApplication.objects();
+            let objects = CurrentApplication.objectsIncluded();
             objectList.parse(objects);
 
             // if (objectList.exists(object.id))
@@ -560,12 +570,12 @@ module.exports = class AB_Work_Object_List extends ABComponent {
          },
 
          exclude: function() {
-            var objectId = $$(ids.list).getSelectedId(false);
+            var object = $$(ids.list).getSelectedItem(false);
 
             _logic.listBusy();
 
-            CurrentApplication.objectExclude(objectId).then(() => {
-               objectList.remove(objectId);
+            CurrentApplication.objectRemove(object).then(() => {
+               objectList.remove(object.id);
 
                _logic.listReady();
 
@@ -593,17 +603,45 @@ module.exports = class AB_Work_Object_List extends ABComponent {
                   if (isOK) {
                      _logic.listBusy();
 
-                     selectedObject.destroy().then(() => {
-                        _logic.listReady();
+                     selectedObject
+                        .destroy()
+                        .then(() => {
+                           _logic.listReady();
 
-                        objectList.remove(selectedObject.id);
+                           objectList.remove(selectedObject.id);
 
-                        // refresh items list
-                        _logic.callbackNewObject();
+                           // refresh items list
+                           _logic.callbackNewObject();
 
-                        // clear object workspace
-                        _logic.callbacks.onChange(null);
-                     });
+                           // clear object workspace
+                           _logic.callbacks.onChange(null);
+                        })
+                        .catch((err) => {
+                           var strError = err.toString();
+
+                           if (strError.indexOf("Not Found")) {
+                              // an object that wasn't found works just as good as a .destroy()
+
+                              _logic.listReady();
+
+                              objectList.remove(selectedObject.id);
+
+                              // refresh items list
+                              _logic.callbackNewObject();
+
+                              // clear object workspace
+                              _logic.callbacks.onChange(null);
+
+                              return;
+                           }
+
+                           webix.alert({
+                              title: "Error removing object",
+                              ok: "fix it",
+                              text: strError,
+                              type: "alert-error"
+                           });
+                        });
                   }
                }
             });

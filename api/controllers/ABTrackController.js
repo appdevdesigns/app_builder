@@ -16,13 +16,13 @@ module.exports = {
             () =>
                new Promise((next, bad) => {
                   ABTrack.find(cond)
-                     .catch((error) => {
-                        bad(error);
-                        res.AD.error(error);
-                     })
                      .then((data) => {
                         result = data || [];
                         next();
+                     })
+                     .catch((error) => {
+                        bad(error);
+                        res.AD.error(error);
                      });
                })
          )
@@ -47,10 +47,6 @@ module.exports = {
                         },
                         req.user.data
                      )
-                     .catch((error) => {
-                        bad(error);
-                        res.AD.error(error);
-                     })
                      .then((list) => {
                         let row = list[0];
                         if (row) {
@@ -80,6 +76,10 @@ module.exports = {
                         }
 
                         next();
+                     })
+                     .catch((error) => {
+                        bad(error);
+                        res.AD.error(error);
                      });
                })
          )

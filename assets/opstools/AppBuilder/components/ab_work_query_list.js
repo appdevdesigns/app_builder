@@ -477,12 +477,12 @@ module.exports = class AB_Work_Query_List extends ABComponent {
          },
 
          exclude: function() {
-            let queryId = $$(ids.list).getSelectedId(false);
+            let query = $$(ids.list).getSelectedItem(false);
 
             _logic.listBusy();
 
-            CurrentApplication.queryExclude(queryId).then(() => {
-               queryList.remove(queryId);
+            CurrentApplication.queryRemove(query).then(() => {
+               queryList.remove(query.id);
 
                _logic.listReady();
 
@@ -532,7 +532,7 @@ module.exports = class AB_Work_Query_List extends ABComponent {
             queryList.clearAll();
 
             if (CurrentApplication)
-               queryList.parse(CurrentApplication.queries());
+               queryList.parse(CurrentApplication.queriesIncluded());
 
             queryList.sort("label", "asc");
 

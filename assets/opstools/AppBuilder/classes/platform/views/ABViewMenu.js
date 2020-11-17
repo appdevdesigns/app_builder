@@ -577,17 +577,24 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
          view.settings.menuPosition ||
             ABViewMenuPropertyComponentDefaults.menuPosition
       );
+      if (view.menuTextLeft == "" && view.settings.menuTextLeft) {
+         view.menuTextLeft = view.settings.menuTextLeft;
+      }
       $$(ids.menuTextLeft).setValue(
-         view.settings.menuTextLeft ||
-            ABViewMenuPropertyComponentDefaults.menuTextLeft
+         view.menuTextLeft || ABViewMenuPropertyComponentDefaults.menuTextLeft
       );
+      if (view.menuTextCenter == "" && view.settings.menuTextCenter) {
+         view.menuTextCenter = view.settings.menuTextCenter;
+      }
       $$(ids.menuTextCenter).setValue(
-         view.settings.menuTextCenter ||
+         view.menuTextCenter ||
             ABViewMenuPropertyComponentDefaults.menuTextCenter
       );
+      if (view.menuTextRight == "" && view.settings.menuTextRight) {
+         view.menuTextRight = view.settings.menuTextRight;
+      }
       $$(ids.menuTextRight).setValue(
-         view.settings.menuTextRight ||
-            ABViewMenuPropertyComponentDefaults.menuTextRight
+         view.menuTextRight || ABViewMenuPropertyComponentDefaults.menuTextRight
       );
 
       var pageTree = new webix.TreeCollection();
@@ -732,9 +739,20 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
       view.settings.menuPadding = $$(ids.menuPadding).getValue();
       view.settings.menuTheme = $$(ids.menuTheme).getValue();
       view.settings.menuPosition = $$(ids.menuPosition).getValue();
-      view.settings.menuTextLeft = $$(ids.menuTextLeft).getValue();
-      view.settings.menuTextCenter = $$(ids.menuTextCenter).getValue();
-      view.settings.menuTextRight = $$(ids.menuTextRight).getValue();
+      view.menuTextLeft = $$(ids.menuTextLeft).getValue();
+      view.menuTextCenter = $$(ids.menuTextCenter).getValue();
+      view.menuTextRight = $$(ids.menuTextRight).getValue();
+      // Legacy support: clear the old settings when new values are created
+      // otherwise leave them
+      if (view.menuTextLeft.length) {
+         view.settings.menuTextLeft = "";
+      }
+      if (view.menuTextCenter.length) {
+         view.settings.menuTextCenter = "";
+      }
+      if (view.menuTextCenter.length) {
+         view.settings.menuTextRight = "";
+      }
 
       // var pagesIdList = [];
       if ($$(ids.pages)) {
@@ -862,20 +880,28 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
          var elems = [];
          var menuIncluded = false;
 
+         // Legacy support: use old settings values if translated values are not set
+         if (this.menuTextLeft == "" && this.settings.menuTextLeft) {
+            this.menuTextLeft = this.settings.menuTextLeft;
+         }
+         if (this.menuTextCenter == "" && this.settings.menuTextCenter) {
+            this.menuTextCenter = this.settings.menuTextCenter;
+         }
+         if (this.menuTextRight == "" && this.settings.menuTextRight) {
+            this.menuTextRight = this.settings.menuTextRight;
+         }
+
          if (
             this.settings.menuPosition &&
             this.settings.menuPosition == "left"
          ) {
             menuIncluded = true;
             elems.push(_ui);
-         } else if (
-            this.settings.menuTextLeft &&
-            this.settings.menuTextLeft.length
-         ) {
-            let width = this.settings.menuTextLeft.length * 15;
+         } else if (this.menuTextLeft && this.menuTextLeft.length) {
+            let width = this.menuTextLeft.length * 15;
             elems.push({
                view: "label",
-               label: this.settings.menuTextLeft,
+               label: this.menuTextLeft,
                align: "left",
                width: width
             });
@@ -893,15 +919,12 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
          ) {
             menuIncluded = true;
             elems.push(_ui);
-         } else if (
-            this.settings.menuTextCenter &&
-            this.settings.menuTextCenter.length
-         ) {
-            let width = this.settings.menuTextLeft.length * 15;
+         } else if (this.menuTextCenter && this.menuTextCenter.length) {
+            let width = this.menuTextLeft.length * 15;
             elems.push({});
             elems.push({
                view: "label",
-               label: this.settings.menuTextCenter,
+               label: this.menuTextCenter,
                align: "center",
                width: width
             });
@@ -920,14 +943,11 @@ module.exports = class ABViewMenu extends ABViewMenuCore {
          ) {
             menuIncluded = true;
             elems.push(_ui);
-         } else if (
-            this.settings.menuTextRight &&
-            this.settings.menuTextRight.length
-         ) {
-            let width = this.settings.menuTextLeft.length * 15;
+         } else if (this.menuTextRight && this.menuTextRight.length) {
+            let width = this.menuTextLeft.length * 15;
             elems.push({
                view: "label",
-               label: this.settings.menuTextRight,
+               label: this.menuTextRight,
                align: "right",
                width: width
             });

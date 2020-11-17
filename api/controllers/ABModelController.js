@@ -269,7 +269,6 @@ function updateRelationValues(object, id, updateRelationParams) {
             query
                .where(obj.PK(), rowId)
                .first()
-               .catch((err) => reject(err))
                .then((record) => {
                   if (record == null) return resolve();
 
@@ -293,7 +292,8 @@ function updateRelationValues(object, id, updateRelationParams) {
                      .then(() => {
                         resolve();
                      });
-               });
+               })
+               .catch((err) => reject(err));
          });
       };
 
@@ -310,7 +310,6 @@ function updateRelationValues(object, id, updateRelationParams) {
             query
                .where(obj.PK(), rowId)
                .first()
-               .catch((err) => reject(err))
                .then((record) => {
                   if (record == null) return resolve();
 
@@ -322,11 +321,12 @@ function updateRelationValues(object, id, updateRelationParams) {
                            .replace("#relation#", relationName)
                      ) // FIX: SQL syntax error because alias name includes special characters
                      .relate(value)
-                     .catch((err) => reject(err))
                      .then(() => {
                         resolve();
-                     });
-               });
+                     })
+                     .catch((err) => reject(err));
+               })
+               .catch((err) => reject(err));
          });
       };
 
@@ -364,10 +364,10 @@ function updateRelationValues(object, id, updateRelationParams) {
                      .orWhere(object.PK(), relateRowId)
                      .orWhere(sourceField.columnName, id)
                      .orWhere(sourceField.columnName, relateRowId)
-                     .catch((err) => reject(err))
                      .then(() => {
                         resolve();
-                     });
+                     })
+                     .catch((err) => reject(err));
                });
             });
 
@@ -383,10 +383,10 @@ function updateRelationValues(object, id, updateRelationParams) {
                         .update(update)
                         .clearWhere()
                         .where(object.PK(), id)
-                        .catch((err) => reject(err))
                         .then(() => {
                            resolve();
-                        });
+                        })
+                        .catch((err) => reject(err));
                   });
                });
 
@@ -400,10 +400,10 @@ function updateRelationValues(object, id, updateRelationParams) {
                         .update(update)
                         .clearWhere()
                         .where(object.PK(), relateRowId)
-                        .catch((err) => reject(err))
                         .then(() => {
                            resolve();
-                        });
+                        })
+                        .catch((err) => reject(err));
                   });
                });
             }
@@ -469,6 +469,16 @@ function updateConnectedFields(object, newData, oldData) {
    connectFields.forEach((f) => {
       // Get the field object that the field is linked to
       var field = f.fieldLink;
+      if (!field) {
+         var err = new Error(
+            `ABModelController.updateConnectedFields(): object[${object.name}][${object.id}] had connected field[${f.label}][${f.id}] with no linked field reference`
+         );
+         sails.log.error(err);
+         sails.log.error("object:", object);
+         sails.log.error("field:", f);
+         return;
+      }
+
       // Get the relation name so we can separate the linked fields updates from the rest
       var relationName = f.relationName();
       if (Array.isArray(newData)) {
@@ -563,10 +573,10 @@ function updateTranslationsValues(object, id, translations, isInsert) {
             if (isInsert) {
                transKnex
                   .insert(vals)
-                  .catch(err)
                   .then(function() {
                      next();
-                  });
+                  })
+                  .catch(err);
             }
             // update
             else {
@@ -590,8 +600,8 @@ function updateTranslationsValues(object, id, translations, isInsert) {
                         transKnex
                            .update(clearVals)
                            .where(where)
-                           .catch(reject)
-                           .then(resolve);
+                           .then(resolve)
+                           .catch(reject);
                      });
                   })
                   .then(() => {
@@ -599,8 +609,8 @@ function updateTranslationsValues(object, id, translations, isInsert) {
                         transKnex
                            .update(vals)
                            .where(where)
-                           .catch(reject)
-                           .then(resolve);
+                           .then(resolve)
+                           .catch(reject);
                      });
                   })
                   .then(next)
@@ -847,9 +857,6 @@ module.exports = {
                            .reduce((promiseChain, currTask) => {
                               return promiseChain.then(currTask);
                            }, Promise.resolve([]))
-                           .catch((err) => {
-                              return Promise.reject(err);
-                           })
                            .then((values) => {
                               // // Query the new row to response to client
                               return object
@@ -875,6 +882,9 @@ module.exports = {
                                     newItem = itemLookup[0];
                                     next(null, newItem);
                                  });
+                           })
+                           .catch((err) => {
+                              return Promise.reject(err);
                            });
                      },
                      (err) => {
@@ -926,7 +936,7 @@ module.exports = {
                var attr = errorResponse.invalidAttributes;
 
                // if error from object.isValidData(createParams)
-               if (validationErrors.length > 0) {
+               if (validationErrors && validationErrors.length > 0) {
                   validationErrors.forEach((e) => {
                      attr[e.name] = attr[e.name] || [];
                      attr[e.name].push(e);
@@ -1370,11 +1380,11 @@ console.error(err);
             function(next) {
                AppBuilder.routes
                   .verifyAndReturnObject(req, res)
-                  .catch(next)
                   .then(function(obj) {
                      object = obj;
                      next();
-                  });
+                  })
+                  .catch(next);
             },
 
             // step #2
@@ -2118,14 +2128,17 @@ console.error(err);
          // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
          object
             .queryCount({ where: where, populate: false }, req.user.data)
-            .first()
-            .catch((err) => {
-               resolvePendingTransaction();
-               res.AD.error(err);
-            })
-            .then((result) => {
-               resolvePendingTransaction();
-               res.AD.success(result);
+            .then((query) => {
+               query
+                  .first()
+                  .then((result) => {
+                     resolvePendingTransaction();
+                     res.AD.success(result);
+                  })
+                  .catch((err) => {
+                     resolvePendingTransaction();
+                     res.AD.error(err);
+                  });
             });
       });
    }

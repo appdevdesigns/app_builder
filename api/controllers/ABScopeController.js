@@ -5,9 +5,6 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-// const ABGraphScope = require("../graphModels/ABScope");
-// const ABGraphRole = require("../graphModels/ABRole");
-
 const ABModelController = require("./ABModelController");
 
 function getScopeObject() {
@@ -26,21 +23,22 @@ let ABScopeController = {
    // GET /app_builder/scope
    find: function(req, res) {
       let cond = req.body || {};
-      let ScopeModel = getScopeObject();
+      let ScopeModel = ABSystemObject.getObjectScope();
 
       if (cond.populate == null) cond.populate = true;
 
-      ScopeModel.queryFind(cond, req.user.data)
-         .catch(res.AD.error)
+      ScopeModel.modelAPI()
+         .findAll(cond, req.user.data)
          .then((scopes) => {
             res.AD.success(scopes || []);
-         });
+         })
+         .catch(res.AD.error);
    },
 
    // GET /app_builder/scope/:id
    findOne: function(req, res) {
       let id = req.param("id");
-      let ScopeModel = getScopeObject();
+      let ScopeModel = ABSystemObject.getObjectScope();
 
       return new Promise((resolve, reject) => {
          ScopeModel.queryFind(
@@ -60,15 +58,15 @@ let ABScopeController = {
             },
             req.user.data
          )
-            .catch((err) => {
-               if (res) res.AD.error(err);
-
-               reject(err);
-            })
             .then((scope = []) => {
                if (res) res.AD.success(scope[0]);
 
                resolve(scope[0]);
+            })
+            .catch((err) => {
+               if (res) res.AD.error(err);
+
+               reject(err);
             });
       });
    },
@@ -77,7 +75,7 @@ let ABScopeController = {
    scopeRole: function(req, res) {
       let scopeId = req.param("id");
 
-      let RoleModel = ABObjectCache.get(ROLE_OBJECT_ID);
+      let RoleModel = ABSystemObject.getObjectRole();
 
       let connectedField = RoleModel.fields(
          (f) =>
@@ -99,7 +97,7 @@ let ABScopeController = {
          ]
       };
 
-      return RoleModel.queryFind(
+      return RoleModel.modelAPI().findAll(
          {
             where: where
          },

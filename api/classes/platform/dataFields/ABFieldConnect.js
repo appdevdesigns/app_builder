@@ -100,36 +100,6 @@ function getConstraintName(tableName, columnName) {
 module.exports = class ABFieldConnect extends ABFieldConnectCore {
    constructor(values, object) {
       super(values, object);
-
-      try {
-         //// Special Debugging to identify misconfigured link settings:
-
-         // find linked object
-         let linkObject = this.datasourceLink;
-         if (!linkObject) {
-            sails.log.error(
-               `ABFieldConnect.migrateCreate(): could not resolve .datasourceLink for Object[${
-                  this.object.name
-               }][${this.object.id}].Field[${this.label}][${
-                  this.id
-               }] : settings[${JSON.stringify(this.settings, null, 4)}]`
-            );
-         }
-
-         let linkField = this.fieldLink;
-         if (!linkField) {
-            // !!! This is an internal Error that is our fault:
-            sails.log.error(
-               `MigrateCreate():Unable to find linked field for object[${
-                  this.object.label
-               }]->field[${this.label}][${this.id}] : settings[${JSON.stringify(
-                  this.settings,
-                  null,
-                  4
-               )}]`
-            );
-         }
-      } catch (err) {}
    }
 
    ///
@@ -157,6 +127,23 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
       return linkObject;
    }
 
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @param {array} ids
+    *        the array of ids to store our relevant .ids into
+    */
+   exportIDs(ids) {
+      super.exportIDs(ids);
+
+      // include datasource with this:
+      // Q?: so, when exporting ids ... do we ensure we gather all connected fields?
+      var connObj = this.datasourceLink;
+      if (connObj) {
+         connObj.exportIDs(ids);
+      }
+   }
+
    ///
    /// DB Migrations
    ///
@@ -172,9 +159,34 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 
          // find linked object
          let linkObject = this.datasourceLink;
+         if (!linkObject) {
+            sails.log.error(
+               `ABFieldConnect.migrateCreate(): could not resolve .datasourceLink for Object[${
+                  this.object.name
+               }][${this.object.id}].Field[${this.label}][${
+                  this.id
+               }] : settings[${JSON.stringify(this.settings, null, 4)}]`
+            );
+         }
          let linkKnex = ABMigration.connection(linkObject.connName);
 
          let linkTableName = linkObject.dbTableName(true);
+         let linkField = this.fieldLink;
+         if (!linkField) {
+            // !!! This is an internal Error that is our fault:
+            var missingFieldLink = new Error(
+               `MigrateCreate():Unable to find linked field for object[${
+                  this.object.label
+               }]->field[${this.label}][${this.id}] : settings[${JSON.stringify(
+                  this.settings,
+                  null,
+                  4
+               )}]`
+            );
+            missingFieldLink.field = this.toObj();
+            reject(missingFieldLink);
+            return;
+         }
          // TODO : should check duplicate column
          let linkColumnName = this.fieldLink.columnName;
 
@@ -211,10 +223,12 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         knex,
                         indexField.object.tableName,
                         indexField.columnName
-                     ).then((result) => {
-                        indexType = result;
-                        next(null, exists);
-                     });
+                     )
+                        .then((result) => {
+                           indexType = result;
+                           next(null, exists);
+                        })
+                        .catch(next);
                   },
                   // create a column
                   (exists, next) => {
@@ -244,6 +258,10 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                        this.columnName
                                     )
                                  );
+                           } else {
+                              console.error(
+                                 `[1:M] object[${this.object.label}]->Field[${this.label}][${this.id}] skipping reference column creation: !linkObject.isExternal[${linkObject.isExternal}] && this.connName[${this.connName}] == linkObject.connName[${linkObject.connName}]`
+                              );
                            }
                         })
                         .then(() => {
@@ -284,10 +302,12 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         knex,
                         indexField.object.tableName,
                         indexField.columnName
-                     ).then((result) => {
-                        indexType = result;
-                        next(null, exists);
-                     });
+                     )
+                        .then((result) => {
+                           indexType = result;
+                           next(null, exists);
+                        })
+                        .catch(next);
                   },
                   // create a column
                   (exists, next) => {
@@ -317,6 +337,10 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                        this.columnName
                                     )
                                  );
+                           } else {
+                              console.error(
+                                 `[1:1] object[${this.object.label}]->Field[${this.label}][${this.id}] skipping reference column creation: !linkObject.isExternal[${linkObject.isExternal}] && this.connName[${this.connName}] == linkObject.connName[${linkObject.connName}]`
+                              );
                            }
 
                            // Set unique name to prevent ER_TOO_LONG_IDENT error
@@ -331,7 +355,13 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         .then(() => {
                            next();
                         })
-                        .catch(next);
+                        // .catch(next);
+                        .catch((err) => {
+                           if (err.code != "ER_DUP_FIELDNAME") {
+                              console.error("[1:1]", err);
+                           }
+                           next(err);
+                        });
                   }
                ],
                (err) => {
@@ -350,6 +380,17 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                [
                   // check column already exist
                   (next) => {
+                     // linkColumnName might be undefined.
+                     // if so, then skip this process.
+                     if (!linkColumnName) {
+                        console.error(
+                           "ABFieldConnect:migrateCreate(): could not resolve linkColumnName. This is unexpected.",
+                           this.toObj()
+                        );
+                        next(null, true);
+                        return;
+                     }
+
                      linkKnex.schema
                         .hasColumn(linkTableName, linkColumnName)
                         .then((exists) => {
@@ -365,10 +406,12 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         knex,
                         indexField.object.tableName,
                         indexField.columnName
-                     ).then((result) => {
-                        indexType = result;
-                        next(null, exists);
-                     });
+                     )
+                        .then((result) => {
+                           indexType = result;
+                           next(null, exists);
+                        })
+                        .catch(next);
                   },
                   // create a column
                   (exists, next) => {
@@ -398,12 +441,22 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                        linkColumnName
                                     )
                                  );
+                           } else {
+                              console.error(
+                                 `[M:1] object[${this.object.label}]->Field[${this.label}][${this.id}] skipping linkCol creation: !isExternal[${this.object.isExternal}]  && connName[${this.connName}] == linkObj.connName[${linkObject.connName}]`
+                              );
                            }
                         })
                         .then(() => {
                            next();
                         })
-                        .catch(next);
+                        // .catch(next);
+                        .catch((err) => {
+                           if (err.code != "ER_DUP_FIELDNAME") {
+                              console.error("[M:1]", err);
+                           }
+                           next(err);
+                        });
                   }
                ],
                (err) => {
@@ -504,11 +557,19 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         let linkCol;
                         let linkCol2;
 
-                        // custom index
                         let linkFK2 = this.datasourceLink.PK();
+
+                        // check for custom Index field
                         let indexField2 = this.indexField2;
                         if (indexField2) {
-                           linkFK2 = indexField2.columnName;
+                           // verify which Field this custom index relates to:
+                           // if my object then linkFK
+                           if (indexField2.object.id === this.object.id) {
+                              linkFK = indexField2.columnName;
+                           } else {
+                              // else linkFK2
+                              linkFK2 = indexField2.columnName;
+                           }
                         }
 
                         linkCol = this.setNewColumnSchema(
@@ -542,6 +603,10 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                               .inTable(linkTableName)
                               .withKeyName(targetFkName)
                               .onDelete("SET NULL");
+                        } else {
+                           console.error(
+                              `[M:N] object[${this.object.label}]->Field[${this.label}][${this.id}] skipping linkCol creation: !this.object.isExternal[${this.object.isExternal}] && !linkObject.isExternal[${linkObject.isExternal}] && connName[${this.connName}] == linkObj.connName[${linkObject.connName}]`
+                           );
                         }
 
                         // // create columns
@@ -562,6 +627,14 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                      resolve();
                   })
                   .catch((err) => {
+                     var ignoreCodes = [
+                        "ER_DUP_FIELDNAME",
+                        "ER_TABLE_EXISTS_ERROR"
+                     ];
+                     if (ignoreCodes.indexOf(err.code) == -1) {
+                        console.error("[M:N]", err);
+                     }
+
                      // If the table exists, skip the error
                      if (err.code == "ER_TABLE_EXISTS_ERROR") resolve();
                      else reject(err);
@@ -592,7 +665,8 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          ) {
             // If the linked object is removed, it can not find join table name.
             // The join table should be removed already.
-            if (!this.datasourceLink) return resolve();
+            if (!this.datasourceLink)
+               return super.migrateDrop(knex).then(() => resolve(), reject);
 
             // drop join table
             var joinTableName = this.joinTableName();
@@ -804,9 +878,27 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          } else {
             sourceObjectName = linkObject.name;
             targetObjectName = this.object.name;
-            columnName = this.fieldLink.columnName;
+            // NOTE: it is possible for this.fieldLink to return undefined
+            if (this.fieldLink) {
+               columnName = this.fieldLink.columnName;
+            }
          }
 
+         // if columnName is not set, we can't proceed:
+         if (!columnName) {
+            var tryThisField = linkObject.fields(
+               (f) => f.id == this.settings.linkColumn
+            )[0];
+            if (tryThisField) {
+               columnName = tryThisField.columnName;
+            } else {
+               // yeah, well this shouldn't be happening, and is only
+               // happening due to the current Role & Scope transition,
+               // so we will take this all out once we have those
+               // merged into ABDefinitions
+               columnName = "roles"; // linkObject.name;
+            }
+         }
          // return join table name
          tableName = AppBuilder.rules.toJunctionTableNameFormat(
             // this.object.application.name, // application name

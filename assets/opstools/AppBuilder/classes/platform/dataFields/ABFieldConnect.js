@@ -30,7 +30,7 @@ var defaultValues = ABFieldConnectCore.defaultValues();
 
 function populateSelect(populate, callback) {
    var options = [];
-   ABFieldConnectComponent.CurrentApplication.objects().forEach((o) => {
+   ABFieldConnectComponent.CurrentApplication.objectsIncluded().forEach((o) => {
       options.push({ id: o.id, value: o.label });
    });
 
@@ -628,33 +628,31 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
             // NOTE: our .migrateXXX() routines expect the object to currently exist
             // in the DB before we perform the DB operations.  So we need to
             // .migrateDrop()  before we actually .objectDestroy() this.
-            this.migrateDrop()
+            // this.migrateDrop()
+            //    // .then(() => {
+            //    //    // NOTE : prevent recursive remove connected fields
+            //    //    // - remove this field from JSON
+            //    //    this.object._fields = this.object.fields((f) => {
+            //    //       return f.id != this.id;
+            //    //    });
+            //    // })
+            //    .then(() => {
+            //       // Save JSON of the object
+            //       return this.object.fieldRemove(this);
+            //    })
+            super
+               .destroy()
                .then(() => {
-                  // NOTE : prevent recursive remove connected fields
-                  // - remove this field from JSON
-                  this.object._fields = this.object.fields((f) => {
-                     return f.id != this.id;
-                  });
-               })
-               .then(() => {
-                  var application = this.object.application;
+                  // Now we need to remove our linked Object->field
 
-                  var linkObject = application.objects(
-                     (obj) => obj.id == this.settings.linkObject
-                  )[0];
+                  var linkObject = this.datasourceLink;
                   if (!linkObject) return Promise.resolve();
 
-                  var linkField = linkObject.fields(
-                     (f) => f.id == this.settings.linkColumn
-                  )[0];
+                  var linkField = this.fieldLink;
                   if (!linkField) return Promise.resolve();
 
                   // destroy linked field
                   return linkField.destroy();
-               })
-               .then(() => {
-                  // Save JSON of the object
-                  return this.object.fieldRemove(this);
                })
                .then(resolve)
                .catch(reject);
@@ -692,7 +690,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 
                return d;
             });
-         } else if (data.id) {
+         } else if (data.id || data.uuid) {
             selectedData = data;
             selectedData.text =
                selectedData.text || linkedObject.displayData(selectedData);

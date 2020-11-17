@@ -1,7 +1,7 @@
 var path = require("path");
 var _ = require("lodash");
 
-var ABClassObject = require(path.join(__dirname, "ABObject"));
+var ABObject = require(path.join(__dirname, "ABObject"));
 
 var Model = require("objection").Model;
 
@@ -45,7 +45,7 @@ function getColumnFn(colType) {
 
 // to minimize .knex bindings (and connection pools!)
 
-module.exports = class ABObjectExternal extends ABClassObject {
+module.exports = class ABObjectExternal extends ABObject {
    constructor(attributes, application) {
       super(attributes, application);
    }
@@ -69,7 +69,10 @@ module.exports = class ABObjectExternal extends ABClassObject {
     */
    migrateCreate(knex, options) {
       sails.log.verbose("ABObjectExternal.migrateCreate()");
-
+      // We no longer create Federated Tables.
+      // Now we simply accept connections to outside Tables and work with them.
+      return Promise.resolve();
+      /*
       if (options == null)
          return Promise.reject(
             "ABObjectExternal needs target options to create a federated table"
@@ -247,6 +250,7 @@ module.exports = class ABObjectExternal extends ABClassObject {
                });
             })
       );
+*/
    }
 
    /**
@@ -258,6 +262,11 @@ module.exports = class ABObjectExternal extends ABClassObject {
    migrateDrop(knex) {
       sails.log.verbose("ABObject.migrateDrop()");
 
+      // We no longer manage Federated Tables, so we don't drop our
+      // connected table.
+      return Promise.resolve();
+
+      /*
       var tableName = this.dbTableName();
       sails.log.verbose(".... dbTableName:" + tableName);
 
@@ -280,6 +289,7 @@ module.exports = class ABObjectExternal extends ABClassObject {
             })
             .catch(reject);
       });
+      */
    }
 
    ///

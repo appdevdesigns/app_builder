@@ -7,6 +7,10 @@ const uuid = require("uuid/v4");
 var __ModelPool = {}; // reuse any previously created Model connections
 // to minimize .knex bindings (and connection pools!)
 
+var conditionFields = ["sort", "offset", "limit", "populate"];
+// the list of fields on a provided .findAll(cond) param that we should
+// consider when parsing the object.
+
 module.exports = class ABModel extends ABModelCore {
    /**
     * @method create
@@ -99,14 +103,35 @@ module.exports = class ABModel extends ABModelCore {
       //		 should we populate the connected fields of the entries
       //		 returned?
       cond = cond || {};
+      var defaultCond = {
+         // where: cond,
+         sort: [], // No Sorts
+         offset: 0, // no offset
+         limit: 0, // no limit
+         populate: false // don't populate the data
+      };
       if (!cond.where) {
-         cond = {
-            where: cond,
-            sort: [], // No Sorts
-            offset: 0, // no offset
-            limit: 0, // no limit
-            populate: false // don't populate the data
-         };
+         // if we don't seem to have an EXPANDED format, see if we can
+         // figure it out:
+
+         conditionFields.forEach((f) => {
+            if (!_.isUndefined(cond[f])) {
+               defaultCond[f] = cond[f];
+               delete cond[f];
+            }
+         });
+
+         // store the rest as our .where cond
+         defaultCond.where = cond;
+
+         cond = defaultCond;
+      } else {
+         // make sure cond has our defaults set:
+         conditionFields.forEach((f) => {
+            if (_.isUndefined(cond[f])) {
+               cond[f] = defaultCond[f];
+            }
+         });
       }
 
       // conditionDefaults is optional.  Some system tasks wont provide this.
@@ -143,7 +168,13 @@ module.exports = class ABModel extends ABModelCore {
          this.queryPopulate(query, cond.populate);
 
          // perform the operation
-         query.then(resolve).catch(reject);
+         query
+            .then((data) => {
+               // normalize our Data before returning
+               this.normalizeData(data);
+               resolve(data);
+            })
+            .catch(reject);
       });
    }
 
@@ -341,9 +372,10 @@ module.exports = class ABModel extends ABModelCore {
          tableName = this.object.dbTableName(true);
 
       if (!__ModelPool[modelName]) {
-         var knex = ABMigration.connection(
-            this.object.isImported ? this.object.connName : undefined
-         );
+         var connectionName = this.object.isExternal
+            ? this.object.connName
+            : undefined;
+         var knex = ABMigration.connection(connectionName);
 
          // Compile our jsonSchema from our DataFields
          // jsonSchema is only used by Objection.js to validate data before

@@ -42,7 +42,23 @@ const ABApplication = require(path.join(
    "platform",
    "ABApplication"
 ));
-var GeneralApp = new ABApplication({});
+var GeneralApp = null;
+var consoleCount = 0;
+// function loadGeneralApp() {
+//    if (typeof ABDefinitionModel != "undefined") {
+//       GeneralApp = new ABApplication({});
+//    } else {
+//       if (consoleCount == 0) {
+//          console.log("... ABServerApp: waiting for ABDefinitionModel to load");
+//       }
+//       consoleCount++;
+//       if (consoleCount > 20) {
+//          consoleCount = 0;
+//       }
+//       setTimeout(loadGeneralApp, 25);
+//    }
+// }
+// loadGeneralApp();
 
 var __AllDefinitions = {};
 
@@ -50,12 +66,17 @@ var Log = function(text) {
    console.log("ABServerApp:" + text);
 };
 module.exports = {
-   processes: (fn) => {
-      fn =
-         fn ||
-         function() {
-            return true;
-         };
+   objectNew: (def) => {
+      if (!GeneralApp) {
+         GeneralApp = ABSystemObject.getApplication();
+      }
+      return GeneralApp.objectNew(def);
+   },
+
+   processes: (fn = () => true) => {
+      if (!GeneralApp) {
+         GeneralApp = ABSystemObject.getApplication();
+      }
 
       return ABDefinitionModel.find({ type: "process" }).then(
          (listDefinitions) => {
@@ -92,5 +113,12 @@ module.exports = {
          }
       }
       return null;
+   },
+
+   queryNew: (def) => {
+      if (!GeneralApp) {
+         GeneralApp = ABSystemObject.getApplication();
+      }
+      return GeneralApp.queryNew(def);
    }
 };

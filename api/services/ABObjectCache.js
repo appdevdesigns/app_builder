@@ -8,8 +8,15 @@ module.exports = {
     */
    cache: function(object) {
       if (object == null) return;
-
-      __ObjectPool[object.id] = object;
+      if (object.id) {
+         __ObjectPool[object.id] = object;
+      } else {
+         var error = new Error(
+            "ABObjectCache.cache(): received object with invalid .id field"
+         );
+         console.error(error);
+         console.error(object);
+      }
    },
 
    /**
@@ -42,11 +49,14 @@ module.exports = {
    list: function(filter = () => true) {
       let result = [];
 
-      for (let key in __ObjectPool || {}) {
-         let obj = __ObjectPool[key];
-         if (filter(obj)) result.push(obj);
+      for (let id in __ObjectPool || {}) {
+         // let obj = __ObjectPool[id];
+         // if (filter(obj)) result.push(obj);
+         result.push(__ObjectPool[id]);
       }
 
-      return result;
+      // prevent case where an invalid object might be stored in
+      // __ObjectPool[id]
+      return result.filter((o) => o && filter(o));
    }
 };

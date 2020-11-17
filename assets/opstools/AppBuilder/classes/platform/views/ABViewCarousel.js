@@ -172,14 +172,23 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
                                           }) || [];
                                  }
                               }
-
-                              imageFields.unshift({
-                                 id: "",
-                                 value: L(
-                                    "ab.component.label.selectField",
-                                    "*Select a field"
-                                 )
-                              });
+                              if (imageFields.length > 0) {
+                                 imageFields.unshift({
+                                    id: "",
+                                    value: L(
+                                       "ab.component.label.selectField",
+                                       "*Select a field"
+                                    )
+                                 });
+                              } else {
+                                 imageFields.unshift({
+                                    id: "",
+                                    value: L(
+                                       "ab.component.label.noImageFields",
+                                       "*no image fields."
+                                    )
+                                 });
+                              }
 
                               $$(ids.field).define("options", imageFields);
                               $$(ids.field).refresh();
@@ -191,7 +200,7 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
                   {
                      view: "select",
                      name: "field",
-                     label: L("ab.component.label.field", "*Field:"),
+                     label: L("ab.component.label.imageField", "*Image Field:"),
                      labelWidth: App.config.labelWidthLarge,
                      options: []
                   }
@@ -331,19 +340,8 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
       if (!view) return;
 
       // Set the objects you can choose from in the list
-      var defaultOption = {
-         id: "",
-         value: L("ab.component.label.selectObject", "*Select an object")
-      };
-
       // Pull data collections to options
-      var objectOptions = view.application.datacollections().map((dc) => {
-         return {
-            id: dc.id,
-            value: dc.label
-         };
-      });
-      objectOptions.unshift(defaultOption);
+      var objectOptions = view.propertyDatacollections();
       $$(ids.datacollection).define("options", objectOptions);
       $$(ids.datacollection).refresh();
 

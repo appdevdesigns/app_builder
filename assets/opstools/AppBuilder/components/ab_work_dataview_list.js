@@ -154,7 +154,7 @@ module.exports = class AB_Work_Datacollection_List extends ABComponent {
 
             // get a DataCollection of all our objects
             datacollectionList = new webix.DataCollection({
-               data: application.datacollections()
+               data: application.datacollectionsIncluded()
             });
             datacollectionList.sort("label", "asc");
 
@@ -267,7 +267,7 @@ module.exports = class AB_Work_Datacollection_List extends ABComponent {
                return;
             }
 
-            let datacollections = CurrentApplication.datacollections();
+            let datacollections = CurrentApplication.datacollectionsIncluded();
             datacollectionList.parse(datacollections);
 
             // if (objectList.exists(object.id))
@@ -304,21 +304,19 @@ module.exports = class AB_Work_Datacollection_List extends ABComponent {
          },
 
          exclude: function() {
-            var datacollectionId = $$(ids.list).getSelectedId(false);
+            var datacollection = $$(ids.list).getSelectedItem(false);
 
             _logic.listBusy();
 
-            CurrentApplication.datacollectionExclude(datacollectionId).then(
-               () => {
-                  if (datacollectionList.exists(datacollectionId))
-                     datacollectionList.remove(datacollectionId);
+            CurrentApplication.datacollectionRemove(datacollection).then(() => {
+               if (datacollectionList.exists(datacollection.id))
+                  datacollectionList.remove(datacollection.id);
 
-                  _logic.listReady();
+               _logic.listReady();
 
-                  // clear object workspace
-                  _logic.callbacks.onChange(null);
-               }
-            );
+               // clear object workspace
+               _logic.callbacks.onChange(null);
+            });
          },
 
          rename: function() {

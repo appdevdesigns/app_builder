@@ -27,6 +27,16 @@ module.exports = class ABProcessTask extends ABProcessElementCore {
    ///
 
    /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @param {array} ids
+    *        the array of ids to store our relevant .ids into
+    */
+   exportIDs(ids) {
+      ids.push(this.id);
+   }
+
+   /**
     * @method save()
     *
     * persist this instance of ABObject with it's parent ABApplication

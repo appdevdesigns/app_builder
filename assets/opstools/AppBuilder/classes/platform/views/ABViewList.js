@@ -125,17 +125,7 @@ module.exports = class ABViewList extends ABViewListCore {
       var SourceSelector = $$(ids.datacollection);
 
       // Pull data collections to options
-      var dcOptions = view.application.datacollections().map((dc) => {
-         return {
-            id: dc.id,
-            value: dc.label
-         };
-      });
-
-      dcOptions.unshift({
-         id: null,
-         value: "[Select]"
-      });
+      var dcOptions = view.propertyDatacollections();
       SourceSelector.define("options", dcOptions);
       SourceSelector.define("value", datacollectionId);
       SourceSelector.refresh();
@@ -152,6 +142,8 @@ module.exports = class ABViewList extends ABViewListCore {
       view.settings.dataviewID = $$(ids.datacollection).getValue();
       view.settings.field = $$(ids.field).getValue();
       view.settings.height = $$(ids.height).getValue();
+      view.settings.height =
+         parseInt(view.settings.height) || ABViewList.defaultValues().height;
    }
 
    /*
@@ -171,7 +163,6 @@ module.exports = class ABViewList extends ABViewListCore {
       var _ui = {
          id: ids.component,
          view: "dataview",
-         height: this.settings.height,
          type: {
             width: 1000,
             height: 30
@@ -184,12 +175,20 @@ module.exports = class ABViewList extends ABViewListCore {
          }
       };
 
+      // set height or autoHeight
+      if (this.settings.height != 0) {
+         _ui.height = this.settings.height;
+      } else {
+         _ui.autoHeight = true;
+      }
+
       var _init = (options) => {
          var dv = this.datacollection;
          if (!dv) return;
 
          // bind dc to component
          dv.bind($$(ids.component));
+         // $$(ids.component).sync(dv);
       };
 
       // var _logic = {

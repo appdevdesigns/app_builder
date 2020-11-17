@@ -136,5 +136,4 @@ module.exports = {
       let knex = ABMigration.connection();
       return knex.transaction(callback);
    }
-
 };

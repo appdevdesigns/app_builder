@@ -22,6 +22,7 @@ module.exports = class ABMLClass extends ABMLClassCore {
     * translate the multilingual fields (in this.mlFields) from
     * our .translation data.
     */
+   /*
    translate() {
       // NOTE: until we have our proper Core changes in place,
       // this file will also be included on the Server.  So we
@@ -31,13 +32,14 @@ module.exports = class ABMLClass extends ABMLClassCore {
          OP.Multilingual.translate(this, this, this.mlFields);
       }
    }
-
+*/
    /**
     * @method unTranslate()
     *
     * un-translate the multilingual fields (in this.mlFields) into
     * our .translation data
     */
+   /*
    unTranslate() {
       // NOTE: until we have our proper Core changes in place,
       // this file will also be included on the Server.  So we
@@ -47,7 +49,7 @@ module.exports = class ABMLClass extends ABMLClassCore {
          OP.Multilingual.unTranslate(this, this, this.mlFields);
       }
    }
-
+*/
    /**
     * @method destroy()
     * remove this definition.

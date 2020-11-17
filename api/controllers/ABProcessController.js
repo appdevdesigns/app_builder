@@ -71,13 +71,13 @@ module.exports = {
                // if (cond.populate == null) cond.populate = true;
 
                RoleModel.queryFind(cond, req.user.data)
-                  .catch(done)
                   .then((list) => {
                      (list || []).forEach((l) => {
                         roles.push(l.uuid);
                      });
                      done();
-                  });
+                  })
+                  .catch(done);
             },
             (done) => {
                var jobData = {

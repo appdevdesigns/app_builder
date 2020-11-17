@@ -147,18 +147,7 @@ module.exports = class ABViewComment extends ABViewCommentCore {
 
    static propertyUpdateDatacollectionOptions(ids, view, dcId) {
       // Pull data collections to options
-      var dcOptions = view.application.datacollections().map((dc) => {
-         return {
-            id: dc.id,
-            value: dc.label
-         };
-      });
-
-      dcOptions.unshift({
-         id: null,
-         value: "[Select]"
-      });
-
+      var dcOptions = view.propertyDatacollections();
       $$(ids.dataSource).define("options", dcOptions);
       $$(ids.dataSource).define("value", dcId);
       $$(ids.dataSource).refresh();

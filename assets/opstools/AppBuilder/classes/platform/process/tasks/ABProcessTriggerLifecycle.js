@@ -24,7 +24,7 @@ module.exports = class ABProcessTriggerLifecycle extends ABProcessTriggerLifecyc
    propertiesShow(id) {
       var ids = this.propertyIDs(id);
 
-      var allObjects = this.application.objects();
+      var allObjects = this.application.objectsIncluded();
       var listObj = [];
       allObjects.forEach((obj) => {
          listObj.push({ id: obj.id, value: obj.label });

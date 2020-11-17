@@ -315,9 +315,7 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                         let rand = Math.floor(Math.random() * 1000);
                         field.settings.isSource = 1;
 
-                        var linkObject = _currentApplication.objects(
-                           (obj) => obj.id == field.settings.linkObject
-                        )[0];
+                        var linkObject = field.datasourceLink;
 
                         // 1:1, 1:M, M:1 should have same column name
                         let linkColumnName = field.columnName;
@@ -341,7 +339,7 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                         }
 
                         linkCol = linkObject.fieldNew({
-                           id: OP.Util.uuid(),
+                           // id: OP.Util.uuid(),
 
                            key: field.key,
 
@@ -363,7 +361,7 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                         });
 
                         // Update link column id to source column
-                        field.settings.linkColumn = linkCol.id;
+                        // field.settings.linkColumn = linkCol.id;
                      }
                   } else {
                      // NOTE: update label before .toObj for .unTranslate to .translations
@@ -419,50 +417,78 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
                            // TODO workaround : update link column id
                            if (linkCol != null) {
                               linkCol.settings.linkColumn = field.id;
-                              linkCol.save().then(() => {
-                                 // when add new link fields, then run create migrate fields here
-                                 if (!_editField) {
-                                    Promise.resolve()
-                                       .then(() => {
-                                          return new Promise((next, err) => {
-                                             field
-                                                .migrateCreate()
-                                                .catch(err)
-                                                .then(() => next());
-                                          });
-                                       })
-                                       .then(() => {
-                                          return new Promise((next, err) => {
-                                             linkCol
-                                                .migrateCreate()
-                                                .catch(err)
-                                                .then(() => next());
-                                          });
-                                       })
-                                       .then(() => {
-                                          return new Promise((next, err) => {
+                              return linkCol
+                                 .save()
+                                 .then(() => {
+                                    // now linkCol has an .id, so update our field:
+                                    field.settings.linkColumn = linkCol.id;
+                                    return field.save();
+                                 })
+                                 .then(() => {
+                                    // when add new link fields, then run create migrate fields here
+                                    if (!_editField) {
+                                       return Promise.resolve()
+                                          .then(() => {
+                                             return new Promise((next, err) => {
+                                                field
+                                                   .migrateCreate()
+                                                   .catch(err)
+                                                   .then(() => next());
+                                             });
+                                          })
+                                          .then(() => {
+                                             return new Promise((next, err) => {
+                                                linkCol
+                                                   .migrateCreate()
+                                                   .catch(err)
+                                                   .then(() => next());
+                                             });
+                                          })
+                                          .then(() => {
+                                             // return new Promise((next, err) => {
                                              refreshModels();
                                              finishUpdateField();
 
-                                             next();
+                                             //    next();
+                                             // });
                                           });
-                                       });
-                                 } else {
-                                    refreshModels();
-                                    finishUpdateField();
-                                 }
-                              });
+                                    } else {
+                                       refreshModels();
+                                       finishUpdateField();
+                                    }
+                                 });
                            } else {
                               finishUpdateField();
                            }
                         })
                         .catch((err) => {
-                           OP.Validation.isFormValidationError(
-                              err,
-                              $$(editor.ui.id)
-                           );
-                           $$(ids.buttonSave).enable();
-                           $$(ids.component).hideProgress();
+                           if (
+                              OP.Validation.isFormValidationError(
+                                 err,
+                                 $$(editor.ui.id)
+                              )
+                           ) {
+                              // for validation errors, keep things in place
+                              // and let the user fix the data:
+                              $$(ids.buttonSave).enable();
+                              $$(ids.component).hideProgress();
+                           } else {
+                              var errMsg = err.toString();
+                              if (err.message) {
+                                 errMsg = err.message;
+                              }
+                              webix.alert({
+                                 title: "Error saving fields.",
+                                 ok: "tell appdev",
+                                 text: errMsg,
+                                 type: "alert-error"
+                              });
+
+                              // Q: if not validation error, do we
+                              // then field.destroy() ? and let them try again?
+                              // $$(ids.buttonSave).enable();
+                              // $$(ids.component).hideProgress();
+                           }
                         });
                   }
                } else {

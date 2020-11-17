@@ -78,17 +78,19 @@ module.exports = class AB_Work_Query extends ABComponent {
          show: function() {
             $$(ids.component).show();
 
-            if (
-               CurrentApplication &&
-               (!CurrentApplication.loadedQueries || QueryList.count() < 1)
-            ) {
-               QueryList.busy();
+            QueryList.refresh();
 
-               CurrentApplication.queryLoad().then(() => {
-                  QueryList.refresh();
-                  QueryList.ready();
-               });
-            }
+            // if (
+            //    CurrentApplication &&
+            //    (!CurrentApplication.loadedQueries || QueryList.count() < 1)
+            // ) {
+            //    QueryList.busy();
+
+            //    CurrentApplication.queryLoad().then(() => {
+            //       QueryList.refresh();
+            //       QueryList.ready();
+            //    });
+            // }
          }
       };
       this._logic = _logic;

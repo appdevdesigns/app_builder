@@ -247,12 +247,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
       super.propertyEditorPopulate(App, ids, view);
 
       // Pull data views to options
-      let dcOptions = view.application.datacollections().map((dc) => {
-         return {
-            id: dc.id,
-            value: dc.label
-         };
-      });
+      let dcOptions = view.propertyDatacollections();
 
       let $DcSelector = $$(ids.datacollection);
       $DcSelector.define("options", dcOptions);
@@ -1242,6 +1237,9 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                   id: f.columnIndex,
                   header: f.field.label,
                   editor: editor,
+                  template: function(obj, common, value, col, ind) {
+                     return value.replace(/[<]/g, "&lt;");
+                  },
                   minWidth: 150,
                   fillspace: true
                });
@@ -1328,19 +1326,6 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
 
             /** Prepare Data */
             let parsedData = [];
-            function escapeHtml(text) {
-               var map = {
-                  "&": "&amp;",
-                  "<": "&lt;",
-                  ">": "&gt;",
-                  '"': "&quot;",
-                  "'": "&#039;"
-               };
-
-               return text.replace(/[&<>"']/g, function(m) {
-                  return map[m];
-               });
-            }
 
             (_dataRows || []).forEach((row, index) => {
                let rowValue = {
@@ -1360,7 +1345,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      }
                      rowValue[f.columnIndex] = dateFormat;
                   } else {
-                     rowValue[f.columnIndex] = escapeHtml(data); // array to object
+                     rowValue[f.columnIndex] = data; // array to object
                   }
                });
 

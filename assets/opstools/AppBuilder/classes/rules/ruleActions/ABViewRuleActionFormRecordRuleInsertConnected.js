@@ -83,10 +83,12 @@ module.exports = class ABViewRuleActionFormRecordRuleInsertConnected extends Upd
 
       if (newObjectValues.newRecords) {
          // now add our .id to the proper field in newObjectValues
-         let connectedObjectField = connObj.fields((f) => {
+         let connectedObjectField;
+         connectedObjectField = connObj.fields((f) => {
             return f.id == connectionField.settings.linkColumn;
-         })[0];
-         if (connectedObjectField == null)
+         }, true)[0];
+
+         if (!connectedObjectField)
             return Promise.reject("No connected object field");
 
          newObjectValues.newRecords.forEach((r) => {
@@ -96,10 +98,12 @@ module.exports = class ABViewRuleActionFormRecordRuleInsertConnected extends Upd
          });
       } else {
          // now add our .id to the proper field in newObjectValues
-         let connectedObjectField = connObj.fields((f) => {
+         let connectedObjectField;
+         connectedObjectField = connObj.fields((f) => {
             return f.id == connectionField.settings.linkColumn;
-         })[0];
-         if (connectedObjectField == null)
+         }, true)[0];
+
+         if (!connectedObjectField)
             return Promise.reject("No connected object field");
 
          newObjectValues[connectedObjectField.columnName] = options.data.id;

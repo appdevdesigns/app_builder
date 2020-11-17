@@ -264,7 +264,7 @@ module.exports = class ABViewFormButton extends ABViewFormButtonCore {
          _ui.cols.push({
             view: "button",
             type: "form",
-            css: "webix_priamry",
+            css: "webix_primary",
             autowidth: true,
             value: this.settings.saveLabel || L("ab.common.save", "*Save"),
             click: function() {

@@ -97,28 +97,32 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
       var idBase = "ABViewDataview_" + this.id;
       var ids = {
          scrollview: App.unique(idBase + "_scrollview"),
-         component: App.unique(idBase + "_component")
+         component: App.unique(idBase + "_component"),
+         dataFlexView: App.unique(idBase + "_dataFlexView")
       };
 
       let linkPage = this.linkPageHelper.component(App, idBase);
 
       com.ui = {
-         id: ids.scrollview,
-         view: "scrollview",
-         scroll: "y",
+         id: ids.component,
          body: {
-            id: ids.component,
-            view: "layout",
-            paddingX: 15,
-            paddingY: 19,
-            type: "space",
-            rows: []
-         },
-         on: {
-            onAfterScroll: function() {
-               let pos = this.getScrollState();
+            id: ids.scrollview,
+            view: "scrollview",
+            scroll: "y",
+            body: {
+               id: ids.dataFlexView,
+               view: "flexlayout",
+               paddingX: 15,
+               paddingY: 19,
+               type: "space",
+               cols: []
+            },
+            on: {
+               onAfterScroll: function() {
+                  let pos = this.getScrollState();
 
-               com.logic.scroll(pos);
+                  com.logic.scroll(pos);
+               }
             }
          }
       };
@@ -135,37 +139,48 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
             datacollection: dc
          });
 
-         com.onShow();
+         com.logic.busy();
+
+         this.eventClear();
 
          this.eventAdd({
             emitter: dc,
             eventName: "loadData",
             listener: () => {
-               com.onShow();
+               com.renderData();
             }
          });
-
-         if (dc.dataStatus == dc.dataStatusFlag.notInitial) {
-            // load data when a widget is showing
-            dc.loadData();
-         }
       };
 
       com.logic = {
          busy: () => {
-            let Layout = $$(ids.component);
+            let Layout = $$(ids.dataFlexView);
+            let Scroll = $$(ids.scrollview);
+
+            // editor mode doesn't load this ui
+            if (!Scroll || !Layout) return;
 
             Layout.disable();
 
-            if (Layout.showProgress) Layout.showProgress({ type: "icon" });
+            if (!Scroll.showProgress) {
+               webix.extend(Scroll, webix.ProgressBar);
+            }
+            Scroll.showProgress({ type: "icon" });
          },
 
          ready: () => {
-            let Layout = $$(ids.component);
+            let Layout = $$(ids.dataFlexView);
+            let Scroll = $$(ids.scrollview);
+
+            // editor mode doesn't load this ui
+            if (!Scroll || !Layout) return;
 
             Layout.enable();
 
-            if (Layout.hideProgress) Layout.hideProgress();
+            if (Scroll && !Scroll.hideProgress) {
+               webix.extend(Scroll, webix.ProgressBar);
+            }
+            Scroll.hideProgress();
          },
 
          // we need to recursivly look backwards to toggle tabs into view when a user choosed to select a tab for edit or details views
@@ -209,25 +224,24 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
 
             let y = pos.y;
             let maxYPos =
-               $$(ids.component).$height - $$(ids.scrollview).$height;
+               $$(ids.dataFlexView).$height - $$(ids.scrollview).$height;
             if (maxYPos - y <= loadWhen) {
                if (this.loadMoreTimer) return;
+
+               com.setYPos(y);
 
                var dc = this.datacollection;
                if (!dc) return;
 
-               if (this._rowCount >= dc.totalCount) return;
+               if ($$(ids.dataFlexView).getChildViews().length >= dc.totalCount)
+                  return;
 
                // loading cursor
                com.logic.busy();
 
-               dc.loadData(this._rowCount || 0)
-                  .catch(() => {
-                     com.logic.ready();
-                  })
-                  .then(() => {
-                     com.logic.ready();
-                  });
+               dc.loadData($$(ids.dataFlexView).getChildViews().length || 0)
+                  .catch(() => {})
+                  .then(() => {});
 
                this.loadMoreTimer = setTimeout(() => {
                   this.loadMoreTimer = null;
@@ -237,61 +251,81 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
       };
 
       com.onShow = () => {
+         var dc = this.datacollection;
+         if (!dc) return;
+
+         if (dc.dataStatus == dc.dataStatusFlag.notInitial) {
+            // load data when a widget is showing
+            dc.loadData();
+         } else if (dc.dataStatus == dc.dataStatusFlag.initialized) {
+            com.renderData();
+         }
+      };
+
+      com.setYPos = (pos) => {
+         this.yPosition = pos;
+      };
+
+      com.getYPos = () => {
+         return this.yPosition || 0;
+      };
+
+      com.renderData = () => {
          var editPage = this.settings.editPage;
          var detailsPage = this.settings.detailsPage;
          var editTab = this.settings.editTab;
          var detailsTab = this.settings.detailsTab;
          var accessLevel = this.parent.getUserAccess();
-
-         let baseCom = super.component(App, this.id);
-         baseCom.onShow();
-
-         // clear UI
-         webix.ui(
-            [
-               {
-                  view: "label",
-                  label: "No data",
-                  height: 50,
-                  align: "center"
-               }
-            ],
-            $$(ids.component)
-         );
+         var records = [];
 
          var dc = this.datacollection;
          if (!dc) return;
 
-         // add loading cursor
-         var Layout = $$(ids.component);
-         if (Layout) webix.extend(Layout, webix.ProgressBar);
+         var Layout = $$(ids.dataFlexView) || $$(ids.component);
+
+         var recordWidth = Math.floor(
+            (Layout.$width - 20 - parseInt(this.settings.xCount) * 20) /
+               parseInt(this.settings.xCount)
+         );
 
          var rows = dc.getData();
 
+         // if this amount of data is already parsed just skip the rest.
+         if (Layout.currentLength == rows.length) return;
+
+         Layout.currentLength = rows.length;
+
          // store total of rows
-         this._rowCount = rows.length;
+         this._startPos = Layout.getChildViews
+            ? Layout.getChildViews().length
+            : 0;
 
-         // lets build a grid based off the number of columns we want in each row
-         var dataGrid = [];
-         var colCount = 1; // start with column 1
-         var rowObj = { cols: [] }; // create row that has a cols array to push items into
-         // loop through items and put them into columns
-         rows.forEach((row) => {
-            // if the column value is higher than the number of columns allowed begin a new row
-            if (colCount > parseInt(this.settings.xCount)) {
-               dataGrid.push(rowObj);
-               rowObj = { cols: [] };
-               colCount = 1;
+         let stopPos = rows.length;
+
+         if (this._startPos == 0) {
+            if (rows.length < 20) {
+               stopPos = rows.length;
+            } else {
+               stopPos = 20;
             }
+         } else if (rows.length - this._startPos > 20) {
+            stopPos = this._startPos + 20;
+         }
 
+         if (dc.settings.loadAll) {
+            stopPos = rows.length;
+         }
+
+         var dataGrid = [];
+         for (var i = this._startPos; i < stopPos; i++) {
             // get the components configuation
-            let detailCom = _.cloneDeep(super.component(App, row.id));
+            let detailCom = _.cloneDeep(super.component(App, rows[i].id));
 
             // adjust the UI to make sure it will look like a "card"
             detailCom.ui.type = "space";
             detailCom.ui.css = "ab-detail-view";
             if (detailsPage || editPage) {
-               detailCom.ui.css += " ab-detail-hover ab-record-" + row.id;
+               detailCom.ui.css += " ab-detail-hover ab-record-" + rows[i].id;
             }
             if (detailsPage) {
                detailCom.ui.css += " ab-detail-page";
@@ -301,90 +335,89 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
             }
             detailCom.ui.paddingX = 10;
             detailCom.ui.paddingY = 6;
+            detailCom.ui.minWidth = recordWidth - 10;
+            detailCom.ui.maxWidth = recordWidth;
 
-            // put the component into the column
-            rowObj.cols.push(detailCom.ui);
-
-            // we are done with this column move to the next
-            colCount++;
-         });
-
-         // get any empty cols with number of colums minus the mod of the length and the xCount
-         var emptyCols =
-            parseInt(this.settings.xCount) -
-            (rows.length % parseInt(this.settings.xCount));
-
-         // make sure that we need emptyCols, that we are doing more than one column per row and that the emptyCols does not equal the number per row
-         if (
-            emptyCols &&
-            parseInt(this.settings.xCount) > 1 &&
-            emptyCols != parseInt(this.settings.xCount)
-         ) {
-            for (var i = 0; i < emptyCols; i++) {
-               // add a spacer to fill column space
-               rowObj.cols.push({});
+            if (Layout.addView) {
+               Layout.addView(detailCom.ui, -1);
+               detailCom.init(null, accessLevel);
+               setTimeout(detailCom.logic.displayData(rows[i]), 0);
+            } else {
+               records.push(detailCom.ui);
             }
          }
 
-         // push in the last row
-         dataGrid.push(rowObj);
-
-         // dynamically create the UI with this new configuration
-         webix.ui(dataGrid, $$(ids.component));
-
-         if (detailsPage || editPage) {
-            $$(ids.component).$view.onclick = (e) => {
-               var clicked = false;
-               if (editPage) {
-                  for (let p of e.path) {
-                     if (
-                        p.className &&
-                        p.className.indexOf("webix_accordionitem_header") > -1
-                     ) {
-                        clicked = true;
-                        $(p.parentNode.parentNode)[0].classList.forEach((c) => {
-                           if (c.indexOf("ab-record-") > -1) {
-                              // var record = parseInt(c.replace("ab-record-", ""));
-                              var record = c.replace("ab-record-", "");
-                              linkPage.changePage(editPage, record);
-                              // com.logic.toggleTab(detailsTab, ids.component);
-                           }
-                        });
-                        break;
-                     }
-                  }
-               }
-               if (detailsPage && !clicked) {
-                  for (let p of e.path) {
-                     if (
-                        p.className &&
-                        p.className.indexOf("webix_accordionitem") > -1
-                     ) {
-                        $(p.parentNode.parentNode)[0].classList.forEach((c) => {
-                           if (c.indexOf("ab-record-") > -1) {
-                              // var record = parseInt(c.replace("ab-record-", ""));
-                              var record = c.replace("ab-record-", "");
-                              linkPage.changePage(detailsPage, record);
-                              // com.logic.toggleTab(detailsTab, ids.component);
-                           }
-                        });
-                        break;
-                     }
-                  }
-               }
+         if (records.length) {
+            var flexlayout = {
+               id: ids.dataFlexView,
+               view: "flexlayout",
+               paddingX: 15,
+               paddingY: 19,
+               type: "space",
+               cols: records
             };
+            webix.ui(flexlayout, $$(ids.component));
+
+            for (var i = this._startPos; i < stopPos; i++) {
+               let detailCom = _.cloneDeep(super.component(App, rows[i].id));
+               detailCom.init(null, accessLevel);
+               setTimeout(detailCom.logic.displayData(rows[i]), 0);
+            }
          }
 
-         // loop through the components so we can initialize their data
-         // this has to be done after they have been attached to the view so we couldn't have done in the previous step
-         rows.forEach((row) => {
-            let detailCom = _.cloneDeep(super.component(App, row.id));
+         if ($$(ids.scrollview)) {
+            $$(ids.scrollview).scrollTo(0, com.getYPos());
 
-            detailCom.init(null, accessLevel);
-            detailCom.logic.displayData(row);
-         });
+            if (detailsPage || editPage) {
+               Layout.$view.onclick = (e) => {
+                  var clicked = false;
+                  if (editPage) {
+                     for (let p of e.path) {
+                        if (
+                           p.className &&
+                           p.className.indexOf("webix_accordionitem_header") >
+                              -1
+                        ) {
+                           clicked = true;
+                           $(p.parentNode.parentNode)[0].classList.forEach(
+                              (c) => {
+                                 if (c.indexOf("ab-record-") > -1) {
+                                    // var record = parseInt(c.replace("ab-record-", ""));
+                                    var record = c.replace("ab-record-", "");
+                                    linkPage.changePage(editPage, record);
+                                    // com.logic.toggleTab(detailsTab, ids.component);
+                                 }
+                              }
+                           );
+                           break;
+                        }
+                     }
+                  }
+                  if (detailsPage && !clicked) {
+                     for (let p of e.path) {
+                        if (
+                           p.className &&
+                           p.className.indexOf("webix_accordionitem") > -1
+                        ) {
+                           $(p.parentNode.parentNode)[0].classList.forEach(
+                              (c) => {
+                                 if (c.indexOf("ab-record-") > -1) {
+                                    // var record = parseInt(c.replace("ab-record-", ""));
+                                    var record = c.replace("ab-record-", "");
+                                    linkPage.changePage(detailsPage, record);
+                                    // com.logic.toggleTab(detailsTab, ids.component);
+                                 }
+                              }
+                           );
+                           break;
+                        }
+                     }
+                  }
+               };
+            }
+         }
 
-         $$(ids.scrollview).adjust();
+         com.logic.ready();
       };
 
       return com;

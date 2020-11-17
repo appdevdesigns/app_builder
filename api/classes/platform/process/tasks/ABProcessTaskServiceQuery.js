@@ -21,6 +21,20 @@ const reqAB = AB.reqAB({}, {});
 reqAB.jobID = "ABProcessTaskServiceQuery";
 
 module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQueryCore {
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @param {array} ids
+    *         the array of ids to insert my relevant .ids into.
+    */
+   exportIDs(ids) {
+      super.exportIDs(ids);
+
+      if (this.qlObj) {
+         this.qlObj.exportIDs(ids);
+      }
+   }
+
    ////
    //// Process Instance Methods
    ////

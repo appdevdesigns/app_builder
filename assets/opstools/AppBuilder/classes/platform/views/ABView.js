@@ -3,6 +3,10 @@ const ABPropertyComponent = require("../ABPropertyComponent");
 
 const ABViewPropertyComponentDefaults = ABViewCore.defaultValues();
 
+function L(key, altText) {
+   return AD.lang.label.getLabel(key) || altText;
+}
+
 module.exports = class ABView extends ABViewCore {
    constructor(values, application, parent, defaultValues) {
       super(values, application, parent, defaultValues);
@@ -382,10 +386,12 @@ module.exports = class ABView extends ABViewCore {
    }
 
    static propertyEditorPopulate(App, ids, view) {
+      if (!view) return;
       $$(ids.label).setValue(view.label);
    }
 
    static propertyEditorValues(ids, view) {
+      if (!view) return;
       view.label = $$(ids.label).getValue();
    }
 
@@ -406,6 +412,48 @@ module.exports = class ABView extends ABViewCore {
                reject(err);
             });
       });
+   }
+
+   /**
+    * @method propertyDatacollections()
+    * a convience method to return a list of available Datacollections
+    * @param {bool} isGlobal
+    *        true : return a list of ALL available DataCollections
+    *        false: (default) only return a list of included DCs
+    * @return {array}
+    *        [ { id:dc.id, value:dc.label } ]
+    *        this format is used by the webix select lists to choose your
+    *        datasources.
+    */
+   propertyDatacollections(
+      filter = () => true,
+      isGlobal = false,
+      defaultOption = null
+   ) {
+      if (defaultOption == null) {
+         defaultOption = {
+            id: "",
+            value: L(
+               "ab.component.label.selectDatacollection",
+               "*Select a DataCollection"
+            )
+         };
+      }
+
+      var list = [];
+      if (isGlobal) {
+         list = this.application.datacollections(filter);
+      } else {
+         list = this.application.datacollectionsIncluded(filter);
+      }
+      list = list.map((dc) => {
+         return {
+            id: dc.id,
+            value: dc.label
+         };
+      });
+      list.unshift(defaultOption);
+      return list;
    }
 
    /*

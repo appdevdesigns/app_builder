@@ -1,449 +1,18 @@
 const path = require("path");
 const _ = require("lodash");
 
-const ABClassObject = require(path.join(__dirname, "ABObject"));
+const ABObjectQueryCore = require(path.join(
+   __dirname,
+   "..",
+   "core",
+   "ABObjectQueryCore"
+));
 const ABObjectExternal = require(path.join(__dirname, "ABObjectExternal"));
 const ABObjectImport = require(path.join(__dirname, "ABObjectImport"));
 
 const Model = require("objection").Model;
 
-module.exports = class ABClassQuery extends ABClassObject {
-   constructor(attributes, application) {
-      super(attributes, application);
-
-      // populate connection objects
-      this._objects = {};
-      (attributes.objects || []).forEach((obj) => {
-         if (obj.isExternal == true)
-            this._objects[obj.alias] = new ABObjectExternal(obj, application);
-         else if (obj.isImported == true)
-            this._objects[obj.alias] = new ABObjectImport(obj, application);
-         else this._objects[obj.alias] = new ABClassObject(obj, application);
-      });
-
-      this.viewName = attributes.viewName || "";
-      // knex does not like .(dot) in table and column names
-      // https://github.com/knex/knex/issues/2762
-      this.viewName = this.viewName.replace(/[^a-zA-Z0-9_ ]/gi, "");
-
-      /*
-		{
-			id: uuid(),
-			name: 'name',
-			labelFormat: 'xxxxx',
-			isImported: 1/0,
-			viewName:'string',  // NOTE: store view name
-			urlPath:'string',
-			importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
-										// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
-			translations:[
-				{}
-			],
-			objects: [
-				{ABObject}
-			],
-			fields:[
-				{
-					alias: "",
-					field: {ABField},
-				}
-			],
-
-			// we store a list of joins:
-			joins: {
-				alias: "",							// the alias name of table - use in SQL command
-				objectID: "uuid",					// id of the connection object
-				links: [
-					{
-						alias: "",							// the alias name of table - use in SQL command
-						fieldID: "uuid",					// the connection field of the object we are joining with.
-						type:[left, right, inner, outer]	// join type: these should match the names of the knex methods
-								=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
-						links: [
-							...
-						]
-					}
-				]
-			},
-
-
-			where: { QBWhere },
-			settings: {
-				grouping: false,	// Boolean
-				hidePrefix: false	// Boolean
-			}
-
-		}
-		*/
-
-      // import all our Joins
-      this.importJoins(attributes.joins || {});
-      this.importFields(attributes.fields || []); // import after joins are imported
-
-      this.where = attributes.where;
-
-      // Fix default glue value
-      if (
-         this.where &&
-         !this.where.glue &&
-         this.where.rules &&
-         this.where.rules.length > 0
-      )
-         this.where.glue = "and";
-
-      this._objectWorkspaceViews = attributes.objectWorkspaceViews || {};
-
-      // NOTE: this is for transitioning from legacy data structures.
-      // we can remove this after our changes have been accepted on working
-      // systems.
-      // if (!this._where) {
-      // 	// load any legacy objectWorkspace.filterCondition
-      // 	if (attributes.objectWorkspace && attributes.objectWorkspace.filterConditions) {
-      // 		this._where = attributes.objectWorkspace.filterConditions;
-      // 	}
-
-      // 	// // overwrite with an updated workspaceFilterCondition
-      // 	// if (this.workspaceFilterConditions && this.workspaceFilterConditions.length > 0) {
-      // 	// 	this._where = this.workspaceFilterConditions;
-      // 	// }
-      // }
-
-      this.settings = this.settings || {};
-
-      if (attributes && attributes.settings) {
-         // convert from "0" => true/false
-         this.settings.grouping = JSON.parse(
-            attributes.settings.grouping || false
-         );
-         this.settings.hidePrefix = JSON.parse(
-            attributes.settings.hidePrefix || false
-         );
-      }
-   }
-
-   ///
-   /// Static Methods
-   ///
-   /// Available to the Class level object.  These methods are not dependent
-   /// on the instance values of the Application.
-   ///
-
-   ///
-   /// Instance Methods
-   ///
-
-   /**
-    * @method toObj()
-    *
-    * properly compile the current state of this ABApplication instance
-    * into the values needed for saving to the DB.
-    *
-    * Most of the instance data is stored in .json field, so be sure to
-    * update that from all the current values of our child fields.
-    *
-    * @return {json}
-    */
-   toObj() {
-      var result = super.toObj();
-
-      result.viewName = this.viewName;
-      /// include our additional objects and where settings:
-
-      result.joins = this.exportJoins(); //object;
-      result.where = this.where; // .workspaceFilterConditions
-
-      result.settings = this.settings;
-
-      return result;
-   }
-
-   ///
-   /// Fields
-   ///
-
-   /**
-    * @method fieldNew()
-    *
-    * return an instance of a new (unsaved) ABField that is tied to this
-    * ABObject.
-    *
-    * NOTE: this new field is not included in our this.fields until a .save()
-    * is performed on the field.
-    *
-    * @return {ABField}
-    */
-   // fieldNew ( values ) {
-   // 	// NOTE: ABFieldManager.newField() returns the proper ABFieldXXXX instance.
-   // 	return ABFieldManager.newField( values, this );
-   // }
-
-   /**
-    * @method importFields
-    * instantiate a set of fields from the given attributes.
-    * Our attributes are a set of field URLs That should already be created in their respective
-    * ABObjects.
-    * @param {array} fieldSettings The different field urls for each field
-    *					{ }
-    */
-   importFields(fieldSettings) {
-      var newFields = [];
-      (fieldSettings || []).forEach((fieldInfo) => {
-         if (fieldInfo == null) return;
-
-         // pull a object by alias
-         let object = this.objectByAlias(fieldInfo.alias);
-         if (!object) return;
-
-         var field = object.fields((f) => f.id == fieldInfo.fieldID)[0];
-
-         // should be a field of base/join objects
-         if (
-            field &&
-            this.canFilterField(field) &&
-            // check duplicate
-            newFields.filter(
-               (f) =>
-                  f.alias == fieldInfo.alias && f.field.id == fieldInfo.fieldID
-            ).length < 1
-         ) {
-            // add alias to field
-            let cloneField = _.clone(field, false);
-            cloneField.alias = fieldInfo.alias;
-
-            newFields.push({
-               alias: fieldInfo.alias,
-               field: cloneField
-            });
-         }
-      });
-      this._fields = newFields;
-   }
-
-   ///
-   /// Joins & Objects
-   ///
-
-   /**
-    * @method joins()
-    *
-    * return an object of joins for this Query.
-    *
-    * @return {Object}
-    */
-   joins() {
-      return this._joins || {};
-   }
-
-   /**
-    * @method objects()
-    *
-    * return an array of all the ABObjects for this Query.
-    *
-    * @return {array}
-    */
-   objects(filter) {
-      if (!this._objects) return [];
-
-      filter =
-         filter ||
-         function() {
-            return true;
-         };
-
-      // get all objects (values of a object)
-      let objects = Object.keys(this._objects).map((key) => {
-         return this._objects[key];
-      });
-
-      return (objects || []).filter(filter);
-   }
-
-   /**
-    * @method objectByAlias()
-    * return ABClassObject search by alias name
-    *
-    * @param {string} - alias name
-    * @return {ABClassObject}
-    */
-   objectByAlias(alias) {
-      return (this._objects || {})[alias];
-   }
-
-   /**
-    * @method objectAlias()
-    *
-    * return alias of of ABObjects.
-    *
-    * @return {string}
-    */
-   objectAlias(objectId) {
-      let result = null;
-
-      Object.keys(this._objects || {}).forEach((alias) => {
-         let obj = this._objects[alias];
-         if (obj.id == objectId && !result) {
-            result = alias;
-         }
-      });
-
-      return result;
-   }
-
-   /**
-    * @method objectBase
-    * return the origin object
-    *
-    * @return {ABObject}
-    */
-   objectBase() {
-      if (!this._joins.objectID) return null;
-
-      return ABObjectCache.get(this._joins.objectID) || null;
-   }
-
-   /**
-    * @method importJoins
-    * instantiate a set of joins from the given attributes.
-    * Our joins contain a set of ABObject URLs that should already be created in our Application.
-    * @param {Object} settings The different field urls for each field
-    *					{ }
-    */
-   importJoins(settings) {
-      // copy join settings
-      this._joins = _.cloneDeep(settings);
-
-      var newObjects = {};
-
-      let storeObject = (object, alias) => {
-         if (!object) return;
-
-         // var inThere = newObjects.filter(obj => obj.id == object.id && obj.alias == alias ).length > 0;
-         // if (!inThere) {
-         newObjects[alias] = object;
-         // newObjects.push({
-         // 	alias: alias,
-         // 	object: object
-         // });
-         // }
-      };
-
-      let processJoin = (baseObject, joins) => {
-         if (!baseObject) return;
-
-         (joins || []).forEach((link) => {
-            // Convert our saved settings:
-            //	{
-            //		alias: "",							// the alias name of table - use in SQL command
-            //		objectID: "uuid",					// id of the connection object
-            //		links: [
-            //			{
-            //				alias: "",							// the alias name of table - use in SQL command
-            //				fieldID: "uuid",					// the connection field of the object we are joining with.
-            //				type:[left, right, inner, outer]	// join type: these should match the names of the knex methods
-            //						=> innerJoin, leftJoin, leftOuterJoin, rightJoin, rightOuterJoin, fullOuterJoin
-            //				links: [
-            //					...
-            //				]
-            //			}
-            //		]
-            //	},
-
-            var linkField = baseObject.fields((f) => {
-               return f.id == link.fieldID;
-            })[0];
-            if (!linkField) return;
-
-            // track our linked object
-            var linkObject = linkField.datasourceLink;
-            if (!linkObject) return;
-
-            storeObject(linkObject, link.alias);
-
-            processJoin(linkObject, link.links);
-         });
-      };
-
-      if (!this._joins.objectID)
-         // TODO: this is old query version
-         return;
-
-      // store the root object
-      var rootObject = ABObjectCache.get(this._joins.objectID);
-      if (!rootObject) {
-         this._objects = newObjects;
-         return;
-      }
-
-      storeObject(rootObject, "BASE_OBJECT");
-
-      processJoin(rootObject, settings.links);
-
-      this._objects = newObjects;
-   }
-
-   /**
-    * @method exportObjects
-    * save our list of objects into our format for persisting on the server
-    * @return {object} settings
-    */
-   exportJoins() {
-      return _.cloneDeep(this._joins);
-   }
-
-   /**
-    * @method fields()
-    *
-    * return an array of all the ABFields for this ABObject.
-    *
-    * @return {array}
-    */
-   fields(filter) {
-      filter =
-         filter ||
-         function() {
-            return true;
-         };
-
-      return this._fields
-         .map((fInfo) => fInfo.field)
-         .filter((result) => filter(result));
-   }
-
-   /**
-    * @method canFilterObject
-    * evaluate the provided object to see if it can directly be filtered by this
-    * query.
-    * @param {ABObject} object
-    * @return {bool}
-    */
-   canFilterObject(object) {
-      if (!object) return false;
-
-      // I can filter this object if it is one of the objects in my joins
-      return (
-         this.objects((o) => {
-            return o.id == object.id;
-         }).length > 0
-      );
-   }
-
-   /**
-    * @method canFilterField
-    * evaluate the provided field to see if it can be filtered by this
-    * query.
-    * @param {ABObject} object
-    * @return {bool}
-    */
-   canFilterField(field) {
-      if (!field) return false;
-
-      // I can filter a field if it's object OR the object it links to can be filtered:
-      var object = field.object;
-      var linkedObject = field.datasourceLink;
-
-      return this.canFilterObject(object) || this.canFilterObject(linkedObject);
-   }
-
+module.exports = class ABClassQuery extends ABObjectQueryCore {
    ///
    /// Migration Services
    ///
@@ -459,6 +28,23 @@ module.exports = class ABClassQuery extends ABClassObject {
       } else {
          return this.viewName;
       }
+   }
+
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @param {array} ids
+    *        the array of ids to store any relevant .ids into.
+    */
+   exportIDs(ids) {
+      // make sure we don't get into an infinite loop:
+      if (ids.indexOf(this.id) > -1) return;
+      ids.push(this.id);
+
+      // include my fields:
+      this.objects().forEach((o) => {
+         o.exportIDs(ids);
+      });
    }
 
    /**
@@ -831,8 +417,13 @@ module.exports = class ABClassQuery extends ABClassObject {
       let fields = this.fields();
 
       // Add custom index fields
-      (Object.keys(this._objects) || []).forEach((alias) => {
-         let obj = this._objects[alias];
+      (Object.keys(this.alias2Obj) || []).forEach((alias) => {
+         var objID = this.alias2Obj[alias];
+         var obj = this.objects().find((o) => o.id == objID);
+         if (!obj) {
+            return;
+         }
+
          let indexes = obj.indexes();
 
          (indexes || []).forEach((idx) => {
@@ -865,6 +456,19 @@ module.exports = class ABClassQuery extends ABClassObject {
             let fieldIndex = f.indexField;
             let fieldIndex2 = f.indexField2;
             let baseColumnName = obj.PK();
+
+            if (!objLink) {
+               sails.log.error(
+                  `!!! connected.field[${f.id}] did not have an objLink`,
+                  f
+               );
+            }
+            if (!fieldLink) {
+               sails.log.error(
+                  `!!! connected.field[${f.id}] did not have a fieldLink`,
+                  f
+               );
+            }
 
             // custom index
             if (fieldIndex && fieldIndex.object.id == obj.id) {
@@ -910,11 +514,13 @@ module.exports = class ABClassQuery extends ABClassObject {
                f.settings.linkType == "many" &&
                f.settings.linkViaType == "one"
             ) {
-               selectField = connectColFormat
-                  .replace(/{linkDbName}/g, objLink.dbSchemaName())
-                  .replace(/{linkTableName}/g, objLink.dbTableName())
-                  .replace(/{linkColumnName}/g, fieldLink.columnName)
-                  .replace(/{columnName}/g, objLink.PK());
+               if (objLink && fieldLink) {
+                  selectField = connectColFormat
+                     .replace(/{linkDbName}/g, objLink.dbSchemaName())
+                     .replace(/{linkTableName}/g, objLink.dbTableName())
+                     .replace(/{linkColumnName}/g, fieldLink.columnName)
+                     .replace(/{columnName}/g, objLink.PK());
+               }
             }
 
             // 1:1
@@ -935,16 +541,18 @@ module.exports = class ABClassQuery extends ABClassObject {
                      .replace(/{displayPrefix}/g, f.alias ? f.alias : obj.name)
                      .replace(/{displayName}/g, f.relationName());
                } else {
-                  selectField = connectColFormat
-                     .replace(/{linkDbName}/g, objLink.dbSchemaName())
-                     .replace(/{linkTableName}/g, objLink.dbTableName())
-                     .replace(
-                        /{linkColumnName}/g,
-                        fieldIndex
-                           ? fieldIndex.columnName
-                           : fieldLink.columnName
-                     )
-                     .replace(/{columnName}/g, objLink.PK());
+                  if (objLink && fieldLink) {
+                     selectField = connectColFormat
+                        .replace(/{linkDbName}/g, objLink.dbSchemaName())
+                        .replace(/{linkTableName}/g, objLink.dbTableName())
+                        .replace(
+                           /{linkColumnName}/g,
+                           fieldIndex
+                              ? fieldIndex.columnName
+                              : fieldLink.columnName
+                        )
+                        .replace(/{columnName}/g, objLink.PK());
+                  }
                }
             }
 
@@ -953,17 +561,19 @@ module.exports = class ABClassQuery extends ABClassObject {
                f.settings.linkType == "many" &&
                f.settings.linkViaType == "many"
             ) {
-               let joinSchemaName =
-                  f.settings.isSource == true
-                     ? f.object.dbSchemaName()
-                     : fieldLink.object.dbSchemaName();
-               let joinTableName = f.joinTableName();
+               if (objLink && fieldLink) {
+                  let joinSchemaName =
+                     f.settings.isSource == true
+                        ? f.object.dbSchemaName()
+                        : fieldLink.object.dbSchemaName();
+                  let joinTableName = f.joinTableName();
 
-               selectField = connectColFormat
-                  .replace(/{linkDbName}/g, joinSchemaName)
-                  .replace(/{linkTableName}/g, joinTableName)
-                  .replace(/{linkColumnName}/g, obj.name)
-                  .replace(/{columnName}/g, objLink.name);
+                  selectField = connectColFormat
+                     .replace(/{linkDbName}/g, joinSchemaName)
+                     .replace(/{linkTableName}/g, joinTableName)
+                     .replace(/{linkColumnName}/g, obj.name)
+                     .replace(/{columnName}/g, objLink.name);
+               }
             }
 
             if (selectField)
@@ -1178,7 +788,7 @@ module.exports = class ABClassQuery extends ABClassObject {
 
       // when empty columns, then add default id
       // if (selects.length == 0 && columns.length == 0) {
-      Object.keys(this._objects).forEach((alias) => {
+      Object.keys(this.alias2Obj).forEach((alias) => {
          let object = this.objectByAlias(alias);
          if (!object) return;
 
@@ -1189,6 +799,18 @@ module.exports = class ABClassQuery extends ABClassObject {
                .replace(/#pk#/g, object.PK())
          );
       });
+
+      // Object.keys(this._objects).forEach((alias) => {
+      //    let object = this.objectByAlias(alias);
+      //    if (!object) return;
+
+      //    // selects.push("#alias#.#pk# AS PK"
+      //    selects.push(
+      //       "#alias#.#pk# AS #alias#.#pk#"
+      //          .replace(/#alias#/g, alias || fromBaseTable)
+      //          .replace(/#pk#/g, object.PK())
+      //    );
+      // });
       // }
 
       query.column(columns);
@@ -1211,10 +833,7 @@ module.exports = class ABClassQuery extends ABClassObject {
     * @return {Promise}
     */
    migrateDrop(knex) {
-      sails.log.verbose("ABObject.migrateDrop()");
-      sails.log.debug(
-         "ABClassQuery.migrateDrop() called, but no migrations allowed."
-      );
+      sails.log.verbose("ABObjectQuery.migrateDrop()");
 
       let viewName = this.dbViewName();
 
@@ -1524,4 +1143,3 @@ module.exports = class ABClassQuery extends ABClassObject {
       return condition;
    }
 };
-

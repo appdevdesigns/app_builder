@@ -9,8 +9,8 @@
  *  afterCreate(createdRecord, cb)
  *  beforeUpdate(valuesToUpdate, cb)
  *  afterUpdate(updatedRecord, cb)
- *  beforeDelete(criteria, cb)
- *  afterDelete(deletedRecord, cb)
+ *  beforeDestroy(criteria, cb)
+ *  afterDestroy(deletedRecord, cb)
  *
  * Each callback is a function that receives a copy of the provided information
  * submitted with the request and a node style callback ( cb(err) ).
