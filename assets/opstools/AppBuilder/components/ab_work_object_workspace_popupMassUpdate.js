@@ -295,37 +295,49 @@ module.exports = class AB_Work_Object_Workspace_PopupMassUpdate extends ABCompon
             // $$(ids.component).showProgress({ type: "icon" });
 
             let $datatable = $$(DataTable.ui.id);
-            let updateTasks = [];
-            $datatable.data.each(function(obj) {
+            // let updateTasks = [];
+            let updatedRowIds = [];
+            $datatable.data.each(function(row) {
                if (
-                  obj &&
-                  obj.hasOwnProperty("appbuilder_select_item") &&
-                  obj.appbuilder_select_item == 1
+                  row &&
+                  row.hasOwnProperty("appbuilder_select_item") &&
+                  row.appbuilder_select_item == 1
                ) {
-                  let rowData = $datatable.getItem(obj.id);
+                  updatedRowIds.push(row.id);
+                  // let rowData = $datatable.getItem(obj.id);
 
-                  update_items.forEach((item) => {
-                     let fieldInfo = CurrentObject.fields(
-                        (f) => f.id == item.fieldId
-                     )[0];
-                     if (!fieldInfo) return;
+                  // update_items.forEach((item) => {
+                  //    let fieldInfo = CurrentObject.fields(
+                  //       (f) => f.id == item.fieldId
+                  //    )[0];
+                  //    if (!fieldInfo) return;
 
-                     rowData[fieldInfo.columnName] = item.value;
-                  });
+                  //    rowData[fieldInfo.columnName] = item.value;
+                  // });
 
-                  updateTasks.push(function(next) {
-                     CurrentObject.model()
-                        .update(rowData.id, rowData)
-                        .then(() => {
-                           // DataTable.refresh(); // We need this in the object builder
-                           // We use DataCollection instead
-                           next();
-                        }, next);
-                  });
+                  // updateTasks.push(function(next) {
+                  //    CurrentObject.model()
+                  //       .update(rowData.id, rowData)
+                  //       .then(() => {
+                  //          // DataTable.refresh(); // We need this in the object builder
+                  //          // We use DataCollection instead
+                  //          next();
+                  //       }, next);
+                  // });
                }
             });
 
-            if (updateTasks.length > 0) {
+            let vals = {};
+            update_items.forEach((item) => {
+               let fieldInfo = CurrentObject.fields(
+                  (f) => f.id == item.fieldId
+               )[0];
+               if (!fieldInfo) return;
+
+               vals[fieldInfo.columnName] = item.value;
+            });
+
+            if (updatedRowIds.length > 0) {
                OP.Dialog.Confirm({
                   title: "Updating Multiple Records",
                   text: "Are you sure you want to update the selected records?",
@@ -334,18 +346,37 @@ module.exports = class AB_Work_Object_Workspace_PopupMassUpdate extends ABCompon
                         if ($datatable && $datatable.showProgress)
                            $datatable.showProgress({ type: "icon" });
 
-                        async.parallel(updateTasks, function(err) {
-                           if (err) {
-                              // TODO : Error message
-                           } else {
+                        let objModel = CurrentObject.model();
+                        objModel
+                           .batchUpdate({
+                              rowIds: updatedRowIds,
+                              values: vals
+                           })
+                           .then(() => {
                               // Anything we need to do after we are done.
                               update_button.enable();
                               _logic.hide();
-                           }
 
-                           if ($datatable && $datatable.hideProgress)
-                              $datatable.hideProgress();
-                        });
+                              if ($datatable && $datatable.hideProgress)
+                                 $datatable.hideProgress();
+                           })
+                           .catch((err) => {
+                              // TODO
+                              console.error(err);
+                           });
+
+                        // async.parallel(updateTasks, function(err) {
+                        //    if (err) {
+                        //       // TODO : Error message
+                        //    } else {
+                        //       // Anything we need to do after we are done.
+                        //       update_button.enable();
+                        //       _logic.hide();
+                        //    }
+
+                        //    if ($datatable && $datatable.hideProgress)
+                        //       $datatable.hideProgress();
+                        // });
                      }
                   }
                });

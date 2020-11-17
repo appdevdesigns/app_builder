@@ -70,6 +70,160 @@ function cleanUp(object, data) {
    return data;
 }
 
+function updateData(object, id, values, userData) {
+   // return the parameters from the input params that relate to this object
+   // exclude connectObject data field values
+   let updateParams = object.requestParams(values);
+
+   // return the parameters of connectObject data field values
+   let updateRelationParams = object.requestRelationParams(values);
+
+   // get translations values for the external object
+   // it will update to translations table after model values updated
+   let transParams = _.cloneDeep(updateParams.translations);
+
+   let validationErrors = object.isValidData(updateParams);
+   if (validationErrors.length > 0) {
+      return Promise.reject({
+         code: "NOT_VALID",
+         errors: validationErrors
+      });
+   }
+
+   if (object.isExternal || object.isImported) {
+      // translations values does not in same table of the external object
+      delete updateParams.translations;
+   } else {
+      // this is an update operation, so ...
+      // updateParams.updated_at = (new Date()).toISOString();
+
+      updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
+
+      // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
+      if (values.properties != "") {
+         updateParams.properties = values.properties;
+      } else {
+         updateParams.properties = null;
+      }
+   }
+
+   // Prevent ER_PARSE_ERROR: when no properties of update params
+   // update `TABLE_NAME` set  where `id` = 'ID'
+   if (updateParams && Object.keys(updateParams).length == 0)
+      updateParams = null;
+
+   if (updateParams == null) {
+      updateParams = {};
+      updateParams[object.PK()] = ref(object.PK());
+   }
+
+   updateParams = cleanUp(object, updateParams);
+
+   sails.log.verbose(
+      "ABModelController.update().updateData(): updateParams:",
+      updateParams
+   );
+
+   let defaultUpdate = {};
+   defaultUpdate[object.PK()] = id;
+
+   // Do Knex update data tasks
+   return new Promise((resolve, reject) => {
+      let query = object.model().query();
+      query
+         .patch(updateParams || defaultUpdate)
+         .where(object.PK(), id)
+         .then((values) => {
+            // track logging
+            ABTrack.logUpdate({
+               objectId: object.id,
+               rowId: id,
+               username: userData.username,
+               data: Object.assign(
+                  updateParams,
+                  updateRelationParams,
+                  transParams
+               )
+            });
+
+            // create a new query when use same query, then new data are created duplicate
+            let updateTasks = updateRelationValues(
+               object,
+               id,
+               updateRelationParams
+            );
+
+            // update translation of the external table
+            if (object.isExternal || object.isImported)
+               updateTasks.push(
+                  updateTranslationsValues(object, id, transParams)
+               );
+
+            // update relation values sequentially
+            return (
+               updateTasks
+                  .reduce((promiseChain, currTask) => {
+                     return promiseChain.then(currTask);
+                  }, Promise.resolve([]))
+                  .catch((err) => {
+                     return Promise.reject(err);
+                  })
+                  // Query the new row to response to client
+                  .then((values) => {
+                     return object
+                        .queryFind(
+                           {
+                              where: {
+                                 glue: "and",
+                                 rules: [
+                                    {
+                                       key: object.PK(),
+                                       rule: "equals",
+                                       value: id
+                                    }
+                                 ]
+                              },
+                              offset: 0,
+                              limit: 1,
+                              populate: true
+                           },
+                           userData
+                        )
+                        .then((newItem) => {
+                           let result = newItem[0];
+
+                           var key = `${object.id}.updated`;
+                           return ABProcess.trigger(key, result)
+                              .then(() => {
+                                 // updateConnectedFields(object, result);
+
+                                 // We want to broadcast the change from the server to the client so all datacollections can properly update
+                                 // Build a payload that tells us what was updated
+                                 var payload = {
+                                    objectId: object.id,
+                                    data: result
+                                 };
+
+                                 // Broadcast the update
+                                 sails.sockets.broadcast(
+                                    object.id,
+                                    "ab.datacollection.update",
+                                    payload
+                                 );
+
+                                 resolve(result);
+                              })
+                              .catch((err) => {
+                                 return Promise.reject(err);
+                              });
+                        });
+                  })
+            );
+         })
+         .catch(reject);
+   });
+}
+
 /**
  * @function updateRelationValues
  * Make sure an object's relationships are properly updated.
@@ -518,6 +672,38 @@ module.exports = {
                   errors: errorRows // Return error messages of each rows
                });
             });
+      }
+   },
+
+   batchUpdate: function(req, res) {
+      let allParams = req.allParams();
+      // sails.log.verbose(
+      console.log("ABModelController.batchUpdate(): allParams:", allParams);
+
+      let rowIds = allParams.rowIds || [];
+      let values = allParams.values || [];
+      if (rowIds && rowIds.length) {
+         AppBuilder.routes
+            .verifyAndReturnObject(req, res)
+            .then(function(object) {
+               let updateTasks = [];
+
+               rowIds.forEach((rowId) => {
+                  updateTasks.push(
+                     updateData(object, rowId, values, req.user.data)
+                  );
+               });
+
+               Promise.all(updateTasks)
+                  .catch((error) => {
+                     res.AD.error(error);
+                  })
+                  .then(() => {
+                     res.AD.success(true);
+                  });
+            });
+      } else {
+         res.AD.success(true);
       }
    },
 
@@ -1601,261 +1787,105 @@ console.error(err);
          var allParams = req.allParams();
          sails.log.verbose("ABModelController.update(): allParams:", allParams);
 
-         // return the parameters from the input params that relate to this object
-         // exclude connectObject data field values
-         var updateParams = object.requestParams(allParams);
+         updateData(object, id, allParams, req.user.data)
+            .then((result) => {
+               resolvePendingTransaction();
+               res.AD.success(result);
+            })
+            .catch((err) => {
+               resolvePendingTransaction();
 
-         // return the parameters of connectObject data field values
-         var updateRelationParams = object.requestRelationParams(allParams);
+               // TODO: REFACTOR throw errors CONVENTION!! ^_^"
 
-         // get translations values for the external object
-         // it will update to translations table after model values updated
-         var transParams = _.cloneDeep(updateParams.translations);
+               // handle invalid values here:
+               if (err instanceof ValidationError) {
+                  //// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
 
-         var validationErrors = object.isValidData(updateParams);
-         if (validationErrors.length == 0) {
-            if (object.isExternal || object.isImported) {
-               // translations values does not in same table of the external object
-               delete updateParams.translations;
-            } else {
-               // this is an update operation, so ...
-               // updateParams.updated_at = (new Date()).toISOString();
+                  // return an invalid values response:
+                  let errorResponse = {
+                     error: "E_VALIDATION",
+                     invalidAttributes: {}
+                  };
 
-               updateParams.updated_at = AppBuilder.rules.toSQLDateTime(
-                  new Date()
-               );
+                  var attr = errorResponse.invalidAttributes;
 
-               // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
-               if (allParams.properties != "") {
-                  updateParams.properties = allParams.properties;
-               } else {
-                  updateParams.properties = null;
+                  for (var e in err.data) {
+                     attr[e] = attr[e] || [];
+                     err.data[e].forEach((eObj) => {
+                        eObj.name = e;
+                        attr[e].push(eObj);
+                     });
+                  }
+
+                  res.AD.error(errorResponse);
                }
-            }
+               // This object does not allow to update or delete (blocked by MySQL.Trigger)
+               else if (
+                  err.code == "ER_SIGNAL_EXCEPTION" &&
+                  err.sqlState == "45000"
+               ) {
+                  let errResponse = {
+                     error: "READONLY",
+                     message: err.sqlMessage
+                  };
 
-            // Prevent ER_PARSE_ERROR: when no properties of update params
-            // update `TABLE_NAME` set  where `id` = 'ID'
-            if (updateParams && Object.keys(updateParams).length == 0)
-               updateParams = null;
+                  res.AD.error(errResponse);
+               } else if (err && err.code == "NOT_VALID") {
+                  // return an invalid values response:
+                  var errorResponse = {
+                     error: "E_VALIDATION",
+                     invalidAttributes: {}
+                  };
 
-            if (updateParams == null) {
-               updateParams = {};
-               updateParams[object.PK()] = ref(object.PK());
-            }
+                  var attr = errorResponse.invalidAttributes;
 
-            updateParams = cleanUp(object, updateParams);
+                  validationErrors.forEach((e) => {
+                     attr[e.name] = attr[e.name] || [];
+                     attr[e.name].push(e);
+                  });
+                  res.AD.error(errorResponse);
+               } else if (!(err instanceof ValidationError)) {
+                  ADCore.error.log("Error performing update!", {
+                     error: err
+                  });
+                  res.AD.error(err);
+                  sails.log.error("!!!! error:", err);
+               } else {
+                  let errorResponse = {
+                     error: "E_VALIDATION",
+                     invalidAttributes: {}
+                  };
 
-            sails.log.verbose(
-               "ABModelController.update(): updateParams:",
-               updateParams
-            );
+                  // WORKAROUND : Get invalid field
+                  var invalidFields = object.fields(
+                     (f) =>
+                        (err.sqlMessage || "")
+                           .toLowerCase()
+                           .indexOf((f.columnName || "").toLowerCase()) > -1
+                  );
+                  invalidFields.forEach((f) => {
+                     let errorMessage;
 
-            let defaultUpdate = {};
-            defaultUpdate[object.PK()] = id;
+                     switch (err.code) {
+                        case "ER_DUP_ENTRY":
+                           errorMessage =
+                              "The value is a duplicate value and therefore, not valid.";
+                           break;
+                        default:
+                           errorMessage = err.sqlMessage;
+                           break;
+                     }
 
-            var query = object.model().query();
-
-            // Do Knex update data tasks
-            query
-               .patch(updateParams || defaultUpdate)
-               .where(object.PK(), id)
-               .then(
-                  (values) => {
-                     // track logging
-                     ABTrack.logUpdate({
-                        objectId: object.id,
-                        rowId: id,
-                        username: req.user.data.username,
-                        data: Object.assign(
-                           updateParams,
-                           updateRelationParams,
-                           transParams
-                        )
-                     });
-
-                     // create a new query when use same query, then new data are created duplicate
-                     var updateTasks = updateRelationValues(
-                        object,
-                        id,
-                        updateRelationParams
-                     );
-
-                     // update translation of the external table
-                     if (object.isExternal || object.isImported)
-                        updateTasks.push(
-                           updateTranslationsValues(object, id, transParams)
-                        );
-
-                     // update relation values sequentially
-                     return updateTasks
-                        .reduce((promiseChain, currTask) => {
-                           return promiseChain.then(currTask);
-                        }, Promise.resolve([]))
-                        .then((values) => {
-                           // Query the new row to response to client
-                           var query3 = object.queryFind(
-                              {
-                                 where: {
-                                    glue: "and",
-                                    rules: [
-                                       {
-                                          key: object.PK(),
-                                          rule: "equals",
-                                          value: id
-                                       }
-                                    ]
-                                 },
-                                 offset: 0,
-                                 limit: 1,
-                                 populate: true
-                              },
-                              req.user.data
-                           );
-
-                           return query3
-                              .then((newItem) => {
-                                 let result = newItem[0];
-
-                                 var key = `${object.id}.updated`;
-                                 return ABProcess.trigger(key, result)
-                                    .then(() => {
-                                       resolvePendingTransaction();
-                                       res.AD.success(result);
-                                       updateConnectedFields(object, result);
-
-                                       // We want to broadcast the change from the server to the client so all datacollections can properly update
-                                       // Build a payload that tells us what was updated
-                                       var payload = {
-                                          objectId: object.id,
-                                          data: result
-                                       };
-
-                                       // Broadcast the update
-                                       sails.sockets.broadcast(
-                                          object.id,
-                                          "ab.datacollection.update",
-                                          payload
-                                       );
-                                    })
-                                    .catch((err) => {
-                                       return Promise.reject(err);
-                                    });
-                              })
-                              .catch((err) => {
-                                 return Promise.reject(err);
-                              });
-                        })
-                        .catch((err) => {
-                           return Promise.reject(err);
-                        });
-                  },
-                  (err) => {
-                     console.log("...  (err) handler!", err);
-
-                     resolvePendingTransaction();
-
-                     // handle invalid values here:
-                     if (err instanceof ValidationError) {
-                        //// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
-
-                        // return an invalid values response:
-                        let errorResponse = {
-                           error: "E_VALIDATION",
-                           invalidAttributes: {}
-                        };
-
-                        var attr = errorResponse.invalidAttributes;
-
-                        for (var e in err.data) {
-                           attr[e] = attr[e] || [];
-                           err.data[e].forEach((eObj) => {
-                              eObj.name = e;
-                              attr[e].push(eObj);
-                           });
+                     errorResponse.invalidAttributes[f.columnName] = [
+                        {
+                           message: errorMessage
                         }
+                     ];
+                  });
 
-                        res.AD.error(errorResponse);
-                     }
-                     // This object does not allow to update or delete (blocked by MySQL.Trigger)
-                     else if (
-                        err.code == "ER_SIGNAL_EXCEPTION" &&
-                        err.sqlState == "45000"
-                     ) {
-                        let errResponse = {
-                           error: "READONLY",
-                           message: err.sqlMessage
-                        };
-
-                        res.AD.error(errResponse);
-                     } else {
-                        let errorResponse = {
-                           error: "E_VALIDATION",
-                           invalidAttributes: {}
-                        };
-
-                        // WORKAROUND : Get invalid field
-                        var invalidFields = object.fields(
-                           (f) =>
-                              (err.sqlMessage || "")
-                                 .toLowerCase()
-                                 .indexOf((f.columnName || "").toLowerCase()) >
-                              -1
-                        );
-                        invalidFields.forEach((f) => {
-                           let errorMessage;
-
-                           switch (err.code) {
-                              case "ER_DUP_ENTRY":
-                                 errorMessage =
-                                    "The value is a duplicate value and therefore, not valid.";
-                                 break;
-                              default:
-                                 errorMessage = err.sqlMessage;
-                                 break;
-                           }
-
-                           errorResponse.invalidAttributes[f.columnName] = [
-                              {
-                                 message: errorMessage
-                              }
-                           ];
-                        });
-
-                        res.AD.error(errorResponse);
-                     }
-                  }
-               )
-               .catch((err) => {
-                  console.log("... catch(err) !");
-
-                  if (!(err instanceof ValidationError)) {
-                     ADCore.error.log("Error performing update!", {
-                        error: err
-                     });
-                     resolvePendingTransaction();
-                     res.AD.error(err);
-                     sails.log.error("!!!! error:", err);
-                  }
-               });
-         } else {
-            // return an invalid values response:
-            var errorResponse = {
-               error: "E_VALIDATION",
-               invalidAttributes: {}
-            };
-
-            var attr = errorResponse.invalidAttributes;
-
-            validationErrors.forEach((e) => {
-               attr[e.name] = attr[e.name] || [];
-               attr[e.name].push(e);
+                  res.AD.error(errorResponse);
+               }
             });
-
-            resolvePendingTransaction();
-            res.AD.error(errorResponse);
-         }
-
-         // });
       });
    },
 

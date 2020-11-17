@@ -229,7 +229,7 @@ module.exports = class ABViewChart extends ABViewChartCore {
       var obj = dc.datasource;
       if (obj == null) return;
 
-      var normalFields = obj.fields((f) => f.key != "connectObject");
+      var allFields = obj.fields();
       var numFields = obj.fields(
          (f) => f.key == "number" || f.key == "formula" || f.key == "calculate"
       );
@@ -242,7 +242,7 @@ module.exports = class ABViewChart extends ABViewChartCore {
          };
       };
 
-      var columnLabelOptions = normalFields.map(convertOption);
+      var columnLabelOptions = allFields.map(convertOption);
       var columnValueOptions = numFields.map(convertOption);
 
       var defaultOption = {
