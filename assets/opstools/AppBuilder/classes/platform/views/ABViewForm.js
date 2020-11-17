@@ -263,7 +263,11 @@ module.exports = class ABViewForm extends ABViewFormCore {
       _logic.recordRuleShow = () => {
          var currView = _logic.currentEditObject();
 
-         PopupRecordRule.formLoad(currView);
+         var selectedDv = currView.datacollection;
+         if (selectedDv) {
+            PopupRecordRule.objectLoad(selectedDv.datasource);
+         }
+	 PopupRecordRule.formLoad(currView);
          PopupRecordRule.fromSettings(currView.settings.recordRules);
          PopupRecordRule.show();
 
