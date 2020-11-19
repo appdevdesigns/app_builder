@@ -76,13 +76,24 @@ module.exports = class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRul
       };
 
       this._ui = {
-         ui: {
-            id: ids.pagesAndTabs,
-            view: "richselect",
-            options: []
-         },
+         ui: { id: ids.pagesAndTabs, view: "richselect", options: [] },
 
          init: () => {
+            _logic.populateOptions();
+         },
+
+         _logic: _logic,
+
+         fromSettings: (valueRules) => {
+            _logic.fromSettings(valueRules);
+         },
+         toSettings: () => {
+            return _logic.toSettings();
+         }
+      };
+
+      var _logic = {
+         populateOptions: () => {
             // Pull page list to "Redirect to an existing page"
             var _pageOptions = [];
 
@@ -98,29 +109,40 @@ module.exports = class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRul
                let icon = "fa fa-file-o";
                if (type == "tab") icon = "fa fa-window-maximize";
 
+               let pageParent = pageOrTab.pageParent();
+
                _pageOptions.push({
                   id: pageOrTab.id,
                   value: indent + pageOrTab.label,
                   type: type,
-                  pageId: pageId,
+                  pageId: pageParent ? pageParent.id : null,
 
                   icon: icon
                });
 
-               if (type == "page") {
-                  pageOrTab.pages().forEach(function(p) {
-                     addPage(p, indent + "-", "page");
-                  });
+               if (type == "page" || type == "tab") {
+                  if (pageOrTab.pages) {
+                     pageOrTab.pages().forEach(function(p) {
+                        addPage(p, indent + "-", "page");
+                     });
+                  }
 
                   // add 'tab' options
-                  pageOrTab
-                     .views((v) => v.key == "tab")
-                     .forEach((tab) => {
-                        // add 'tab view' to options
-                        tab.views().forEach((tabView) => {
-                           addPage(tabView, indent + "-", "tab", pageOrTab.id);
+                  if (pageOrTab.views) {
+                     pageOrTab
+                        .views((v) => v.key == "tab")
+                        .forEach((tab) => {
+                           // add 'tab view' to options
+                           tab.views().forEach((tabView) => {
+                              addPage(
+                                 tabView,
+                                 indent + "-",
+                                 "tab",
+                                 pageOrTab.id
+                              );
+                           });
                         });
-                     });
+                  }
                }
             };
 
@@ -130,17 +152,6 @@ module.exports = class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRul
             $$(ids.pagesAndTabs).refresh();
          },
 
-         _logic: _logic,
-
-         fromSettings: (valueRules) => {
-            _logic.fromSettings(valueRules);
-         },
-         toSettings: () => {
-            return _logic.toSettings();
-         }
-      };
-
-      var _logic = {
          fromSettings: (valueRules) => {
             valueRules = valueRules || {};
 
@@ -260,3 +271,4 @@ module.exports = class ABViewRuleActionFormSubmitRuleExistPage extends ABViewRul
       return settings;
    }
 };
+
