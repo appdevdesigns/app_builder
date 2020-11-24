@@ -739,7 +739,16 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
          if (appDef) {
             resolve(new ABApplication(appDef));
          } else {
-            reject(new Error(`Unknown Application [${appID}]`));
+            // If the user does not have access to the AppBuilder we do not preload
+            // all definitions...so go ahead and get them now if the appDef is null
+            ABDefinition.loadAll().then((defs) => {
+               appDef = ABDefinition.definition(appID);
+               if (appDef) {
+                  resolve(new ABApplication(appDef));
+               } else {
+                  reject(new Error(`Unknown Application [${appID}]`));
+               }
+            });
          }
       });
    }
