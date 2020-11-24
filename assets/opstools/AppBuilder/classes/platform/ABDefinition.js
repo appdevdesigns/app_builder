@@ -106,6 +106,11 @@ module.exports = class ABDefinition extends ABDefinitionCore {
     * @return {array}
     */
    static loadAll() {
+      // AppBuilder and LiveView both call this so lets only call it once.
+      if (Object.keys(__AllDefinitions).length > 0) {
+         return __AllDefinitions;
+      }
+
       return OP.Comm.Socket.get({
          url: `/app_builder/abdefinitionmodel`
       }).then((allDefinitions) => {
