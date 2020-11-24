@@ -212,21 +212,27 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
                      let dv = this.datacollection;
                      if (!dv) return next();
 
-                     let data = dv.getData();
-                     if (data.length > 0) return next(data);
+                     this.eventAdd({
+                        emitter: dv,
+                        eventName: "initializedData",
+                        listener: () => {
+                           next();
+                        }
+                     });
 
-                     // load data at first
-
-                     dv.loadData()
-                        .catch(err)
-                        .then(() => {
-                           next(dv.getData());
-                        });
+                     switch (dv.dataStatus) {
+                        case dv.dataStatusFlag.notInitial:
+                           dv.loadData();
+                           break;
+                        case dv.dataStatusFlag.initialized:
+                           next();
+                           break;
+                     }
                   });
                })
 
                // populate data into pivot
-               .then((data) => {
+               .then(() => {
                   return new Promise((next, err) => {
                      let dv = this.datacollection;
                      if (!dv) return next();
@@ -234,10 +240,11 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
                      let object = dv.datasource;
                      if (!object) return next();
 
-                     var dataMapped = data.map((d) => {
-                        var result = {};
+                     let data = dv.getData();
+                     let dataMapped = data.map((d) => {
+                        let result = {};
 
-                        object.fields().forEach((f) => {
+                        object.fields(null, true).forEach((f) => {
                            if (f instanceof ABFieldNumber)
                               result[f.columnName] = d[f.columnName];
                            else result[f.columnName] = f.format(d);
@@ -274,3 +281,4 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
       };
    }
 };
+
