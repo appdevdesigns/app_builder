@@ -67,6 +67,16 @@ module.exports = class ABField extends ABFieldCore {
    }
 
    /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @param {array} ids
+    *        the array of ids to store our relevant .ids into
+    */
+   exportIDs(ids) {
+      ids.push(this.id);
+   }
+
+   /**
     * @function migrateCreate
     * perform the necessary sql actions to ADD this column to the DB table.
     * @param {knex} knex the Knex connection.
@@ -193,7 +203,8 @@ module.exports = class ABField extends ABFieldCore {
                   let tasks = [];
 
                   let queries = ABObjectCache.list(
-                     (obj) => obj.canFilterField && obj.canFilterField(this)
+                     (obj) =>
+                        obj && obj.canFilterField && obj.canFilterField(this)
                   );
                   (queries || []).forEach((q) => {
                      // Remove the field from query
@@ -210,6 +221,11 @@ module.exports = class ABField extends ABFieldCore {
                      .catch(() => next()) // ignore error of queries
                      .then(() => next());
                });
+            })
+
+            // have the Model refresh it's objection/knex definitions:
+            .then(() => {
+               this.object.modelRefresh();
             })
       );
    }

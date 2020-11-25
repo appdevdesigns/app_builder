@@ -16,6 +16,21 @@ class ABQL extends ABQLCore {
    ///
    /// Instance Methods
    ///
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @param {array} ids
+    *         the array of ids to insert your ids into.
+    */
+   exportIDs(ids) {
+      if (this.next) {
+         this.next.exportIDs(ids);
+      }
+
+      if (this.objectID) {
+         this.object.exportIDs(ids);
+      }
+   }
 }
 
 module.exports = ABQL;

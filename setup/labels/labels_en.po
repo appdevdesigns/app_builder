@@ -650,8 +650,8 @@ msgstr "(Connect to <b>{0}</b>)"
 #. path: app_builder
 #. code: en
 #. key: ab.object.delete.title
-msgid "Delete data field"
-msgstr "Delete data field"
+msgid "Delete?"
+msgstr "Delete?"
 
 #. path: app_builder
 #. code: en

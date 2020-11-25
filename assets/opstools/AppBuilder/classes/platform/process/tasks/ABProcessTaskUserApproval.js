@@ -308,8 +308,8 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
     */
    propertiesStash(id) {
       var ids = this.propertyIDs(id);
-      this.name = $$(ids.name).getValue();
-      this.who = $$(ids.who).getValue();
+      this.name = this.property(ids.name);
+      this.who = this.property(ids.who);
       this.toUsers = ABProcessParticipant.stashUsersUi(id + "_who_");
    }
 };

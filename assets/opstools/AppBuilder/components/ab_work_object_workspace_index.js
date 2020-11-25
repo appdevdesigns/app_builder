@@ -96,7 +96,7 @@ module.exports = class ABWorkObjectWorkspaceIndex extends ABComponent {
                   id: ids.fields,
                   view: "multicombo",
                   label: "Fields",
-                  name: "fields",
+                  name: "fieldIDs",
                   options: []
                },
                {
@@ -237,7 +237,7 @@ module.exports = class ABWorkObjectWorkspaceIndex extends ABComponent {
       this.busy();
 
       let vals = $form.getValues();
-      vals.fields = vals.fields.split(",");
+      vals.fieldIDs = vals.fieldIDs.split(",");
 
       // Add new
       if (this.CurrentIndex == null)

@@ -410,7 +410,8 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
       );
       var ids = {
          component: App.unique(idBase + "_component"),
-         popup: App.unique(idBase + "_popup_add_new")
+         popup: App.unique(idBase + "_popup_add_new"),
+         editpopup: App.unique(idBase + "_popup_edit_form_popup_add_new")
       };
 
       var settings = {};
@@ -511,6 +512,7 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
                   var myOption = data.filter((d) => d.id == saveData.id)[0];
                   if (myOption == null) {
                      if ($$(ids.popup)) $$(ids.popup).close();
+                     if ($$(ids.editpopup)) $$(ids.editpopup).close();
                      return;
                   }
 
@@ -532,6 +534,7 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
                   // close the popup when we are finished
                   if ($$(ids.popup)) $$(ids.popup).close();
+                  if ($$(ids.editpopup)) $$(ids.editpopup).close();
                });
          },
 

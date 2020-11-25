@@ -22,15 +22,15 @@ module.exports = class ABMLClass extends ABMLClassCore {
     * translate the multilingual fields (in this.mlFields) from
     * our .translation data.
     */
-   translate() {
-      // NOTE: until we have our proper Core changes in place,
-      // this file will also be included on the Server.  So we
-      // need to make sure we don't crash trying web code:
-      if (typeof OP != "undefined") {
-         // multilingual fields: label, description
-         OP.Multilingual.translate(this, this, this.mlFields);
-      }
-   }
+   /*
+    translate(instance, attributes, fields) {
+        if (!instance) instance = this;
+        if (!attributes) attributes = this;
+        if (!fields) fields = this.mlFields;
+
+        super.translate(instance, attributes, fields);
+    }
+    */
 
    /**
     * @method unTranslate()
@@ -38,14 +38,23 @@ module.exports = class ABMLClass extends ABMLClassCore {
     * un-translate the multilingual fields (in this.mlFields) into
     * our .translation data
     */
-   unTranslate() {
-      // NOTE: until we have our proper Core changes in place,
-      // this file will also be included on the Server.  So we
-      // need to make sure we don't crash trying web code:
-      if (typeof OP != "undefined") {
-         // multilingual fields: label, description
-         OP.Multilingual.unTranslate(this, this, this.mlFields);
-      }
+   /*
+    unTranslate(instance, attributes, fields) {
+        if (!instance) instance = this;
+        if (!attributes) attributes = this;
+        if (!fields) fields = this.mlFields;
+        
+        super.unTranslate(instance, attributes, fields);
+    }
+    */
+
+   /**
+    * @method languageDefault
+    * return a default language code.
+    * @return {string}
+    */
+   languageDefault() {
+      return AD.lang.currentLanguage || "en";
    }
 
    /**
@@ -66,7 +75,21 @@ module.exports = class ABMLClass extends ABMLClassCore {
       var def = this.toDefinition().toObj();
       if (def.id) {
          // here ABDefinition is our sails.model()
-         return ABDefinition.destroy(def.id);
+         return new Promise((resolve, reject) => {
+            ABDefinition.destroy(def.id)
+               .then(resolve)
+               .catch((err) => {
+                  if (err.toString().indexOf("No record found") > -1) {
+                     // this is weird, but not breaking:
+                     console.log(
+                        `ABMLClass.destroy(): could not find record for id[${def.id}]`
+                     );
+                     console.log(def);
+                     return resolve();
+                  }
+                  reject(err);
+               });
+         });
       } else {
          return Promise.resolve();
       }
@@ -96,8 +119,10 @@ module.exports = class ABMLClass extends ABMLClassCore {
 
       //// Until then:
       var def = this.toDefinition().toObj();
+      def.name = def.name || this.name || this.label || "name";
+      def.type = def.type || this.type || "type";
       if (def.id) {
-         // here ABDefinition is our sails.model()
+         // here ABDefinition communicates directly with our sails model
          return ABDefinition.update(def.id, def);
       } else {
          return ABDefinition.create(def).then((data) => {

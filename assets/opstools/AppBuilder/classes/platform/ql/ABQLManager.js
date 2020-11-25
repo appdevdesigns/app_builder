@@ -189,6 +189,12 @@ var ABQLManager = {
    parse: function(id, task, application) {
       var ids = ABQLManager.ids(id);
       var root = $$(ids.root);
+
+      if (!root) {
+         console.warn("ABQLManager.parse(): unable to find root element");
+         return;
+      }
+
       // get all the input rows
       var rows = root.getParentView().getChildViews();
       rows.shift(); // remove the query label row:

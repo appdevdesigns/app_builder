@@ -58,7 +58,9 @@ module.exports = class ABObjectQuery extends ABObjectQueryCore {
     * @return {Promise}
     */
    destroy() {
-      return this.application.queryDestroy(this);
+      return super.destroy().then(() => {
+         return this.application.queryRemove(this);
+      });
    }
 
    /**
@@ -71,7 +73,7 @@ module.exports = class ABObjectQuery extends ABObjectQueryCore {
     */
    save() {
       // var isAdd = false;
-
+      /*
       // if this is our initial save()
       if (!this.id) {
          // this.id = OP.Util.uuid();	// setup default .id
@@ -98,6 +100,41 @@ module.exports = class ABObjectQuery extends ABObjectQueryCore {
             .catch(function(err) {
                reject(err);
             });
+      });
+*/
+      return Promise.resolve()
+         .then(() => {
+            return super.save();
+         })
+         .then(() => {
+            return this.application.queryInsert(this);
+         });
+   }
+
+   ///
+   /// Fields
+   ///
+
+   /**
+    * @method importFields
+    * instantiate a set of fields from the given attributes.
+    * Our attributes are a set of field URLs That should already be created in their respective
+    * ABObjects.
+    * @param {array} fieldSettings The different field urls for each field
+    *             { }
+    * @param {bool} shouldAliasColumn
+    *        should we add the object alias to the columnNames?
+    *        this is primarily used on the web client
+    */
+   importFields(fieldSettings) {
+      super.importFields(fieldSettings);
+
+      this._fields.forEach((fieldEntry) => {
+         // include object name {aliasName}.{columnName}
+         // to use it in grid headers & hidden fields
+         fieldEntry.field.columnName = "{aliasName}.{columnName}"
+            .replace("{aliasName}", fieldEntry.alias)
+            .replace("{columnName}", fieldEntry.field.columnName);
       });
    }
 
@@ -216,7 +253,7 @@ module.exports = class ABObjectQuery extends ABObjectQueryCore {
                   return (
                      common.icon(item, common) +
                      (originTemplate
-                        ? originTemplate(item, common)
+                        ? originTemplate(item, common, item[h.id])
                         : item[h.id])
                   );
                else return "";

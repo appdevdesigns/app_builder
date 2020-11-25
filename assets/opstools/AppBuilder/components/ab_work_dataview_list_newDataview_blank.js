@@ -146,7 +146,7 @@ module.exports = class AB_Work_Query_List_newDataview_Blank extends ABComponent 
             if (CurrentApplication) {
                // Objects
                datasourceOpts = datasourceOpts.concat(
-                  CurrentApplication.objects().map((obj) => {
+                  CurrentApplication.objectsIncluded().map((obj) => {
                      return {
                         id: obj.id,
                         value: obj.label,
@@ -158,7 +158,7 @@ module.exports = class AB_Work_Query_List_newDataview_Blank extends ABComponent 
 
                // Queries
                datasourceOpts = datasourceOpts.concat(
-                  CurrentApplication.queries().map((q) => {
+                  CurrentApplication.queriesIncluded().map((q) => {
                      return {
                         id: q.id,
                         value: q.label,

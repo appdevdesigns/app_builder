@@ -1349,20 +1349,8 @@ module.exports = class ABViewGrid extends ABViewGridCore {
    }
 
    populateEditor(ids, view) {
-      // Set the objects you can choose from in the list
-      var defaultOption = {
-         id: "",
-         value: L("ab.component.label.selectObject", "*Select an object")
-      };
-
       // Pull data collections to options
-      var objectOptions = view.application.datacollections().map((dc) => {
-         return {
-            id: dc.id,
-            value: dc.label
-         };
-      });
-      objectOptions.unshift(defaultOption);
+      var objectOptions = view.propertyDatacollections();
       $$(ids.datacollection).define("options", objectOptions);
       $$(ids.datacollection).refresh();
       if (view.settings.datacollection != "") {

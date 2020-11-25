@@ -75,15 +75,20 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
                   // add all fields to editor by default
                   if (currView._views.length > 0) return Promise.resolve();
 
-                  // let tasks = [];
+                  let fieldSaves = [];
                   let fields = $$(ids.fields).find({});
                   fields.reverse();
                   fields.forEach((f, index) => {
                      if (!f.selected) {
                         let yPosition = fields.length - index - 1;
 
-                        // tasks.push(() => currView.addFieldToView(f, yPosition, ids, App).save());
-                        currView.addFieldToView(f, yPosition, ids, App);
+                        var fieldView = currView.addFieldToView(
+                           f,
+                           yPosition,
+                           ids,
+                           App
+                        );
+                        fieldSaves.push(fieldView.save());
 
                         // update item to UI list
                         f.selected = 1;
@@ -91,23 +96,17 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
                      }
                   });
 
-                  return Promise.resolve();
-                  // return tasks.reduce((promiseChain, currTask) => {
-                  // 	return promiseChain.then(currTask);
-                  // }, Promise.resolve([]));
+                  return Promise.all(fieldSaves);
                })
                // Saving
                .then(() => {
-                  let includeSubViews = true;
-                  return currView.save(includeSubViews);
+                  return currView.save();
                })
                // Finally
                .then(() => {
                   currView.emit("properties.updated", currView);
 
                   _logic.ready();
-
-                  return Promise.resolve();
                })
          );
       };
@@ -135,6 +134,9 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
                .then(() => {
                   // Refresh UI
                   currView.emit("properties.updated", currView);
+
+                  // .addFieldToView() does not auto update the currView:
+                  return currView.save();
                });
          }
          // remove field in the form
@@ -231,13 +233,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
       var datacollectionId = view.settings.dataviewID || null;
 
       // Pull data views to options
-      var dcOptions = view.application.datacollections().map((dc) => {
-         return {
-            id: dc.id,
-            value: dc.label
-         };
-      });
-
+      var dcOptions = view.propertyDatacollections();
       SourceSelector.define("options", dcOptions);
       SourceSelector.define("value", datacollectionId);
       SourceSelector.refresh();
@@ -401,7 +397,7 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
                // set value to each components
                var vComponent = f.component(App, idPrefix);
 
-               if (vComponent.onShow) vComponent.onShow();
+               // if (vComponent.onShow) vComponent.onShow();
 
                if (vComponent.logic && vComponent.logic.setValue) {
                   vComponent.logic.setValue(val);

@@ -7,13 +7,39 @@
  * For more information on bootstrapping your app, check out:
  * http://sailsjs.org/#documentation
  */
+var _ = require("lodash");
 var path = require("path");
 var AD = require("ad-utils");
 var fs = require("fs");
 var async = require("async");
 
-var ABGraphObject = require(path.join("..", "api", "graphModels", "ABObject"));
-var ABGraphQuery = require(path.join("..", "api", "graphModels", "ABQuery"));
+const ABDefinition = require(path.join(
+   __dirname,
+   "..",
+   "api",
+   "classes",
+   "platform",
+   "ABDefinition"
+));
+
+const ABApplication = require(path.join(
+   __dirname,
+   "..",
+   "api",
+   "classes",
+   "platform",
+   "ABApplication"
+));
+const ABObject = require(path.join(
+   __dirname,
+   "..",
+   "api",
+   "classes",
+   "platform",
+   "ABObject"
+));
+
+var allDefinitions = [];
 
 module.exports = function(cb) {
    AD.module.bootstrap(__dirname, (err) => {
@@ -35,7 +61,13 @@ module.exports = function(cb) {
             verifyWellKnownConfigs,
             verifyDataDir,
 
-            initialGraphDB,
+            // define our ABDefinition Lifecycle callbacks
+            loadDefinitionCallbacks,
+
+            // load all our ABDefinitions
+            loadDefinitions,
+
+            // initialGraphDB,
             initialSystemObjects,
             cacheABClassObjects,
 
@@ -45,8 +77,7 @@ module.exports = function(cb) {
             addSDCAppInfo,
             defaultEmailNotificationInvite,
             addSDCAppDataDirectory,
-            addSDCObjectLifecycleBeforeCreate,
-            loadDefinitions
+            addSDCObjectLifecycleBeforeCreate
          ],
          (err, data) => {
             if (err) {
@@ -61,7 +92,7 @@ module.exports = function(cb) {
          }
       );
    });
-   // AppBuilder.buildDirectory.init();		// start the build directory re creation
+   // AppBuilder.buildDirectory.init();      // start the build directory re creation
 };
 
 function verifyWellKnownDir(next) {
@@ -137,41 +168,18 @@ function verifyWellKnownConfigs(next) {
 function cacheABClassObjects(next) {
    let tasks = [];
 
-   tasks.push(
-      new Promise((resolve, reject) => {
-         ABGraphObject.find()
-            .catch(reject)
-            .then((objects) => {
-               objects.forEach((obj) => {
-                  // it will be cached here
-                  obj.toABClass();
-               });
+   var genApp = ABSystemObject.getApplication();
+   var objDefs = (allDefinitions || []).filter((d) => d.type == "object");
+   objDefs.forEach((o) => {
+      new ABObject(o.json, genApp);
+   });
 
-               resolve();
-            });
-      })
-   );
+   // once the objects are created, then recreate the Queries that were
+   // initially created without ABObjects in place.
+   genApp.queriesClear();
+   genApp.queriesAll();
 
-   tasks.push(
-      new Promise((resolve, reject) => {
-         ABGraphQuery.find({
-            relations: ["objects"]
-         })
-            .catch(reject)
-            .then((queries) => {
-               (queries || []).forEach((q) => {
-                  // it will be cached here
-                  q.toABClass();
-               });
-
-               resolve();
-            });
-      })
-   );
-
-   Promise.all(tasks)
-      .catch(next)
-      .then(() => next());
+   next();
 }
 
 function setupPollingMCC(next) {
@@ -194,7 +202,7 @@ function setupPollingMCC(next) {
          })
          .catch((err) => {
             // if (err.code == 'E_SERVER_TIMEOUT') {
-            // 	delay += sails.config.appbuilder.mcc.pollFrequency;
+            //    delay += sails.config.appbuilder.mcc.pollFrequency;
             // }
 
             var errString = err.toString();
@@ -491,7 +499,9 @@ function addSDCObjectLifecycleBeforeCreate(next) {
                if (!emailRows || emailRows.length == 0) {
                   bailError(
                      "E_NOTFOUND",
-                     `Provided email was not found. [${createParams["New Coach Email"]}]`
+                     `Provided email was not found. [${
+                        createParams["New Coach Email"]
+                     }]`
                   );
                   return;
                }
@@ -613,10 +623,10 @@ AppDev Team
       // okToSend = true;
 
       // console.log("Email to Send:", {
-      // 			notify,
-      // 			recipients,
-      // 			body
-      // 		});
+      //          notify,
+      //          recipients,
+      //          body
+      //       });
 
       if (okToSend) {
          EmailNotifications.send({
@@ -646,17 +656,363 @@ AppDev Team
    next();
 }
 
-function initialGraphDB(next) {
-   ABGraphDB.initial()
-      .catch(next)
-      .then(() => {
-         next();
+// function initialGraphDB(next) {
+//    ABGraphDB.initial()
+//       .catch(next)
+//       .then(() => {
+//          next();
+//       });
+// }
+
+function prepareDefinition(values) {
+   var def = values.json;
+   if (typeof def == "string") {
+      try {
+         def = JSON.parse(def);
+      } catch (e) {}
+   }
+   return def;
+}
+function loadDefinitionCallbacks(next) {
+   //
+   // Application Lifecycle
+   //
+   var ApplicationMaintainance = [
+      "application.afterCreate",
+      "application.afterUpdate"
+   ];
+   ApplicationMaintainance.forEach((key) => {
+      ABModelLifecycle.register(key, (values, cb) => {
+         var def = prepareDefinition(values);
+         var pending = [];
+         // track any Async operations.
+
+         // .upudateNavBarArea() will update it if it exists, or create it if it
+         // doesn't.  Will work for both .afterCreate && .afterUpdate:
+         pending.push(AppBuilder.updateNavBarArea(def.id));
+
+         // make sure all Async operations are complete before calling
+         // our CB()
+         Promise.all(pending)
+            .then(() => {
+               cb();
+            })
+            .catch((err) => {
+               sails.log.error("application.afterCreate :: Error:", err);
+               cb(err);
+            });
       });
+   });
+
+   ABModelLifecycle.register("application.beforeDestroy", (values, cb) => {
+      var def = prepareDefinition(values);
+      var pending = [];
+      // track any Async operations.
+
+      debugger;
+      // figure out our actionKeyName:
+      var appName = AppBuilder.rules.toApplicationNameFormat(def.name);
+      var actionKeys = [`opstools.${appName}.view`];
+      var areaKey = _.kebabCase(`ab-${def.name}`);
+
+      Promise.resolve()
+         .then(() => {
+            return Permissions.action.destroyKeys(actionKeys);
+         })
+         .then(() => {
+            return OPSPortal.NavBar.Area.remove(areaKey);
+         })
+         .then(() => {
+            cb();
+         })
+         .catch((err) => {
+            sails.log.error("application.beforeDestroy :: Error:", err);
+            cb(err);
+         });
+   });
+
+   // ABObject.beforeCreate Lifecycle
+   ABModelLifecycle.register("object.beforeCreate", (values, cb) => {
+      var def = prepareDefinition(values);
+      var pending = [];
+      // track any Async operations.
+
+      // Make sure .tableName is set:
+      if (!def.tableName) {
+         // NOTE: do NOT use ABSystemObject.getApplication() here!
+         def.tableName = AppBuilder.rules.toObjectNameFormat(def.name);
+      }
+
+      // make sure all Async operations are complete before calling
+      // our CB()
+      Promise.all(pending)
+         .then(() => {
+            cb();
+         })
+         .catch((err) => {
+            sails.log.error("object.beforeCreate :: Error:", err);
+            cb(err);
+         });
+   });
+
+   // ABObject.beforeCreate Lifecycle
+   ABModelLifecycle.register("object.afterUpdate", (values, cb) => {
+      var def = prepareDefinition(values);
+      var pending = [];
+      // track any Async operations.
+
+      // After an Update, create a new instance of ABObject so
+      // we update our ABObjectCache
+      new ABObject(def, ABSystemObject.getApplication());
+
+      // sails.log("object.afterUpdate(): new Object definitions:", def);
+
+      // make sure all Async operations are complete before calling
+      // our CB()
+      Promise.all(pending)
+         .then(() => {
+            cb();
+         })
+         .catch((err) => {
+            sails.log.error("object.afterUpdate :: Error:", err);
+            cb(err);
+         });
+   });
+
+   // ABField.afterUpdate Lifcycle
+   ABModelLifecycle.register("field.afterUpdate", (values, cb) => {
+      var def = prepareDefinition(values);
+      var pending = [];
+      // track any Async operations.
+
+      // figure out which object is referencing this field
+      var relatedObj = null;
+      var allObjs = ABObjectCache.list();
+      for (var i = 0; i < allObjs.length; i++) {
+         var obj = allObjs[i];
+         var field = obj.fields((f) => f.id == def.id)[0];
+         if (field) {
+            relatedObj = obj;
+            break;
+         }
+      }
+
+      // then re-create the object
+      if (relatedObj) {
+         sails.log("field.afterUpdate(): refreshing obj:", relatedObj.label);
+         var objDef = ABDefinitionModel.definitionForID(relatedObj.id);
+         if (objDef) {
+            new ABObject(objDef, ABSystemObject.getApplication());
+         } else {
+            sails.error(
+               "field.afterUpdate(): unable to pull definition for related object : ",
+               relatedObj.id
+            );
+         }
+      } else {
+         sails.log(
+            "field.afterUpdate(): unable to find ABObject for updated field:",
+            def.id
+         );
+      }
+
+      // make sure all Async operations are complete before calling
+      // our CB()
+      Promise.all(pending)
+         .then(() => {
+            cb();
+         })
+         .catch((err) => {
+            sails.log.error("field.afterUpdate :: Error:", err);
+            cb(err);
+         });
+   });
+
+   // ABObjectQuery.beforeCreate Lifecycle
+   var QueryDataValidations = ["query.beforeCreate", "query.beforeUpdate"];
+   QueryDataValidations.forEach((key) => {
+      ABModelLifecycle.register(key, (values, cb) => {
+         var def = prepareDefinition(values);
+         var pending = [];
+         // track any Async operations.
+
+         // Make sure .viewName is set:
+         if (!def.viewName || def.viewName == "") {
+            def.viewName = AppBuilder.rules.toObjectNameFormat(
+               "View_" + def.name
+            );
+         }
+
+         // make sure all Async operations are complete before calling
+         // our CB()
+         Promise.all(pending)
+            .then(() => {
+               cb();
+            })
+            .catch((err) => {
+               sails.log.error(`${key} :: Error:`, err);
+               cb(err);
+            });
+      });
+   });
+
+   // ABObjectQuery.afterCreate Lifecycle
+   var QueryMaintainance = ["query.afterCreate", "query.afterUpdate"];
+   QueryMaintainance.forEach((key) => {
+      ABModelLifecycle.register(key, (values, cb) => {
+         var def = prepareDefinition(values);
+         var pending = [];
+         // track any Async operations.
+
+         // perform a Migrate.create() to create/update the Query Table.
+         var qClass = ABSystemObject.getApplication().queryNew(def);
+         pending.push(ABMigration.createQuery(qClass));
+
+         // make sure all Async operations are complete before calling
+         // our CB()
+         Promise.all(pending)
+            .then(() => {
+               cb();
+            })
+            .catch((err) => {
+               sails.log.error(`${key} :: Error:`, err);
+               cb(err);
+            });
+      });
+   });
+
+   // ABObjectQuery.afterCreate Lifecycle
+   var ViewMaintainance = ["view.afterCreate", "view.afterUpdate"];
+   ViewMaintainance.forEach((key) => {
+      ABModelLifecycle.register(key, (values, cb) => {
+         var def = prepareDefinition(values);
+         var pending = [];
+         // track any Async operations.
+
+         // If this is a New Page, that is a Root page (def.isRoot)
+         // then create the OPs portal permissions:
+         if (def.key == "page" && def.isRoot === "true") {
+            // var Page = ABSystemObject.getApplication().pageNew(def);
+
+            sails.log(`::: View.Page Create NavView (${def.name})`);
+
+            // Find the Parent ABApplication
+            var appDef = ABDefinition.definition(def.myAppID);
+            if (appDef) {
+               var pApp = new ABApplication(appDef);
+               let pageName = "Application Admin Page";
+
+               // 1)  Update Admin App page
+               if (pApp.isAdminApp) {
+                  let optionsAdmin = {
+                     isAdminPage: true,
+                     name: pageName,
+                     label: "Admin",
+                     icon: "fa-circle-o-notch" // TODO admin app icon
+                  };
+
+                  pending.push(AppBuilder.updateNavView(pApp, optionsAdmin));
+               }
+               // Remove Admin App page
+               else {
+                  pending.push(AppBuilder.removeNavView(pApp, pageName));
+               }
+
+               // 2) manage the pages Nav View Permission
+               var label = def.name;
+               if (def.translations && def.translations.length) {
+                  label = def.translations[0].label;
+               }
+               let options = {
+                  name: def.name,
+                  label: label,
+                  pageID: def.id,
+                  icon: def.icon
+               };
+
+               pending.push(AppBuilder.updateNavView(pApp, options));
+            } else {
+               if (typeof def.myAppID == "undefined") {
+                  sails.log(
+                     `${key} :: Page[${def.id}] did not define a .myAppID, not configuring a NavBar view for this.`
+                  );
+               } else {
+                  var err = new Error(
+                     `${key} :: Error:Could not find Application[${def.myAppID}] for Page[${def.id}]`
+                  );
+
+                  sails.log.error(err);
+                  //// TODO: better way to respond to this failed operation!
+               }
+            }
+         }
+
+         // make sure all Async operations are complete before calling
+         // our CB()
+         Promise.all(pending)
+            .then(() => {
+               cb();
+            })
+            .catch((err) => {
+               sails.log.error(`${key} :: Error:`, err);
+               cb(err);
+            });
+      });
+   });
+
+   ABModelLifecycle.register("view.beforeDestroy", (values, cb) => {
+      var def = prepareDefinition(values);
+      var pending = [];
+      // track any Async operations.
+
+      // If this is a Page, then remove the OPs portal permissions:
+      if (def.key == "page") {
+         // var Page = ABSystemObject.getApplication().pageNew(def);
+
+         // Find the Parent ABApplication
+         var appDef = ABDefinition.definition(def.myAppID);
+         if (appDef) {
+            var pApp = new ABApplication(appDef);
+            let pageName = "Application Admin Page";
+
+            // 1)  Remove Admin App page
+            if (pApp.isAdminApp) {
+               pending.push(AppBuilder.removeNavView(pApp, pageName));
+            }
+
+            // 2) remove the pages Nav View Permission
+            pending.push(AppBuilder.removeNavView(pApp, def.name));
+         } else {
+            var err = new Error(
+               `view.beforeDestroy :: Error:Could not find Application[${def.myAppID}] for Page[${def.id}]`
+            );
+            sails.log.error(err);
+
+            //// TODO: better way to respond to this failed operation!
+         }
+      }
+
+      // make sure all Async operations are complete before calling
+      // our CB()
+      Promise.all(pending)
+         .then(() => {
+            cb();
+         })
+         .catch((err) => {
+            // if a NavView() fn returns an error, just post it here
+            sails.log.error("view.beforeDestroy :: Error:", err);
+            // and continue
+            cb();
+         });
+   });
+
+   next();
 }
 
 function loadDefinitions(next) {
    ABDefinitionModel.refresh()
-      .then(() => {
+      .then((allDefs) => {
+         allDefinitions = allDefs;
          next();
       })
       .catch(next);

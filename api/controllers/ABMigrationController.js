@@ -10,8 +10,6 @@ var _ = require("lodash");
 var path = require("path");
 var async = require("async");
 
-var ABGraphObject = require(path.join("..", "graphModels", "ABObject"));
-
 var reloading = null;
 
 module.exports = {
@@ -66,42 +64,7 @@ module.exports = {
     * post app_builder/migrate/object/:objID/index/:indexID
     */
    createIndex: function(req, res) {
-      let newIndexVals = req.body;
-      let objID = req.param("objID", -1);
-
-      return (Promise.resolve()
-            .then(() => ABGraphObject.findOne(objID))
-            .then(
-               (objectData) =>
-                  new Promise((next, err) => {
-                     if (!objectData) {
-                        let missingObj = new Error("Missing Object");
-                        missingObj.objID = objID;
-                        console.log(`Error: Missing Object from id: ${objID}`);
-                        return err(missingObj);
-                     }
-
-                     let object = objectData.toABClass();
-                     let index = object.application.indexNew(
-                        newIndexVals,
-                        object
-                     );
-                     next(index);
-                  })
-            )
-            // Create MySQL index
-            .then((index) => ABMigration.createIndex(index))
-            // TODO: Save index to ABObject
-            .then(function() {
-               res.AD.success({ good: "job" });
-            })
-            .catch(function(err) {
-               ADCore.error.log("ABMigration.createIndex() failed:", {
-                  error: err
-               });
-               res.AD.error(err, 500);
-            })
-      );
+      simpleIndexOperation(req, res, "createIndex");
    },
 
    /**
@@ -110,16 +73,7 @@ module.exports = {
     * delete app_builder/migrate/object/:objID/index/:indexID
     */
    dropIndex: function(req, res) {
-      simpleIndexOperation(req, res, "dropIndex")
-         .then(function() {
-            res.AD.success({ good: "job" });
-         })
-         .catch(function(err) {
-            ADCore.error.log("ABMigration.dropIndex() failed:", {
-               error: err
-            });
-            res.AD.error(err, 500);
-         });
+      simpleIndexOperation(req, res, "dropIndex");
    }
 };
 
@@ -200,18 +154,59 @@ module.exports = {
 function verifyAndReturnField(req, res) {
    return new Promise((resolve, reject) => {
       let objID = req.param("objID", -1);
+      let object = ABObjectCache.get(objID);
 
       // AppBuilder.routes.verifyAndReturnObject(req, res)
-      ABGraphObject.findOne(objID)
+      // ABGraphObject.findOne(objID)
+      Promise.resolve()
+         .then(() => {
+            // if object already in the ABObjectCache, skip this step
+            if (object) {
+               sails.log.info("object returned form ABObjectCache");
+               return;
+            }
+
+            // lookup the object information
+            return AppBuilder.routes
+               .verifyAndReturnObject(req, res)
+               .then((obj) => {
+                  object = obj;
+               });
+         })
+         // .then(()=>{
+
+         //     // if object already in the ABObjectCache, skip this step
+         //     if (object) {
+         //         return;
+         //     }
+
+         //     // lookup object if it isn't already in the cache:
+         //     return new Promise((next, error) =>{
+
+         //         var def = ABDefinitionModel.definitionForID(objID);
+         //         if (def) {
+         //             object = ABServerApp.objectNew(def);
+         //             next();
+         //             return;
+         //         } else {
+         //             ABDefinitionModel.find({id:objID})
+         //             .then((list)=>{
+         //                 if (list && list.length > 0) {
+         //                     object = ABServerApp.objectNew(list[0].json);
+         //                 }
+         //                 next();
+         //             })
+         //             .catch(error);
+         //         }
+         //     });
+         // })
          .then(function(objectData) {
-            if (!objectData) {
+            if (!object) {
                var missingObj = new Error("Missing Object");
                missingObj.objID = objID;
                console.log(`Error: Missing Object from id: ${objID}`);
                return reject(missingObj);
             }
-
-            let object = objectData.toABClass();
 
             var fieldID = req.param("fieldID", -1);
 
@@ -272,6 +267,12 @@ function simpleObjectOperation(req, res, operation) {
                });
                res.AD.error(err, 500);
             });
+      })
+      .catch((err) => {
+         console.log(err);
+         // NOTE: verifyAndReturnObject() should already have handled the error
+         // response.  So we don't need to do anything else here, but we
+         // add the .catch() to prevent additional "unhandled" error messages.
       });
 }
 
@@ -282,22 +283,37 @@ function simpleFieldOperation(req, res, operation) {
 
    // NOTE: verifyAnd...() handles any errors and responses internally.
    // only need to respond to a field being passed back on .resolve()
-   verifyAndReturnField(req, res).then(function(field) {
-      ABMigration[operation](field)
-         .then(function() {
-            // make sure this field's object's model cache is reset
-            field.object.modelRefresh();
 
-            res.AD.success({ good: "job" });
-         })
-         .catch(function(err) {
-            ADCore.error.log("ABMigration." + operation + "() failed:", {
-               error: err,
-               field: field
+   verifyAndReturnField(req, res)
+      .then(function(field) {
+         sails.log.info("  -> found field:", field);
+
+         ABMigration[operation](field)
+            .then(function() {
+               // make sure this field's object's model cache is reset
+               field.object.modelRefresh();
+
+               res.AD.success({ good: "job" });
+            })
+            .catch(function(err) {
+               // make sure this field's object's model cache is reset
+               // even though it was an error, not sure just how far things
+               // went.
+               field.object.modelRefresh();
+
+               ADCore.error.log("ABMigration." + operation + "() failed:", {
+                  error: err,
+                  field: field
+               });
+               res.AD.error(err, 500);
             });
-            res.AD.error(err, 500);
-         });
-   });
+      })
+      .catch((err) => {
+         console.log(err);
+         // NOTE: verifyAndReturnField() should already have handled the error
+         // response.  So we don't need to do anything else here, but we
+         // add the .catch() to prevent additional "unhandled" error messages.
+      });
 }
 
 function simpleIndexOperation(req, res, operation) {
@@ -309,23 +325,19 @@ function simpleIndexOperation(req, res, operation) {
    let indexID = req.param("indexID", -1);
    if (!objID || !indexID) {
       res.AD.error("Bad parameters", 400);
-      return Promise.reject();
+      return;
    }
 
-   return Promise.resolve()
-      .then(() => ABGraphObject.findOne(objID))
+   // NOTE: verifyAnd...() handles any errors and responses internally.
+   // only need to responde to an object being passed back on .resolve()
+
+   AppBuilder.routes
+      .verifyAndReturnObject(req, res)
+      // ABGraphObject.findOne(objID)
       .then(
-         (objectData) =>
+         (object) =>
             new Promise((next, err) => {
-               if (!objectData) {
-                  let missingObj = new Error("Missing Object");
-                  missingObj.objID = objID;
-                  console.log(`Error: Missing Object from id: ${objID}`);
-                  return err(missingObj);
-               }
-
-               let object = objectData.toABClass();
-
+               // Now get our index
                let index = object.indexes((idx) => idx.id == indexID)[0];
                if (!index) {
                   let missingIndex = new Error("Missing Index");
@@ -337,5 +349,15 @@ function simpleIndexOperation(req, res, operation) {
                next(index);
             })
       )
-      .then((index) => ABMigration[operation](index));
+      .then((index) =>
+         ABMigration[operation](index).then(function() {
+            res.AD.success({ good: "job" });
+         })
+      )
+      .catch(function(err) {
+         ADCore.error.log(`ABMigration.${operation}() failed:`, {
+            error: err
+         });
+         res.AD.error(err, 500);
+      });
 }

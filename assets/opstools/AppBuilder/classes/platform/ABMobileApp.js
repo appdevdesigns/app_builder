@@ -21,9 +21,6 @@ module.exports = class ABMobileApp extends ABMobileAppCore {
 	]
 }
 */
-
-      // multilingual fields: label, description
-      OP.Multilingual.translate(this, this, ["label"]);
    }
 
    ///
@@ -64,29 +61,12 @@ module.exports = class ABMobileApp extends ABMobileAppCore {
     */
    save() {
       return this.application
-         .objectSave(this)
+         .objectInsert(this)
          .then(() => {
             resolve(this);
          })
          .catch(function(err) {
             reject(err);
          });
-   }
-
-   /**
-    * @method toObj()
-    *
-    * properly compile the current state of this ABApplication instance
-    * into the values needed for saving to the DB.
-    *
-    * Most of the instance data is stored in .json field, so be sure to
-    * update that from all the current values of our child fields.
-    *
-    * @return {json}
-    */
-   toObj() {
-      OP.Multilingual.unTranslate(this, this, ["label"]);
-
-      return super.toObj();
    }
 };

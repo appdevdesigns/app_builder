@@ -14,7 +14,8 @@ var AD = require("ad-utils");
 var _ = require("lodash");
 var path = require("path");
 
-var ABGraphDataview = require(path.join("..", "graphModels", "ABDataview"));
+// var ABGraphDataview = require(path.join("..", "graphModels", "ABDataview"));
+var SystemObject = require(path.join("..", "services", "ABSystemObject"));
 
 module.exports = function(req, res, next) {
    // our QB Conditions look like:
@@ -124,12 +125,19 @@ function parseQueryCondition(_where, object, req, res, cb) {
          //     if (dv == null)
          //         dv = p.application.datacollections(dColl => dColl.id == cond.value)[0];
          // });
+         var Application = SystemObject.getApplication();
+
+         // NOTE: on the server, Application.datacollection*() methods do not return
+         // datacollections.  (for now).  So we need to pull the definition of the dv
+         // here:
+         // var dv = Application.datacollectionByID(cond.value);
+         var defDC = Application.definitionForID(cond.value);
 
          Promise.resolve()
             // Get data view
-            .then(() => ABGraphDataview.findOne(cond.value))
-            .then((dc) => {
-               if (!dc) {
+
+            .then(() => {
+               if (!defDC) {
                   ADCore.error.log(
                      "AppBuilder:Policy:ABModelConvertDataCollectionCondition:Could not find specified data collection:",
                      { dcId: cond.value, condition: cond }
@@ -144,11 +152,13 @@ function parseQueryCondition(_where, object, req, res, cb) {
                }
 
                // var sourceObject = object.application.objects(obj => obj.id == dc.settings.object)[0];
-               var sourceObject = ABObjectCache.get(dc.settings.datasourceID);
+               var sourceObject = ABObjectCache.get(
+                  defDC.settings.datasourceID
+               );
                if (!sourceObject) {
                   ADCore.error.log(
                      "AppBuilder:Policy:ABModelConvertDataCollectionCondition:Source object not exists:",
-                     { field: field, sourceObject: sourceObject, dc: dc }
+                     { field: field, sourceObject: sourceObject, dc: defDC }
                   );
                   var err = new Error("Source object not exists.");
                   cb(err);
@@ -353,8 +363,8 @@ function parseQueryCondition(_where, object, req, res, cb) {
                   var query = sourceObject.queryFind(
                      {
                         columnNames: [objectColumn],
-                        where: dc.settings.objectWorkspace.filterConditions,
-                        sort: dc.settings.objectWorkspace.sortFields || []
+                        where: defDC.settings.objectWorkspace.filterConditions,
+                        sort: defDC.settings.objectWorkspace.sortFields || []
                      },
                      req.user.data
                   );

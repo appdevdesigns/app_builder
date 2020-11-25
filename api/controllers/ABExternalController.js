@@ -23,7 +23,10 @@ module.exports = {
          .then((result) => {
             res.AD.success(result);
          })
-         .catch(res.AD.error);
+         .catch((err) => {
+            console.error(err);
+            res.AD.error(err);
+         });
    },
 
    /**
@@ -39,7 +42,10 @@ module.exports = {
          .then((result) => {
             res.AD.success(result);
          })
-         .catch(res.AD.error);
+         .catch((err) => {
+            console.error(err);
+            res.AD.error(err);
+         });
    },
 
    /**
@@ -54,8 +60,8 @@ module.exports = {
          columnList = req.body.columns || [];
 
       ABExternal.tableToObject(appID, tableName, columnList, connName)
-         .then(function(objectList) {
-            res.AD.success(objectList);
+         .then(function(definitionList) {
+            res.AD.success(definitionList);
          })
          .catch(function(err) {
             ADCore.error.log("ABExternal.importTable() failed:", {

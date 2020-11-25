@@ -350,31 +350,25 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
             _logic.listBusy();
 
             // get a copy of the page
-            let copiedPage = selectedPage.copy(null, selectedPage.parent);
-            copiedPage.parent = selectedPage.parent;
-
-            // saving
-            let savePageFn = (p) => {
-               return new Promise((resolve, reject) => {
-                  p.save()
-                     .catch(reject)
-                     .then(() => {
-                        // save sub-pages sequentially
-                        var subTasks = Promise.resolve();
-                        p.pages().forEach((subPage) => {
-                           subTasks = subTasks.then((x) => savePageFn(subPage));
-                        });
-
-                        // final
-                        subTasks.then(() => resolve());
-                     });
-               });
-            };
-
-            savePageFn(copiedPage)
-               .catch((err) => _logic.listReady())
-               .then(() => {
-                  _logic.callbackNewPage(copiedPage);
+            selectedPage
+               .copy(null, selectedPage.parent)
+               .then((copiedPage) => {
+                  copiedPage.parent = selectedPage.parent;
+                  copiedPage.label = copiedPage.label + " (copied)";
+                  copiedPage.save().then(() => {
+                     _logic.callbackNewPage(copiedPage);
+                     _logic.listReady();
+                  });
+               })
+               .catch((err) => {
+                  var strError = err.toString();
+                  webix.alert({
+                     title: "Error copying page",
+                     ok: "fix it",
+                     text: strError,
+                     type: "alert-error"
+                  });
+                  console.log(err);
                   _logic.listReady();
                });
          },
@@ -397,7 +391,9 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
                      selectedPage.destroy().then(() => {
                         _logic.listReady();
 
-                        viewList.remove(selectedPage.id);
+                        if (viewList.exists(selectedPage.id)) {
+                           viewList.remove(selectedPage.id);
+                        }
 
                         // refresh the root page list
                         PopupNewPageComponent.applicationLoad(

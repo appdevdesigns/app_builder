@@ -249,6 +249,9 @@ module.exports = class ABChooseList extends ABComponent {
             // Get applications data from the server
             _logic.busy();
 
+            // Q: is it possible this might be delayed before the
+            //    .applicationInfo() below is complete, continues and this info
+            //    is needed?
             ABApplication.initRoles();
 
             // ABApplication.allApplications()
@@ -331,6 +334,17 @@ module.exports = class ABChooseList extends ABComponent {
             return new Promise((resolve, reject) => {
                let selectedApp = $$(ids.list).getItem(appId);
 
+               // Since moving to ABDefinition, we no longer have
+               // to pull a fuller version of the ABApplication from
+               // the server:
+
+               if (selectedApp) {
+                  resolve(selectedApp);
+                  return;
+               }
+               reject(new Error(`unknown App.id [${appId}]`));
+
+               /*
                // loaded full data of application already
                if (selectedApp._isFullLoaded) {
                   resolve(selectedApp);
@@ -351,6 +365,7 @@ module.exports = class ABChooseList extends ABComponent {
                      resolve(_data.listApplications.getItem(appId));
                   });
                }
+               */
             });
          },
 
@@ -411,7 +426,8 @@ module.exports = class ABChooseList extends ABComponent {
           *
           * The File Upload process finished.
           */
-         onFileUpload: function(item, response) {
+         onFileUpload: (item, response) => {
+            this.loaded = false;
             _logic.loadData(); // refresh app list
             $$(ids.uploader).enable();
             _logic.ready();

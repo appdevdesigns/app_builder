@@ -80,7 +80,10 @@ module.exports = class ABObject extends ABObjectCore {
       // label/name must be unique:
       var isNameUnique =
          this.application.objects((o) => {
-            return o.name.toLowerCase() == this.name.toLowerCase();
+            return (
+               o.id != this.id &&
+               o.name.toLowerCase() == this.name.toLowerCase()
+            );
          }).length == 0;
       if (!isNameUnique) {
          validator.addError(
@@ -156,66 +159,154 @@ module.exports = class ABObject extends ABObjectCore {
     * @return {Promise}
     */
    destroy() {
-      return new Promise((resolve, reject) => {
-         // Remove the import object, then its model will not be destroyed
-         if (this.isImported) {
-            this.application
-               .objectDestroy(this)
-               .catch(reject)
-               .then(() => {
-                  resolve();
+      /*
+        return new Promise((resolve, reject) => {
+            // Remove the import object, then its model will not be destroyed
+            if (this.isImported) {
+                this.application
+                    .objectDestroy(this)
+                    .catch(reject)
+                    .then(() => {
+                        resolve();
+                    });
+
+                return;
+            }
+
+            // OK, some of our Fields have special follow up actions that need to be
+            // considered when they no longer exist, so before we simply drop this
+            // object/table, drop each of our fields and give them a chance to clean up
+            // what needs cleaning up.
+
+            // ==> More work, but safer.
+            var fieldDrops = [];
+            this.fields().forEach((f) => {
+                fieldDrops.push(f.destroy());
+            });
+
+            Promise.all(fieldDrops)
+                .then(() => {
+                    return new Promise((next, err) => {
+                        // now drop our table
+                        // NOTE: our .migrateXXX() routines expect the object to currently exist
+                        // in the DB before we perform the DB operations.  So we need to
+                        // .migrateDrop()  before we actually .objectDestroy() this.
+                        this.migrateDrop()
+                            .then(() => {
+                                // finally remove us from the application storage
+                                return this.application.objectDestroy(this);
+                            })
+                            .then(next)
+                            .catch(err);
+                    });
+                })
+
+                // flag .disable to queries who contains this removed object
+                .then(() => {
+                    return new Promise((next, err) => {
+                        this.application
+                            .queries(
+                                (q) =>
+                                    q.objects((o) => o.id == this.id).length > 0
+                            )
+                            .forEach((q) => {
+                                q._objects = q.objects((o) => o.id != this.id);
+
+                                q.disabled = true;
+                            });
+
+                        next();
+                    });
+                })
+                .then(resolve)
+                .catch(reject);
+        });
+ */
+
+      var removeFromApplications = () => {
+         return new Promise((next, err) => {
+            ABApplication.allCurrentApplications().then((apps) => {
+               // NOTE: apps is a webix datacollection
+
+               var allRemoves = [];
+
+               var appsWithObject = apps.find((a) => {
+                  return a.objectsIncluded((o) => o.id == this.id);
+               });
+               appsWithObject.forEach((app) => {
+                  allRemoves.push(app.objectRemove(this));
                });
 
-            return;
-         }
-
-         // OK, some of our Fields have special follow up actions that need to be
-         // considered when they no longer exist, so before we simply drop this
-         // object/table, drop each of our fields and give them a chance to clean up
-         // what needs cleaning up.
-
-         // ==> More work, but safer.
-         var fieldDrops = [];
-         this.fields().forEach((f) => {
-            fieldDrops.push(f.destroy());
+               return Promise.all(allRemoves)
+                  .then(next)
+                  .catch(err);
+            });
          });
+      };
 
-         Promise.all(fieldDrops)
-            .then(() => {
-               return new Promise((next, err) => {
-                  // now drop our table
-                  // NOTE: our .migrateXXX() routines expect the object to currently exist
-                  // in the DB before we perform the DB operations.  So we need to
-                  // .migrateDrop()  before we actually .objectDestroy() this.
-                  this.migrateDrop()
-                     .then(() => {
-                        // finally remove us from the application storage
-                        return this.application.objectDestroy(this);
-                     })
-                     .then(next)
-                     .catch(err);
+      var disableRelatedQueries = () => {
+         return new Promise((next, err) => {
+            this.application
+               .queries((q) => q.objects((o) => o.id == this.id).length > 0)
+               .forEach((q) => {
+                  // q._objects = q.objects((o) => o.id != this.id);
+
+                  q.disabled = true;
                });
-            })
 
-            // flag .disable to queries who contains this removed object
-            .then(() => {
-               return new Promise((next, err) => {
-                  this.application
-                     .queries(
-                        (q) => q.objects((o) => o.id == this.id).length > 0
-                     )
-                     .forEach((q) => {
-                        q._objects = q.objects((o) => o.id != this.id);
+            next();
+         });
+      };
 
-                        q.disabled = true;
-                     });
+      return Promise.resolve()
+         .then(() => {
+            // 1) remove us from all Application:
+            return removeFromApplications();
+         })
+         .then(() => {
+            // 2) disable any connected Queries
+            return disableRelatedQueries();
+         })
+         .then(() => {
+            // if an imported Object (FederatedTable, Existing Table, etc...)
+            // then skip this step
+            if (this.isImported) {
+               return Promise.resolve();
+            }
 
-                  next();
+            // time to remove my table:
+            // NOTE: our .migrateXXX() routines expect the object to currently exist
+            // in the DB before we perform the DB operations.  So we need to
+            // .migrateDrop()  before we actually .destroy() this.
+            return this.migrateDrop();
+         })
+         .then(() => {
+            // now remove my definition
+
+            // start with my fields:
+            var fieldDrops = [];
+
+            // Only ABObjects should attempt any fieldDrops.
+            // ABObjectQueries can safely skip this step:
+            if (this.type == "object") {
+               var allFields = this.fields();
+               this._fields = []; // clear our field counter so we don't retrigger
+               // this.save() on each field.destroy();
+
+               allFields.forEach((f) => {
+                  fieldDrops.push(f.destroy());
                });
-            })
-            .then(resolve)
-            .catch(reject);
-      });
+            }
+
+            return Promise.all(fieldDrops)
+               .then(() => {
+                  // now me.
+                  return super.destroy();
+               })
+               .then(() => {
+                  this.emit("destroyed");
+               });
+         });
    }
 
    /**
@@ -228,38 +319,48 @@ module.exports = class ABObject extends ABObjectCore {
     *						.resolve( {this} )
     */
    save() {
-      return new Promise((resolve, reject) => {
-         var isAdd = false;
+      var isAdd = false;
 
-         // if this is our initial save()
-         if (!this.id) {
-            // this.id = OP.Util.uuid();	// setup default .id
-            this.label = this.label || this.name;
-            this.urlPath =
-               this.urlPath || this.application.name + "/" + this.name;
-            isAdd = true;
+      // if this is our initial save()
+      if (!this.id) {
+         this.label = this.label || this.name;
+         if (!this.createdInAppID) {
+            this.createdInAppID = this.application.id;
          }
+         isAdd = true;
+      }
 
-         this.application
-            .objectSave(this)
-            .then((newObj) => {
-               if (newObj && newObj.id && !this.id) this.id = newObj.id;
-
-               if (isAdd) {
-                  // on a Create: trigger a migrateCreate object
-                  this.migrateCreate()
+      return Promise.resolve()
+         .then(() => {
+            return super.save();
+         })
+         .then(() => {
+            return new Promise((resolve, reject) => {
+               // make sure only ABObjects perform the .objectInsert()
+               // ABObjectQueries need to perform their own operation:
+               if (this.type == "object") {
+                  this.application
+                     .objectInsert(this)
                      .then(() => {
                         resolve(this);
+                        // }
                      })
-                     .catch(reject);
+                     .catch(function(err) {
+                        reject(err);
+                     });
                } else {
                   resolve(this);
                }
-            })
-            .catch(function(err) {
-               reject(err);
             });
-      });
+         })
+         .then(() => {
+            if (isAdd) {
+               return this.migrateCreate();
+            }
+         })
+         .then(() => {
+            return this;
+         });
    }
 
    /**
@@ -346,7 +447,7 @@ module.exports = class ABObject extends ABObjectCore {
       var columnNameLookup = {};
 
       // get the header for each of our fields:
-      this.fields().forEach(function(f) {
+      this.fields(null, true).forEach(function(f) {
          var header = f.columnHeader({
             isObjectWorkspace: isObjectWorkspace,
             editable: isEditable
@@ -457,6 +558,7 @@ module.exports = class ABObject extends ABObjectCore {
       if (rowData == null) return "";
 
       // translate multilingual
+      //// TODO: isn't this a MLObject??  use this.translate()
       var mlFields = this.multilingualFields();
       this.application.translate(rowData, rowData, mlFields);
 

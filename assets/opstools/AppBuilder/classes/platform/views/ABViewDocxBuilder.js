@@ -86,9 +86,9 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
 
          let currView = _logic.currentEditObject();
          currView.settings.filename = fileInfo.data.uuid;
-         currView.settings.filelabel = fileInfo.name;
+         currView.filelabel = fileInfo.name;
 
-         $$(ids.filelabel).setValue(currView.settings.filelabel);
+         $$(ids.filelabel).setValue(currView.filelabel);
          $$(ids.docxDownload).show();
       };
 
@@ -99,7 +99,7 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
          fetch(url)
             .then((response) => response.blob())
             .then((blob) => {
-               letUserDownload(blob, currView.settings.filelabel);
+               letUserDownload(blob, currView.filelabel);
             });
       };
 
@@ -361,8 +361,10 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
             ABViewDocxBuilderPropertyComponentDefaults.language
       );
 
-      $$(ids.filelabel).setValue(view.settings.filelabel);
-      $$(ids.buttonlabel).setValue(view.settings.buttonlabel);
+      $$(ids.filelabel).setValue(view.filelabel || view.settings.filelabel);
+      $$(ids.buttonlabel).setValue(
+         view.buttonlabel || view.settings.buttonlabel
+      );
       $$(ids.width).setValue(view.settings.width);
 
       if (view.settings.filename) {
@@ -375,10 +377,10 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
    static propertyEditorValues(ids, view) {
       super.propertyEditorValues(ids, view);
 
-      view.settings.buttonlabel = $$(ids.buttonlabel).getValue();
+      view.buttonlabel = $$(ids.buttonlabel).getValue();
       view.settings.dataviewID = $$(ids.datacollection).getValue();
       view.settings.width = $$(ids.width).getValue();
-      view.settings.filelabel = $$(ids.filelabel).getValue();
+      view.filelabel = $$(ids.filelabel).getValue();
       view.settings.language = $$(ids.language).getValue();
       view.settings.toolbarBackground = $$(ids.toolbarBackground).getValue();
       view.settings.buttonPosition = $$(ids.buttonPosition).getValue();
@@ -435,6 +437,12 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
          };
       }
 
+      var buttonLabelText = this.buttonlabel || this.settings.buttonlabel;
+      if (!buttonLabelText) {
+         buttonLabelText =
+            ABViewDocxBuilderPropertyComponentDefaults.buttonlabel;
+      }
+
       var _ui = {
          view: "toolbar",
          css:
@@ -448,9 +456,7 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                css: "webix_primary",
                type: "icon",
                icon: "fa fa-file-word-o",
-               label:
-                  this.settings.buttonlabel ||
-                  ABViewDocxBuilderPropertyComponentDefaults.buttonlabel,
+               label: buttonLabelText,
                width:
                   this.settings.width ||
                   ABViewDocxBuilderPropertyComponentDefaults.width,
@@ -1081,7 +1087,7 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                .then((blobFile) => {
                   // Let user download the output file
                   return new Promise((next, err) => {
-                     letUserDownload(blobFile, this.settings.filelabel);
+                     letUserDownload(blobFile, this.filelabel);
 
                      next();
                   });

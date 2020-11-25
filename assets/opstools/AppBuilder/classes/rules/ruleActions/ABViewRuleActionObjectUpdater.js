@@ -1041,6 +1041,7 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
                   // QUESTION: if value returns undefined should we do something else?
                   switch (op.op) {
                      case "set":
+                        if (!value) break;
                         // if we are setting a connection we do not want to pass the full object because
                         // batch creates payload gets too large
                         objectToUpdate[field.columnName] = {};
@@ -1052,8 +1053,7 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
                         field.datasourceLink
                            .fields(
-                              (f) =>
-                                 f.key == "combined" || f.key == "AutoIndex"
+                              (f) => f.key == "combined" || f.key == "AutoIndex"
                            )
                            .forEach((f) => {
                               objectToUpdate[field.columnName][f.columnName] =

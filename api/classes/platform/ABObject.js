@@ -60,17 +60,122 @@ module.exports = class ABClassObject extends ABObjectCore {
       ABObjectCache.cache(this);
    }
 
+   currentView() {
+      return this.objectWorkspace || {};
+   }
+
    ///
    /// Instance Methods
    ///
+
+   ///
+   /// Import/Export Services
+   ///
+
+   /**
+    * @method applyConnectFields()
+    * reapply the connectFields we "stashed" earlier.
+    */
+   applyConnectFields() {
+      (this._stashConnectFields || []).forEach((f) => {
+         this._fields.push(f);
+      });
+      this._stashConnectFields = [];
+   }
+
+   /**
+    * @method applyIndexes()
+    * reapply the indexes we "stashed" earlier.
+    */
+   applyIndexes() {
+      (this._stashIndexes || []).forEach((f) => {
+         this._indexes.push(f);
+      });
+      this._stashIndexes = [];
+   }
+
+   /**
+    * @method getStashedIndexes()
+    * return the array of stashed indexes.
+    * @return {array} [...{ABIndex}] or {null}
+    */
+   getStashedIndexes() {
+      if (!this._stashIndexes) return null;
+      return this._stashIndexes;
+   }
+
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @param {array} ids
+    *         the array of relevant ids to store our .ids into.
+    */
+   exportIDs(ids) {
+      // make sure we don't get into an infinite loop:
+      if (ids.indexOf(this.id) > -1) return;
+
+      ids.push(this.id);
+
+      // include my fields:
+      this.fields(null, true).forEach((f) => {
+         f.exportIDs(ids);
+      });
+
+      this.indexes().forEach((i) => {
+         i.exportIDs(ids);
+      });
+   }
+
+   /**
+    * @method stashConnectFields()
+    * internally "stash" the connectFields away so we don't reference them.
+    * We do this during an import, so we can create the base Object Tables
+    * before we create connections between them.
+    */
+   stashConnectFields() {
+      this._stashConnectFields = [];
+      (this.connectFields() || []).forEach((f) => {
+         this._stashConnectFields.push(f);
+         this._fields = this.fields(function(o) {
+            return o.id != f.id;
+         });
+      });
+   }
+
+   /**
+    * @method stashIndexFieldsWithConnection()
+    * internally "stash" these indexs away so we don't reference them.
+    * We do this during an import, so that the connectFields are
+    * created 1st before we try to create an index on them.
+    */
+   stashIndexFieldsWithConnection() {
+      this._stashIndexes = [];
+      // console.log("::: StashIndexFieldsWithConnection():");
+      // console.log(`    indexes:`, this.indexes());
+      (this.indexes() || []).forEach((indx) => {
+         // console.log("       indx:", indx);
+         var hasConnect =
+            (indx.fields || []).filter((f) => f.key == "connectObject").length >
+            0;
+         if (hasConnect) {
+            sails.log(
+               `:::: STASHING INDEX O[${this.label}].I[${indx.indexName}]`
+            );
+            this._stashIndexes.push(indx);
+            this._indexes = this.indexes(function(o) {
+               return o.id != indx.id;
+            });
+         }
+      });
+   }
 
    ///
    /// Migration Services
    ///
 
    dbSchemaName() {
-      return sails.config.connections["appBuilder"].database;
-      // return sails.config.connections[this.connName || "appBuilder"].database;
+      // return sails.config.connections["appBuilder"].database;
+      return sails.config.connections[this.connName || "appBuilder"].database;
    }
 
    dbTableName(prefixSchema = false) {
@@ -105,8 +210,22 @@ module.exports = class ABClassObject extends ABObjectCore {
                // if it doesn't exist, then create it and any known fields:
                if (!exists) {
                   sails.log.verbose("... creating!!!");
+
+                  function migrateIt(f) {
+                     return f.migrateCreate(knex).catch((err) => {
+                        console.error(
+                           `field[${f.label}].migrateCreate(): error:`,
+                           err
+                        );
+                        throw err;
+                     });
+                  }
+
                   return knex.schema
                      .createTable(tableName, (t) => {
+                        //// NOTE: the table is NOT YET CREATED here
+                        //// we can just modify the table definition
+
                         // Use .uuid to be primary key instead
                         // t.increments('id').primary();
                         t.string("uuid").primary();
@@ -118,31 +237,42 @@ module.exports = class ABClassObject extends ABObjectCore {
                         t.charset("utf8");
                         t.collate("utf8_unicode_ci");
 
-                        let updateTasks = [];
+                        // Adding a new field to store various item properties in JSON (ex: height)
+                        t.text("properties");
+                     })
+                     .then(() => {
+                        //// NOTE: NOW the table is created
+                        //// let's go add our Fields to it:
+                        let fieldUpdates = [];
 
                         let normalFields = this.fields(
                            (f) => f && f.key != "connectObject"
                         );
-                        let connectFields = this.fields(
-                           (f) => f && f.key == "connectObject"
-                        );
 
                         normalFields.forEach((f) => {
-                           updateTasks.push(f.migrateCreate(knex));
+                           fieldUpdates.push(migrateIt(f));
                         });
 
+                        return Promise.all(fieldUpdates);
+                     })
+                     .then(() => {
+                        // Now Create our indexes
+
+                        let fieldUpdates = [];
                         this.indexes().forEach((idx) => {
-                           updateTasks.push(idx.migrateCreate(knex));
+                           fieldUpdates.push(migrateIt(idx));
                         });
+                        return Promise.all(fieldUpdates);
+                     })
+                     .then(() => {
+                        // finally create any connect Fields
 
+                        let fieldUpdates = [];
+                        let connectFields = this.connectFields();
                         connectFields.forEach((f) => {
-                           updateTasks.push(f.migrateCreate(knex));
+                           fieldUpdates.push(migrateIt(f));
                         });
-
-                        // Adding a new field to store various item properties in JSON (ex: height)
-                        updateTasks.push(t.text("properties"));
-
-                        return Promise.all(updateTasks);
+                        return Promise.all(fieldUpdates);
                      })
                      .then(resolve)
                      .catch(reject);
@@ -730,8 +860,8 @@ module.exports = class ABClassObject extends ABObjectCore {
                         objectIds = [this.id];
                      }
 
-                     let ABObjectScope = ABSystemObject.getObjectScope();
-                     ABObjectScope.pullScopes({
+                     // let ABObjectScope = ABSystemObject.getObjectScope();
+                     this.pullScopes({
                         username: userData.username,
                         objectIds: objectIds,
                         ignoreQueryId: this.viewName ? this.id : null
@@ -1555,6 +1685,89 @@ module.exports = class ABClassObject extends ABObjectCore {
                   })
             )
       );
+   }
+
+   /**
+    * @method pullScopes
+    *
+    * @param {Object} options - {
+    *                   username: {string},
+    *                   objectIds: {array},
+    *                   ignoreQueryId: {uuid}
+    *                }
+    */
+   pullScopes(options = {}) {
+      return new Promise((resolve, reject) => {
+         let ABObjectRole = ABObjectCache.get(ABSystemObject.getObjectRoleId());
+         // let ABObjectScope = ABObjectCache.get(SCOPE_OBJECT_ID);
+
+         // ABObjectRole.queryFind({
+         ABObjectRole.modelAPI()
+            .findAll({
+               where: {
+                  glue: "and",
+                  rules: [
+                     {
+                        key: "users",
+                        rule: "contains",
+                        value: options.username
+                     }
+                  ]
+               },
+               populate: true
+            })
+            .catch(reject)
+            .then((roles) => {
+               let scopes = [];
+
+               (roles || []).forEach((r) => {
+                  // Check user in role
+                  if (
+                     !(r.users || []).filter(
+                        (u) => (u.id || u) == options.username
+                     )[0]
+                  )
+                     return;
+
+                  (r.scopes__relation || []).forEach((sData) => {
+                     if (
+                        !scopes.filter(
+                           (s) => (s.id || s.uuid) == (sData.id || sData.uuid)
+                        )[0]
+                     )
+                        scopes.push(sData);
+                  });
+               });
+
+               // remove rules who has filter to query id
+               if (options.ignoreQueryId) {
+                  (scopes || []).forEach((s) => {
+                     if (
+                        !s ||
+                        !s.filter ||
+                        !s.filter.rules ||
+                        s.filter.rules.length < 1
+                     )
+                        return;
+
+                     s.filter.rules.forEach((r, rIndex) => {
+                        if (
+                           r.rule &&
+                           (r.rule == "in_query" ||
+                              r.rule == "not_in_query" ||
+                              r.rule == "in_query_field" ||
+                              r.rule == "not_in_query_field") &&
+                           (r.value || "").indexOf(options.ignoreQueryId) > -1
+                        ) {
+                           s.filter.rules.splice(rIndex, 1);
+                        }
+                     });
+                  });
+               }
+
+               resolve(scopes);
+            });
+      });
    }
 
    ///

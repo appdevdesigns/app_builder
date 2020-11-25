@@ -17,6 +17,20 @@ const ABProcessLane = require("./process/ABProcessLane");
 const ABProcess = require("./ABProcess");
 
 var _AllApplications = [];
+var __AllObjects = {
+   /* ABObject.id : ABObject */
+};
+// {obj} : a hash of all ABObjects in our system.
+
+var __AllQueries = {
+   /* ABQuery.id : ABObjectQuery */
+};
+// {obj} : a hash of all ABObjectQueriess in our system.
+
+var __AllDatacollections = {
+   /* ABDatacollection.id : ABDataCollection */
+};
+// {obj} : a hash of all ABDataCollection in our system.
 
 var _AllUserRoles = [];
 // an array of {id:, lable:} of the ABRoles the current User has assigned
@@ -46,24 +60,16 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    constructor(attributes) {
       super(attributes);
 
-      // Live display passes data collections on load
-      let newDatacollections = [];
-      (attributes.json.datacollections || []).forEach((datacollection) => {
-         // prevent processing of null values.
-         if (datacollection) {
-            newDatacollections.push(this.datacollectionNew(datacollection));
-         }
+      // Make sure to listen for "updated" events on our pages so we can tell
+      // the UI to refresh:
+      this._pages.forEach((p) => {
+         p.on("updated", (pu) => {
+            if (pu) {
+            }
+         });
       });
-      this._datacollections = newDatacollections;
 
-      // multilingual fields: label, description
-      OP.Multilingual.translate(
-         this,
-         this.json,
-         ABApplication.fieldsMultilingual()
-      );
-
-      // instance keeps a link to our Model for .save() and .destroy();
+      // instance keeps a link to our Model for .permissions and views;
       this.Model = OP.Model.get("opstools.BuildApp.ABApplication");
 
       // [fix] prevent crash if no model was returned
@@ -77,37 +83,6 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    /// Available to the Class level object.  These methods are not dependent
    /// on the instance values of the Application.
    ///
-
-   /**
-    * @function allApplications
-    *
-    * return a DataCollection that contains all the ABApplications this user
-    * can see (based upon server side permissions);
-    *
-    * NOTE: this manages the results in the _AllApplications dataCollection
-    * store.  Any future .create(), .destroy(), .updates() modify values in
-    * that collection.
-    *
-    * Any webix ui components synced to that collection will be automatically
-    * updated.
-    *
-    * @return {Promise}
-    */
-   static allApplications() {
-      return new Promise((resolve, reject) => {
-         var ModelApplication = OP.Model.get("opstools.BuildApp.ABApplication");
-         ModelApplication.Models(ABApplication); // set the Models  setting.
-
-         ModelApplication.findAll()
-            .then(function(data) {
-               // NOTE: data is already a DataCollection from .findAll()
-               _AllApplications = data;
-
-               resolve(data);
-            })
-            .catch(reject);
-      });
-   }
 
    static allCurrentApplications() {
       return new Promise((resolve, reject) => {
@@ -125,40 +100,34 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
       return new Promise((resolve, reject) => {
          // NOTE: make sure all ABDefinitions are loaded before
          // pulling our Applications ...
-         ABDefinition.loadAll().then(() => {
-            var ModelApplication = OP.Model.get(
-               "opstools.BuildApp.ABApplication"
-            );
-            ModelApplication.Models(ABApplication); // set the Models  setting.
-
-            ModelApplication.staticData
-               .info()
-               .then(function(list) {
-                  let apps = [];
-
-                  (list || []).forEach((app) => {
-                     apps.push(new ABApplication(app));
-                  });
-
-                  // if (_AllApplications == null) {
-                  _AllApplications = new webix.DataCollection({
-                     data: apps || []
-                  });
-                  // }
-
-                  resolve(_AllApplications);
-
-                  if (dfdReady) {
-                     dfdReady.__resolve();
-                  }
-               })
-               .catch((err) => {
-                  reject(err);
-                  if (dfdReady) {
-                     dfdReady.__reject(err);
-                  }
+         ABDefinition.loadAll()
+            .then((allDefinitions) => {
+               let apps = [];
+               // debugger;
+               let appDefs = allDefinitions.filter((def) => {
+                  return def.type == "application";
                });
-         });
+
+               appDefs.forEach((app) => {
+                  apps.push(new ABApplication(app.json));
+               });
+
+               _AllApplications = new webix.DataCollection({
+                  data: apps || []
+               });
+
+               resolve(_AllApplications);
+
+               if (dfdReady) {
+                  dfdReady.__resolve();
+               }
+            })
+            .catch((err) => {
+               reject(err);
+               if (dfdReady) {
+                  dfdReady.__reject(err);
+               }
+            });
       });
    }
 
@@ -169,41 +138,23 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    static initRoles() {
-      return new Promise((resolve, reject) => {
-         var __Roles = [];
-         var __UserRoles = [];
-
-         async.series(
-            [
-               function(next) {
-                  ABRole.rolesOfUser(window.OP.User.username())
-                     .then((list) => {
-                        list.forEach(function(l) {
-                           __UserRoles.push({
-                              id: l.id,
-                              label: l.label
-                           });
-                        });
-                        _AllUserRoles = __UserRoles;
-                        next();
-                     })
-                     .catch((err) => {
-                        AD.error.log(
-                           "ABLiveTool: Error loading roles of user",
-                           {
-                              error: err
-                           }
-                        );
-                        next(err);
-                     });
-               }
-            ],
-            function(err) {
-               if (err) reject(err);
-               else resolve();
-            }
-         );
-      });
+      return ABRole.rolesOfUser(window.OP.User.username())
+         .then((list) => {
+            _AllUserRoles = [];
+            list.forEach(function(l) {
+               _AllUserRoles.push({
+                  id: l.id,
+                  label: l.label
+               });
+            });
+         })
+         .catch((err) => {
+            AD.error.log("ABLiveTool: Error loading roles of user", {
+               error: err
+            });
+            // keep the error going!
+            throw err;
+         });
    }
 
    static isReady() {
@@ -230,17 +181,14 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     */
    static get(appID) {
       return new Promise((resolve, reject) => {
-         var ModelApplication = OP.Model.get("opstools.BuildApp.ABApplication");
-         ModelApplication.Models(ABApplication); // set the Models  setting.
-
-         ModelApplication.staticData
-            .get(appID)
-            .catch(reject)
-            .then(function(app) {
-               // resolve(app);
-               if (app) resolve(new ABApplication(app));
-               else resolve();
-            });
+         var app = _AllApplications.getItem(appID);
+         if (app) {
+            resolve(app);
+         } else {
+            app = ABDefinition.definition(appID);
+            if (app) resolve(new ABApplication(app));
+            else resolve();
+         }
       });
    }
 
@@ -252,27 +200,8 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    static create(values) {
-      return new Promise(function(resolve, reject) {
-         var newApp = {};
-         OP.Multilingual.unTranslate(
-            values,
-            newApp,
-            ABApplication.fieldsMultilingual()
-         );
-         values.json = newApp;
-         newApp.name = values.name;
-
-         var ModelApplication = OP.Model.get("opstools.BuildApp.ABApplication");
-         ModelApplication.create(values)
-            .then(function(app) {
-               // return an instance of ABApplication
-               var App = new ABApplication(app);
-
-               _AllApplications.add(App, 0);
-               resolve(App);
-            })
-            .catch(reject);
-      });
+      var newApp = new ABApplication(values);
+      return newApp.save();
    }
 
    //// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
@@ -324,6 +253,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    static objectFromRef(resolveUrl) {
+      debugger;
       // #/3/_objects/6eb3121b-1208-4c49-ae45-fcf722bd6db1
       var parts = resolveUrl.split("/");
 
@@ -377,11 +307,30 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    destroy() {
-      if (this.id) {
-         return this.Model.destroy(this.id).then(() => {
+      return Promise.resolve()
+         .then(() => {
+            // When deleting an ABApplication
+            // be sure to remove any of it's ABViewPages as well
+            // This cleans out any dangling ABDefinitions and cleans up the
+            // OpsPortal Permissions:
+
+            var allPageDeletes = [];
+            var allPages = this.pages();
+            this._pages = [];
+            // doing ._pages = [] prevents any ABApplication updates when
+            // a page is .destroy()ed
+
+            allPages.forEach((p) => {
+               allPageDeletes.push(p.destroy());
+            });
+            return Promise.all(allPageDeletes);
+         })
+         .then(() => {
+            return super.destroy();
+         })
+         .then(() => {
             _AllApplications.remove(this.id);
          });
-      }
    }
 
    /**
@@ -394,64 +343,14 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    save() {
-      var values = this.toObj();
-
-      // we already have an .id, so this must be an UPDATE
-      if (values.id) {
-         return this.Model.update(values.id, values).then(() => {
-            _AllApplications.updateItem(values.id, this);
-         });
-      } else {
-         // must be a CREATE:
-         return this.Model.create(values).then((data) => {
-            this.id = data.id;
+      return super.save().then(() => {
+         var currEntry = _AllApplications.getItem(this.id);
+         if (currEntry) {
+            _AllApplications.updateItem(this.id, this);
+         } else {
             _AllApplications.add(this, 0);
-         });
-      }
-   }
-
-   /**
-    * @method toObj()
-    *
-    * properly compile the current state of this ABApplication instance
-    * into the values needed for saving to the DB.
-    *
-    * Most of the instance data is stored in .json field, so be sure to
-    * update that from all the current values of our child fields.
-    *
-    * @return {json}
-    */
-   toObj() {
-      OP.Multilingual.unTranslate(
-         this,
-         this.json,
-         ABApplication.fieldsMultilingual()
-      );
-
-      return super.toObj();
-   }
-
-   /// ABApplication info methods
-
-   /**
-    * @method updateInfo()
-    *
-    * Update label/description of ABApplication
-    *
-    * @param {array} translations	an array of translations
-    *
-    * @return {Promise}
-    */
-   updateInfo() {
-      var values = this.toObj();
-      values.json = values.json || {};
-      values.json.translations = values.json.translations || [];
-
-      return this.Model.staticData.updateInfo(this.id, {
-         isAdminApp: values.isAdminApp,
-         isAccessManaged: values.isAccessManaged,
-         accessManagers: values.accessManagers,
-         translations: values.json.translations
+         }
+         return this;
       });
    }
 
@@ -511,31 +410,20 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    }
 
    ///
+   /// Definition
+   ///
+
+   definitionForID(id) {
+      return ABDefinition.definition(id);
+   }
+
+   ///
    /// Objects
    ///
 
    objectsAll() {
-      return webix.storage.local.get("_ABObjects");
-   }
-
-   objectLoad() {
-      if (this.loadedObjects) return Promise.resolve();
-
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .objectLoad(this.id)
-            .catch(reject)
-            .then((objects) => {
-               this.loadedObjects = true;
-
-               var newObjects = [];
-               (objects || []).forEach((obj) => {
-                  newObjects.push(this.objectNew(obj));
-               });
-               this._objects = newObjects;
-
-               resolve();
-            });
+      return ABDefinition.allObjects().map((d) => {
+         return __AllObjects[d.id] ? __AllObjects[d.id] : this.objectNew(d);
       });
    }
 
@@ -551,181 +439,50 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {ABObject}
     */
    objectNew(values) {
-      return new ABObject(values, this);
+      var obj = super.objectNew(values);
+      obj.on("destroyed", () => {
+         delete __AllObjects[obj.id];
+      });
+      __AllObjects[obj.id] = obj;
+      return obj;
    }
 
    /**
-    * @method objectDestroy()
+    * @method objectRemove()
     *
-    * remove the current ABObject from our list of ._objects.
-    *
+    * remove the current ABObject from our list of .objectIDs.
+    * NOTE: this method persists the changes to the server.
     * @param {ABObject} object
     * @return {Promise}
     */
-   objectDestroy(object) {
-      var remaininObjects = this.objects(function(o) {
-         return o.id != object.id;
+   objectRemove(object) {
+      var begLen = this.objectIDs.length;
+      this.objectIDs = this.objectIDs.filter((id) => {
+         return id != object.id;
       });
-      this._objects = remaininObjects;
-
-      return this.Model.staticData.objectDestroy(object.id).then(() => {
-         // TODO : Should update _AllApplications in
-      });
-   }
-
-   /**
-    * @method objectSave()
-    *
-    * persist the current ABObject in our list of ._objects.
-    *
-    * @param {ABObject} object
-    * @return {Promise}
-    */
-   objectSave(object) {
-      var isIncluded =
-         this.objects(function(o) {
-            return o.id == object.id;
-         }).length > 0;
-      if (!isIncluded) {
-         this._objects.push(object);
+      // if there was a change then save this.
+      if (begLen != this.objectIDs.length) {
+         return this.save();
       }
-
-      // update
-      return this.Model.staticData.objectSave(this.id, object.toObj());
+      return Promise.resolve();
    }
 
-   objectGet(id) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .objectGet(id)
-            .catch(reject)
-            .then((object) => {
-               if (object) {
-                  resolve(this.objectNew(object, this));
-               } else {
-                  resolve(null);
-               }
-            });
-      });
-   }
-
-   objectFind(cond) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .objectFind(cond)
-            .catch(reject)
-            .then((objects) => {
-               if (objects && objects.forEach) {
-                  let result = [];
-
-                  objects.forEach((obj) => {
-                     if (obj) result.push(this.objectNew(obj, this));
-                  });
-
-                  resolve(result);
-               } else {
-                  resolve(null);
-               }
-            });
-      });
-   }
-
-   objectInfo(cond) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .objectInfo(cond)
-            .catch(reject)
-            .then((objects) => {
-               let result = [];
-
-               (objects || []).forEach((obj) => {
-                  result.push(this.objectNew(obj));
-               });
-
-               resolve(result);
-            });
-      });
-   }
-
-   objectImport(objectId) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .objectImport(this.id, objectId)
-            .catch(reject)
-            .then((newObj) => {
-               let refreshTasks = [];
-
-               // add connect field to exist objects
-               (newObj.fields || []).forEach((f) => {
-                  if (f.key == "connectObject") {
-                     let linkObject = this.objects(
-                        (obj) => obj.id == f.settings.linkObject
-                     )[0];
-                     if (linkObject) {
-                        refreshTasks.push(this.objectRefresh(linkObject.id));
-                     }
-                  }
-               });
-
-               Promise.all(refreshTasks)
-                  .catch(reject)
-                  .then(() => {
-                     // add to list
-                     var newObjClass = this.objectNew(newObj);
-                     this._objects.push(newObjClass);
-
-                     resolve(newObjClass);
-                  });
-            });
-      });
-   }
-
-   objectExclude(objectId) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .objectExclude(this.id, objectId)
-            .catch(reject)
-            .then(() => {
-               // exclude object from application
-               let remainObjects = this.objects((o) => o.id != objectId);
-               this._objects = remainObjects;
-
-               // exclude conected fields who link to this object
-               this.objects().forEach((obj) => {
-                  let remainFields = obj.fields((f) => {
-                     if (
-                        f.key == "connectObject" &&
-                        f.settings &&
-                        f.settings.linkObject == objectId
-                     ) {
-                        return false;
-                     } else {
-                        return true;
-                     }
-                  }, true);
-                  obj._fields = remainFields;
-               });
-
-               resolve();
-            });
-      });
-   }
-
-   objectRefresh(objectId) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .objectGet(objectId)
-            .catch(reject)
-            .then((object) => {
-               this.objects().forEach((obj, index) => {
-                  if (obj.id == objectId) {
-                     this._objects[index] = this.objectNew(object);
-                  }
-               });
-
-               resolve();
-            });
-      });
+   /**
+    * @method objectInsert()
+    *
+    * persist the current ABObject in our list of .objectIDs.
+    *
+    * @param {ABObject} object
+    * @return {Promise}
+    */
+   objectInsert(object) {
+      var isIncluded = this.objectIDs.indexOf(object.id) != -1;
+      if (!isIncluded) {
+         this.objectIDs.push(object.id);
+         // Save our own Info:
+         return this.save();
+      }
+      return Promise.resolve();
    }
 
    ///
@@ -769,6 +526,44 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    }
 
    /**
+    * @method pageInsert()
+    *
+    * persist the current ABViewPage in our list of .pages.
+    *
+    * @param {ABViewPage} page
+    * @return {Promise}
+    */
+   pageInsert(page) {
+      var isIncluded = this._pages.filter((p) => p.id == page.id)[0];
+      if (!isIncluded) {
+         this._pages.push(page);
+         // Save our own Info:
+         return this.save();
+      }
+      return Promise.resolve();
+   }
+
+   /**
+    * @method pageRemove()
+    *
+    * remove the current ABViewPage from our list of pages.
+    *
+    * @param {ABViewPage} page
+    * @return {Promise}
+    */
+   pageRemove(page) {
+      var begLen = this._pages.length;
+      this._pages = this._pages.filter((p) => {
+         return p.id != page.id;
+      });
+      // if there was a change then save this.
+      if (begLen != this._pages.length) {
+         return this.save();
+      }
+      return Promise.resolve();
+   }
+
+   /**
     * @method viewNew()
     *
     * return an ABView based upon the given values.
@@ -799,92 +594,6 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    }
 
    /**
-    * @method viewDestroy()
-    *
-    * remove the current ABView from our list of ._pages or ._views.
-    *
-    * @param {ABView} view
-    * @return {Promise}
-    */
-   viewDestroy(view) {
-      // return this.save();
-
-      var resolveUrl = view.urlPointer();
-
-      return this.Model.staticData.viewDestroy(this.id, resolveUrl).then(() => {
-         // TODO : Should update _AllApplications in
-      });
-   }
-
-   /**
-    * @method viewSave()
-    *
-    * persist the current ABView in our list of ._pages or ._views.
-    *
-    * @param {ABView} view
-    * @param {Boolean} includeSubViews
-    * @param {Boolean} ignoreUiUpdate
-    *
-    * @return {Promise}
-    */
-   viewSave(view, includeSubViews = false, updateUi = true) {
-      // var isIncluded = (this.pages(function (p) { return p.id == page.id }).length > 0);
-      // if (!isIncluded) {
-      // 	this._pages.push(page);
-      // }
-
-      var resolveUrl = view.urlPointer(),
-         data = view.toObj();
-
-      // return this.save();
-      return this.Model.staticData
-         .viewSave(this.id, resolveUrl, data, includeSubViews)
-         .then(() => {
-            // TODO : Should update _AllApplications in
-
-            // Trigger a update event to the live display page
-            let rootPage = view.pageRoot();
-            if (rootPage && updateUi) {
-               AD.comm.hub.publish("ab.interface.update", {
-                  rootPageId: rootPage.id
-               });
-            }
-         });
-   }
-
-   /**
-    * @method viewReorder()
-    *
-    * save order of ._views.
-    *
-    * @param {ABView} view
-    * @return {Promise}
-    */
-   viewReorder(view) {
-      let resolveUrl = view.urlPointer(),
-         data = (view.views() || []).map((v) => {
-            return {
-               id: v.id,
-               position: v.position
-            };
-         });
-
-      return this.Model.staticData
-         .viewReorder(this.id, resolveUrl, data)
-         .then(() => {
-            // TODO : Should update _AllApplications in
-
-            // Trigger a update event to the live display page
-            let rootPage = view.pageRoot();
-            if (rootPage) {
-               AD.comm.hub.publish("ab.interface.update", {
-                  rootPageId: rootPage.id
-               });
-            }
-         });
-   }
-
-   /**
     * @method urlPage()
     * return the url pointer for pages in this application.
     * @return {string}
@@ -897,68 +606,10 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
    /// Queries
    ///
 
-   queryLoad() {
-      if (this.loadedQueries) return Promise.resolve();
-
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .queryLoad(this.id)
-            .catch(reject)
-            .then((queries) => {
-               this.loadedQueries = true;
-
-               var newQueries = [];
-               (queries || []).forEach((query) => {
-                  // prevent processing of null values.
-                  if (query) {
-                     newQueries.push(this.queryNew(query));
-                  }
-               });
-               this._queries = newQueries;
-
-               resolve();
-            });
+   queriesAll() {
+      return ABDefinition.allQueries().map((d) => {
+         return __AllQueries[d.id] ? __AllQueries[d.id] : this.queryNew(d);
       });
-   }
-
-   queryGet(id) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .queryGet(id)
-            .catch(reject)
-            .then((query) => {
-               if (query) {
-                  resolve(this.queryNew(query, this));
-               } else {
-                  resolve(null);
-               }
-            });
-      });
-   }
-
-   queryFind(cond) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .queryFind(cond)
-            .catch(reject)
-            .then((queries) => {
-               if (queries && queries.forEach) {
-                  let result = [];
-
-                  queries.forEach((q) => {
-                     if (q) result.push(this.queryNew(q, this));
-                  });
-
-                  resolve(result);
-               } else {
-                  resolve(null);
-               }
-            });
-      });
-   }
-
-   queryInfo(cond) {
-      return this.Model.staticData.queryInfo(cond);
    }
 
    /**
@@ -973,219 +624,103 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {ABObjectQuery}
     */
    queryNew(values) {
-      return new ABObjectQuery(values, this);
+      var query = new ABObjectQuery(values, this);
+      query.on("destroyed", () => {
+         delete __AllQueries[query.id];
+      });
+      __AllQueries[query.id] = query;
+      return query;
    }
 
    /**
-    * @method queryDestroy()
+    * @method queryRemove()
     *
-    * remove the current ABObjectQuery from our list of ._queries.
+    * remove the current ABObjectQuery from our list of .queryIDs.
     *
     * @param {ABObject} query
     * @return {Promise}
     */
-   queryDestroy(query) {
-      var remaininQueries = this.queries(function(q) {
-         return q.id != query.id;
+   queryRemove(query) {
+      var begLen = this.queryIDs.length;
+      this.queryIDs = this.queryIDs.filter((id) => {
+         return id != query.id;
       });
-      this._queries = remaininQueries;
-
-      return this.Model.staticData.queryDestroy(query.id);
+      // if there was a change then save this.
+      if (begLen != this.queryIDs.length) {
+         return this.save();
+      }
+      return Promise.resolve();
    }
 
    /**
-    * @method querySave()
+    * @method queryInsert()
     *
     * persist the current ABObjectQuery in our list of ._queries.
     *
     * @param {ABObjectQuery} query
     * @return {Promise}
     */
-   querySave(query) {
-      var isIncluded =
-         this.queries(function(q) {
-            return q.id == query.id;
-         }).length > 0;
+   queryInsert(query) {
+      var isIncluded = this.queryIDs.indexOf(query.id) != -1;
       if (!isIncluded) {
-         this._queries.push(query);
+         this.queryIDs.push(query.id);
+         // Save our own Info:
+         return this.save();
       }
-
-      return this.Model.staticData.querySave(this.id, query.toObj());
+      return Promise.resolve();
    }
 
-   queryImport(queryId) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .queryImport(this.id, queryId)
-            .catch(reject)
-            .then((newQuery) => {
-               let newQueryClass = this.queryNew(newQuery);
-
-               // add to list
-               var isIncluded =
-                  this.queries((q) => q.id == newQuery.id).length > 0;
-               if (!isIncluded) {
-                  this._queries.push(newQueryClass);
-               }
-
-               resolve(newQueryClass);
-            });
+   datacollectionsAll() {
+      return ABDefinition.allDatacollections().map((d) => {
+         return __AllDatacollections[d.id]
+            ? __AllDatacollections[d.id]
+            : this.datacollectionNew(d);
       });
-   }
-
-   queryExclude(queryId) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .queryExclude(this.id, queryId)
-            .catch(reject)
-            .then(() => {
-               // remove query from list
-               this._queries = this.queries((q) => q.id != queryId);
-
-               resolve();
-            });
-      });
-   }
-
-   ///
-   /// Data collections
-   ///
-
-   datacollectionLoad() {
-      if (this.loadedDatacollection) return Promise.resolve();
-
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .datacollectionLoad(this.id)
-            .catch(reject)
-            .then((datacollections) => {
-               this.loadedDatacollection = true;
-
-               var newDatacollections = [];
-               (datacollections || []).forEach((datacollection) => {
-                  // prevent processing of null values.
-                  if (datacollection) {
-                     newDatacollections.push(
-                        this.datacollectionNew(datacollection)
-                     );
-                  }
-               });
-               this._datacollections = newDatacollections;
-
-               // Initial data views
-               this.datacollections().forEach((datacollection) => {
-                  if (datacollection) datacollection.init();
-               });
-
-               resolve();
-            });
-      });
-   }
-
-   datacollectionFind(cond) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .datacollectionFind(cond)
-            .catch(reject)
-            .then((datacollections) => {
-               var result = [];
-
-               (datacollections || []).forEach((datacollection) => {
-                  // prevent processing of null values.
-                  if (datacollection) {
-                     result.push(this.datacollectionNew(datacollection, this));
-                  }
-               });
-
-               resolve(result);
-            });
-      });
-   }
-
-   datacollectionInfo(cond) {
-      return this.Model.staticData.datacollectionInfo(cond);
    }
 
    datacollectionNew(values) {
-      return new ABDataCollection(values, this);
+      var dc = new ABDataCollection(values, this);
+      dc.on("destroyed", () => {
+         delete __AllDatacollections[dc.id];
+      });
+      __AllDatacollections[dc.id] = dc;
+      return dc;
    }
 
    /**
-    * @method datacollectionDestroy()
-    *
-    * remove the current ABDatacollection from our list of ._datacollections.
-    *
+    * @method datacollectionInsert()
+    * persist the current ABDatacollection in our list of .datacollectionIDs.
     * @param {ABDatacollection} datacollection
     * @return {Promise}
     */
-   datacollectionDestroy(datacollection) {
-      var remaininDatacollections = this.datacollections(
-         (dView) => dView.id != datacollection.id
-      );
-      this._datacollections = remaininDatacollections;
-
-      return this.Model.staticData.datacollectionDestroy(datacollection.id);
-   }
-
-   /**
-    * @method datacollectionSave()
-    *
-    * persist the current ABDatacollection in our list of ._datacollections.
-    *
-    * @param {ABDatacollection} datacollection
-    * @return {Promise}
-    */
-   datacollectionSave(datacollection) {
-      var isIncluded =
-         this.datacollections((dView) => dView.id == datacollection.id).length >
-         0;
+   datacollectionInsert(datacollection) {
+      var isIncluded = this.datacollectionIDs.indexOf(datacollection.id) != -1;
       if (!isIncluded) {
-         this._datacollections.push(datacollection);
+         this.datacollectionIDs.push(datacollection.id);
+         // Save our own Info:
+         return this.save();
       }
-
-      return this.Model.staticData.datacollectionSave(
-         this.id,
-         datacollection.toObj()
-      );
+      return Promise.resolve();
    }
 
-   datacollectionImport(datacollectionId) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .datacollectionImport(this.id, datacollectionId)
-            .catch(reject)
-            .then((newDatacollection) => {
-               let newDatacollectionClass = this.datacollectionNew(
-                  newDatacollection
-               );
-
-               // add to list
-               var isIncluded =
-                  this.datacollections((q) => q.id == newDatacollection.id)
-                     .length > 0;
-               if (!isIncluded) {
-                  this._datacollections.push(newDatacollectionClass);
-               }
-
-               resolve(newDatacollectionClass);
-            });
+   /**
+    * @method datacollectionRemove()
+    *
+    * remove the current ABDataCollection from our list of .datacollectionIDs.
+    *
+    * @param {ABObject} datacollection
+    * @return {Promise}
+    */
+   datacollectionRemove(datacollection) {
+      var begLen = this.datacollectionIDs.length;
+      this.datacollectionIDs = this.datacollectionIDs.filter((id) => {
+         return id != datacollection.id;
       });
-   }
-
-   datacollectionExclude(datacollectionId) {
-      return new Promise((resolve, reject) => {
-         this.Model.staticData
-            .datacollectionExclude(this.id, datacollectionId)
-            .catch(reject)
-            .then(() => {
-               // remove query from list
-               this._datacollections = this.datacollections(
-                  (dc) => dc.id != datacollectionId
-               );
-
-               resolve();
-            });
-      });
+      // if there was a change then save this.
+      if (begLen != this.datacollectionIDs.length) {
+         return this.save();
+      }
+      return Promise.resolve();
    }
 
    /**
@@ -1200,16 +735,21 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     */
    static livepage(appID, pageID) {
       return new Promise((resolve, reject) => {
-         var ModelApplication = OP.Model.get("opstools.BuildApp.ABApplication");
-         ModelApplication.Models(ABApplication); // set the Models  setting.
-
-         ModelApplication.staticData
-            .livepage(appID, pageID)
-            .catch(reject)
-            .then(function(app) {
-               if (app) resolve(new ABApplication(app));
-               else resolve();
+         var appDef = ABDefinition.definition(appID);
+         if (appDef) {
+            resolve(new ABApplication(appDef));
+         } else {
+            // If the user does not have access to the AppBuilder we do not preload
+            // all definitions...so go ahead and get them now if the appDef is null
+            ABDefinition.loadAll().then((defs) => {
+               appDef = ABDefinition.definition(appID);
+               if (appDef) {
+                  resolve(new ABApplication(appDef));
+               } else {
+                  reject(new Error(`Unknown Application [${appID}]`));
+               }
             });
+         }
       });
    }
 

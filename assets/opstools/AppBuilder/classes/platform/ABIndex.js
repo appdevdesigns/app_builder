@@ -14,11 +14,10 @@ module.exports = class ABIndex extends ABIndexCore {
     * @return {Promise}
     */
    save() {
-      if (!this.id) this.id = OP.Util.uuid();
-
-      return Promise.resolve()
-         .then(() => this.migrateCreate())
-         .then(() => this.object.indexSave(this));
+      return super
+         .save()
+         .then(() => this.object.indexSave(this))
+         .then(() => this.migrateCreate());
    }
 
    /**
@@ -31,9 +30,19 @@ module.exports = class ABIndex extends ABIndexCore {
     * @return {Promise}
     */
    destroy() {
-      return Promise.resolve()
-         .then(() => this.migrateDrop())
-         .then(() => this.object.indexRemove(this));
+      return new Promise((resolve, reject) => {
+         if (this.id) {
+            this.migrateDrop()
+               .then(() => {
+                  return super.destroy();
+               })
+               .then(() => this.object.indexRemove(this))
+               .then(resolve)
+               .catch(reject);
+         } else {
+            resolve();
+         }
+      });
    }
 
    ///

@@ -27,7 +27,7 @@ module.exports = class ABObjectSystem extends ABObject {
       return result;
    }
 
-   initFields() {
-      this._fields = [];
-   }
+   // initFields() {
+   //    this._fields = [];
+   // }
 };

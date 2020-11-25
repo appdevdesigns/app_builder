@@ -247,12 +247,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
       super.propertyEditorPopulate(App, ids, view);
 
       // Pull data views to options
-      let dcOptions = view.application.datacollections().map((dc) => {
-         return {
-            id: dc.id,
-            value: dc.label
-         };
-      });
+      let dcOptions = view.propertyDatacollections();
 
       let $DcSelector = $$(ids.datacollection);
       $DcSelector.define("options", dcOptions);

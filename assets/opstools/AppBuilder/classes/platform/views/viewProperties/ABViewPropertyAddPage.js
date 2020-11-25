@@ -183,7 +183,7 @@ module.exports = class ABViewPropertyAddPage extends ABViewProperty {
                }
 
                // Clone page so we modify without causing problems
-               let pageClone = page.copy(null, null, { ignoreSubPages: true });
+               let pageClone = page.clone(null, null, { ignoreSubPages: true });
                pageClone.id = OP.Util.uuid(); // lets take the stored id can create a new dynamic one so our views don't duplicate
                // pageClone.id = pageClone.id + "-" + webix.uid(); // lets take the stored id can create a new dynamic one so our views don't duplicate
                let popUpComp = pageClone.component(App);

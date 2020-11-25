@@ -26,9 +26,6 @@ const FieldManager = require(path.join(
    "ABFieldManager.js"
 ));
 
-const ABGraphApplication = require("../graphModels/ABApplication");
-const ABGraphObject = require("../graphModels/ABObject");
-
 // Build a reference of AB defaults for all supported Sails data field types
 var mysqlTypeToABFields = {};
 FieldManager.allFields().forEach((Field) => {
@@ -172,8 +169,8 @@ module.exports = {
     * @method getTableList
     * Get the list of table name
     *
-    * @param {guid} - The id of ABApplication
-    * @param {string} - The name of database connection
+    * @param {guid} appID - The id of ABApplication
+    * @param {string} connName - The name of database connection
     *
     * @return Promise -
     * 			return {Array} [
@@ -231,9 +228,17 @@ module.exports = {
             })
             .then(function() {
                return new Promise((resolve, reject) => {
+                  var application = ABSystemObject.getApplication();
+                  application.objects().forEach((obj) => {
+                     existsTableNames.push(obj.dbTableName());
+                  });
+
+                  resolve();
+                  /*
                   ABGraphApplication.findOne(appID)
                      .then((application) => {
                         if (!application) return resolve();
+
 
                         let app = application.toABClass();
                         app.objects().forEach((obj) => {
@@ -241,8 +246,9 @@ module.exports = {
                         });
 
                         resolve();
-                     })
-                     .catch(reject);
+                     }
+                  });
+                  */
                });
             })
             // Get only not exists table names
@@ -460,6 +466,10 @@ module.exports = {
       columnList,
       connName = "appBuilder"
    ) {
+      ////
+      //// LEFT OFF HERE:
+      //// Refactor out ABApplication
+      ////
       let knexAppBuilder = ABMigration.connection("appBuilder"),
          knexTable = ABMigration.connection(connName),
          application,
@@ -480,24 +490,26 @@ module.exports = {
          });
       };
 
+      application = ABSystemObject.getApplication();
+
       return (
          Promise.resolve()
 
             // Find app in database
-            .then(function() {
-               return new Promise((resolve, reject) => {
-                  ABGraphApplication.findOne(appID)
-                     .then((app) => {
-                        if (!app) {
-                           reject(new Error("application not found: " + appID));
-                        } else {
-                           application = app;
-                           resolve();
-                        }
-                     })
-                     .catch(reject);
-               });
-            })
+            // .then(function() {
+            //    return new Promise((resolve, reject) => {
+            //       ABGraphApplication.findOne(appID)
+            //          .then((app) => {
+            //             if (!app) {
+            //                reject(new Error("application not found: " + appID));
+            //             } else {
+            //                application = app;
+            //                resolve();
+            //             }
+            //          })
+            //          .catch(reject);
+            //    });
+            // })
 
             // Find site languages
             .then(function() {
@@ -574,13 +586,14 @@ module.exports = {
             .then(function() {
                return new Promise((resolve, reject) => {
                   objectData = {
-                     id: uuid(),
+                     // id: uuid(),
                      connName: connName,
                      name: tableName,
                      tableName: tableName,
                      transColumnName: transColumnName,
                      labelFormat: "",
                      isExternal: 1,
+                     createdInAppID: appID,
                      translations: [],
                      objectWorkspace: {
                         hiddenFields: []
@@ -639,8 +652,7 @@ module.exports = {
                      let colData = FieldManager.newField(
                         {
                            key: inputCol.fieldKey,
-
-                           id: uuid.v4(),
+                           // id: uuid.v4(),
                            columnName: colName,
                            settings: {
                               isImported: true,
@@ -771,7 +783,7 @@ module.exports = {
                            // Refresh the target model
                            let targetObjClass = new ABObjectExternal(
                               targetObj,
-                              application.toABClass()
+                              application
                            );
                            targetObjClass.modelRefresh();
                         }
@@ -783,13 +795,14 @@ module.exports = {
                   resolve();
                });
             })
-
+            /*
             // Create federated table
             .then(function() {
+               debugger;
                return new Promise((resolve, reject) => {
                   let externalObject = new ABObjectExternal(
                      objectData,
-                     application.toABClass()
+                     application
                   );
 
                   externalObject
@@ -802,7 +815,7 @@ module.exports = {
                      .catch(reject);
                });
             })
-
+*/
             // Create column associations in database
             .then(function() {
                return new Promise((resolve, reject) => {
@@ -812,52 +825,84 @@ module.exports = {
             })
 
             // Save to database
-            .then(
-               () =>
-                  new Promise((resolve, reject) => {
-                     ABGraphObject.upsert(objectData.id, objectData)
-                        .catch(reject)
-                        .then(() => {
-                           resolve();
+            .then(function() {
+               return new Promise((resolve, reject) => {
+                  // Here we have a built out objectData structure that mimics
+                  // our previous design. Now we parse this structure to create
+                  // live ABObject:
+
+                  // Create our Base Object
+                  var newObject = new ABObjectExternal(objectData, application);
+
+                  // create each field,
+                  var allFields = [];
+                  var allFieldSaves = [];
+                  (objectData.fields || []).forEach((f) => {
+                     var newField = newObject.fieldNew(f);
+                     allFields.push(newField);
+                     allFieldSaves.push(newField.save());
+                  });
+                  Promise.all(allFieldSaves)
+                     .then(() => {
+                        // insert fields into object and save()
+                        newObject._fields = allFields;
+                        return newObject.save();
+                     })
+                     .then(() => {
+                        // We need to make sure all the definitions get back
+                        // to the client.
+                        var definitions = [];
+                        definitions.push(newObject.toDefinition().toObj());
+                        allFields.forEach((f) => {
+                           definitions.push(f.toDefinition().toObj());
                         });
-                  })
-            )
 
-            // Relate
-            .then(
-               () =>
-                  new Promise((resolve, reject) => {
-                     if (!application || !objectData) return resolve();
+                        resolve(definitions);
+                     })
+                     .catch(reject);
 
-                     application
-                        .relate("objects", objectData.id)
-                        .catch(reject)
-                        .then(() => {
-                           resolve(objectData);
-                        });
-                  })
-            )
-         // .then(function() {
-         //    return new Promise((resolve, reject) => {
-         //       application.json.objects = application.json.objects || [];
-         //       application.json.objects.push(objectData);
+                  // ABApplication.update(
+                  //    { id: appID },
+                  //    { json: application.json }
+                  // ).exec((err, updated) => {
+                  //    if (err) {
+                  //       console.log("ERROR: ", err);
+                  //       reject(err);
+                  //    } else if (!updated || !updated[0]) {
+                  //       console.log("ERROR: app not updated");
+                  //       reject(new Error("Application not updated"));
+                  //    } else {
+                  //       resolve(application.json.objects);
+                  //    }
+                  // });
+               });
+            })
 
-         //       ABApplication.update(
-         //          { id: appID },
-         //          { json: application.json }
-         //       ).exec((err, updated) => {
-         //          if (err) {
-         //             console.log("ERROR: ", err);
-         //             reject(err);
-         //          } else if (!updated || !updated[0]) {
-         //             console.log("ERROR: app not updated");
-         //             reject(new Error("Application not updated"));
-         //          } else {
-         //             resolve(application.json.objects);
-         //          }
-         //       });
-         //    });
-         // })
+         // .then(
+         //    () =>
+         //       new Promise((resolve, reject) => {
+         //          ABGraphObject.upsert(objectData.id, objectData)
+         //             .catch(reject)
+         //             .then(() => {
+         //                resolve();
+         //             });
+         //       })
+         // )
+
+         // // Relate
+         // .then(
+         //    () =>
+         //       new Promise((resolve, reject) => {
+         //          if (!application || !objectData) return resolve();
+
+         //          application
+         //             .relate("objects", objectData.id)
+         //             .catch(reject)
+         //             .then(() => {
+         //                resolve(objectData);
+         //             });
+         //       })
+         // )
       );
    }
 };
