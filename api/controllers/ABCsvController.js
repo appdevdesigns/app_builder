@@ -307,10 +307,15 @@ let ABCsvController = {
             });
 
             sqlStream.on("data", (result) => {
-               res.write(`${Object.values(result).join(",")}\r\n`);
+               res.write(
+                  `${Object.values(result)
+                     .map((r) => `"${r}"`) // To encode a quote, use "" to support , (comma) in text
+                     .join(",")}\r\n`
+               );
             });
          });
    }
 };
 
 module.exports = ABCsvController;
+
