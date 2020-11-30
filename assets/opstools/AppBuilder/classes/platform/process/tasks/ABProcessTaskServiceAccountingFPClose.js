@@ -15,6 +15,7 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
          processFPValue: `${id}_processFPValue`,
          objectFP: `${id}_objectFP`,
          objectGL: `${id}_objectGL`,
+         objectAcc: `${id}_objectAcc`,
          fieldFPStart: `${id}_fieldFPStart`,
          fieldFPOpen: `${id}_fieldFPOpen`,
          fieldFPStatus: `${id}_fieldFPStatus`,
@@ -22,7 +23,15 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
          fieldGLStarting: `${id}_fieldGLStarting`,
          fieldGLRunning: `${id}_fieldGLRunning`,
          fieldGLAccount: `${id}_fieldGLAccount`,
-         fieldGLRc: `${id}_fieldGLRc`
+         fieldGLRc: `${id}_fieldGLRc`,
+         fieldGLDebit: `${id}fieldGLDebit`,
+         fieldGLCredit: `${id}_fieldGLCredit`,
+         fieldAccType: `${id}_fieldAccType`,
+         fieldAccAsset: `${id}_fieldAccAsset`,
+         fieldAccExpense: `${id}_fieldAccExpense`,
+         fieldAccLiabilities: `${id}_fieldAccLiabilities`,
+         fieldAccEquity: `${id}_fieldAccEquity`,
+         fieldAccIncome: `${id}_fieldAccIncome`
       };
    }
 
@@ -108,17 +117,64 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
       };
 
       let updateGLFields = (glFields) => {
-         [ids.fieldGLRunning, ids.fieldGLAccount, ids.fieldGLRc].forEach(
-            (fieldGLElem) => {
-               $$(fieldGLElem).define("options", glFields);
-               $$(fieldGLElem).refresh();
-            }
-         );
+         [
+            ids.fieldGLRunning,
+            ids.fieldGLAccount,
+            ids.fieldGLRc,
+            ids.fieldGLDebit,
+            ids.fieldGLCredit
+         ].forEach((fieldGLElem) => {
+            $$(fieldGLElem).define("options", glFields);
+            $$(fieldGLElem).refresh();
+         });
+      };
+
+      let updateAccFields = (accFields) => {
+         $$(ids.fieldAccType).define("options", accFields);
+         $$(ids.fieldAccType).refresh();
+      };
+
+      let updateAccTypeOptions = (accTypeOptions) => {
+         [
+            ids.fieldAccAsset,
+            ids.fieldAccExpense,
+            ids.fieldAccLiabilities,
+            ids.fieldAccEquity,
+            ids.fieldAccIncome
+         ].forEach((fieldGLElem) => {
+            $$(fieldGLElem).define("options", accTypeOptions);
+            $$(fieldGLElem).refresh();
+         });
+      };
+
+      let getListOptions = (objectId, fieldId) => {
+         let result = [];
+         let object = this.application.objects((obj) => obj.id == objectId)[0];
+         if (!object) return result;
+
+         let fpStatusField = object.fields((f) => f.id == fieldId)[0];
+         if (
+            !fpStatusField ||
+            !fpStatusField.settings ||
+            !fpStatusField.settings.options
+         )
+            return result;
+
+         result = (fpStatusField.settings.options || []).map((opt) => {
+            return {
+               id: opt.id,
+               value: opt.text
+            };
+         });
+
+         return result;
       };
 
       let fpFields = getFieldOptions(this.objectFP);
       let glFields = getFieldOptions(this.objectGL);
+      let accFields = getFieldOptions(this.objectAcc);
       let fpStatusFields = getStatusFieldOptions(this.fieldFPStatus);
+      let accTypeOptions = getListOptions(this.objectAcc, this.fieldAccType);
 
       var ui = {
          id: id,
@@ -177,6 +233,22 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                         glFields = getFieldOptions(newVal);
                         // rebuild the associated list of Fields to pick
                         updateGLFields(glFields);
+                     }
+                  }
+               }
+            },
+            {
+               id: ids.objectAcc,
+               view: "select",
+               label: L("ab.process.accounting.objectAcc", "*Account Object"),
+               value: this.objectAcc,
+               name: "objectAcc",
+               options: objectList,
+               on: {
+                  onChange(newVal, oldVal) {
+                     if (newVal != oldVal) {
+                        accFields = getFieldOptions(newVal);
+                        updateAccFields(accFields);
                      }
                   }
                }
@@ -261,6 +333,94 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                value: this.fieldGLRc,
                name: "fieldGLRc",
                options: glFields
+            },
+            {
+               id: ids.fieldGLDebit,
+               view: "select",
+               label: L("ab.process.accounting.fieldGLDebit", "*GL -> Debit"),
+               value: this.fieldGLDebit,
+               name: "fieldGLDebit",
+               options: glFields
+            },
+            {
+               id: ids.fieldGLCredit,
+               view: "select",
+               label: L("ab.process.accounting.fieldGLCredit", "*GL -> Credit"),
+               value: this.fieldGLCredit,
+               name: "fieldGLCredit",
+               options: glFields
+            },
+            {
+               id: ids.fieldAccType,
+               view: "select",
+               label: L("ab.process.accounting.fieldAccType", "*Acc -> Type"),
+               value: this.fieldAccType,
+               name: "fieldAccType",
+               options: accFields,
+               on: {
+                  onChange: (newVal, oldVal) => {
+                     if (newVal != oldVal) {
+                        accTypeOptions = getListOptions(
+                           this.objectAccount ||
+                              $$(ids.objectAccount).getValue(),
+                           newVal
+                        );
+                        updateAccTypeOptions(accTypeOptions);
+                     }
+                  }
+               }
+            },
+            {
+               id: ids.fieldAccAsset,
+               view: "select",
+               label: L("ab.process.accounting.fieldAccAsset", "*Acc -> Asset"),
+               value: this.fieldAccAsset,
+               name: "fieldAccAsset",
+               options: accTypeOptions
+            },
+            {
+               id: ids.fieldAccExpense,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldAccExpense",
+                  "*Acc -> Expense"
+               ),
+               value: this.fieldAccExpense,
+               name: "fieldAccExpense",
+               options: accTypeOptions
+            },
+            {
+               id: ids.fieldAccLiabilities,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldAccLiabilities",
+                  "*Acc -> Liabilities"
+               ),
+               value: this.fieldAccLiabilities,
+               name: "fieldAccLiabilities",
+               options: accTypeOptions
+            },
+            {
+               id: ids.fieldAccEquity,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldAccEquity",
+                  "*Acc -> Equity"
+               ),
+               value: this.fieldAccEquity,
+               name: "fieldAccEquity",
+               options: accTypeOptions
+            },
+            {
+               id: ids.fieldAccIncome,
+               view: "select",
+               label: L(
+                  "ab.process.accounting.fieldAccIncome",
+                  "*Acc -> Income"
+               ),
+               value: this.fieldAccIncome,
+               name: "fieldAccIncome",
+               options: accTypeOptions
             }
          ]
       };
