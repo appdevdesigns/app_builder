@@ -361,8 +361,7 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                   onChange: (newVal, oldVal) => {
                      if (newVal != oldVal) {
                         accTypeOptions = getListOptions(
-                           this.objectAccount ||
-                              $$(ids.objectAccount).getValue(),
+                           this.objectAcc || $$(ids.objectAcc).getValue(),
                            newVal
                         );
                         updateAccTypeOptions(accTypeOptions);
