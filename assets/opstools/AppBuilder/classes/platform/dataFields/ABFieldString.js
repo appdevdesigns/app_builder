@@ -162,7 +162,7 @@ module.exports = class ABFieldString extends ABFieldStringCore {
       config.css = "textCell";
       // config.sort   = 'string'
       config.template = (obj, common, value, col, ind) => {
-         return value.replace(/[<]/g, "&lt;");
+         return (value || "").toString().replace(/[<]/g, "&lt;");
       };
 
       return config;
