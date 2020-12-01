@@ -263,6 +263,10 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                                           })
                                        )
                                        .then((nextGlInfo) => {
+                                          // array to a object
+                                          nextGlInfo =
+                                             nextGlInfo[0] || nextGlInfo;
+
                                           let updateExistsVals = {};
 
                                           // Update the Next Balance > Starting Balance = Original Balance > Running Balance
@@ -288,7 +292,9 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                                                    glAccount = glAccount[0];
 
                                                 switch (
-                                                   glAccount[fieldAccType]
+                                                   glAccount[
+                                                      fieldAccType.columnName
+                                                   ]
                                                 ) {
                                                    // If account category is Asset or Expense: Running Balance = Starting Balance + Debit - Credit
                                                    case this.fieldAccAsset:
