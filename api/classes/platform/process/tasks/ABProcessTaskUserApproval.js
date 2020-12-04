@@ -69,6 +69,15 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                instance,
                entry.key
             ]);
+
+            if (entry && entry.field && entry.field.key == "connectObject") {
+               processData[
+                  `${entry.key}.format`
+               ] = this.process.processData(this, [
+                  instance,
+                  `${entry.key}.format`
+               ]);
+            }
          });
          jobData.data = processData;
 

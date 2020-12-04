@@ -2038,4 +2038,8 @@ module.exports = class ABClassObject extends ABObjectCore {
                : "not_in";
       }
    }
+
+   isUuid(text) {
+      return AppBuilder.rules.isUuid(text);
+   }
 };

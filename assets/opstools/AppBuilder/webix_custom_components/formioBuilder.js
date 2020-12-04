@@ -151,10 +151,8 @@ module.exports = class ABCustomFormIOBuilder {
                            input: true,
                            inputType: "text",
                            disabled: true,
-                           calculateValue:
-                              "value = '" +
-                              entry.field.settings.textFormula +
-                              "'"
+                           calculateValue: `value = data['${entry.field.id}.format']`
+                           // ,calculateValue: `value = '${entry.field.settings.textFormula}'`
                         }
                      };
                      break;
