@@ -209,8 +209,4 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
 
       return AppBuilder.rules.toSQLDate(data);
    }
-
-   dateToString(dateFormat, dateData) {
-      return webix.Date.dateToStr(dateFormat)(dateData);
-   }
 };
