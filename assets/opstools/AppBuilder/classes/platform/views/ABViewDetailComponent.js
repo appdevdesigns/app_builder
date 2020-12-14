@@ -101,11 +101,12 @@ module.exports = class ABViewDetailComponent extends ABViewDetailComponentCore {
 
       var _logic = {
          setValue: (componentId, val) => {
-            if ($$(componentId))
+            if ($$(componentId)) {
                if (field.key == "string" || field.key == "LongText") {
                   val = val.replace(/[<]/g, "&lt;");
                }
-            $$(componentId).setValues({ display: val });
+               $$(componentId).setValues({ display: val });
+            }
          }
       };
 
