@@ -923,7 +923,10 @@ module.exports = class ABClassObject extends ABObjectCore {
                               return next(false);
                            }
                            // Anonymous
-                           else if (scopeWhere.rules.length == 0) {
+                           else if (
+			      !this.viewName && // It have to be ABObject (not ABObjectQuery)
+			      scopeWhere.rules.length == 0
+			   ) {
                               return next(true);
                            }
                            // Process filter policies
