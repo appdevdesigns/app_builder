@@ -446,3 +446,4 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
       });
    }
 };
+
