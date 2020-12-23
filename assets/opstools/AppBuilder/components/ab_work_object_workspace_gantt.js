@@ -6,7 +6,24 @@
  */
 
 const ABComponent = require("../classes/platform/ABComponent");
-const AB_Work_Form = require("./ab_work_object_workspace_formSidePanel");
+
+const DAY_SCALE = { unit: "day", format: "%d" },
+   WEEK_SCALE = {
+      unit: "week",
+      format: (start) => {
+         const parser = webix.Date.dateToStr("%d %M");
+         const wstart = webix.Date.weekStart(start);
+         const wend = webix.Date.add(
+            webix.Date.add(wstart, 1, "week", true),
+            -1,
+            "day",
+            true
+         );
+         return parser(wstart) + " - " + parser(wend);
+      }
+   },
+   MONTH_SCALE = { unit: "month", format: "%F" },
+   YEAR_SCALE = { unit: "year", format: "%Y" };
 
 module.exports = class ABWorkObjectGantt extends ABComponent {
    /**
@@ -35,9 +52,9 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
 
       // internal list of Webix IDs to reference our UI components.
       let ids = {
-         component: this.unique(idBase + "_workspace_gantt_border"),
-         gantt: this.unique(idBase + "_workspace_gantt"),
-         resizer: this.unique(idBase + "_workspace_gantt_resizer")
+         component: this.unique(idBase + "_workspace_gantt_component"),
+         menu: this.unique(idBase + "_workspace_gantt_menu"),
+         gantt: this.unique(idBase + "_workspace_gantt")
       };
 
       let CurrentObject = null,
@@ -46,68 +63,120 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
          CurrentStartDateField = null,
          CurrentEndDateField = null,
          CurrentDurationField = null,
-         CurrentProgressField = null;
-
-      let FormSide = new AB_Work_Form(App, idBase + "_gantt_form");
+         CurrentProgressField = null,
+         CurrentNotesField = null;
 
       // Our webix UI definition:
       this.ui = {
          id: ids.component,
-         cols: [
+         rows: [
+            {
+               cols: [
+                  { fillspace: true },
+                  {
+                     view: "menu",
+                     id: ids.menu,
+                     layout: "x",
+                     width: 300,
+                     data: [
+                        {
+                           id: "day",
+                           value: "Day"
+                        },
+                        {
+                           id: "week",
+                           value: "Week"
+                        },
+                        {
+                           id: "month",
+                           value: "Month"
+                        },
+                        {
+                           id: "year",
+                           value: "Year"
+                        }
+                     ],
+                     on: {
+                        onItemClick: (id, e, node) => {
+                           _logic.setScale(id);
+                        }
+                     }
+                  }
+               ]
+            },
             {
                id: ids.gantt,
-               view: "dhx-gantt",
-               cdn: "/js/webix/components/gantt",
-               init: function(gantt) {
-                  gantt.config.drag_links = false;
-                  gantt.config.details_on_create = false;
-                  gantt.config.details_on_dblclick = false;
-                  gantt.config.columns = [
-                     {
-                        name: "text",
-                        label: "Task name",
-                        tree: true,
-                        width: "*"
-                     },
-                     {
-                        name: "start_date",
-                        label: "Start time",
-                        align: "center"
-                     },
-                     { name: "duration", label: "Duration", align: "center" },
-                     {
-                        name: "__remove",
-                        label: "",
-                        width: 40,
-                        align: "center",
-                        template: () =>
-                           '<span class="fa fa-trash ab-gantt-remove" style="line-height: 35px;"></span>'
+               view: "gantt",
+               scales: [YEAR_SCALE, MONTH_SCALE, DAY_SCALE],
+               override: new Map([
+                  [
+                     gantt.services.Backend,
+                     class MyBackend extends gantt.services.Backend {
+                        tasks() {
+                           return Promise.resolve()
+                              .then(
+                                 () =>
+                                    new Promise((next, bad) => {
+                                       if (
+                                          CurrentDatacollection.dataStatus !=
+                                          CurrentDatacollection.dataStatusFlag
+                                             .initialized
+                                       ) {
+                                          CurrentDatacollection.loadData()
+                                             .catch(bad)
+                                             .then(() => {
+                                                next();
+                                             });
+                                       } else {
+                                          next();
+                                       }
+                                    })
+                              )
+                              .then(
+                                 () =>
+                                    new Promise((next, bad) => {
+                                       next(
+                                          (
+                                             CurrentDatacollection.getData() ||
+                                             []
+                                          ).map((d, index) =>
+                                             _logic.convertFormat(d)
+                                          )
+                                       );
+                                    })
+                              );
+                        }
+                        links() {
+                           return Promise.resolve([]);
+                        }
+                        updateTask(id, obj) {
+                           return new webix.promise((success, fail) => {
+                              _logic
+                                 .updateTask(obj.id, obj)
+                                 .then(() => success({}))
+                                 .catch(fail);
+                           });
+                        }
+                        removeTask(id) {
+                           return new webix.promise((success, fail) => {
+                              _logic
+                                 .removeTask(id)
+                                 .then(() => success({}))
+                                 .catch(fail);
+                           });
+                        }
                      }
-                  ];
-               },
-               ready: function(gantt) {
-                  _logic.attachEvents();
-               }
-            },
-            {
-               id: ids.resizer,
-               view: "resizer",
-               hidden: true,
-               css: "bg_gray",
-               width: 11
-            },
-            FormSide.ui
+                  ]
+               ])
+            }
          ]
       };
 
       // Our init() function for setting up our UI
-      this.init = (options) => {
-         FormSide.init({
-            onAddData: _logic.updateTaskItem,
-            onUpdateData: _logic.updateTaskItem,
-            onClose: _logic.unselect
-         });
-      };
+      this.init = (options) => {};
+
+      let originalStartDate = null;
+      let originalEndDate = null;
 
       // our internal business logic
       var _logic = (this._logic = {
@@ -117,6 +186,7 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
           * hide this component.
           */
          hide: function() {
+            if (!$$(ids.component)) return;
             $$(ids.component).hide();
          },
 
@@ -126,10 +196,8 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
           * Show this component.
           */
          show: () => {
+            if (!$$(ids.component)) return;
             $$(ids.component).show();
-
-            FormSide.hide();
-            $$(ids.resizer).hide();
 
             // Get object's kanban view
             CurrentGanttView = _logic.getCurrentView();
@@ -140,24 +208,11 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
             CurrentEndDateField = CurrentGanttView.endDateField;
             CurrentDurationField = CurrentGanttView.durationField;
             CurrentProgressField = CurrentGanttView.progressField;
-
-            if (
-               !CurrentObject ||
-               !CurrentGanttView ||
-               !CurrentStartDateField ||
-               (!CurrentEndDateField && !CurrentDurationField)
-            )
-               return;
-
-            // rebuild
-            webix.ui(this.ui.cols[0], $$(ids.gantt));
-            webix.extend($$(ids.gantt), webix.ProgressBar);
+            CurrentNotesField = CurrentGanttView.notesField;
          },
 
          objectLoad: (object) => {
             CurrentObject = object;
-
-            FormSide.objectLoad(object);
          },
 
          /**
@@ -185,29 +240,21 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
             CurrentDatacollection.on("create", (vals) => {
                if (CurrentObject.currentView().type != "gantt") return;
 
-               _logic.updateTaskItem(vals, true);
+               _logic.initData();
             });
 
             CurrentDatacollection.on("update", (vals) => {
                if (CurrentObject.currentView().type != "gantt") return;
 
-               _logic.updateTaskItem(vals, true);
+               _logic.initData();
             });
             CurrentDatacollection.on("delete", (taskId) => {
                if (CurrentObject.currentView().type != "gantt") return;
 
                // remove this task in gantt
-               let gantt = $$(ids.gantt).getGantt();
-               if (gantt && gantt.isTaskExists(taskId))
-                  gantt.deleteTask(taskId);
+               if (_logic.ganttElement.isExistsTask(taskId))
+                  _logic.ganttElement.removeTask(taskId);
             });
-
-            // TODO: pagination
-            // https://docs.dhtmlx.com/grid__big_datasets_loading.html
-            // if (CurrentDC)
-            // 	CurrentDC.bind($$(ids.gantt));
-            // else
-            // 	$$(ids.gantt).unbind();
          },
 
          getCurrentView: () => {
@@ -219,80 +266,77 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
             else return null;
          },
 
-         initData: () => {
-            let gantt = $$(ids.gantt).getGantt();
-            if (!gantt) return;
+         setScale: (scale) => {
+            let ganttElem = $$(ids.gantt);
+            if (!ganttElem) return;
 
-            gantt.clearAll();
+            let ganttData = ganttElem.getService("local");
+            if (!ganttData) return;
+
+            let newScales = [];
+
+            switch (scale) {
+               case "day":
+                  newScales = [YEAR_SCALE, MONTH_SCALE, DAY_SCALE];
+                  break;
+               case "week":
+                  newScales = [YEAR_SCALE, MONTH_SCALE, WEEK_SCALE];
+                  break;
+               case "month":
+                  newScales = [YEAR_SCALE, MONTH_SCALE];
+                  break;
+               case "year":
+                  newScales = [YEAR_SCALE];
+                  break;
+            }
+
+            const currScale = ganttElem.getService("local").getScales(),
+               start = webix.Date.add(originalStartDate, -1, scale, true),
+               end = webix.Date.add(originalEndDate, 1, scale, true);
+
+            ganttData.setScales(
+               start,
+               end,
+               currScale.precise,
+               currScale.cellWidth,
+               currScale.cellHeight,
+               newScales
+            );
+            ganttElem.$app.refresh();
+            ganttElem.getState().$batch({ top: 0, left: 0 });
+         },
+
+         initData: () => {
+            let ganttElem = $$(ids.gantt);
+            if (!ganttElem) return;
+
+            let dataService = ganttElem.getService("local");
+            if (!dataService) return;
+
+            let dcTasks = dataService.tasks();
+            if (!dcTasks) return;
+
+            dcTasks.clearAll();
 
             let gantt_data = {
                data: (CurrentDatacollection.getData() || []).map((d, index) =>
-                  _logic.convertFormat(gantt, d)
+                  _logic.convertFormat(d)
                )
-               // .map((d, index) => _logic.convertFormat(gantt, d, index))
             };
 
-            gantt.parse(gantt_data);
+            dcTasks.parse(gantt_data);
+
+            // Keep original start and end dates for calculate scale to display
+            const currScale = dataService.getScales();
+            originalStartDate = currScale.start;
+            originalEndDate = currScale.end;
 
             _logic.sort();
          },
 
-         busy: function() {
-            if ($$(ids.gantt).showProgress)
-               $$(ids.gantt).showProgress({ type: "icon" });
-         },
-
-         ready: function() {
-            if ($$(ids.gantt).hideProgress) $$(ids.gantt).hideProgress();
-         },
-
-         attachEvents: () => {
-            let gantt = $$(ids.gantt).getGantt();
-            if (!gantt) return;
-
-            if (gantt.__onAfterTaskDragEvent == null) {
-               gantt.__onAfterTaskDragEvent = gantt.attachEvent(
-                  "onAfterTaskDrag",
-                  (id, mode, e) => {
-                     switch (mode) {
-                        case "resize":
-                        case "move":
-                           _logic.updateTaskDate(id);
-                           break;
-                        case "progress":
-                           _logic.updateTaskProgress(id);
-                           break;
-                        case "ignore":
-                           break;
-                     }
-                  }
-               );
-            }
-
-            if (gantt.__onTaskClickEvent == null) {
-               gantt.__onTaskClickEvent = gantt.attachEvent(
-                  "onTaskClick",
-                  (id, e) => {
-                     _logic.selectTask(id);
-                     return true;
-                  }
-               );
-            }
-
-            if (gantt.__onTaskRowClick == null) {
-               gantt.__onTaskRowClick = gantt.attachEvent(
-                  "onTaskRowClick",
-                  (id, dom) => {
-                     if (dom.classList.contains("ab-gantt-remove")) {
-                        _logic.removeTask(id);
-                     }
-                  }
-               );
-            }
-         },
-
-         convertFormat: (gantt, data, index) => {
-            data = data || {};
+         convertFormat: (row, index) => {
+            let data = {};
+            row = row || {};
 
             if (
                !CurrentStartDateField ||
@@ -301,36 +345,27 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
                return data;
 
             let currDate = new Date();
-
-            data["id"] = data.id;
+            data["id"] = row.id;
+            data["type"] = "task";
+            data["parent"] = 0;
+            data["open"] = true;
             // define label
-            data["text"] = CurrentObject.displayData(data);
+            data["text"] = CurrentObject.displayData(row);
             data["start_date"] =
-               data[CurrentStartDateField.columnName] || currDate;
+               row[CurrentStartDateField.columnName] || currDate;
             data["progress"] = CurrentProgressField
-               ? parseFloat(data[CurrentProgressField.columnName] || 0)
+               ? parseFloat(row[CurrentProgressField.columnName] || 0)
                : 0;
+
+            if (CurrentNotesField)
+               data["details"] = row[CurrentNotesField.columnName] || "";
 
             if (CurrentEndDateField)
                data["end_date"] =
-                  data[CurrentEndDateField.columnName] || currDate;
+                  row[CurrentEndDateField.columnName] || currDate;
 
             if (CurrentDurationField)
-               data["duration"] = data[CurrentDurationField.columnName] || 1;
-
-            // Calculate duration
-            if (!data["duration"] && data["start_date"] && data["end_date"])
-               data["duration"] = gantt.calculateDuration(
-                  data["start_date"],
-                  data["end_date"]
-               );
-
-            // Calculate end date
-            if (!data["end_date"] && data["start_date"] && data["duration"])
-               data["end_date"] = gantt.calculateEndDate(
-                  data["start_date"],
-                  data["duration"]
-               );
+               data["duration"] = row[CurrentDurationField.columnName] || 1;
 
             // Default values
             if (!data["end_date"] && !data["duration"]) {
@@ -343,169 +378,60 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
             return data;
          },
 
-         selectTask: (rowId) => {
-            let gantt = $$(ids.gantt).getGantt();
-            let task = gantt.getTask(rowId);
-
-            FormSide.show(task || {});
-            $$(ids.resizer).show();
-         },
-
-         unselect: () => {
-            let gantt = $$(ids.gantt).getGantt();
-            gantt.unselectTask();
-         },
-
-         addTask: () => {
-            _logic.unselect();
-
-            // show the side form
-            FormSide.show();
-            $$(ids.resizer).show();
-         },
-
-         updateTask: (rowId, patch) => {
-            _logic.busy();
-
-            CurrentObject.model()
-               .update(rowId, patch)
-               .then((updatedTask) => {
-                  _logic.updateTaskItem(updatedTask);
-
-                  _logic.ready();
-               })
-               .catch((err) => {
-                  OP.Error.log("Error saving item:", { error: err });
-
-                  _logic.ready();
-               });
-         },
-
-         updateTaskDate: (rowId) => {
-            if (
-               !CurrentGanttView ||
-               !CurrentStartDateField ||
-               (!CurrentEndDateField && !CurrentDurationField)
-            )
-               return;
-
-            let task = gantt.getTask(rowId);
-
+         convertValues: (task) => {
             let patch = {};
-            patch[CurrentStartDateField.columnName] = task.start_date;
+
+            patch[CurrentStartDateField.columnName] = task["start_date"];
+
+            if (CurrentProgressField)
+               patch[CurrentProgressField.columnName] = parseFloat(
+                  task["progress"] || 0
+               );
+
+            if (CurrentNotesField)
+               patch[CurrentNotesField.columnName] = task["details"];
 
             if (CurrentEndDateField)
-               patch[CurrentEndDateField.columnName] = task.end_date;
+               patch[CurrentEndDateField.columnName] = task["end_date"];
 
             if (CurrentDurationField)
-               patch[CurrentDurationField.columnName] = task.duration;
+               patch[CurrentDurationField.columnName] = task["duration"];
 
-            _logic.updateTask(rowId, patch);
+            return patch;
          },
 
-         updateTaskProgress: (rowId) => {
-            // Get object's kanban view
-            let ganttView = _logic.getCurrentView();
-            if (!ganttView) return;
+         addTask: () => {},
 
-            // Fields
-            let progressField = ganttView.progressField;
-            if (!progressField) return;
+         updateTask: (rowId, updatedTask) => {
+            let patch = _logic.convertValues(updatedTask);
 
-            let task = gantt.getTask(rowId);
+            return new Promise((resolve, reject) => {
+               CurrentObject.model()
+                  .update(rowId, patch)
+                  .then((updatedTask) => {
+                     resolve();
+                  })
+                  .catch((err) => {
+                     OP.Error.log("Error saving item:", { error: err });
 
-            let patch = {};
-            patch[progressField.columnName] = task.progress || 0;
-
-            _logic.updateTask(rowId, patch);
-         },
-
-         updateTaskItem(data, ignoreSelect = false) {
-            let gantt = $$(ids.gantt).getGantt();
-
-            // update
-            if (data.id && gantt.isTaskExists(data.id)) {
-               let task = gantt.getTask(data.id);
-
-               // Changes task's data
-               // https://docs.dhtmlx.com/gantt/api__gantt_updatetask.html
-               let updatedTask = _logic.convertFormat(gantt, data);
-               for (let key in updatedTask) {
-                  task[key] = updatedTask[key];
-               }
-
-               if (
-                  data["start_date"] &&
-                  (data["end_date"] || data["duration"])
-               ) {
-                  // these fields are required
-                  gantt.updateTask(data.id);
-
-                  // after call .updateTask function. end_date and duration values will be calculated.
-                  // update these values to display in form properly
-                  task = gantt.getTask(data.id);
-
-                  if (CurrentEndDateField)
-                     task[CurrentEndDateField.columnName] = task["end_date"];
-
-                  if (CurrentDurationField)
-                     task[CurrentDurationField.columnName] = task["duration"];
-
-                  gantt.updateTask(data.id);
-               }
-            }
-            // insert
-            else {
-               let newTask = _logic.convertFormat(gantt, data);
-
-               if (
-                  newTask["start_date"] &&
-                  (newTask["end_date"] || newTask["duration"])
-               )
-                  // these fields are required
-                  gantt.addTask(newTask);
-
-               if (!ignoreSelect) {
-                  gantt.selectTask(data.id);
-                  _logic.selectTask(data.id);
-               }
-            }
-
-            _logic.sort();
-
-            // If form opens, then update form data
-            if (FormSide.isVisible()) _logic.selectTask(data.id);
+                     reject(err);
+                  });
+            });
          },
 
          removeTask: (rowId) => {
-            OP.Dialog.Confirm({
-               title: labels.component.confirmDeleteTaskTitle,
-               text: labels.component.confirmDeleteTaskMessage,
-               callback: (result) => {
-                  if (!result) return;
+            return new Promise((resolve, reject) => {
+               CurrentObject.model()
+                  .delete(rowId)
+                  .then((response) => {
+                     resolve();
+                  })
+                  .catch((err) => {
+                     OP.Error.log("Error deleting item:", { error: err });
 
-                  _logic.busy();
-
-                  CurrentObject.model()
-                     .delete(rowId)
-                     .then((response) => {
-                        // remove this task in gantt
-                        let gantt = $$(ids.gantt).getGantt();
-                        if (gantt && gantt.isTaskExists(rowId)) {
-                           gantt.deleteTask(rowId);
-                           FormSide.hide();
-                        }
-
-                        _logic.ready();
-                     })
-                     .catch((err) => {
-                        OP.Error.log("Error deleting item:", { error: err });
-
-                        _logic.ready();
-
-                        //// TODO: what do we do here?
-                     });
-               }
+                     //// TODO: what do we do here?
+                     reject(err);
+                  });
             });
          },
 
@@ -516,36 +442,58 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
             )
                return;
 
-            let gantt = $$(ids.gantt).getGantt();
-            if (!gantt) return;
+            // TODO: sorting;
+            return;
+            // let gantt = $$(ids.gantt).getGantt();
+            // if (!gantt) return;
 
-            // default sort
-            let MAX_date = new Date(8640000000000000);
-            gantt.sort(function(a, b) {
-               let aStartDate = a["start_date"],
-                  aEndDate = a["end_date"],
-                  aDuration = a["duration"] || 1,
-                  bStartDate = b["start_date"],
-                  bEndDate = b["end_date"],
-                  bDuration = b["duration"] || 1;
+            // // default sort
+            // let MAX_date = new Date(8640000000000000);
+            // gantt.sort(function(a, b) {
+            //    let aStartDate = a["start_date"],
+            //       aEndDate = a["end_date"],
+            //       aDuration = a["duration"] || 1,
+            //       bStartDate = b["start_date"],
+            //       bEndDate = b["end_date"],
+            //       bDuration = b["duration"] || 1;
 
-               // if no start date, then be a last item
-               if (
-                  a[CurrentStartDateField.columnName] == null ||
-                  b[CurrentStartDateField.columnName] == null
-               ) {
-                  return (
-                     (a[CurrentStartDateField.columnName] || MAX_date) -
-                     (b[CurrentStartDateField.columnName] || MAX_date)
-                  );
-               } else if (aStartDate != bStartDate) {
-                  return aStartDate - bStartDate;
-               } else if (aEndDate != bEndDate) {
-                  return aEndDate - bEndDate;
-               } else if (aDuration != bDuration) {
-                  return bDuration - aDuration;
-               }
-            }, false);
+            //    // if no start date, then be a last item
+            //    if (
+            //       a[CurrentStartDateField.columnName] == null ||
+            //       b[CurrentStartDateField.columnName] == null
+            //    ) {
+            //       return (
+            //          (a[CurrentStartDateField.columnName] || MAX_date) -
+            //          (b[CurrentStartDateField.columnName] || MAX_date)
+            //       );
+            //    } else if (aStartDate != bStartDate) {
+            //       return aStartDate - bStartDate;
+            //    } else if (aEndDate != bEndDate) {
+            //       return aEndDate - bEndDate;
+            //    } else if (aDuration != bDuration) {
+            //       return bDuration - aDuration;
+            //    }
+            // }, false);
+         },
+
+         ganttElement: {
+            isExistsTask: (taskId) => {
+               let localService = $$(ids.gantt).getService("local");
+               if (!localService) return false;
+
+               let tasksData = localService.tasks();
+               if (!tasksData || !tasksData.exists) return false;
+
+               return tasksData.exists(taskId);
+            },
+            removeTask: (taskId) => {
+               if (!_logic.ganttElement.isExistsTask(taskId)) return;
+
+               let opsService = $$(ids.gantt).getService("operations");
+               if (!opsService) return;
+
+               return opsService.removeTask(taskId);
+            }
          }
       });
 
