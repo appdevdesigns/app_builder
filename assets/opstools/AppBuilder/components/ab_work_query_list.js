@@ -493,6 +493,7 @@ module.exports = class AB_Work_Query_List extends ABComponent {
 
          remove: function() {
             var selectedQuery = $$(ids.list).getSelectedItem(false);
+            if (!selectedQuery) return;
 
             // verify they mean to do this:
             OP.Dialog.Confirm({

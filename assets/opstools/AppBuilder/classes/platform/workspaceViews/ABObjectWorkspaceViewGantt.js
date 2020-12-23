@@ -9,6 +9,8 @@ const ABPopupNewDataField = require("../../../components/ab_work_object_workspac
 
 const ABFieldDate = require("../dataFields/ABFieldDate");
 const ABFieldNumber = require("../dataFields/ABFieldNumber");
+const ABFieldString = require("../dataFields/ABFieldString");
+const ABFieldLongText = require("../dataFields/ABFieldLongText");
 
 var defaultValues = {
    name: "Default Gantt",
@@ -17,7 +19,8 @@ var defaultValues = {
    startDate: null, // id of a ABFieldDate
    endDate: "none", // id of a ABFieldDate
    duration: "none", // id of a ABFieldNumber
-   progress: null // id of a ABFieldNumber - decimal
+   progress: null, // id of a ABFieldNumber - decimal
+   notes: null // id of a ABFieldString, ABFieldLongText
 };
 
 module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
@@ -54,7 +57,8 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
          startDate: App.unique(idBase + "_popupGanttStartDate"),
          endDate: App.unique(idBase + "_popupGanttEndDate"),
          duration: App.unique(idBase + "_popupGanttDuration"),
-         progress: App.unique(idBase + "_popupGanttProgress")
+         progress: App.unique(idBase + "_popupGanttProgress"),
+         notes: App.unique(idBase + "_popupGanttNotes")
       };
 
       let L = (key, altText) => {
@@ -68,6 +72,7 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
             endDate: L("ab.add_view.gantt.endDate", "*End Date"),
             duration: L("ab.add_view.gantt.duration", "*Duration"),
             progress: L("ab.add_view.gantt.progress", "*Progress"),
+            notes: L("ab.add_view.gantt.notes", "*Notes"),
 
             datePlaceholder: L(
                "ab.add_view.gantt.datePlaceholder",
@@ -76,6 +81,10 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
             numberPlaceholder: L(
                "ab.add_view.gantt.numberPlaceholder",
                "*Select a number field"
+            ),
+            stringPlaceholder: L(
+               "ab.add_view.gantt.stringPlaceholder",
+               "*Select a string field"
             )
          }
       };
@@ -120,6 +129,14 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
             .map(({ id, label }) => ({ id, value: label }));
          $$(ids.progress).define("options", decimalFields);
 
+         // Notes
+         let stringFields = object
+            .fields(
+               (f) => f instanceof ABFieldString || f instanceof ABFieldLongText
+            )
+            .map(({ id, label }) => ({ id, value: label }));
+         $$(ids.notes).define("options", stringFields);
+
          // Select view's values
          if (view && view.startDate) {
             $$(ids.startDate).define("value", view.startDate);
@@ -145,6 +162,11 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
          if (view && view.progress) {
             $$(ids.progress).define("value", view.progress);
             $$(ids.progress).refresh();
+         }
+
+         if (view && view.notes) {
+            $$(ids.notes).define("value", view.notes);
+            $$(ids.notes).refresh();
          }
       };
 
@@ -267,6 +289,34 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
                            }
                         }
                      ]
+                  },
+                  {
+                     cols: [
+                        {
+                           id: ids.notes,
+                           view: "richselect",
+                           label: `<span class='webix_icon fa fa-align-right'></span> ${labels.component.notes}`,
+                           placeholder: labels.component.stringPlaceholder,
+                           labelWidth: 180,
+                           name: "notes",
+                           required: false,
+                           options: []
+                        },
+                        {
+                           view: "button",
+                           css: "webix_primary",
+                           type: "icon",
+                           icon: "fa fa-plus",
+                           label: "",
+                           width: 20,
+                           click: () => {
+                              PopupNewDataFieldComponent.show(
+                                 null,
+                                 ABFieldLongText.defaults().key
+                              );
+                           }
+                        }
+                     ]
                   }
                ]
             };
@@ -316,6 +366,7 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
                $$(ids.duration).getValue() || defaultValues.duration;
             result.progress =
                $$(ids.progress).getValue() || defaultValues.progress;
+            result.notes = $$(ids.notes).getValue() || defaultValues.notes;
 
             return result;
          },
@@ -384,5 +435,12 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
          object = viewCollection.object;
 
       return object.fields((f) => f.id == this.progress)[0];
+   }
+
+   get notesField() {
+      let viewCollection = this.object,
+         object = viewCollection.object;
+
+      return object.fields((f) => f.id == this.notes)[0];
    }
 };

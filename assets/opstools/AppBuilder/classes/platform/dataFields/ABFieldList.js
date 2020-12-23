@@ -282,7 +282,7 @@ var ABFieldListComponent = new ABFieldComponent({
                   { id: itemId, value: "", hex: nextHex },
                   $$(ids.options).count()
                );
-               $$(ids.options).edit(itemId);
+               if ($$(ids.options).exists(itemId)) $$(ids.options).edit(itemId);
             }
          },
          {
