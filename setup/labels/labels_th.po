@@ -2467,6 +2467,12 @@ msgstr "[th] Pivot"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.reportsManager
+msgid "Reports Manager"
+msgstr "[th] Reports Manager"
+
+#. path: app_builder
+#. code: th
 #. key: ab.object.list.title
 msgid "Data Objects"
 msgstr "ที่เก็บข้อมูล"
