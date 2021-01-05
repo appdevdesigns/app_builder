@@ -86,8 +86,61 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                reports.services.Backend,
                class MyBackend extends reports.services.Backend {
                   getModules() {
-                     return webix.promise.resolve([]);
+                     return webix.promise.resolve(
+                        compInstance.settings.moduleList || []
+                     );
                   }
+                  saveModule(id, data) {
+                     id = id || webix.uid();
+                     compInstance.settings.moduleList =
+                        compInstance.settings.moduleList || [];
+
+                     let indexOfModule = null;
+                     let module = compInstance.settings.moduleList.filter(
+                        (m, index) => {
+                           let isExists = m.id == id;
+                           if (isExists) indexOfModule = index;
+
+                           return isExists;
+                        }
+                     )[0];
+
+                     // Update
+                     if (module) {
+                        compInstance.settings.moduleList[indexOfModule] = data;
+                     }
+                     // Add
+                     else {
+                        compInstance.settings.moduleList.push(data);
+                     }
+
+                     return new Promise((resolve, reject) => {
+                        compInstance
+                           .save()
+                           .catch(reject)
+                           .then(() => {
+                              resolve({ id: id });
+                           });
+                     });
+                  }
+                  deleteModule(id) {
+                     compInstance.settings.moduleList =
+                        compInstance.settings.moduleList || [];
+
+                     compInstance.settings.moduleList = compInstance.settings.moduleList.filter(
+                        (m) => m.id != id
+                     );
+
+                     return new Promise((resolve, reject) => {
+                        compInstance
+                           .save()
+                           .catch(reject)
+                           .then(() => {
+                              resolve({ id: id });
+                           });
+                     });
+                  }
+
                   getModels() {
                      let reportModels = {};
 
@@ -120,9 +173,63 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
 
                      return webix.promise.resolve(reportModels);
                   }
+
                   getQueries() {
-                     return webix.promise.resolve([]);
+                     return webix.promise.resolve(
+                        compInstance.settings.queryList || []
+                     );
                   }
+                  saveQuery(id, data) {
+                     id = id || webix.uid();
+                     compInstance.settings.queryList =
+                        compInstance.settings.queryList || [];
+
+                     let indexOfQuery = null;
+                     let query = compInstance.settings.queryList.filter(
+                        (m, index) => {
+                           let isExists = m.id == id;
+                           if (isExists) indexOfQuery = index;
+
+                           return isExists;
+                        }
+                     )[0];
+
+                     // Update
+                     if (query) {
+                        compInstance.settings.queryList[indexOfQuery] = data;
+                     }
+                     // Add
+                     else {
+                        compInstance.settings.queryList.push(data);
+                     }
+
+                     return new Promise((resolve, reject) => {
+                        compInstance
+                           .save()
+                           .catch(reject)
+                           .then(() => {
+                              resolve({ id: id });
+                           });
+                     });
+                  }
+                  deleteQuery(id) {
+                     compInstance.settings.queryList =
+                        compInstance.settings.queryList || [];
+
+                     compInstance.settings.queryList = compInstance.settings.queryList.filter(
+                        (m) => m.id != id
+                     );
+
+                     return new Promise((resolve, reject) => {
+                        compInstance
+                           .save()
+                           .catch(reject)
+                           .then(() => {
+                              resolve({ id: id });
+                           });
+                     });
+                  }
+
                   getData(config) {
                      let dc = compInstance.application.datacollections(
                         (dcItem) => dcItem.id == config.data
