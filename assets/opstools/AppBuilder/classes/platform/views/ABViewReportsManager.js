@@ -150,13 +150,16 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                            if (!obj) return;
 
                            let reportFields = obj.fields().map((f) => {
+                              let columnFormat = f.columnHeader();
+
                               return {
                                  id: f.columnName,
                                  name: f.label,
-                                 filter: true,
+                                 filter: f.fieldIsFilterable(),
                                  edit: false,
-                                 // type: "number", // TODO
-                                 type: "text",
+                                 type: columnFormat.editor,
+                                 format: columnFormat.format,
+                                 options: columnFormat.options,
                                  ref: "",
                                  key: false,
                                  show: true
@@ -244,7 +247,29 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                         });
                      });
 
-                     return webix.promise.resolve(data || []);
+                     let currState = $$(ids.component).getState();
+                     if (!currState) return webix.promise.resolve([]);
+
+                     let currModule = currState.module;
+                     if (!currModule) return webix.promise.resolve([]);
+
+                     // create a new query widget to get the filter function
+                     let filterElem = webix.ui({
+                        view: "query",
+                        fields: currModule.columns,
+                        value: JSON.parse(config.query || "{}")
+                     });
+
+                     // create a new data collection and apply the query filter
+                     let tempDc = new webix.DataCollection();
+                     tempDc.parse(data);
+                     let result = tempDc.find(filterElem.getFilterFunction());
+
+                     // clear
+                     filterElem.destructor();
+                     tempDc.destructor();
+
+                     return result;
                   }
                   getOptions(fields) {
                      // TODO
