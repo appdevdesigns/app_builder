@@ -2491,6 +2491,12 @@ msgstr "Pivot"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.reportsManager
+msgid "Reports Manager"
+msgstr "Reports Manager"
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.list.title
 msgid "Data Objects"
 msgstr "Data Objects"
