@@ -225,6 +225,9 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                      )[0];
                      if (!dc) return webix.promise.resolve([]);
 
+                     let object = dc.datasource;
+                     if (!object) return webix.promise.resolve([]);
+
                      return Promise.resolve()
                         .then(
                            () =>
@@ -253,7 +256,13 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                                  (data || []).forEach((row) => {
                                     (config.columns || []).forEach((col) => {
                                        let columnName = col.split(".")[1]; // DC_ID.columnName format
-                                       row[col] = row[columnName];
+                                       let field = object.fields(
+                                          (f) => f.columnName == columnName
+                                       )[0];
+
+                                       row[col] = field
+                                          ? field.format(row)
+                                          : row[columnName];
 
                                        let rField = reportFields.filter(
                                           (f) => f.id == columnName
