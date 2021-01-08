@@ -169,17 +169,14 @@ module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
 
                   // bind a data collection to the display grid
                   datacollection.unbind($datatable);
+                  datacollection.bind($datatable);
+                  $datatable.adjust();
 
                   if (
                      datacollection.datacollectionLink &&
                      datacollection.fieldLink
                   ) {
-                     datacollection.bind(
-                        $datatable,
-                        datacollection.datacollectionLink,
-                        datacollection.fieldLink
-                     );
-                     $datatable.adjust();
+                     datacollection.bindParentDc();
 
                      // load data of parent DC, then our dc will trigger ."dataFeed"
                      let datacollectionLink = datacollection.datacollectionLink;
@@ -202,9 +199,6 @@ module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
                         datacollectionLink.setStaticCursor();
                      }
                   } else {
-                     datacollection.bind($datatable);
-                     $datatable.adjust();
-
                      // load data
                      if (
                         datacollection.dataStatus ==
@@ -234,3 +228,4 @@ module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
       };
    }
 };
+
