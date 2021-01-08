@@ -149,22 +149,8 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                            let obj = dc.datasource;
                            if (!obj) return;
 
-                           let reportFields = obj.fields().map((f) => {
-                              let columnFormat = f.columnHeader();
+                           let reportFields = _logic.getReportFields(dc);
 
-                              return {
-                                 id: f.columnName,
-                                 name: f.label,
-                                 filter: f.fieldIsFilterable(),
-                                 edit: false,
-                                 type: columnFormat.editor,
-                                 format: columnFormat.format,
-                                 options: columnFormat.options,
-                                 ref: "",
-                                 key: false,
-                                 show: true
-                              };
-                           });
                            reportModels[dc.id] = {
                               id: dc.id,
                               name: dc.label,
@@ -239,37 +225,69 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                      )[0];
                      if (!dc) return webix.promise.resolve([]);
 
-                     let data = dc.getData();
-                     (data || []).forEach((row) => {
-                        (config.columns || []).forEach((col) => {
-                           let columnName = col.split(".")[1]; // DC_ID.columnName format
-                           row[col] = row[columnName];
-                        });
-                     });
+                     return Promise.resolve()
+                        .then(() => new Promise((next, bad) => {
+                           if (dc.dataStatus == dc.dataStatusFlag.notInitial) {
+                              dc.loadData().catch(bad).then(() => next());
+                           }
+                           else {
+                              next();
+                           }
+                        }))
+                        .then(() => new Promise((next, bad) => {
+                           let reportsElem = $$(ids.component);
+                           if (!reportsElem) return next([]);
 
-                     let currState = $$(ids.component).getState();
-                     if (!currState) return webix.promise.resolve([]);
+                           let reportFields = _logic.getReportFields(dc);
 
-                     let currModule = currState.module;
-                     if (!currModule) return webix.promise.resolve([]);
+                           let data = dc.getData();
+                           (data || []).forEach((row) => {
+                              (config.columns || []).forEach((col) => {
+                                 let columnName = col.split(".")[1]; // DC_ID.columnName format
+                                 row[col] = row[columnName];
 
-                     // create a new query widget to get the filter function
-                     let filterElem = webix.ui({
-                        view: "query",
-                        fields: currModule.columns,
-                        value: JSON.parse(config.query || "{}")
-                     });
-
-                     // create a new data collection and apply the query filter
-                     let tempDc = new webix.DataCollection();
-                     tempDc.parse(data);
-                     let result = tempDc.find(filterElem.getFilterFunction());
-
-                     // clear
-                     filterElem.destructor();
-                     tempDc.destructor();
-
-                     return result;
+                                 let rField = reportFields.filter((f) => f.id == col)[0];
+                                 if (rField) {
+                                    switch (rField.type) {
+                                       case "text":
+                                          row[col] = (row[col] || "").toString();
+                                          break;
+                                       case "number":
+                                          row[col] = parseFloat(row[col] || 0);
+                                          break;
+                                    }
+                                 }
+                              });
+                           });
+      
+                           let currState = reportsElem.getState();
+                           if (!currState) return next([]);
+      
+                           let currModule = currState.module;
+                           if (!currModule) return next([]);
+      
+                           // create a new query widget to get the filter function
+                           let filterElem = webix.ui({
+                              view: "query",
+                              fields: _logic.getReportFields(dc),
+                              value: JSON.parse(config.query || "{}")
+                           });
+      
+                           // create a new data collection and apply the query filter
+                           let tempDc = new webix.DataCollection();
+                           tempDc.parse(data);
+                           let filterFn = {};
+                           try {
+                              filterFn = filterElem.getFilterFunction();
+                           } catch(error) {};
+                           let result = tempDc.find(filterFn);
+      
+                           // clear
+                           filterElem.destructor();
+                           tempDc.destructor();
+      
+                           return next(result);
+                        }));
                   }
                   getOptions(fields) {
                      // TODO
@@ -297,9 +315,36 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
          return Promise.resolve();
       };
 
+      let _logic = {
+         getReportFields: (dc) => {
+            if (!dc) return [];
+
+            let object = dc.datasource;
+            if (!object) return [];
+
+            return object.fields().map((f) => {
+               let columnFormat = f.columnHeader();
+
+               return {
+                  id: `${dc.id}.${f.columnName}`, // DC_ID.columnName format
+                  name: f.label,
+                  filter: f.fieldIsFilterable(),
+                  edit: false,
+                  type: columnFormat.editor || "text",
+                  format: columnFormat.format,
+                  options: columnFormat.options,
+                  ref: "",
+                  key: false,
+                  show: true
+               };
+            });
+         }
+      };
+
       return {
          ui: _ui,
          init: _init,
+         logic: _logic,
 
          onShow: baseCom.onShow
       };
