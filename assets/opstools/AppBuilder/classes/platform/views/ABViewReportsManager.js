@@ -305,11 +305,25 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                                  // create a new data collection and apply the query filter
                                  let tempDc = new webix.DataCollection();
                                  tempDc.parse(data);
-                                 let filterFn = {};
+
+                                 // sorting
+                                 (config.sort || []).forEach((sort) => {
+                                    if (sort.id)
+                                       tempDc.sort({
+                                          as: "string",
+                                          dir: sort.mod || "asc",
+                                          by: `#${sort.id}#`
+                                       });
+                                 });
+
+                                 // filter
+                                 let filterFn;
                                  try {
                                     filterFn = filterElem.getFilterFunction();
                                  } catch (error) {}
-                                 let result = tempDc.find(filterFn);
+                                 if (filterFn) tempDc.filter(filterFn);
+
+                                 let result = tempDc.serialize();
 
                                  // clear
                                  filterElem.destructor();
