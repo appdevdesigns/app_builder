@@ -197,6 +197,7 @@ module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
                      ) {
                         datacollectionLink.setCursor(null);
                         datacollectionLink.setStaticCursor();
+                        datacollectionLink.__dataCollection.refreshCursor();
                      }
                   } else {
                      // load data
@@ -228,4 +229,5 @@ module.exports = class AB_Work_Datacollection_Workspace extends ABComponent {
       };
    }
 };
+
 
