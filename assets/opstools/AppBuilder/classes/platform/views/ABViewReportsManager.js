@@ -151,11 +151,30 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
 
                            let reportFields = _logic.getReportFields(dc);
 
+                           // get connected data collections
+                           let linkedFields = [];
+                           (obj.connectFields() || []).forEach((f, index) => {
+                              let connectedDcs = compInstance.application.datacollections(
+                                 (dColl) =>
+                                    dColl &&
+                                    dColl.datasource &&
+                                    dColl.datasource.id == f.settings.linkObject
+                              );
+                              (connectedDcs || []).forEach((linkedDc) => {
+                                 linkedFields.push({
+                                    id: index + 1,
+                                    name: linkedDc.label,
+                                    source: dc.id,
+                                    target: linkedDc.id
+                                 });
+                              });
+                           });
+
                            reportModels[dc.id] = {
                               id: dc.id,
                               name: dc.label,
                               data: reportFields,
-                              refs: []
+                              refs: linkedFields
                            };
                         }
                      );
@@ -366,10 +385,12 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
             let object = dc.datasource;
             if (!object) return [];
 
-            return object.fields().map((f) => {
+            let fields = [];
+
+            object.fields().forEach((f) => {
                let columnFormat = f.columnHeader();
 
-               return {
+               fields.push({
                   id: f.columnName,
                   name: f.label,
                   filter: f.fieldIsFilterable(),
@@ -380,8 +401,31 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                   ref: "",
                   key: false,
                   show: true
-               };
+               });
+
+               if (f.key == "connectObject") {
+                  let linkedDcs = compInstance.application.datacollections(
+                     (dc) =>
+                        dc &&
+                        dc.datasource &&
+                        dc.datasource.id == f.settings.linkObject
+                  );
+                  (linkedDcs || []).forEach((linkDc) => {
+                     fields.push({
+                        id: `${f.id}_link`,
+                        name: f.label,
+                        filter: false,
+                        edit: false,
+                        type: "reference",
+                        ref: linkDc.id,
+                        key: false,
+                        show: false
+                     });
+                  });
+               }
             });
+
+            return fields;
          }
       };
 
