@@ -603,4 +603,8 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
 
       return detailComponentSetting;
    }
+
+   dateToString(dateFormat, dateData) {
+      return webix.Date.dateToStr(dateFormat)(dateData);
+   }
 };
