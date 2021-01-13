@@ -356,7 +356,7 @@ module.exports = class ABViewCSVExporter extends ABViewCSVExporterCore {
             let obj = dc.datasource;
 
             ClientFilter.applicationLoad(obj ? obj.application : null);
-            ClientFilter.fieldsLoad(obj ? obj.fields() : [], obj);
+            ClientFilter.fieldsLoad(obj ? obj.fields() : []);
          }
 
          ClientFilter.init({
