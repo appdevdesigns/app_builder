@@ -99,7 +99,10 @@ module.exports = {
                   ABDefinitionModel.find({ type: "application" })
                      .then((listApps) => {
                         listApps.forEach((def) => {
-                           if (def.json.json.processIDs.length) {
+                           if (
+                              def.json.json.processIDs &&
+                              def.json.json.processIDs.length
+                           ) {
                               apps.push(def.json);
                            }
                         });
@@ -111,7 +114,11 @@ module.exports = {
                }
             },
             (done) => {
-               if (req.query.version && req.query.version == "2") {
+               if (
+                  req.query.version &&
+                  req.query.version == "2" &&
+                  apps.length
+               ) {
                   apps.forEach((app) => {
                      app.processes = [];
                      app.json.processIDs.forEach((processDef) => {
