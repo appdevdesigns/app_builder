@@ -258,8 +258,8 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
          ]
       };
 
-      var _init = (options) => {
-         baseComp.init(options);
+      var _init = (options, accessLevel) => {
+         baseComp.init(options, accessLevel);
 
          this.populateFilterComponent();
 
