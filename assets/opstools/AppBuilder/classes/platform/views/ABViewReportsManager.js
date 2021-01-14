@@ -251,135 +251,177 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                   getData(config) {
                      let result = [];
                      let pullDataTasks = [];
-                     let dcInfos = [];
+                     let dcIds = [];
                      let dcData = {};
 
-                     // add load data of the base dc task
-                     dcInfos.push({
-                        datacollectionId: config.data,
-                        filter: config.query,
-                        sort: config.sort
-                     });
-
-                     // add load data of the joined dc task
+                     // pull data of the base and join DCs
+                     dcIds.push(config.data);
                      (config.joins || []).forEach((j) => {
-                        dcInfos.push({
-                           datacollectionId: j.sid
-                        });
-                        dcInfos.push({
-                           datacollectionId: j.tid
-                        });
+                        dcIds.push(j.sid);
+                        dcIds.push(j.tid);
                      });
-
-                     dcInfos = _.uniqBy(dcInfos, "datacollectionId");
-                     dcInfos.forEach((dcInfo) => {
+                     dcIds = _.uniq(dcIds);
+                     dcIds.forEach((dcId) => {
                         pullDataTasks.push(
                            new Promise((next, bad) => {
                               _logic
-                                 .getData({
-                                    datacollectionId: dcInfo.datacollectionId,
-                                    filter: dcInfo.filter,
-                                    sort: dcInfo.sort
-                                 })
+                                 .getData(dcId)
                                  .catch(bad)
                                  .then((data) => {
-                                    dcData[dcInfo.datacollectionId] =
-                                       data || [];
+                                    dcData[dcId] = data || [];
                                     next();
                                  });
                            })
                         );
                      });
 
-                     return Promise.resolve()
-                        .then(() => Promise.all(pullDataTasks))
-                        .then(
-                           () =>
-                              new Promise((next, bad) => {
-                                 // no join settings
-                                 if (!config.joins || !config.joins.length) {
+                     return (
+                        Promise.resolve()
+                           .then(() => Promise.all(pullDataTasks))
+                           .then(
+                              () =>
+                                 new Promise((next, bad) => {
+                                    // the data result equals data of the base DC
                                     result = dcData[config.data] || [];
-                                    return next();
-                                 }
 
-                                 (config.joins || []).forEach((j) => {
-                                    let sourceDc = compInstance.application.datacollections(
-                                       (dc) => dc.id == j.sid
-                                    )[0];
-                                    if (!sourceDc) return;
+                                    // no join settings
+                                    if (!config.joins || !config.joins.length) {
+                                       return next();
+                                    }
 
-                                    let sourceObj = sourceDc.datasource;
-                                    if (!sourceObj) return;
+                                    (config.joins || []).forEach((j) => {
+                                       let sourceDc = compInstance.application.datacollections(
+                                          (dc) => dc.id == j.sid
+                                       )[0];
+                                       if (!sourceDc) return;
 
-                                    let targetDc = compInstance.application.datacollections(
-                                       (dc) => dc.id == j.tid
-                                    )[0];
-                                    if (!targetDc) return;
+                                       let sourceObj = sourceDc.datasource;
+                                       if (!sourceObj) return;
 
-                                    let targetObj = targetDc.datasource;
-                                    if (!targetObj) return;
+                                       let targetDc = compInstance.application.datacollections(
+                                          (dc) => dc.id == j.tid
+                                       )[0];
+                                       if (!targetDc) return;
 
-                                    let sourceLinkField = sourceObj.fields(
-                                       (f) => f.id == j.sf
-                                    )[0];
-                                    let targetLinkField = targetObj.fields(
-                                       (f) => f.id == j.tf
-                                    )[0];
-                                    if (!sourceLinkField && !targetLinkField)
-                                       return;
+                                       let targetObj = targetDc.datasource;
+                                       if (!targetObj) return;
 
-                                    let sourceData = dcData[j.sid] || [];
-                                    let targetData = dcData[j.tid] || [];
-                                    sourceData.forEach((sData) => {
-                                       targetData.forEach((tData) => {
-                                          let sVal =
-                                             sData[
-                                                sourceLinkField
-                                                   ? `${j.sid}.${sourceLinkField.columnName}.id`
-                                                   : `${j.sid}.id`
-                                             ] || [];
+                                       let sourceLinkField = sourceObj.fields(
+                                          (f) => f.id == j.sf
+                                       )[0];
+                                       let targetLinkField = targetObj.fields(
+                                          (f) => f.id == j.tf
+                                       )[0];
+                                       if (!sourceLinkField && !targetLinkField)
+                                          return;
 
-                                          let tVal =
-                                             tData[
-                                                targetLinkField
-                                                   ? `${j.tid}.${targetLinkField.columnName}.id`
-                                                   : `${j.tid}.id`
-                                             ] || [];
+                                       let sourceData = dcData[j.sid] || [];
+                                       let targetData = dcData[j.tid] || [];
+                                       sourceData.forEach((sData) => {
+                                          targetData.forEach((tData) => {
+                                             let sVal =
+                                                sData[
+                                                   sourceLinkField
+                                                      ? `${j.sid}.${sourceLinkField.columnName}.id`
+                                                      : `${j.sid}.id`
+                                                ] || [];
 
-                                          if (!Array.isArray(sVal))
-                                             sVal = [sVal];
-                                          if (!Array.isArray(tVal))
-                                             tVal = [tVal];
+                                             let tVal =
+                                                tData[
+                                                   targetLinkField
+                                                      ? `${j.tid}.${targetLinkField.columnName}.id`
+                                                      : `${j.tid}.id`
+                                                ] || [];
 
-                                          // Add joined row to the result array
-                                          let matchedVal = sVal.filter(
-                                             (val) => tVal.indexOf(val) > -1
-                                          );
-                                          if (matchedVal && matchedVal.length) {
-                                             result.push(
-                                                _.extend(sData, tData)
+                                             if (!Array.isArray(sVal))
+                                                sVal = [sVal];
+                                             if (!Array.isArray(tVal))
+                                                tVal = [tVal];
+
+                                             // Add joined row to the result array
+                                             let matchedVal = sVal.filter(
+                                                (val) => tVal.indexOf(val) > -1
                                              );
-                                          }
+                                             if (
+                                                matchedVal &&
+                                                matchedVal.length
+                                             ) {
+                                                result.push(
+                                                   Object.assign(
+                                                      _.clone(sData),
+                                                      _.clone(tData)
+                                                   )
+                                                );
+                                             }
+                                          });
                                        });
                                     });
 
-                                    // replace joined array to source dc
-                                    dcData[j.sid] = result;
-                                 });
+                                    next();
+                                 })
+                           )
+                           // filter & sort
+                           .then(
+                              () =>
+                                 new Promise((next, bad) => {
+                                    let reportFields = [];
 
-                                 // remove id
-                                 (result || []).forEach((r) => {
-                                    Object.keys(r).forEach((prop) => {
-                                       if (prop.indexOf(".id") > -1)
-                                          delete r[prop];
+                                    dcIds.forEach((dcId) => {
+                                       let dataCol = compInstance.application.datacollections(
+                                          (dc) => dc.id == dcId
+                                       )[0];
+                                       if (!dataCol) return;
+
+                                       reportFields = reportFields.concat(
+                                          _logic
+                                             .getReportFields(dataCol)
+                                             .map((f) => {
+                                                // change format of id to match the report widget
+                                                f.id = `${dcId}.${f.id}`; // dc_id.field_id
+                                                return f;
+                                             })
+                                       );
                                     });
-                                    delete r.id;
-                                 });
 
-                                 next();
-                              })
-                        )
-                        .then(() => Promise.resolve(result));
+                                    // create a new query widget to get the filter function
+                                    let filterElem = webix.ui({
+                                       view: "query",
+                                       fields: reportFields,
+                                       value: JSON.parse(config.query || "{}")
+                                    });
+
+                                    // create a new data collection and apply the query filter
+                                    let tempDc = new webix.DataCollection();
+                                    tempDc.parse(result);
+
+                                    // filter
+                                    let filterFn;
+                                    try {
+                                       filterFn = filterElem.getFilterFunction();
+                                    } catch (error) {}
+                                    if (filterFn) tempDc.filter(filterFn);
+
+                                    // sorting
+                                    (config.sort || []).forEach((sort) => {
+                                       if (sort.id)
+                                          tempDc.sort({
+                                             as: "string",
+                                             dir: sort.mod || "asc",
+                                             by: `#${sort.id}#`
+                                          });
+                                    });
+
+                                    result = tempDc.serialize();
+
+                                    // clear
+                                    filterElem.destructor();
+                                    tempDc.destructor();
+
+                                    next();
+                                 })
+                           )
+                           .then(() => webix.promise.resolve(result))
+                     );
                   }
                   getOptions(fields) {
                      // TODO
@@ -457,7 +499,7 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
             return fields;
          },
 
-         getData: ({ datacollectionId, filter, sort }) => {
+         getData: (datacollectionId) => {
             let datacollection = compInstance.application.datacollections(
                (dcItem) => dcItem.id == datacollectionId
             )[0];
@@ -547,46 +589,7 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                            reportData.push(reportRow);
                         });
 
-                        // create a new query widget to get the filter function
-                        reportFields = reportFields.map((f) => {
-                           // change format of id to match the report widget
-                           f.id = `${datacollection.id}.${f.id}`; // dc_id.field_id
-                           return f;
-                        });
-                        let filterElem = webix.ui({
-                           view: "query",
-                           fields: reportFields,
-                           value: JSON.parse(filter || "{}")
-                        });
-
-                        // create a new data collection and apply the query filter
-                        let tempDc = new webix.DataCollection();
-                        tempDc.parse(reportData);
-
-                        // filter
-                        let filterFn;
-                        try {
-                           filterFn = filterElem.getFilterFunction();
-                        } catch (error) {}
-                        if (filterFn) tempDc.filter(filterFn);
-
-                        // sorting
-                        (sort || []).forEach((sort) => {
-                           if (sort.id)
-                              tempDc.sort({
-                                 as: "string",
-                                 dir: sort.mod || "asc",
-                                 by: `#${sort.id}#`
-                              });
-                        });
-
-                        let result = tempDc.serialize();
-
-                        // clear
-                        filterElem.destructor();
-                        tempDc.destructor();
-
-                        return next(result);
+                        return next(reportData);
                      })
                );
          }
