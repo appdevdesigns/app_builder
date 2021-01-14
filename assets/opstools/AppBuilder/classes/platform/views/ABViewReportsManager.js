@@ -152,29 +152,39 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                            let reportFields = _logic.getReportFields(dc);
 
                            // get connected data collections
-                           let linkedFields = [];
-                           (obj.connectFields() || []).forEach((f, index) => {
-                              let connectedDcs = compInstance.application.datacollections(
-                                 (dColl) =>
-                                    dColl &&
-                                    dColl.datasource &&
-                                    dColl.datasource.id == f.settings.linkObject
-                              );
-                              (connectedDcs || []).forEach((linkedDc) => {
-                                 linkedFields.push({
-                                    id: index + 1,
-                                    name: linkedDc.label,
-                                    source: dc.id,
-                                    target: linkedDc.id
-                                 });
-                              });
-                           });
+                           // let linkedFields = [];
+                           // (obj.connectFields() || []).forEach((f, index) => {
+                           //    let connectedDcs = compInstance.application.datacollections(
+                           //       (dColl) =>
+                           //          dColl &&
+                           //          dColl.datasource &&
+                           //          dColl.datasource.id == f.settings.linkObject
+                           //    );
+                           //    (connectedDcs || []).forEach((linkedDc) => {
+                           //       linkedFields.push({
+                           //          id: index + 1,
+                           //          name: linkedDc.label,
+                           //          source: dc.id,
+                           //          target: linkedDc.id
+                           //       });
+                           //    });
+                           // });
+
+                           // // MOCK UP for testing
+                           // let linkedFields = [
+                           //    {
+                           //       id: "id",
+                           //       name: "id",
+                           //       source: "39378ee0-38f0-4b9d-a5aa-dddc61137fcd", // Player
+                           //       target: "0de82362-4ab5-4f0f-8cfa-d1288d173cba" // Team
+                           //    }
+                           // ];
 
                            reportModels[dc.id] = {
                               id: dc.id,
                               name: dc.label,
                               data: reportFields,
-                              refs: linkedFields
+                              refs: []
                            };
                         }
                      );
@@ -239,118 +249,137 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                   }
 
                   getData(config) {
-                     let dc = compInstance.application.datacollections(
-                        (dcItem) => dcItem.id == config.data
-                     )[0];
-                     if (!dc) return webix.promise.resolve([]);
+                     let result = [];
+                     let pullDataTasks = [];
+                     let dcInfos = [];
+                     let dcData = {};
 
-                     let object = dc.datasource;
-                     if (!object) return webix.promise.resolve([]);
+                     // add load data of the base dc task
+                     dcInfos.push({
+                        datacollectionId: config.data,
+                        filter: config.query,
+                        sort: config.sort
+                     });
+
+                     // add load data of the joined dc task
+                     (config.joins || []).forEach((j) => {
+                        dcInfos.push({
+                           datacollectionId: j.sid
+                        });
+                        dcInfos.push({
+                           datacollectionId: j.tid
+                        });
+                     });
+
+                     dcInfos = _.uniqBy(dcInfos, "datacollectionId");
+                     dcInfos.forEach((dcInfo) => {
+                        pullDataTasks.push(
+                           new Promise((next, bad) => {
+                              _logic
+                                 .getData({
+                                    datacollectionId: dcInfo.datacollectionId,
+                                    filter: dcInfo.filter,
+                                    sort: dcInfo.sort
+                                 })
+                                 .catch(bad)
+                                 .then((data) => {
+                                    dcData[dcInfo.datacollectionId] =
+                                       data || [];
+                                    next();
+                                 });
+                           })
+                        );
+                     });
 
                      return Promise.resolve()
+                        .then(() => Promise.all(pullDataTasks))
                         .then(
                            () =>
                               new Promise((next, bad) => {
-                                 if (
-                                    dc.dataStatus ==
-                                    dc.dataStatusFlag.notInitial
-                                 ) {
-                                    dc.loadData()
-                                       .catch(bad)
-                                       .then(() => next());
-                                 } else {
-                                    next();
+                                 // no join settings
+                                 if (!config.joins || !config.joins.length) {
+                                    result = dcData[config.data] || [];
+                                    return next();
                                  }
+
+                                 (config.joins || []).forEach((j) => {
+                                    let sourceDc = compInstance.application.datacollections(
+                                       (dc) => dc.id == j.sid
+                                    )[0];
+                                    if (!sourceDc) return;
+
+                                    let sourceObj = sourceDc.datasource;
+                                    if (!sourceObj) return;
+
+                                    let targetDc = compInstance.application.datacollections(
+                                       (dc) => dc.id == j.tid
+                                    )[0];
+                                    if (!targetDc) return;
+
+                                    let targetObj = targetDc.datasource;
+                                    if (!targetObj) return;
+
+                                    let sourceLinkField = sourceObj.fields(
+                                       (f) => f.id == j.sf
+                                    )[0];
+                                    let targetLinkField = targetObj.fields(
+                                       (f) => f.id == j.tf
+                                    )[0];
+                                    if (!sourceLinkField && !targetLinkField)
+                                       return;
+
+                                    let sourceData = dcData[j.sid] || [];
+                                    let targetData = dcData[j.tid] || [];
+                                    sourceData.forEach((sData) => {
+                                       targetData.forEach((tData) => {
+                                          let sVal =
+                                             sData[
+                                                sourceLinkField
+                                                   ? `${j.sid}.${sourceLinkField.columnName}.id`
+                                                   : `${j.sid}.id`
+                                             ] || [];
+
+                                          let tVal =
+                                             tData[
+                                                targetLinkField
+                                                   ? `${j.tid}.${targetLinkField.columnName}.id`
+                                                   : `${j.tid}.id`
+                                             ] || [];
+
+                                          if (!Array.isArray(sVal))
+                                             sVal = [sVal];
+                                          if (!Array.isArray(tVal))
+                                             tVal = [tVal];
+
+                                          // Add joined row to the result array
+                                          let matchedVal = sVal.filter(
+                                             (val) => tVal.indexOf(val) > -1
+                                          );
+                                          if (matchedVal && matchedVal.length) {
+                                             result.push(
+                                                _.extend(sData, tData)
+                                             );
+                                          }
+                                       });
+                                    });
+
+                                    // replace joined array to source dc
+                                    dcData[j.sid] = result;
+                                 });
+
+                                 // remove id
+                                 (result || []).forEach((r) => {
+                                    Object.keys(r).forEach((prop) => {
+                                       if (prop.indexOf(".id") > -1)
+                                          delete r[prop];
+                                    });
+                                    delete r.id;
+                                 });
+
+                                 next();
                               })
                         )
-                        .then(
-                           () =>
-                              new Promise((next, bad) => {
-                                 let reportsElem = $$(ids.component);
-                                 if (!reportsElem) return next([]);
-
-                                 let reportFields = _logic.getReportFields(dc);
-
-                                 let data = dc.getData();
-                                 (data || []).forEach((row) => {
-                                    (config.columns || []).forEach((col) => {
-                                       let columnName = col.split(".")[1]; // DC_ID.columnName format
-                                       let field = object.fields(
-                                          (f) => f.columnName == columnName
-                                       )[0];
-
-                                       row[col] = field
-                                          ? field.format(row)
-                                          : row[columnName];
-
-                                       let rField = reportFields.filter(
-                                          (f) => f.id == columnName
-                                       )[0];
-                                       if (rField) {
-                                          switch (rField.type) {
-                                             case "text":
-                                                row[col] = (
-                                                   row[col] || ""
-                                                ).toString();
-                                                break;
-                                             case "number":
-                                                row[col] = parseFloat(
-                                                   row[col] || 0
-                                                );
-                                                break;
-                                          }
-                                       }
-                                    });
-                                 });
-
-                                 let currState = reportsElem.getState();
-                                 if (!currState) return next([]);
-
-                                 let currModule = currState.module;
-                                 if (!currModule) return next([]);
-
-                                 // create a new query widget to get the filter function
-                                 reportFields = reportFields.map((f) => {
-                                    // change format of id to match the report widget
-                                    f.id = `${dc.id}.${f.id}`; // dc_id.field_id
-                                    return f;
-                                 });
-                                 let filterElem = webix.ui({
-                                    view: "query",
-                                    fields: reportFields,
-                                    value: JSON.parse(config.query || "{}")
-                                 });
-
-                                 // create a new data collection and apply the query filter
-                                 let tempDc = new webix.DataCollection();
-                                 tempDc.parse(data);
-
-                                 // sorting
-                                 (config.sort || []).forEach((sort) => {
-                                    if (sort.id)
-                                       tempDc.sort({
-                                          as: "string",
-                                          dir: sort.mod || "asc",
-                                          by: `#${sort.id}#`
-                                       });
-                                 });
-
-                                 // filter
-                                 let filterFn;
-                                 try {
-                                    filterFn = filterElem.getFilterFunction();
-                                 } catch (error) {}
-                                 if (filterFn) tempDc.filter(filterFn);
-
-                                 let result = tempDc.serialize();
-
-                                 // clear
-                                 filterElem.destructor();
-                                 tempDc.destructor();
-
-                                 return next(result);
-                              })
-                        );
+                        .then(() => Promise.resolve(result));
                   }
                   getOptions(fields) {
                      // TODO
@@ -403,7 +432,7 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                   show: true
                });
 
-               if (f.key == "connectObject") {
+               if (f.key == "connectObject" && f.settings.isSource) {
                   let linkedDcs = compInstance.application.datacollections(
                      (dc) =>
                         dc &&
@@ -412,7 +441,7 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                   );
                   (linkedDcs || []).forEach((linkDc) => {
                      fields.push({
-                        id: `${f.id}_link`,
+                        id: f.id,
                         name: f.label,
                         filter: false,
                         edit: false,
@@ -426,6 +455,140 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
             });
 
             return fields;
+         },
+
+         getData: ({ datacollectionId, filter, sort }) => {
+            let datacollection = compInstance.application.datacollections(
+               (dcItem) => dcItem.id == datacollectionId
+            )[0];
+            if (!datacollection) return Promise.resolve([]);
+
+            let object = datacollection.datasource;
+            if (!object) return Promise.resolve([]);
+
+            return Promise.resolve()
+               .then(
+                  () =>
+                     new Promise((next, bad) => {
+                        if (
+                           datacollection.dataStatus ==
+                           datacollection.dataStatusFlag.notInitial
+                        ) {
+                           datacollection
+                              .loadData()
+                              .catch(bad)
+                              .then(() => next());
+                        } else {
+                           next();
+                        }
+                     })
+               )
+               .then(
+                  () =>
+                     new Promise((next, bad) => {
+                        let reportFields = _logic.getReportFields(
+                           datacollection
+                        );
+
+                        let reportData = [];
+                        let rawData = datacollection.getData();
+                        (rawData || []).forEach((row) => {
+                           let reportRow = { id: row.id };
+                           reportRow[`${datacollection.id}.id`] = row.id;
+
+                           object.fields().forEach((field) => {
+                              let columnName = field.columnName;
+                              let col = `${datacollection.id}.${columnName}`;
+
+                              reportRow[col] = field
+                                 ? field.format(row)
+                                 : row[columnName];
+
+                              // FK value of the connect field
+                              if (field && field.key == "connectObject") {
+                                 if (Array.isArray(row[columnName])) {
+                                    reportRow[`${col}.id`] = row[
+                                       columnName
+                                    ].map(
+                                       (link) =>
+                                          link[field.datasourceLink.PK()] ||
+                                          link.id ||
+                                          link
+                                    );
+                                 } else if (row[columnName]) {
+                                    reportRow[`${col}.id`] =
+                                       row[columnName][
+                                          field.datasourceLink.PK()
+                                       ] ||
+                                       row[columnName].id ||
+                                       row[columnName];
+                                 }
+                              }
+
+                              let rField = reportFields.filter(
+                                 (f) => f.id == columnName
+                              )[0];
+                              if (!rField) return;
+
+                              switch (rField.type) {
+                                 case "text":
+                                 case "reference":
+                                    reportRow[col] = (
+                                       reportRow[col] || ""
+                                    ).toString();
+                                    break;
+                                 case "number":
+                                    reportRow[col] = parseFloat(
+                                       reportRow[col] || 0
+                                    );
+                                    break;
+                              }
+                           });
+                           reportData.push(reportRow);
+                        });
+
+                        // create a new query widget to get the filter function
+                        reportFields = reportFields.map((f) => {
+                           // change format of id to match the report widget
+                           f.id = `${datacollection.id}.${f.id}`; // dc_id.field_id
+                           return f;
+                        });
+                        let filterElem = webix.ui({
+                           view: "query",
+                           fields: reportFields,
+                           value: JSON.parse(filter || "{}")
+                        });
+
+                        // create a new data collection and apply the query filter
+                        let tempDc = new webix.DataCollection();
+                        tempDc.parse(reportData);
+
+                        // filter
+                        let filterFn;
+                        try {
+                           filterFn = filterElem.getFilterFunction();
+                        } catch (error) {}
+                        if (filterFn) tempDc.filter(filterFn);
+
+                        // sorting
+                        (sort || []).forEach((sort) => {
+                           if (sort.id)
+                              tempDc.sort({
+                                 as: "string",
+                                 dir: sort.mod || "asc",
+                                 by: `#${sort.id}#`
+                              });
+                        });
+
+                        let result = tempDc.serialize();
+
+                        // clear
+                        filterElem.destructor();
+                        tempDc.destructor();
+
+                        return next(result);
+                     })
+               );
          }
       };
 
