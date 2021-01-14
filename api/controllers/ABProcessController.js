@@ -35,6 +35,7 @@ module.exports = {
       var User = req.AD.user();
       var user = User.userModel.uuid || User.userModel.id;
       var roles = [];
+      var apps = [];
       var inboxItems = null;
 
       async.series(
@@ -92,6 +93,41 @@ module.exports = {
                      done(err);
                   }
                );
+            },
+            (done) => {
+               if (req.query.version && req.query.version == "2") {
+                  ABDefinitionModel.find({ type: "application" })
+                     .then((listApps) => {
+                        listApps.forEach((def) => {
+                           if (def.json.json.processIDs.length) {
+                              apps.push(def.json);
+                           }
+                        });
+                        done();
+                     })
+                     .catch(done);
+               } else {
+                  done();
+               }
+            },
+            (done) => {
+               if (req.query.version && req.query.version == "2") {
+                  apps.forEach((app) => {
+                     app.processes = [];
+                     app.json.processIDs.forEach((processDef) => {
+                        ABDefinitionModel.find({ id: processDef })
+                           .then((listProcesses) => {
+                              listProcesses.forEach((def) => {
+                                 app.processes.push(def.json);
+                              });
+                              done();
+                           })
+                           .catch(done);
+                     });
+                  });
+               } else {
+                  done();
+               }
             }
          ],
          (err) => {
@@ -100,7 +136,26 @@ module.exports = {
                res.AD.error(err);
                return;
             }
-            res.AD.success(inboxItems);
+            if (req.query.version && req.query.version == "2") {
+               inboxItems.forEach((item) => {
+                  apps.forEach((app) => {
+                     app.processes.forEach((process) => {
+                        if (process.id == item.definition) {
+                           if (
+                              !process.tasks &&
+                              !Array.isArray(process.tasks)
+                           ) {
+                              process.tasks = [];
+                           }
+                           process.tasks.push(item);
+                        }
+                     });
+                  });
+               });
+               res.AD.success(apps);
+            } else {
+               res.AD.success(inboxItems);
+            }
          }
       );
    },
