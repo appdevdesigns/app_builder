@@ -90,7 +90,11 @@ module.exports = {
                   jobData,
                   (err, results) => {
                      inboxItems = results;
-                     done(err);
+                     if (err) {
+                        done(err);
+                     } else {
+                        done();
+                     }
                   }
                );
             },
@@ -119,19 +123,29 @@ module.exports = {
                   req.query.version == "2" &&
                   apps.length
                ) {
+                  var allFinds = [];
                   apps.forEach((app) => {
-                     app.processes = [];
-                     app.json.processIDs.forEach((processDef) => {
-                        ABDefinitionModel.find({ id: processDef })
-                           .then((listProcesses) => {
-                              listProcesses.forEach((def) => {
-                                 app.processes.push(def.json);
-                              });
-                              done();
-                           })
-                           .catch(done);
-                     });
+                     allFinds.push(
+                        new Promise((resolve, reject) => {
+                           app.processes = [];
+                           ABDefinitionModel.find({ id: app.json.processIDs })
+                              .then((listProcesses) => {
+                                 listProcesses.forEach((def) => {
+                                    app.processes.push(def.json);
+                                 });
+                                 resolve();
+                              })
+                              .catch(reject);
+                        })
+                     );
                   });
+                  Promise.all(allFinds)
+                     .then((vals) => {
+                        done();
+                     })
+                     .catch((err) => {
+                        done(err);
+                     });
                } else {
                   done();
                }
