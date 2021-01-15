@@ -346,12 +346,38 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                                                 matchedVal &&
                                                 matchedVal.length
                                              ) {
-                                                result.push(
-                                                   Object.assign(
-                                                      _.clone(sData),
-                                                      _.clone(tData)
-                                                   )
-                                                );
+                                                let updateRows =
+                                                   result.filter(
+                                                      (r) =>
+                                                         r[`${j.sid}.id`] ==
+                                                            sData[
+                                                               `${j.sid}.id`
+                                                            ] &&
+                                                         r[`${j.tid}.id`] ==
+                                                            null
+                                                   ) || [];
+
+                                                if (
+                                                   updateRows &&
+                                                   updateRows.length
+                                                ) {
+                                                   (updateRows || []).forEach(
+                                                      (r) => {
+                                                         for (let key in tData) {
+                                                            if (key != "id")
+                                                               r[key] =
+                                                                  tData[key];
+                                                         }
+                                                      }
+                                                   );
+                                                } else {
+                                                   result.push(
+                                                      Object.assign(
+                                                         _.clone(sData),
+                                                         _.clone(tData)
+                                                      )
+                                                   );
+                                                }
                                              }
                                           });
                                        });
