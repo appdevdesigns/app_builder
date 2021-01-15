@@ -443,6 +443,79 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                                     filterElem.destructor();
                                     tempDc.destructor();
 
+                                    // group by
+                                    if (config.group && config.group.length) {
+                                       (config.group || []).forEach(
+                                          (groupProp) => {
+                                             result = _(result).groupBy(
+                                                groupProp
+                                             );
+                                          }
+                                       );
+
+                                       result = result
+                                          .map((groupedData, id) => {
+                                             let groupedResult = {};
+
+                                             (config.columns || []).forEach(
+                                                (col) => {
+                                                   let agg = col.split(".")[0];
+                                                   let rawCol = col.replace(
+                                                      /sum.|avg.|count.|max.|min./g,
+                                                      ""
+                                                   );
+
+                                                   switch (agg) {
+                                                      case "sum":
+                                                         groupedResult[
+                                                            col
+                                                         ] = _.sumBy(
+                                                            groupedData,
+                                                            rawCol
+                                                         );
+                                                         break;
+                                                      case "avg":
+                                                         groupedResult[
+                                                            col
+                                                         ] = _.meanBy(
+                                                            groupedData,
+                                                            rawCol
+                                                         );
+                                                         break;
+                                                      case "count":
+                                                         groupedResult[col] = (
+                                                            groupedData || []
+                                                         ).length;
+                                                         break;
+                                                      case "max":
+                                                         groupedResult[col] =
+                                                            (_.maxBy(
+                                                               groupedData,
+                                                               rawCol
+                                                            ) || {})[rawCol] ||
+                                                            "";
+                                                         break;
+                                                      case "min":
+                                                         groupedResult[col] =
+                                                            (_.minBy(
+                                                               groupedData,
+                                                               rawCol
+                                                            ) || {})[rawCol] ||
+                                                            "";
+                                                         break;
+                                                      default:
+                                                         groupedResult[col] =
+                                                            groupedData[0][col];
+                                                         break;
+                                                   }
+                                                }
+                                             );
+
+                                             return groupedResult;
+                                          })
+                                          .value();
+                                    }
+
                                     next();
                                  })
                            )
