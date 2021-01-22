@@ -99,7 +99,7 @@ module.exports = class ABFieldSelectivity extends ABField {
                      options.highlighted ? " highlighted" : ""
                   }"
 								style="background-color: #eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"
-								data-item-id="${options.uuid}" data-field-id="${settings.field}">
+								data-item-id="${options.id}" data-field-id="${settings.field}">
 								<i class="fa fa-user" style="color: #666; opacity: 0.6;"></i> 
 								${options.text}
 								${
@@ -117,7 +117,7 @@ module.exports = class ABFieldSelectivity extends ABField {
                      options.highlighted ? " highlighted" : ""
                   }"
 								style="background-color: ${options.hex} !important;"
-								data-item-id="${options.uuid}" data-field-id="${settings.field}">
+								data-item-id="${options.id}" data-field-id="${settings.field}">
                         ${
                            settings.editPage
                               ? ` <a class="selectivity-multiple-selected-item-edit"><i class="fa fa-edit"></i></a>`
@@ -141,7 +141,7 @@ module.exports = class ABFieldSelectivity extends ABField {
          settings.templates = {
             singleSelectedItem: function(options) {
                return `<span class="selectivity-single-selected-item" data-item-id="${
-                  options.uuid
+                  options.id
                }" data-field-id="${settings.field}">
 							${
                         settings.editPage
