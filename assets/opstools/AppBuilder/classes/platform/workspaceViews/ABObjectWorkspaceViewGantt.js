@@ -187,7 +187,7 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
                            view: "richselect",
                            label: `<span class='webix_icon fa fa-calendar'></span> ${labels.component.startDate}`,
                            placeholder: labels.component.datePlaceholder,
-                           labelWidth: 180,
+                           labelWidth: 130,
                            name: "startDate",
                            required: true,
                            options: []
@@ -215,7 +215,7 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
                            view: "richselect",
                            label: `<span class='webix_icon fa fa-calendar'></span> ${labels.component.endDate}`,
                            placeholder: labels.component.datePlaceholder,
-                           labelWidth: 180,
+                           labelWidth: 130,
                            name: "endDate",
                            options: []
                         },
@@ -242,7 +242,7 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
                            view: "richselect",
                            label: `<span class='webix_icon fa fa-hashtag'></span> ${labels.component.duration}`,
                            placeholder: labels.component.numberPlaceholder,
-                           labelWidth: 180,
+                           labelWidth: 130,
                            name: "duration",
                            options: []
                         },
@@ -269,7 +269,7 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
                            view: "richselect",
                            label: `<span class='webix_icon fa fa-hashtag'></span> ${labels.component.progress}`,
                            placeholder: labels.component.numberPlaceholder,
-                           labelWidth: 180,
+                           labelWidth: 130,
                            name: "progress",
                            required: false,
                            options: []
@@ -297,7 +297,7 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
                            view: "richselect",
                            label: `<span class='webix_icon fa fa-align-right'></span> ${labels.component.notes}`,
                            placeholder: labels.component.stringPlaceholder,
-                           labelWidth: 180,
+                           labelWidth: 130,
                            name: "notes",
                            required: false,
                            options: []

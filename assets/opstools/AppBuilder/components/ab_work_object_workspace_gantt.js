@@ -118,9 +118,10 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
                                  () =>
                                     new Promise((next, bad) => {
                                        if (
+                                          CurrentDatacollection &&
                                           CurrentDatacollection.dataStatus !=
-                                          CurrentDatacollection.dataStatusFlag
-                                             .initialized
+                                             CurrentDatacollection
+                                                .dataStatusFlag.initialized
                                        ) {
                                           CurrentDatacollection.loadData()
                                              .catch(bad)
@@ -135,6 +136,9 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
                               .then(
                                  () =>
                                     new Promise((next, bad) => {
+                                       if (!CurrentDatacollection)
+                                          return next([]);
+
                                        next(
                                           (
                                              CurrentDatacollection.getData() ||
@@ -204,11 +208,13 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
             if (!CurrentGanttView) return;
 
             // Fields
-            CurrentStartDateField = CurrentGanttView.startDateField;
-            CurrentEndDateField = CurrentGanttView.endDateField;
-            CurrentDurationField = CurrentGanttView.durationField;
-            CurrentProgressField = CurrentGanttView.progressField;
-            CurrentNotesField = CurrentGanttView.notesField;
+            this.setFields({
+               startDateField: CurrentGanttView.startDateField,
+               endDateField: CurrentGanttView.endDateField,
+               durationField: CurrentGanttView.durationField,
+               progressField: CurrentGanttView.progressField,
+               notesField: CurrentGanttView.notesField
+            });
          },
 
          objectLoad: (object) => {
@@ -255,6 +261,20 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
                if (_logic.ganttElement.isExistsTask(taskId))
                   _logic.ganttElement.removeTask(taskId);
             });
+         },
+
+         setFields: ({
+            startDateField,
+            endDateField,
+            durationField,
+            progressField,
+            notesField
+         }) => {
+            CurrentStartDateField = startDateField;
+            CurrentEndDateField = endDateField;
+            CurrentDurationField = durationField;
+            CurrentProgressField = progressField;
+            CurrentNotesField = notesField;
          },
 
          getCurrentView: () => {
@@ -319,12 +339,20 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
             dcTasks.clearAll();
 
             let gantt_data = {
-               data: (CurrentDatacollection.getData() || []).map((d, index) =>
-                  _logic.convertFormat(d)
-               )
+               data: CurrentDatacollection
+                  ? (CurrentDatacollection.getData() || []).map((d, index) =>
+                       _logic.convertFormat(d)
+                    )
+                  : []
             };
 
-            dcTasks.parse(gantt_data);
+            // check required fields before parse
+            if (
+               CurrentStartDateField &&
+               (CurrentEndDateField || CurrentDurationField)
+            ) {
+               dcTasks.parse(gantt_data);
+            }
 
             // Keep original start and end dates for calculate scale to display
             const currScale = dataService.getScales();
@@ -381,7 +409,8 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
          convertValues: (task) => {
             let patch = {};
 
-            patch[CurrentStartDateField.columnName] = task["start_date"];
+            if (CurrentStartDateField)
+               patch[CurrentStartDateField.columnName] = task["start_date"];
 
             if (CurrentProgressField)
                patch[CurrentProgressField.columnName] = parseFloat(
@@ -399,8 +428,6 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
 
             return patch;
          },
-
-         addTask: () => {},
 
          updateTask: (rowId, updatedTask) => {
             let patch = _logic.convertValues(updatedTask);
@@ -505,6 +532,6 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
       this.show = _logic.show;
       this.objectLoad = _logic.objectLoad;
       this.datacollectionLoad = _logic.datacollectionLoad;
-      this.addTask = _logic.addTask;
+      this.setFields = _logic.setFields;
    }
 };
