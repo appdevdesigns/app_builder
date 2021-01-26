@@ -97,6 +97,14 @@ module.exports = class ABViewGantt extends ABViewGanttCore {
       if (dc && dc.datasource) {
          this._ganttProperty.init(dc.datasource);
       }
+
+      $$(ids.fields).setValues({
+         startDate: view.settings.startDateFieldID,
+         endDate: view.settings.endDateFieldID,
+         duration: view.settings.durationFieldID,
+         progress: view.settings.progressFieldID,
+         notes: view.settings.notesFieldID
+      });
    }
 
    static propertyEditorValues(ids, view) {
@@ -151,9 +159,6 @@ module.exports = class ABViewGantt extends ABViewGanttCore {
          let obj = dc.datasource;
          if (!obj) return;
 
-         ganttView.objectLoad(obj);
-         ganttView.datacollectionLoad(dc);
-
          ganttView.setFields({
             startDateField: obj.fields(
                (f) => f.id == this.settings.startDateFieldID
@@ -173,6 +178,9 @@ module.exports = class ABViewGantt extends ABViewGanttCore {
 
             notesField: obj.fields((f) => f.id == this.settings.notesFieldID)[0]
          });
+
+         ganttView.objectLoad(obj);
+         ganttView.datacollectionLoad(dc);
       };
 
       return {
