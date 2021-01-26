@@ -60,6 +60,7 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
       let CurrentObject = null,
          CurrentDatacollection = null,
          CurrentGanttView = null,
+         CurrentTitleField = null,
          CurrentStartDateField = null,
          CurrentEndDateField = null,
          CurrentDurationField = null,
@@ -153,6 +154,16 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
                         links() {
                            return Promise.resolve([]);
                         }
+                        addTask(obj, index, parent) {
+                           return new webix.promise((success, fail) => {
+                              _logic
+                                 .addTask(obj)
+                                 .then((newTask) =>
+                                    success({ id: (newTask || {}).id })
+                                 )
+                                 .catch(fail);
+                           });
+                        }
                         updateTask(id, obj) {
                            return new webix.promise((success, fail) => {
                               _logic
@@ -209,6 +220,7 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
 
             // Fields
             this.setFields({
+               titleField: CurrentGanttView.titleField,
                startDateField: CurrentGanttView.startDateField,
                endDateField: CurrentGanttView.endDateField,
                durationField: CurrentGanttView.durationField,
@@ -264,12 +276,14 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
          },
 
          setFields: ({
+            titleField,
             startDateField,
             endDateField,
             durationField,
             progressField,
             notesField
          }) => {
+            CurrentTitleField = titleField;
             CurrentStartDateField = startDateField;
             CurrentEndDateField = endDateField;
             CurrentDurationField = durationField;
@@ -378,7 +392,9 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
             data["parent"] = 0;
             data["open"] = true;
             // define label
-            data["text"] = CurrentObject.displayData(row);
+            data["text"] = CurrentTitleField
+               ? row[CurrentTitleField.columnName] || ""
+               : CurrentObject.displayData(row);
             data["start_date"] =
                row[CurrentStartDateField.columnName] || currDate;
             data["progress"] = CurrentProgressField
@@ -409,6 +425,9 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
          convertValues: (task) => {
             let patch = {};
 
+            if (CurrentTitleField)
+               patch[CurrentTitleField.columnName] = task["text"] || "";
+
             if (CurrentStartDateField)
                patch[CurrentStartDateField.columnName] = task["start_date"];
 
@@ -427,6 +446,23 @@ module.exports = class ABWorkObjectGantt extends ABComponent {
                patch[CurrentDurationField.columnName] = task["duration"];
 
             return patch;
+         },
+
+         addTask: (taskData) => {
+            let patch = _logic.convertValues(taskData);
+
+            return new Promise((resolve, reject) => {
+               CurrentObject.model()
+                  .create(patch)
+                  .then((result) => {
+                     resolve(result);
+                  })
+                  .catch((err) => {
+                     OP.Error.log("Error saving item:", { error: err });
+
+                     reject(err);
+                  });
+            });
          },
 
          updateTask: (rowId, updatedTask) => {

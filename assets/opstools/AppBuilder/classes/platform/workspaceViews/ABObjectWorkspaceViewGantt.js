@@ -16,6 +16,7 @@ var defaultValues = {
    name: "Default Gantt",
    filterConditions: [], // array of filters to apply to the data table
    sortFields: [],
+   title: null, // id of a ABFieldString, ABFieldLongText
    startDate: null, // id of a ABFieldDate
    endDate: "none", // id of a ABFieldDate
    duration: "none", // id of a ABFieldNumber
@@ -54,6 +55,7 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
 
    static component(App, idBase) {
       let ids = {
+         title: App.unique(idBase + "_popupGanttTitle"),
          startDate: App.unique(idBase + "_popupGanttStartDate"),
          endDate: App.unique(idBase + "_popupGanttEndDate"),
          duration: App.unique(idBase + "_popupGanttDuration"),
@@ -68,6 +70,7 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
       let labels = {
          common: App.labels,
          component: {
+            title: L("ab.add_view.gantt.title", "*Title"),
             startDate: L("ab.add_view.gantt.startDate", "*Start Date"),
             endDate: L("ab.add_view.gantt.endDate", "*End Date"),
             duration: L("ab.add_view.gantt.duration", "*Duration"),
@@ -120,12 +123,7 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
 
          // Progress
          let decimalFields = object
-            .fields(
-               (f) =>
-                  f instanceof ABFieldNumber &&
-                  f.settings.typeDecimals &&
-                  f.settings.typeDecimals != "none"
-            )
+            .fields((f) => f instanceof ABFieldNumber)
             .map(({ id, label }) => ({ id, value: label }));
          $$(ids.progress).define("options", decimalFields);
 
@@ -135,9 +133,15 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
                (f) => f instanceof ABFieldString || f instanceof ABFieldLongText
             )
             .map(({ id, label }) => ({ id, value: label }));
+         $$(ids.title).define("options", stringFields);
          $$(ids.notes).define("options", stringFields);
 
          // Select view's values
+         if (view && view.title) {
+            $$(ids.title).define("value", view.title);
+            $$(ids.title).refresh();
+         }
+
          if (view && view.startDate) {
             $$(ids.startDate).define("value", view.startDate);
             $$(ids.startDate).refresh();
@@ -180,6 +184,33 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
             return {
                batch: "gantt",
                rows: [
+                  {
+                     cols: [
+                        {
+                           id: ids.title,
+                           view: "richselect",
+                           label: `<span class='webix_icon fa fa-calendar'></span> ${labels.component.title}`,
+                           placeholder: labels.component.stringPlaceholder,
+                           labelWidth: 130,
+                           name: "title",
+                           options: []
+                        },
+                        {
+                           view: "button",
+                           css: "webix_primary",
+                           type: "icon",
+                           icon: "fa fa-plus",
+                           label: "",
+                           width: 20,
+                           click: () => {
+                              PopupNewDataFieldComponent.show(
+                                 null,
+                                 ABFieldString.defaults().key
+                              );
+                           }
+                        }
+                     ]
+                  },
                   {
                      cols: [
                         {
@@ -358,6 +389,7 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
          values: function() {
             let result = {};
 
+            result.title = $$(ids.title).getValue() || defaultValues.title;
             result.startDate =
                $$(ids.startDate).getValue() || defaultValues.startDate;
             result.endDate =
@@ -407,6 +439,13 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
 
       obj.type = ABObjectWorkspaceViewGantt.type();
       return obj;
+   }
+
+   get titleField() {
+      let viewCollection = this.object, // Should use another name property ?
+         object = viewCollection.object;
+
+      return object.fields((f) => f.id == this.title)[0];
    }
 
    get startDateField() {

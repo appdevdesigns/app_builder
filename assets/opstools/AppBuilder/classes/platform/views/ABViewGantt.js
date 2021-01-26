@@ -99,6 +99,7 @@ module.exports = class ABViewGantt extends ABViewGanttCore {
       }
 
       $$(ids.fields).setValues({
+         title: view.settings.titleFieldID,
          startDate: view.settings.startDateFieldID,
          endDate: view.settings.endDateFieldID,
          duration: view.settings.durationFieldID,
@@ -121,6 +122,8 @@ module.exports = class ABViewGantt extends ABViewGanttCore {
 
       let fieldIds = $$(ids.fields).getValues() || {};
 
+      view.settings.titleFieldID =
+         fieldIds.title || ABViewGanttPropertyComponentDefaults.titleFieldID;
       view.settings.startDateFieldID =
          fieldIds.startDate ||
          ABViewGanttPropertyComponentDefaults.startDateFieldID;
@@ -160,6 +163,10 @@ module.exports = class ABViewGantt extends ABViewGanttCore {
          if (!obj) return;
 
          ganttView.setFields({
+            titleField: obj.fields(
+               (f) => f.id == this.settings.titleFieldID
+            )[0],
+
             startDateField: obj.fields(
                (f) => f.id == this.settings.startDateFieldID
             )[0],
