@@ -2419,6 +2419,12 @@ msgstr "Grid"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.gantt
+msgid "Gantt"
+msgstr "Gantt"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.docxBuilder
 msgid "DOCX Builder"
 msgstr "DOCX Builder"
