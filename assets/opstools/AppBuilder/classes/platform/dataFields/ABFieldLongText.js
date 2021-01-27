@@ -165,7 +165,7 @@ module.exports = class ABFieldLongText extends ABFieldLongTextCore {
       config.editor = "text"; // '[edit_type]'   for your unique situation
       // config.sort = 'string' // '[sort_type]'   for your unique situation
       config.template = (obj, common, value, col, ind) => {
-         return value.replace(/[<]/g, "&lt;");
+         return (value || "").toString().replace(/[<]/g, "&lt;");
       };
 
       return config;
@@ -224,3 +224,4 @@ module.exports = class ABFieldLongText extends ABFieldLongTextCore {
       super.setValue(item, rowData, "");
    }
 };
+
