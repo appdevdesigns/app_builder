@@ -48,7 +48,7 @@ module.exports = class ABTotalFooter {
                   }
                });
 
-               node.firstChild.innerHTML = result;
+               node.innerHTML = result;
             }
          },
          webix.ui.datafilter.summColumn

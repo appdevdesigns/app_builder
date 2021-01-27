@@ -182,6 +182,7 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
          var newEditorList = {
             view: "multiview",
             id: ids.editDefinitions,
+            animate: false,
             rows: []
          };
 

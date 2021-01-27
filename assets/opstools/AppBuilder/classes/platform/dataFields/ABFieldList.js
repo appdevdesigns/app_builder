@@ -76,6 +76,7 @@ function updateDefaultList(ids, settings = {}) {
       var domNode = $$(ids.multipleDefault).$view.querySelector(
          ".list-data-values"
       );
+      if (!domNode) return false;
 
       // TODO : use to render selectivity to set default values
       let selectivityRender = new ABFieldSelectivity(
@@ -236,6 +237,7 @@ var ABFieldListComponent = new ABFieldComponent({
                         view: "popup",
                         body: {
                            view: "colorboard",
+                           type: "classic",
                            id: "color",
                            width: 125,
                            height: 150,

@@ -344,7 +344,7 @@ label {
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
-.webix_dtable .webix_ss_footer td:hover , .webix_dtable .webix_ss_header td:hover {
+.webix_dtable .webix_ss_footer .webix_hcell:hover , .webix_dtable .webix_ss_header .webix_hcell:hover {
 	border-right-color: #dadee0;
 }
 
