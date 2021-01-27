@@ -16,12 +16,12 @@ var defaultValues = {
    name: "Default Gantt",
    filterConditions: [], // array of filters to apply to the data table
    sortFields: [],
-   title: null, // id of a ABFieldString, ABFieldLongText
+   title: "none", // id of a ABFieldString, ABFieldLongText
    startDate: null, // id of a ABFieldDate
    endDate: "none", // id of a ABFieldDate
    duration: "none", // id of a ABFieldNumber
-   progress: null, // id of a ABFieldNumber - decimal
-   notes: null // id of a ABFieldString, ABFieldLongText
+   progress: "none", // id of a ABFieldNumber
+   notes: "none" // id of a ABFieldString, ABFieldLongText
 };
 
 module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView {
@@ -125,14 +125,26 @@ module.exports = class ABObjectWorkspaceViewGantt extends ABObjectWorkspaceView 
          let decimalFields = object
             .fields((f) => f instanceof ABFieldNumber)
             .map(({ id, label }) => ({ id, value: label }));
+
+         // Add default option
+         decimalFields.unshift({
+            id: "none",
+            value: labels.component.numberPlaceholder
+         });
          $$(ids.progress).define("options", decimalFields);
 
-         // Notes
+         // Title & Notes
          let stringFields = object
             .fields(
                (f) => f instanceof ABFieldString || f instanceof ABFieldLongText
             )
             .map(({ id, label }) => ({ id, value: label }));
+
+         // Add default option
+         stringFields.unshift({
+            id: "none",
+            value: labels.component.stringPlaceholder
+         });
          $$(ids.title).define("options", stringFields);
          $$(ids.notes).define("options", stringFields);
 
