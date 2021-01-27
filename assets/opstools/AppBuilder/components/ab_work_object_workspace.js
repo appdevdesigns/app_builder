@@ -1040,9 +1040,6 @@ module.exports = class ABWorkObjectWorkspace extends ABComponent {
                case "kanban":
                   KanBan.addCard();
                   break;
-               case "gantt":
-                  Gantt.addTask();
-                  break;
                case "grid":
                default:
                   DataTable.addRow();

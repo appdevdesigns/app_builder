@@ -692,4 +692,8 @@ module.exports = class ABObject extends ABObjectCore {
    currentView() {
       return this.workspaceViews.getCurrentView();
    }
+
+   isUuid(text) {
+      return OP.Util.isUuid(text);
+   }
 };

@@ -2419,6 +2419,12 @@ msgstr "Grid"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.gantt
+msgid "Gantt"
+msgstr "Gantt"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.docxBuilder
 msgid "DOCX Builder"
 msgstr "DOCX Builder"
@@ -2488,6 +2494,12 @@ msgstr "Tree"
 #. key: ab.components.pivot
 msgid "Pivot"
 msgstr "Pivot"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.reportsManager
+msgid "Reports Manager"
+msgstr "Reports Manager"
 
 #. path: app_builder
 #. code: en

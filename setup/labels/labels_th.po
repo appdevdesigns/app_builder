@@ -2401,6 +2401,12 @@ msgstr "ตาราง"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.gantt
+msgid "Gantt"
+msgstr "แกนต์"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.image
 msgid "Image"
 msgstr "รูปภาพ"
@@ -2464,6 +2470,12 @@ msgstr "[th] Tree"
 #. key: ab.components.pivot
 msgid "Pivot"
 msgstr "[th] Pivot"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.reportsManager
+msgid "Reports Manager"
+msgstr "[th] Reports Manager"
 
 #. path: app_builder
 #. code: th
