@@ -218,6 +218,15 @@ module.exports = class ABViewLayout extends ABViewLayoutCore {
       this.views().forEach((v) => {
          this.viewComponents[v.id] = v.component(App, idPrefix);
          _ui.cols.push(this.viewComponents[v.id].ui);
+
+         // Trigger 'changePage' event to parent
+         this.eventAdd({
+            emitter: v,
+            eventName: "changePage",
+            listener: (pageId) => {
+               this.changePage(pageId);
+            }
+         });
       });
 
       // make sure each of our child views get .init() called
@@ -252,3 +261,4 @@ module.exports = class ABViewLayout extends ABViewLayoutCore {
       };
    }
 };
+
