@@ -965,8 +965,22 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                   _logic.busy();
                });
                CurrentDatacollection.on("initializedData", () => {
-                  _logic.grouping();
                   _logic.ready();
+               });
+               CurrentDatacollection.on("loadData", () => {
+                  let $treetable = $$(this.ui.id);
+                  if (
+                     $treetable &&
+                     $treetable.config.view == "treetable" &&
+                     CurrentObject &&
+                     !CurrentObject.isGroup
+                  ) {
+                     $treetable.clearAll();
+                     $treetable.parse(CurrentDatacollection.getData());
+
+                     _logic.grouping();
+                     _logic.ready();
+                  }
                });
                _logic.grouping();
             } else DataTable.unbind();
@@ -1667,3 +1681,4 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
       this.show = _logic.show;
    }
 };
+

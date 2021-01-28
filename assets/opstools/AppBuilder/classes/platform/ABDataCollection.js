@@ -283,21 +283,21 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
                   );
                }
 
-               // NOTE : treetable should use .parse or TreeCollection
-               // https://forum.webix.com/discussion/1694/tree-and-treetable-using-data-from-datacollection
-               if (
-                  component.config.view == "treetable" &&
-                  !this.datasource.isGroup
-               ) {
-                  component.___AD = component.___AD || {};
-                  if (!component.___AD.onDcLoadData) {
-                     component.___AD.onDcLoadData = () => {
-                        component.parse(dc.find({}));
-                     };
+               // // NOTE : treetable should use .parse or TreeCollection
+               // // https://forum.webix.com/discussion/1694/tree-and-treetable-using-data-from-datacollection
+               // if (
+               //    component.config.view == "treetable" &&
+               //    !this.datasource.isGroup
+               // ) {
+               //    component.___AD = component.___AD || {};
+               //    if (!component.___AD.onDcLoadData) {
+               //       component.___AD.onDcLoadData = () => {
+               //          component.parse(dc.find({}));
+               //       };
 
-                     this.on("loadData", component.___AD.onDcLoadData);
-                  }
-               }
+               //       this.on("loadData", component.___AD.onDcLoadData);
+               //    }
+               // }
             }
          } else {
             component.data.unsync();
@@ -527,4 +527,5 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
       return OP.User.scopes();
    }
 };
+
 
