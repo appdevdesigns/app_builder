@@ -2227,7 +2227,45 @@ steal(
                               self.initAMP();
                            }
                         }
-                        self.initQTT();
+                        if (self.rootPage.application.isTranslationManaged) {
+                           var shouldInitQTT = false;
+                           if (
+                              parseInt(
+                                 self.rootPage.application.translationManagers
+                                    .useRole
+                              ) == 1
+                           ) {
+                              self.rootPage.application
+                                 .userRoles()
+                                 .forEach((role) => {
+                                    if (
+                                       self.rootPage.application.translationManagers.role.indexOf(
+                                          role.id
+                                       ) > -1
+                                    ) {
+                                       shouldInitQTT = true;
+                                    }
+                                 });
+                           }
+                           if (
+                              !shouldInitQTT &&
+                              parseInt(
+                                 self.rootPage.application.translationManagers
+                                    .useAccount
+                              ) == 1
+                           ) {
+                              if (
+                                 self.rootPage.application.translationManagers.account.indexOf(
+                                    OP.User.id() + ""
+                                 ) > -1
+                              ) {
+                                 shouldInitQTT = true;
+                              }
+                           }
+                           if (shouldInitQTT) {
+                              self.initQTT();
+                           }
+                        }
 
                         webix.ready(function() {
                            self.showPage();
