@@ -156,12 +156,14 @@ module.exports = class ABViewRuleActionFormRecordRuleUpdateConnected extends ABV
                id: ids.selectConnectedField,
                view: "richselect",
                label: this.labels.component.selectField,
-               labelWidth: this.App.config.labelWidthXXXLarge,
+               labelWidth: 300,
                value: this.selectedField,
                options: this.fieldDropList,
                on: {
                   onChange: (newVal, oldVal) => {
-                     _logic.selectAction(newVal, oldVal);
+                     if (!this.isUpdateValueDisabled) {
+                        _logic.selectAction(newVal, oldVal);
+                     }
                   }
                }
             }
