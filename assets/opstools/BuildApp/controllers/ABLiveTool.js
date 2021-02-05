@@ -1892,6 +1892,7 @@ steal(
                               .views((v) => v.defaults.key == "menu")
                               .forEach((menu, menuIndex) => {
                                  // menu buttons
+                                 if (!menu.settings.order) return;
                                  menu.settings.order.forEach(
                                     (menuItem, menuItemIndex) => {
                                        // tab items will be below sub-page items
