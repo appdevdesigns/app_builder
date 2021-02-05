@@ -161,9 +161,7 @@ module.exports = class ABViewRuleActionFormRecordRuleUpdateConnected extends ABV
                options: this.fieldDropList,
                on: {
                   onChange: (newVal, oldVal) => {
-                     if (!this.isUpdateValueDisabled) {
-                        _logic.selectAction(newVal, oldVal);
-                     }
+                     _logic.selectAction(newVal, oldVal);
                   }
                }
             }
@@ -223,6 +221,14 @@ module.exports = class ABViewRuleActionFormRecordRuleUpdateConnected extends ABV
                // create a new blank update form
                _logic.addDisplay(this.updateComponent.ui);
                this.updateComponent.init();
+
+               if (this.isUpdateValueDisabled) {
+                  let $updateForm = $$(this.updateComponent.ui.id);
+                  if ($updateForm) {
+                     $updateForm.disable();
+                     $updateForm.hide();
+                  }
+               }
             } else {
                OP.Error.log("!!! No connectedObject found.", {
                   fieldID: this.selectedFieldID
