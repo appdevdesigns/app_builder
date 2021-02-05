@@ -413,52 +413,10 @@ steal(
                                     `<span>` +
                                     icon +
                                     common.icon(obj, common) +
-                                    `<span>${obj.value}</span><i style="float:right; color: lightgray" class="externalLink fa fa-external-link"></i>`
+                                    `<span>${obj.value}</span>`
                                  );
                               },
                               data: [],
-                              onClick: {
-                                 externalLink: (event, branch, target) => {
-                                    var item = $$(
-                                       "linetree_" +
-                                          self.containerDomID +
-                                          "_objects"
-                                    ).getItem(branch);
-                                    if (item.type == "tab") {
-                                       self.showPage(item.pageId);
-
-                                       var tabView = self.rootPage.application.views(
-                                          (v) => v.id == item.id
-                                       )[0];
-                                       if (!tabView) return false;
-
-                                       var tab = tabView.parent;
-                                       if (!tab) return false;
-
-                                       toggleParent(tab);
-                                       if (
-                                          !$$(tabView.id) ||
-                                          !$$(tabView.id).isVisible()
-                                       ) {
-                                          var showIt = setInterval(function() {
-                                             if (
-                                                $$(tabView.id) &&
-                                                $$(tabView.id).isVisible()
-                                             ) {
-                                                clearInterval(showIt);
-                                             }
-                                             tab.emit("changeTab", tabView.id);
-                                          }, 200);
-                                       }
-                                    }
-                                    // switch page
-                                    else {
-                                       self.showPage(item.id);
-                                    }
-
-                                    return false;
-                                 }
-                              },
                               on: {
                                  onAfterLoad: function(id) {
                                     if (
@@ -677,6 +635,14 @@ steal(
                                  if (!obj.icon) {
                                     obj.icon = "minus";
                                  }
+                                 var externalLink = "";
+                                 if (
+                                    ["button", "label", "menu"].indexOf(
+                                       obj.type
+                                    ) == -1
+                                 ) {
+                                    externalLink = `<i style="float:right; color: lightgray" class="externalLink fa fa-external-link"></i>`;
+                                 }
                                  var icon = `<span class="fa-stack" style="margin: 0 5px 0 4px;">
                                              <i style="color: ${color};" class="fa fa-circle fa-stack-2x"></i>
                                              <i class="fa fa-${obj.icon} fa-stack-1x fa-inverse"></i>
@@ -685,7 +651,8 @@ steal(
                                     `<span>` +
                                     icon +
                                     common.icon(obj, common) +
-                                    `<span>${obj.value}</span><i style="float:right; color: lightgray" class="externalLink fa fa-external-link"></i>`
+                                    `<span>${obj.value}</span>` +
+                                    externalLink
                                  );
                               },
                               data: [],
