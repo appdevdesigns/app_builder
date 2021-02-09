@@ -872,7 +872,7 @@ module.exports = class ABClassObject extends ABObjectCore {
                            if (!scopes || scopes.length < 1) return next(true);
 
                            let scopeWhere = {
-                              glue: "or",
+                              glue: "and",
                               rules: []
                            };
 
@@ -2046,3 +2046,4 @@ module.exports = class ABClassObject extends ABObjectCore {
       return AppBuilder.rules.isUuid(text);
    }
 };
+
