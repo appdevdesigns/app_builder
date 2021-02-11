@@ -353,12 +353,12 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
             selectedPage
                .copy(null, selectedPage.parent)
                .then((copiedPage) => {
-                  copiedPage.parent = selectedPage.parent;
-                  copiedPage.label = copiedPage.label + " (copied)";
-                  copiedPage.save().then(() => {
-                     _logic.callbackNewPage(copiedPage);
-                     _logic.listReady();
-                  });
+                  // copiedPage.parent = selectedPage.parent;
+                  // copiedPage.label = copiedPage.label + " (copied)";
+                  // copiedPage.save().then(() => {
+                  _logic.callbackNewPage(copiedPage);
+                  _logic.listReady();
+                  // });
                })
                .catch((err) => {
                   var strError = err.toString();
@@ -575,3 +575,4 @@ module.exports = class AB_Work_Interface_List extends ABComponent {
       this.applicationLoad = _logic.applicationLoad;
    }
 };
+
