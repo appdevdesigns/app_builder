@@ -51,6 +51,10 @@ module.exports = class ABChoose extends ABComponent {
                "ab.application.form.managerHeader",
                "*Who can manage page/tab access for this app?"
             ),
+            translationHeader: L(
+               "ab.application.form.translationHeader",
+               "*Who can translate this app?"
+            ),
             createNewRole: L(
                "ab.application.form.createNewRoleButton",
                "*Create new role"
@@ -71,6 +75,10 @@ module.exports = class ABChoose extends ABComponent {
             enableAccessManagement: L(
                "ab.application.enableAccessManagement",
                "*Enable Page/Tab Access Management"
+            ),
+            enableTranslationManagement: L(
+               "ab.application.enableTranslationManagement",
+               "*Enable Translation Tool"
             )
          }
       };
@@ -84,11 +92,18 @@ module.exports = class ABChoose extends ABComponent {
 
          saveButton: this.unique("buttonSave"),
          accessManager: this.unique("accessManager"),
-         accessManagerToolbar: this.unique("accessManagerToolbar")
+         accessManagerToolbar: this.unique("accessManagerToolbar"),
+         translationManager: this.unique("translationManager"),
+         translationManagerToolbar: this.unique("translationManagerToolbar")
       };
 
       var accessManagerUI = ABProcessParticipant.selectManagersUi(
          "application_amp_",
+         {}
+      );
+
+      var translationManagerUI = ABProcessParticipant.selectManagersUi(
+         "application_translate_",
          {}
       );
 
@@ -270,6 +285,61 @@ module.exports = class ABChoose extends ABComponent {
                                  ? false
                                  : true
                         },
+                        {
+                           name: "isTranslationManaged",
+                           view: "checkbox",
+                           labelRight:
+                              labels.component.enableTranslationManagement,
+                           labelWidth: 0,
+                           on: {
+                              onChange: function(newv, oldv) {
+                                 if (newv) {
+                                    $$(ids.translationManager).show();
+                                    $$(ids.translationManagerToolbar).show();
+                                 } else {
+                                    $$(ids.translationManager).hide();
+                                    $$(ids.translationManagerToolbar).hide();
+                                 }
+                              },
+                              onItemClick: function(id, e) {
+                                 var enabled = $$(id).getValue();
+                                 if (enabled) {
+                                    $$(ids.translationManager).show();
+                                    $$(ids.translationManagerToolbar).show();
+                                 } else {
+                                    $$(ids.translationManager).hide();
+                                    $$(ids.translationManagerToolbar).hide();
+                                 }
+                              }
+                           }
+                        },
+                        { height: App.config.smallSpacer },
+                        {
+                           view: "toolbar",
+                           id: ids.translationManagerToolbar,
+                           css: "ab-toolbar-submenu webix_dark",
+                           hidden:
+                              parseInt(this.translationManagement) == 1
+                                 ? false
+                                 : true,
+                           cols: [
+                              {
+                                 template: labels.component.translationHeader,
+                                 type: "header",
+                                 borderless: true
+                              },
+                              {}
+                           ]
+                        },
+                        {
+                           id: ids.translationManager,
+                           rows: [translationManagerUI],
+                           paddingY: 10,
+                           hidden:
+                              parseInt(this.translationManagement) == 1
+                                 ? false
+                                 : true
+                        },
                         { height: App.config.smallSpacer },
                         {
                            margin: 5,
@@ -316,7 +386,8 @@ module.exports = class ABChoose extends ABComponent {
          "label",
          "description",
          "isAdminApp",
-         "isAccessManaged"
+         "isAccessManaged",
+         "isTranslationManaged"
       ];
 
       let Application;
@@ -342,7 +413,9 @@ module.exports = class ABChoose extends ABComponent {
                description: values.description,
                isAdminApp: values.isAdminApp,
                isAccessManaged: values.isAccessManaged,
-               accessManagers: values.accessManagers
+               isTranslationManaged: values.isTranslationManaged,
+               accessManagers: values.accessManagers,
+               translationManagers: values.translationManagers
             };
 
             async.waterfall(
@@ -414,6 +487,9 @@ module.exports = class ABChoose extends ABComponent {
             var accessManagers = ABProcessParticipant.stashUsersUi(
                "application_amp_"
             );
+            var translationManagers = ABProcessParticipant.stashUsersUi(
+               "application_translate_"
+            );
 
             async.waterfall(
                [
@@ -431,7 +507,10 @@ module.exports = class ABChoose extends ABComponent {
                      Application.description = values.description;
                      Application.isAdminApp = values.isAdminApp;
                      Application.isAccessManaged = values.isAccessManaged;
+                     Application.isTranslationManaged =
+                        values.isTranslationManaged;
                      Application.accessManagers = accessManagers;
+                     Application.translationManagers = translationManagers;
 
                      if (app_role && app_role.id)
                         Application.role = app_role.id;
@@ -582,6 +661,14 @@ module.exports = class ABChoose extends ABComponent {
                   $$(ids.accessManager).getChildViews()[0]
                );
                $$(ids.accessManager).addView(accessManagerUIPop, 0);
+               var translationManagerUIPop = ABProcessParticipant.selectManagersUi(
+                  "application_translate_",
+                  Application.translationManagers || {}
+               );
+               $$(ids.translationManager).removeView(
+                  $$(ids.translationManager).getChildViews()[0]
+               );
+               $$(ids.translationManager).addView(translationManagerUIPop, 0);
             }
 
             // _logic.permissionPopulate(Application);
@@ -610,10 +697,18 @@ module.exports = class ABChoose extends ABComponent {
                "application_amp_",
                {}
             );
+            var translationManagerUIReset = ABProcessParticipant.selectManagersUi(
+               "application_translate_",
+               {}
+            );
             $$(ids.accessManager).removeView(
                $$(ids.accessManager).getChildViews()[0]
             );
+            $$(ids.translationManager).removeView(
+               $$(ids.translationManager).getChildViews()[0]
+            );
             $$(ids.accessManager).addView(accessManagerUIReset, 0);
+            $$(ids.translationManager).addView(translationManagerUIReset, 0);
             // $$(self.webixUiids.appFormPermissionList).clearValidation();
             // $$(self.webixUiids.appFormPermissionList).clearAll();
             // $$(self.webixUiids.appFormCreateRoleButton).setValue(0);

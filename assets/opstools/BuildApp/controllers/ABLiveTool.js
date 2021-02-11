@@ -127,6 +127,804 @@ steal(
                         }
                      },
 
+                     initQTT: function() {
+                        var self = this;
+
+                        var quickTranslationTool = {
+                           view: "scrollview",
+                           css: "lightgray ab_amp",
+                           body: {
+                              rows: [
+                                 {
+                                    view: "accordion",
+                                    id: "qtt_accordion_" + self.containerDomID,
+                                    roles: [],
+                                    hidden: true,
+                                    collapsed: true,
+                                    css: "webix_dark",
+                                    rows: []
+                                 },
+                                 {
+                                    id:
+                                       "qtt_accordion_noSelection_" +
+                                       self.containerDomID,
+                                    rows: [{}]
+                                 }
+                              ]
+                           }
+                        };
+
+                        webix.ui({
+                           view: "window",
+                           css: "qttWindow",
+                           id: "quickTranslationTool_" + self.containerDomID,
+                           position: function(state) {
+                              state.left = state.maxWidth - 400; // fixed values
+                              state.top = 0;
+                              state.width = 400; // relative values
+                              state.height = state.maxHeight;
+                           },
+                           on: {
+                              onShow: () => {
+                                 // collapse all the accordion items but the top one
+                                 var index = 0;
+                                 $$("qtt_accordion_" + self.containerDomID)
+                                    .getChildViews()
+                                    .forEach((a) => {
+                                       if (index == 0) {
+                                          $$(a).expand();
+                                       } else {
+                                          $$(a).collapse();
+                                       }
+                                       index++;
+                                       $$(
+                                          "qtt_accordion_" + self.containerDomID
+                                       ).show();
+                                       $$(
+                                          "qtt_accordion_noSelection_" +
+                                             self.containerDomID
+                                       ).hide();
+                                    });
+                              }
+                           },
+                           head: {
+                              rows: [
+                                 {
+                                    view: "toolbar",
+                                    css: "webix_dark",
+                                    cols: [
+                                       {
+                                          width: 15
+                                       },
+                                       {
+                                          view: "label",
+                                          label: "Translation Tool",
+                                          autowidth: true
+                                       },
+                                       {},
+                                       {
+                                          view: "button",
+                                          width: 38,
+                                          css: "webix_transparent",
+                                          icon: "fa fa-cog",
+                                          type: "iconTop",
+                                          click: function() {
+                                             if (
+                                                $$("translationSettings").config
+                                                   .hidden
+                                             ) {
+                                                $$(
+                                                   "translationSettings"
+                                                ).show();
+                                             } else {
+                                                $$(
+                                                   "translationSettings"
+                                                ).hide();
+                                             }
+                                          }
+                                       },
+                                       {
+                                          view: "button",
+                                          width: 35,
+                                          css: "webix_transparent",
+                                          type: "icon",
+                                          icon: "nomargin fa fa-times",
+                                          click: () => {
+                                             $$(
+                                                "quickTranslationTool_" +
+                                                   self.containerDomID
+                                             ).hide();
+                                          }
+                                       }
+                                    ]
+                                 },
+                                 {
+                                    view: "toolbar",
+                                    id: "translationSettings",
+                                    hidden: true,
+                                    css: "webix_dark",
+                                    rows: [
+                                       {
+                                          id:
+                                             "qtt_accordion_" +
+                                             self.containerDomID +
+                                             "_translateTo",
+                                          view: "select",
+                                          labelWidth: 120,
+                                          label: "Translate to:",
+                                          labelAlign: "right",
+                                          options: [],
+                                          on: {
+                                             onChange: (newVal, oldVal) => {
+                                                if (newVal != oldVal) {
+                                                   self.buildTranslationAccordion(
+                                                      self.data.application
+                                                         ._objects,
+                                                      self.data.application
+                                                         ._pages
+                                                   );
+                                                }
+                                             }
+                                          }
+                                       },
+                                       {
+                                          id:
+                                             "qtt_accordion_" +
+                                             self.containerDomID +
+                                             "_translateHint",
+                                          view: "select",
+                                          labelWidth: 120,
+                                          label: "Hint language:",
+                                          bottomLabel:
+                                             "*Hover over label to display hint",
+                                          labelAlign: "right",
+                                          options: [],
+                                          on: {
+                                             onChange: (newVal, oldVal) => {
+                                                if (newVal != oldVal) {
+                                                   self.buildTranslationAccordion(
+                                                      self.data.application
+                                                         ._objects,
+                                                      self.data.application
+                                                         ._pages
+                                                   );
+                                                }
+                                             }
+                                          }
+                                       }
+                                    ]
+                                 }
+                              ]
+                           },
+                           body: quickTranslationTool
+                        });
+
+                        var languageList = [];
+
+                        AD.lang.list().then(function(list) {
+                           for (const property in list) {
+                              languageList.push({
+                                 id: property,
+                                 value: list[property]
+                              });
+                           }
+                           $$(
+                              "qtt_accordion_" +
+                                 self.containerDomID +
+                                 "_translateTo"
+                           ).define({
+                              options: languageList,
+                              value: AD.lang.currentLanguage
+                           });
+                           $$(
+                              "qtt_accordion_" +
+                                 self.containerDomID +
+                                 "_translateTo"
+                           ).refresh();
+                           $$(
+                              "qtt_accordion_" +
+                                 self.containerDomID +
+                                 "_translateHint"
+                           ).define({
+                              options: languageList,
+                              value: languageList[0].id
+                           });
+                           $$(
+                              "qtt_accordion_" +
+                                 self.containerDomID +
+                                 "_translateHint"
+                           ).refresh();
+                           self.buildTranslationAccordion(
+                              self.data.application._objects,
+                              self.data.application._pages
+                           );
+                        });
+
+                        webix.ready(function() {
+                           webix.protoUI(
+                              {
+                                 name: "edittree"
+                              },
+                              webix.EditAbility,
+                              webix.ui.tree
+                           );
+                        });
+
+                        $(`#qttButton_${self.containerDomID}`).show();
+                     },
+
+                     buildTranslationAccordion: function(objects, views) {
+                        var self = this;
+                        var objects = objects;
+                        var views = views;
+
+                        $$("qtt_accordion_" + self.containerDomID).removeView(
+                           "qtt_accordionitem_" +
+                              self.containerDomID +
+                              "_objects"
+                        );
+                        $$("qtt_accordion_" + self.containerDomID).removeView(
+                           "qtt_accordionitem_" + self.containerDomID + "_views"
+                        );
+
+                        var toggleParent = (element) => {
+                           if (!element.parent) return false;
+                           var parentElem = element.parent;
+                           if (!parentElem.parent) return false;
+                           parentElem.parent.emit("changeTab", parentElem.id);
+                           toggleParent(parentElem.parent);
+                        };
+
+                        var objectTree = [
+                           {
+                              id: "qtt_object_progress" + self.containerDomID,
+                              height: 7
+                           },
+                           {
+                              id:
+                                 "linetree_" + self.containerDomID + "_objects",
+                              view: "edittree",
+                              type: "lineTree",
+                              editable: true,
+                              tooltip: "#hint#",
+                              // role: role,
+                              editor: "text",
+                              editValue: "value",
+                              template: (obj, common) => {
+                                 let language = $$(
+                                    "qtt_accordion_" +
+                                       self.containerDomID +
+                                       "_translateTo"
+                                 ).getValue();
+                                 var color = "gray";
+                                 if (
+                                    obj.value.indexOf("[" + language + "]") > -1
+                                 ) {
+                                    color = "#ff5c4c";
+                                 }
+                                 if (!obj.icon) {
+                                    obj.icon = "minus";
+                                 }
+                                 var icon = `<span class="fa-stack" style="margin: 0 5px 0 4px;">
+                                             <i style="color: ${color};" class="fa fa-circle fa-stack-2x"></i>
+                                             <i class="fa fa-${obj.icon} fa-stack-1x fa-inverse"></i>
+                                          </span>`;
+                                 return (
+                                    `<span>` +
+                                    icon +
+                                    common.icon(obj, common) +
+                                    `<span>${obj.value}</span>`
+                                 );
+                              },
+                              data: [],
+                              on: {
+                                 onAfterLoad: function(id) {
+                                    if (
+                                       !$$(
+                                          "qtt_object_progress" +
+                                             self.containerDomID
+                                       ).showProgress
+                                    ) {
+                                       webix.extend(
+                                          $$(
+                                             "qtt_object_progress" +
+                                                self.containerDomID
+                                          ),
+                                          webix.ProgressBar
+                                       );
+                                    }
+                                    $$(
+                                       "linetree_" +
+                                          self.containerDomID +
+                                          "_objects"
+                                    ).parse(
+                                       self.getTranslationToolObjectsTree(
+                                          objects,
+                                          self.containerDomID
+                                       )
+                                    );
+                                    $$(
+                                       "linetree_" +
+                                          self.containerDomID +
+                                          "_objects"
+                                    ).openAll();
+                                 },
+                                 onAfterEditStop: (
+                                    state,
+                                    editor,
+                                    ignoreUpdate
+                                 ) => {
+                                    if (state.old == state.value) return false;
+                                    let language = $$(
+                                       "qtt_accordion_" +
+                                          self.containerDomID +
+                                          "_translateTo"
+                                    ).getValue();
+                                    let branch = $$(
+                                       "linetree_" +
+                                          self.containerDomID +
+                                          "_objects"
+                                    ).data.getItem(editor.id);
+                                    let propName = branch.field;
+                                    let objectId = branch.objectId
+                                       ? branch.objectId
+                                       : branch.id;
+                                    let fieldId = branch.fieldId
+                                       ? branch.fieldId
+                                       : "";
+                                    let obj = self.data.application.objectByID(
+                                       objectId
+                                    );
+                                    if (fieldId) {
+                                       let field = obj.fields((item) => {
+                                          return item.id == fieldId;
+                                       })[0];
+                                       if (branch.type == "option") {
+                                          field.settings.options.forEach(
+                                             (option) => {
+                                                if (option.id == branch.id) {
+                                                   if (
+                                                      obj.languageDefault() ==
+                                                      language
+                                                   ) {
+                                                      hasLang = true;
+                                                      option[propName] =
+                                                         state.value;
+                                                   } else {
+                                                      option.translations.forEach(
+                                                         (t) => {
+                                                            if (
+                                                               t.language_code ==
+                                                               language
+                                                            ) {
+                                                               hasLang = true;
+                                                               t[propName] =
+                                                                  state.value;
+                                                            }
+                                                         }
+                                                      );
+                                                   }
+                                                   if (!hasLang) {
+                                                      var trans = {};
+                                                      trans.language_code = language;
+                                                      trans[propName] =
+                                                         state.value;
+                                                      option.translations.push(
+                                                         trans
+                                                      );
+                                                   }
+                                                   field.save();
+                                                }
+                                             }
+                                          );
+                                       } else {
+                                          var hasLang = false;
+                                          if (
+                                             obj.languageDefault() == language
+                                          ) {
+                                             hasLang = true;
+                                             field[propName] = state.value;
+                                          } else {
+                                             field.translations.forEach((t) => {
+                                                if (
+                                                   t.language_code == language
+                                                ) {
+                                                   hasLang = true;
+                                                   t[propName] = state.value;
+                                                }
+                                             });
+                                          }
+                                          if (!hasLang) {
+                                             var trans = {};
+                                             trans.language_code = language;
+                                             trans[propName] = state.value;
+                                             field.translations.push(trans);
+                                          }
+                                          field.save();
+                                       }
+                                    } else {
+                                       var hasLang = false;
+                                       if (obj.languageDefault() == language) {
+                                          hasLang = true;
+                                          obj[propName] = state.value;
+                                       } else {
+                                          obj.translations.forEach((t) => {
+                                             if (t.language_code == language) {
+                                                hasLang = true;
+                                                t[propName] = state.value;
+                                             }
+                                          });
+                                       }
+                                       if (!hasLang) {
+                                          var trans = {};
+                                          trans.language_code = language;
+                                          trans[propName] = state.value;
+                                          obj.translations.push(trans);
+                                       }
+                                       obj.save();
+                                    }
+                                    debugger;
+                                    let progressBar = $$(
+                                       "qtt_object_progress" +
+                                          self.containerDomID
+                                    );
+                                    let total = progressBar.config.total;
+                                    let completed =
+                                       progressBar.config.completed;
+                                    debugger;
+                                    if (
+                                       state.old.indexOf(
+                                          "[" + language + "]"
+                                       ) == -1 &&
+                                       state.value.indexOf(
+                                          "[" + language + "]"
+                                       ) > -1
+                                    ) {
+                                       completed--;
+                                    } else if (
+                                       state.old.indexOf("[" + language + "]") >
+                                          -1 &&
+                                       state.value.indexOf(
+                                          "[" + language + "]"
+                                       ) > -1
+                                    ) {
+                                       // no change to completed count
+                                    } else {
+                                       completed++;
+                                    }
+                                    let position = completed / total + 0.00001;
+                                    progressBar.define({
+                                       total: total,
+                                       completed: completed
+                                    });
+                                    progressBar.showProgress({
+                                       type: "top",
+                                       position: position
+                                    });
+                                 }
+                              }
+                           }
+                        ];
+
+                        var viewTree = [
+                           {
+                              id: "qtt_view_progress" + self.containerDomID,
+                              height: 7
+                           },
+                           {
+                              id: "linetree_" + self.containerDomID + "_views",
+                              view: "edittree",
+                              type: "lineTree",
+                              editable: true,
+                              tooltip: "#hint#",
+                              // role: role,
+                              editor: "text",
+                              editValue: "value",
+                              template: (obj, common) => {
+                                 let language = $$(
+                                    "qtt_accordion_" +
+                                       self.containerDomID +
+                                       "_translateTo"
+                                 ).getValue();
+                                 var color = "gray";
+                                 if (
+                                    obj.value.indexOf("[" + language + "]") > -1
+                                 ) {
+                                    color = "#ff5c4c";
+                                 }
+                                 if (!obj.icon) {
+                                    obj.icon = "minus";
+                                 }
+                                 var externalLink = "";
+                                 if (
+                                    ["button", "label", "menu"].indexOf(
+                                       obj.type
+                                    ) == -1
+                                 ) {
+                                    externalLink = `<i style="float:right; color: lightgray" class="externalLink fa fa-external-link"></i>`;
+                                 }
+                                 var icon = `<span class="fa-stack" style="margin: 0 5px 0 4px;">
+                                             <i style="color: ${color};" class="fa fa-circle fa-stack-2x"></i>
+                                             <i class="fa fa-${obj.icon} fa-stack-1x fa-inverse"></i>
+                                          </span>`;
+                                 return (
+                                    `<span>` +
+                                    icon +
+                                    common.icon(obj, common) +
+                                    `<span>${obj.value}</span>` +
+                                    externalLink
+                                 );
+                              },
+                              data: [],
+                              onClick: {
+                                 externalLink: (event, branch, target) => {
+                                    var item = $$(
+                                       "linetree_" +
+                                          self.containerDomID +
+                                          "_views"
+                                    ).getItem(branch);
+                                    if (item.type == "tab") {
+                                       self.showPage(item.pageId);
+
+                                       var tabView = self.rootPage.application.views(
+                                          (v) => v.id == item.id
+                                       )[0];
+                                       if (!tabView) return false;
+
+                                       var tab = tabView.parent;
+                                       if (!tab) return false;
+
+                                       toggleParent(tab);
+                                       if (
+                                          !$$(tabView.id) ||
+                                          !$$(tabView.id).isVisible()
+                                       ) {
+                                          var showIt = setInterval(function() {
+                                             if (
+                                                $$(tabView.id) &&
+                                                $$(tabView.id).isVisible()
+                                             ) {
+                                                clearInterval(showIt);
+                                             }
+                                             tab.emit("changeTab", tabView.id);
+                                          }, 200);
+                                       }
+                                    }
+                                    // switch page
+                                    else {
+                                       self.showPage(item.id);
+                                    }
+
+                                    return false;
+                                 }
+                              },
+                              on: {
+                                 onAfterLoad: function(id) {
+                                    if (
+                                       !$$(
+                                          "qtt_view_progress" +
+                                             self.containerDomID
+                                       ).showProgress
+                                    ) {
+                                       webix.extend(
+                                          $$(
+                                             "qtt_view_progress" +
+                                                self.containerDomID
+                                          ),
+                                          webix.ProgressBar
+                                       );
+                                    }
+                                    $$(
+                                       "linetree_" +
+                                          self.containerDomID +
+                                          "_views"
+                                    ).parse(
+                                       self.getTranslationToolViewsTree(
+                                          views,
+                                          self.containerDomID
+                                       )
+                                    );
+                                    $$(
+                                       "linetree_" +
+                                          self.containerDomID +
+                                          "_views"
+                                    ).openAll();
+                                 },
+                                 onAfterEditStop: (
+                                    state,
+                                    editor,
+                                    ignoreUpdate
+                                 ) => {
+                                    if (state.old == state.value) return false;
+                                    let language = $$(
+                                       "qtt_accordion_" +
+                                          self.containerDomID +
+                                          "_translateTo"
+                                    ).getValue();
+                                    let branch = $$(
+                                       "linetree_" +
+                                          self.containerDomID +
+                                          "_views"
+                                    ).data.getItem(editor.id);
+                                    let propName = branch.field;
+                                    if (branch.type == "menu") {
+                                       let view = self.data.application.views(
+                                          (view) => {
+                                             return view.id == branch.viewId;
+                                          }
+                                       )[0];
+                                       view.settings.order.forEach((button) => {
+                                          if (
+                                             button.pageId == branch.buttonId
+                                          ) {
+                                             var hasLang = false;
+                                             button.translations.forEach(
+                                                (t) => {
+                                                   if (
+                                                      t.language_code ==
+                                                      language
+                                                   ) {
+                                                      hasLang = true;
+                                                      t[propName] = state.value;
+                                                   }
+                                                }
+                                             );
+                                             if (!hasLang) {
+                                                var trans = {};
+                                                trans.language_code = language;
+                                                trans[propName] = state.value;
+                                                button.translations.push(trans);
+                                             }
+                                             view.save();
+                                          }
+                                       });
+                                    } else if (branch.type == "button") {
+                                       let view = self.data.application.views(
+                                          (view) => {
+                                             return view.id == branch.viewId;
+                                          }
+                                       )[0];
+                                       var hasLang = false;
+
+                                       if (view.languageDefault() == language) {
+                                          hasLang = true;
+                                          view.settings[propName] = state.value;
+                                       } else {
+                                          view.settings.translations.forEach(
+                                             (t) => {
+                                                if (
+                                                   t.language_code == language
+                                                ) {
+                                                   hasLang = true;
+                                                   t[propName] = state.value;
+                                                }
+                                             }
+                                          );
+                                       }
+                                       if (!hasLang) {
+                                          var trans = {};
+                                          trans.language_code = language;
+                                          trans[propName] = state.value;
+                                          view.settings.translations.push(
+                                             trans
+                                          );
+                                       }
+                                       view.save();
+                                    } else {
+                                       let view = self.data.application.views(
+                                          (view) => {
+                                             return view.id == branch.id;
+                                          }
+                                       )[0];
+                                       var hasLang = false;
+                                       if (view.languageDefault() == language) {
+                                          hasLang = true;
+                                          view[propName] = state.value;
+                                       } else {
+                                          view.translations.forEach((t) => {
+                                             if (t.language_code == language) {
+                                                hasLang = true;
+                                                t[propName] = state.value;
+                                             }
+                                          });
+                                       }
+                                       if (!hasLang) {
+                                          var trans = {};
+                                          trans.language_code = language;
+                                          trans[propName] = state.value;
+                                          view.translations.push(trans);
+                                       }
+                                       view.save();
+                                    }
+                                    let progressBar = $$(
+                                       "qtt_view_progress" + self.containerDomID
+                                    );
+                                    let total = progressBar.config.total;
+                                    let completed =
+                                       progressBar.config.completed;
+                                    if (
+                                       state.old.indexOf(
+                                          "[" + language + "]"
+                                       ) == -1 &&
+                                       state.value.indexOf(
+                                          "[" + language + "]"
+                                       ) > -1
+                                    ) {
+                                       completed--;
+                                    } else if (
+                                       state.old.indexOf("[" + language + "]") >
+                                          -1 &&
+                                       state.value.indexOf(
+                                          "[" + language + "]"
+                                       ) > -1
+                                    ) {
+                                       // no change to completed count
+                                    } else {
+                                       completed++;
+                                    }
+                                    let position = completed / total + 0.00001;
+                                    progressBar.define({
+                                       total: total,
+                                       completed: completed
+                                    });
+                                    progressBar.showProgress({
+                                       type: "top",
+                                       position: position
+                                    });
+                                 }
+                              }
+                           }
+                        ];
+
+                        var objectsAccordionItem = {
+                           view: "accordionitem",
+                           id:
+                              "qtt_accordionitem_" +
+                              self.containerDomID +
+                              "_objects",
+                           header: "Data Objects",
+                           collapsed: true,
+                           body: {
+                              type: "clean",
+                              rows: objectTree
+                           }
+                        };
+
+                        var viewsAccordionItem = {
+                           view: "accordionitem",
+                           id:
+                              "qtt_accordionitem_" +
+                              self.containerDomID +
+                              "_views",
+                           header: "Interface Items",
+                           collapsed: true,
+                           body: {
+                              type: "clean",
+                              rows: viewTree
+                           }
+                        };
+
+                        $$("qtt_accordion_" + self.containerDomID).addView(
+                           objectsAccordionItem,
+                           -1
+                        );
+                        $$("qtt_accordion_" + self.containerDomID).addView(
+                           viewsAccordionItem,
+                           -1
+                        );
+                        $$("qtt_accordion_" + self.containerDomID).show();
+                        $$(
+                           "qtt_accordion_noSelection_" + self.containerDomID
+                        ).hide();
+
+                        $$(
+                           "linetree_" + self.containerDomID + "_objects"
+                        ).openAll();
+                        $$(
+                           "linetree_" + self.containerDomID + "_views"
+                        ).openAll();
+                     },
+
                      initAMP: function() {
                         var self = this;
                         // This is also defined in assets/opstools/AppBuilder/classes/core/views/ABViewCore.js
@@ -887,6 +1685,362 @@ steal(
                         ).openAll();
                      },
 
+                     getTranslations: function(
+                        translations,
+                        domId,
+                        field,
+                        completed,
+                        total
+                     ) {
+                        var missingHint = false;
+                        var missingTranslate = false;
+                        var translateLang = $$(
+                           "qtt_accordion_" + domId + "_translateTo"
+                        ).getValue();
+                        var value = translations.filter((item) => {
+                           return item.language_code == translateLang;
+                        })[0];
+                        if (!value) {
+                           // we didn't find the language so we are defaulting to first language
+                           missingTranslate = true;
+                           value = translations[0];
+                        }
+                        var hintLang = $$(
+                           "qtt_accordion_" + domId + "_translateHint"
+                        ).getValue();
+                        var hint = translations.filter((item) => {
+                           return item.language_code == hintLang;
+                        })[0];
+                        if (!hint) {
+                           // we didn't find the language so we are defaulting to first language
+                           missingHint = true;
+                           hint = translations[0];
+                        }
+
+                        var hintLabel = "";
+                        var valueLabel = "";
+
+                        // some items store the text we need translated under "text"
+                        if (field) {
+                           hintLabel = hint[field];
+                           valueLabel = value[field];
+                        }
+                        if (!hintLabel) {
+                           hintLabel = hint.label;
+                        }
+                        if (!valueLabel) {
+                           valueLabel = value.label;
+                        }
+
+                        var hintPrefix = "";
+                        if (missingHint) {
+                           hintPrefix = "[" + hintLang + "] ";
+                        }
+                        var translatePrefix = "";
+                        if (missingTranslate) {
+                           translatePrefix = "[" + translateLang + "] ";
+                        }
+                        if (
+                           valueLabel.indexOf("[" + translateLang + "]") ==
+                              -1 &&
+                           !missingTranslate
+                        ) {
+                           completed++;
+                        }
+                        total++;
+                        return {
+                           hint: hintPrefix + hintLabel,
+                           value: translatePrefix + valueLabel,
+                           completed: completed,
+                           total: total
+                        };
+                     },
+
+                     getTranslationToolViewsTree: function(views, domId) {
+                        var completed = 0;
+                        var total = 0;
+                        var self = this;
+                        // this so it looks right/indented in a tree view:
+                        var tree = new webix.TreeCollection();
+
+                        /**
+                         * @method addPage
+                         *
+                         * @param {ABView} page
+                         * @param {integer} index
+                         * @param {uuid} parentId
+                         */
+                        var addPage = (
+                           page,
+                           parentId,
+                           type,
+                           field = "label",
+                           viewId
+                        ) => {
+                           var translations = page.translations;
+                           var pageId = page.id;
+                           if (type == "button") {
+                              translations = page.settings.translations;
+                              pageId = page.id + "_" + field;
+                           }
+                           var labels = self.getTranslations(
+                              translations,
+                              domId,
+                              field,
+                              completed,
+                              total
+                           );
+                           completed = labels.completed;
+                           total = labels.total;
+                           var icon = page.tabicon ? page.tabicon : page.icon;
+
+                           // add to tree collection
+                           var branch = {
+                              id: pageId,
+                              value: labels.value,
+                              hint: labels.hint,
+                              field: field,
+                              viewId: viewId,
+                              translations: page.translations,
+                              pageId: parentId,
+                              buttonId: page.pageId,
+                              type: type,
+                              icon: icon
+                           };
+                           tree.add(branch, null, parentId);
+
+                           // stop at detail views
+                           // if (page.defaults.key == "detail") {
+                           //    return;
+                           // }
+
+                           var subPages = page.pages ? page.pages() : [];
+                           subPages.forEach((childPage, childIndex) => {
+                              addPage(childPage, page.id, "page");
+                           });
+
+                           // stop if there are no views to parse
+                           if (!page.views) return;
+                           // add labels
+                           page
+                              .views((v) => v.defaults.key == "label")
+                              .forEach((label, labelIndex) => {
+                                 // label views
+                                 // label.icon = "th-list";
+                                 addPage(
+                                    label,
+                                    page.id,
+                                    "label",
+                                    "text",
+                                    label.id
+                                 );
+                              });
+                           // add tabs
+                           page
+                              .views((v) => v.defaults.key == "tab")
+                              .forEach((tab, tabIndex) => {
+                                 // tab views
+                                 tab.views().forEach(
+                                    (tabView, tabViewIndex) => {
+                                       // tab items will be below sub-page items
+                                       // tabView.icon = "th-list";
+                                       addPage(
+                                          tabView,
+                                          page.id,
+                                          "tab",
+                                          "label",
+                                          tab.id
+                                       );
+                                    }
+                                 );
+                              });
+                           // add menus
+                           page
+                              .views((v) => v.defaults.key == "menu")
+                              .forEach((menu, menuIndex) => {
+                                 // menu buttons
+                                 if (!menu.settings.order) return;
+                                 menu.settings.order.forEach(
+                                    (menuItem, menuItemIndex) => {
+                                       // tab items will be below sub-page items
+                                       // menuItem.icon = "link";
+                                       addPage(
+                                          menuItem,
+                                          page.id,
+                                          "menu",
+                                          "aliasname",
+                                          menu.id
+                                       );
+                                    }
+                                 );
+                              });
+                           // add form buttons
+                           page
+                              .views((v) => v.defaults.key == "form")
+                              .forEach((form, formIndex) => {
+                                 // form inputs
+                                 form
+                                    .views()
+                                    .forEach((formInput, formInputIndex) => {
+                                       // we only need buttons
+                                       if (formInput.key == "button") {
+                                          for (const property in formInput
+                                             .settings.translations[0]) {
+                                             if (property != "language_code") {
+                                                addPage(
+                                                   formInput,
+                                                   page.id,
+                                                   "button",
+                                                   property,
+                                                   formInput.id
+                                                );
+                                             }
+                                          }
+                                       }
+                                    });
+                              });
+                           // add chart labels
+                           page
+                              .views((v) => v.defaults.key == "chart")
+                              .forEach((chart, chartIndex) => {
+                                 // chart views
+                                 chart.views().forEach((view, viewIndex) => {
+                                    // we only need buttons
+                                    if (view.key == "label") {
+                                       addPage(
+                                          view,
+                                          page.id,
+                                          "label",
+                                          "text",
+                                          view.id
+                                       );
+                                    }
+                                 });
+                              });
+                        };
+                        views.forEach((p, index) => {
+                           addPage(p, null, "page", "label", p.id);
+                        });
+
+                        // there is a webix bug that will not allow you to se the value of a progress bar to 0
+                        let progressBar = $$("qtt_view_progress" + domId);
+                        let position = completed / total + 0.0001;
+                        progressBar.showProgress({
+                           type: "top",
+                           position: position
+                        });
+                        progressBar.define({
+                           total: total,
+                           completed: completed
+                        });
+
+                        return tree;
+                     },
+
+                     getTranslationToolObjectsTree: function(objects, domId) {
+                        var self = this;
+                        var completed = 0;
+                        var total = 0;
+                        // this so it looks right/indented in a tree view:
+                        var tree = new webix.TreeCollection();
+
+                        /**
+                         * @method addBranch
+                         *
+                         * @param {ABView} page
+                         * @param {uuid} parentId
+                         * @param {string} type
+                         */
+                        var addBranch = (
+                           object,
+                           parentId,
+                           type,
+                           field = "label",
+                           fieldId,
+                           objectId
+                        ) => {
+                           var translations = object.translations;
+                           var labels = self.getTranslations(
+                              translations,
+                              domId,
+                              field,
+                              completed,
+                              total
+                           );
+                           completed = labels.completed;
+                           total = labels.total;
+
+                           // add to tree collection
+                           var branch = {
+                              id: object.id,
+                              value: labels.value,
+                              hint: labels.hint,
+                              translations: object.translations,
+                              pageId: parentId,
+                              objectId: objectId,
+                              type: type,
+                              field: field,
+                              fieldId: fieldId,
+                              icon:
+                                 type == "object"
+                                    ? "database"
+                                    : object.icon
+                                    ? object.icon
+                                    : ""
+                           };
+                           tree.add(branch, null, parentId);
+
+                           var fields = object.fields ? object.fields() : [];
+                           fields.forEach((field, fieldIndex) => {
+                              addBranch(
+                                 field,
+                                 object.id,
+                                 "field",
+                                 "label",
+                                 field.id,
+                                 object.id
+                              );
+                           });
+
+                           // add options
+                           if (
+                              object.settings &&
+                              object.settings.options &&
+                              object.settings.options.length
+                           ) {
+                              object.settings.options.forEach(
+                                 (option, optionIndex) => {
+                                    addBranch(
+                                       option,
+                                       object.id,
+                                       "option",
+                                       "text",
+                                       fieldId,
+                                       parentId
+                                    );
+                                 }
+                              );
+                           }
+                        };
+                        objects.forEach((p, index) => {
+                           addBranch(p, null, "object");
+                        });
+
+                        // there is a webix bug that will not allow you to se the value of a progress bar to 0
+                        let progressBar = $$("qtt_object_progress" + domId);
+                        let position = completed / total + 0.0001;
+                        progressBar.showProgress({
+                           type: "top",
+                           position: position
+                        });
+                        progressBar.define({
+                           total: total,
+                           completed: completed
+                        });
+
+                        return tree;
+                     },
+
                      getAccessLevelTree: function(rootPage, role) {
                         // this so it looks right/indented in a tree view:
                         var tree = new webix.TreeCollection();
@@ -967,6 +2121,15 @@ steal(
                               <div>
                                 Access Management
                               </div>
+                           </div>
+                           <div style="display: none;" id="qttTree_${this.containerDomID}"></div>
+                           <div style="display: none;" id="qttButton_${this.containerDomID}" class="amp qtt" onclick="$$('quickTranslationTool_${this.containerDomID}').show();">
+                              <div>
+                                <i class="fa fa-fw fa-language fa-inverse"></i>
+                              </div>
+                              <div>
+                                Translation Tool
+                              </div>
                            </div>`
                         );
 
@@ -1030,6 +2193,45 @@ steal(
                            }
                            if (shouldInitAMP) {
                               self.initAMP();
+                           }
+                        }
+                        if (self.rootPage.application.isTranslationManaged) {
+                           var shouldInitQTT = false;
+                           if (
+                              parseInt(
+                                 self.rootPage.application.translationManagers
+                                    .useRole
+                              ) == 1
+                           ) {
+                              self.rootPage.application
+                                 .userRoles()
+                                 .forEach((role) => {
+                                    if (
+                                       self.rootPage.application.translationManagers.role.indexOf(
+                                          role.id
+                                       ) > -1
+                                    ) {
+                                       shouldInitQTT = true;
+                                    }
+                                 });
+                           }
+                           if (
+                              !shouldInitQTT &&
+                              parseInt(
+                                 self.rootPage.application.translationManagers
+                                    .useAccount
+                              ) == 1
+                           ) {
+                              if (
+                                 self.rootPage.application.translationManagers.account.indexOf(
+                                    OP.User.id() + ""
+                                 ) > -1
+                              ) {
+                                 shouldInitQTT = true;
+                              }
+                           }
+                           if (shouldInitQTT) {
+                              self.initQTT();
                            }
                         }
 
