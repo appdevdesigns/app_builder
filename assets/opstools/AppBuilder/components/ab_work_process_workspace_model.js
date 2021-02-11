@@ -344,7 +344,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                      );
                      if (currElement) {
                         // send it an onChange(event.element);
-                        currElement.onChange(element);
+                        currElement.onChange(element, ids.properties);
                      } else {
                         // element.changed : can be triggered for deleted elements
                         // make sure the shape for this element still exists,
@@ -634,3 +634,4 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
       this.clearWorkspace = this._logic.clearWorkspace;
    }
 }
+
