@@ -74,7 +74,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                            })
                            .catch(bad)
                            .then((result) => {
-                              next(result[0]);
+                              next(this.getDataValue(instance, result[0]));
                            });
                      })
                );
@@ -282,4 +282,3 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
       return result;
    }
 };
-
