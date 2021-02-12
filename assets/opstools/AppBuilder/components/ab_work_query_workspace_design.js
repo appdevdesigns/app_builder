@@ -862,7 +862,9 @@ module.exports = class ABWorkQueryWorkspaceDesign extends ABComponent {
             CurrentDatacollection.bind(DataTable);
 
             // set data:
-            CurrentDatacollection.loadData(0, 50, () => {});
+            CurrentDatacollection.loadData(0, 50, () => {}).then(() =>
+               CurrentDatacollection.bind(DataTable)
+            );
             // CurrentQuery.model().findAll({ limit: 20, where: CurrentQuery.workspaceViews.getCurrentView().filterConditions, sort: CurrentQuery.workspaceViews.getCurrentView().sortFields })
             // 	.then((response) => {
 
