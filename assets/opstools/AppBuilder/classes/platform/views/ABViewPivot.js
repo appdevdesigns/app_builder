@@ -193,28 +193,51 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
          options = options || {};
          options.componentId = options.componentId || ids.component;
 
+         let dc = this.datacollection;
+         if (!dc) return Promise.resolve();
+
+         let object = dc.datasource;
+         if (!object) return Promise.resolve();
+
+         let populateData = () => {
+            let data = dc.getData();
+            let dataMapped = data.map((d) => {
+               let result = {};
+
+               object.fields(null, true).forEach((f) => {
+                  if (f instanceof ABFieldNumber)
+                     result[f.columnName] = d[f.columnName];
+                  else result[f.columnName] = f.format(d);
+               });
+
+               return result;
+            });
+
+            $$(options.componentId).parse(dataMapped);
+
+            // set pivot configuration
+            if (this.settings.structure)
+               $$(options.componentId).setStructure(this.settings.structure);
+         };
+
+         this.eventAdd({
+            emitter: dc,
+            eventName: "initializedData",
+            listener: () => {
+               populateData();
+            }
+         });
+
          return (
             Promise.resolve()
-
                // get data
                .then(() => {
                   return new Promise((next, err) => {
-                     let dv = this.datacollection;
-                     if (!dv) return next();
-
-                     this.eventAdd({
-                        emitter: dv,
-                        eventName: "initializedData",
-                        listener: () => {
-                           next();
-                        }
-                     });
-
-                     switch (dv.dataStatus) {
-                        case dv.dataStatusFlag.notInitial:
-                           dv.loadData();
+                     switch (dc.dataStatus) {
+                        case dc.dataStatusFlag.notInitial:
+                           dc.loadData();
                            break;
-                        case dv.dataStatusFlag.initialized:
+                        case dc.dataStatusFlag.initialized:
                            next();
                            break;
                      }
@@ -224,39 +247,7 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
                // populate data into pivot
                .then(() => {
                   return new Promise((next, err) => {
-                     let dv = this.datacollection;
-                     if (!dv) return next();
-
-                     let object = dv.datasource;
-                     if (!object) return next();
-
-                     let data = dv.getData();
-                     let dataMapped = data.map((d) => {
-                        let result = {};
-
-                        object.fields(null, true).forEach((f) => {
-                           if (f instanceof ABFieldNumber)
-                              result[f.columnName] = d[f.columnName];
-                           else result[f.columnName] = f.format(d);
-                        });
-
-                        return result;
-                     });
-
-                     $$(options.componentId).parse(dataMapped);
-
-                     next();
-                  });
-               })
-
-               // set pivot configuration
-               .then(() => {
-                  return new Promise((next, err) => {
-                     if (this.settings.structure)
-                        $$(options.componentId).setStructure(
-                           this.settings.structure
-                        );
-
+                     populateData();
                      next();
                   });
                })
@@ -271,4 +262,3 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
       };
    }
 };
-
