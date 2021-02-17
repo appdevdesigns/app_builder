@@ -147,6 +147,7 @@ module.exports = class ABViewGantt extends ABViewGanttCore {
     * @return {obj} UI component
     */
    component(App) {
+      let base = super.component(App);
       let idBase = "ABViewGantt_" + this.id;
       let ids = {
          component: App.unique(idBase + "_component")
@@ -192,7 +193,8 @@ module.exports = class ABViewGantt extends ABViewGanttCore {
 
       return {
          ui: ganttView.ui,
-         init: _init
+         init: _init,
+         onShow: base.onShow
       };
    }
 };
