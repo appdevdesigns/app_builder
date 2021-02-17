@@ -656,7 +656,7 @@ module.exports = class ABClassObject extends ABObjectCore {
             try {
                // sails.log.debug(
                //    "ABClassObject.queryFind - SQL:",
-               console.log(query.toString());
+               query.toString();
                // );
             } catch (e) {
                // sails.log.debug('ABClassObject.queryFind - SQL:', query.debug() );
@@ -1919,7 +1919,11 @@ module.exports = class ABClassObject extends ABObjectCore {
                   FROM ${connectedObj.dbTableName(true)}
                   WHERE ${connectedObj.dbTableName(true)}.\`${
             linkField.columnName
-         }\` = ${this.dbTableName(true)}.\`${this.PK()}\` ${whereClause})`;
+         }\` = ${this.dbTableName(true)}.\`${
+            connectedField.indexField
+               ? connectedField.indexField.columnName
+               : this.PK()
+         }\` ${whereClause})`;
       }
       // 1:M , 1:1 isSource: true
       else if (
@@ -1933,9 +1937,11 @@ module.exports = class ABClassObject extends ABObjectCore {
             numberField.columnName
          }\`), 0)
                   FROM ${connectedObj.dbTableName(true)}
-                  WHERE ${connectedObj.dbTableName(
-                     true
-                  )}.\`${connectedObj.PK()}\` = ${this.dbTableName(true)}.\`${
+                  WHERE ${connectedObj.dbTableName(true)}.\`${
+            connectedField.indexField
+               ? connectedField.indexField.columnName
+               : connectedObj.PK()
+         }\` = ${this.dbTableName(true)}.\`${
             connectedField.columnName
          }\` ${whereClause})`;
       }
