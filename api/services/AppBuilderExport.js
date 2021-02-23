@@ -86,6 +86,7 @@ module.exports = {
                (data.definitions || [])
                   .filter(
                      (d) =>
+                        d &&
                         ["object", "field", "index", "application"].indexOf(
                            d.type
                         ) > -1
@@ -113,7 +114,7 @@ module.exports = {
                // this way we make sure our connectFields can reference other
                // objects properly.
                (data.definitions || [])
-                  .filter((d) => d.type == "object")
+                  .filter((d) => d && d.type == "object")
                   .forEach((o) => {
                      var object = Application.objectNew(o.json);
                      allObjects.push(object);
@@ -272,7 +273,7 @@ ${err.toString()}
                );
                var allSaves = [];
                (data.definitions || []).forEach((def) => {
-                  if (!hashSaved[def.id]) {
+                  if (def && !hashSaved[def.id]) {
                      allSaves.push(
                         ABDefinitionModel.create(def).catch((err) => {
                            if (err.toString().indexOf("already exists") > -1) {
