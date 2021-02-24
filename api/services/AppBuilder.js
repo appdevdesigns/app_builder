@@ -876,6 +876,7 @@ module.exports = {
             sails.config.codepush.production || {};
          sails.config.codepush.staging = sails.config.codepush.staging || {};
          sails.config.codepush.develop = sails.config.codepush.develop || {};
+         sails.config.codepush.nsapp = sails.config.codepush.nsapp || {};
 
          var SDCApp = new ABMobileApp({
             id: "SDC.id",
@@ -905,6 +906,14 @@ module.exports = {
                      android:
                         sails.config.codepush.develop.android ||
                         "android.codepush.develop.key"
+                  },
+                  nsapp: {
+                     ios:
+                        sails.config.codepush.nsapp.ios ||
+                        "ios.codepush.nsapp.key",
+                     android:
+                        sails.config.codepush.nsapp.android ||
+                        "android.codepush.nsapp.key"
                   }
                },
                platforms: {
