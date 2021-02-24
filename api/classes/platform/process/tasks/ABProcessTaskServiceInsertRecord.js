@@ -39,37 +39,90 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
             (o) => o.id == previousElement.objectID
          )[0];
 
-      let values = this.getDataValue(instance);
+      let tasks = [];
+      let pullDataTasks = [];
+      let results = [];
 
-      return Promise.resolve()
-         .then(() => this.object.modelAPI().create(values))
-         .then((record) => {
-            return new Promise((next, bad) => {
-               this.object
-                  .modelAPI()
-                  .findAll({
+      // Create tasks to pull data for repeat insert rows
+      if (this.isRepeat) {
+         let fieldRepeat = this.fieldRepeat;
+         if (fieldRepeat) {
+            let startData = this.processDataStart(instance);
+            let repeatDatas = startData[fieldRepeat.relationName()] || [];
+            if (repeatDatas && !Array.isArray(repeatDatas))
+               repeatDatas = [repeatDatas];
+
+            repeatDatas.forEach((rData) => {
+               pullDataTasks.push(
+                  () =>
+                     new Promise((next, bad) => {
+                        fieldRepeat.datasourceLink
+                           .modelAPI()
+                           .findAll({
+                              where: {
+                                 glue: "and",
+                                 rules: [
+                                    {
+                                       key: fieldRepeat.datasourceLink.PK(),
+                                       rule: "equals",
+                                       value:
+                                          rData[fieldRepeat.datasourceLink.PK()]
+                                    }
+                                 ]
+                              },
+                              populate: true
+                           })
+                           .catch(bad)
+                           .then((result) => {
+                              next(this.getDataValue(instance, result[0]));
+                           });
+                     })
+               );
+            });
+         }
+      }
+      // Pull a data to insert
+      else {
+         pullDataTasks.push(() => Promise.resolve(this.getDataValue(instance)));
+      }
+
+      (pullDataTasks || []).forEach((pullTask) => {
+         tasks.push(
+            Promise.resolve()
+               .then(() => pullTask())
+               .then((val) => this.object.modelAPI().create(val))
+               .then((record) =>
+                  this.object.modelAPI().findAll({
                      where: {
                         glue: "and",
                         rules: [
                            {
                               key: this.object.PK(),
                               rule: "equals",
-                              value: record.uuid
+                              value: record[this.object.PK()]
                            }
                         ]
                      },
                      populate: true
                   })
-                  .then((result) => {
-                     this.stateUpdate(instance, {
-                        data: result[0]
-                     });
-                     this.stateCompleted(instance);
-                     next(true);
-                  })
-                  .catch(bad);
-            });
-         });
+               )
+               .then((result) => {
+                  results.push(result[0]);
+                  return Promise.resolve();
+               })
+         );
+      });
+
+      return Promise.all(tasks).then(
+         () =>
+            new Promise((next, bad) => {
+               this.stateUpdate(instance, {
+                  data: results
+               });
+               this.stateCompleted(instance);
+               next(true);
+            })
+      );
    }
 
    /**
@@ -119,9 +172,12 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
     * @method getDataValue()
     * return the value to insert.
     * @param {obj} instance
+    * @param {obj} rawData - when the insert record task has multi-instance maker
+    *                        pass multi-raw data to this
+    *                        https://github.com/appdevdesigns/planning/issues/109
     * @return {mixed} | null
     */
-   getDataValue(instance) {
+   getDataValue(instance, rawData) {
       let result = {};
       let startData = this.processDataStart(instance);
       let previousData = this.processDataPrevious(instance);
@@ -211,10 +267,18 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                   result[field.columnName] = evalValue;
                }
                break;
+            case "5": // pull data from multiple instances
+               var fieldRepeat = this.fieldRepeat;
+               if (!fieldRepeat || !fieldRepeat.datasourceLink) break;
+               result[field.columnName] = getFieldValue(
+                  fieldRepeat.datasourceLink,
+                  item.value,
+                  rawData
+               );
+               break;
          }
       });
 
       return result;
    }
 };
-

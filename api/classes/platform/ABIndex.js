@@ -182,15 +182,17 @@ module.exports = class ABIndex extends ABIndexCore {
                         )}] Index[${indexName}] `
                      );
                      // ALTER TABLE {tableName} ADD INDEX {indexName} ({columnNames})
-                     return table.index(columnNames, indexName).catch((err) => {
-                        sails.log.error(
-                           `ABIndex.migrateCreate(): INDEX : Table[${tableName}] Column[${columnNames.join(
-                              ", "
-                           )}] Index[${indexName}] `,
-                           err
-                        );
-                        // throw err;
-                     });
+                     return table.index(columnNames, indexName);
+
+                     // .catch((err) => {
+                     //    sails.log.error(
+                     //       `ABIndex.migrateCreate(): INDEX : Table[${tableName}] Column[${columnNames.join(
+                     //          ", "
+                     //       )}] Index[${indexName}] `,
+                     //       err
+                     //    );
+                     //    // throw err;
+                     // });
                   }
                });
             })

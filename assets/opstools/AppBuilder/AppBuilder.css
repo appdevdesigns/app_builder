@@ -588,7 +588,7 @@ label {
 	border-color: rgba(0,0,0,0.1);
 }
 .webix_tree_none {
-	display: none;
+	/* display: none; */
 }
 .ab-background-lightgray {
 	background: #c0c5cc;
@@ -1077,6 +1077,9 @@ div.amp {
    z-index: 100;
    display: flex;
 }
+div.amp.qtt {
+   top: 108px;
+}
 div.amp div {
    padding: 5px 10px;
 }
@@ -1096,7 +1099,7 @@ div.amp:hover .fa-unlock-alt {
 div.amp:hover .fa-lock {
    display: none !important;
 }
-div.amp .fa-unlock-alt, div.amp .fa-lock {
+div.amp .fa-unlock-alt, div.amp .fa-lock, div.amp .fa-language {
    transform: scale(1.25, 1.25);
    text-shadow: 0px -1px 0px rgba(0,0,0,0.2);
 }
@@ -1252,4 +1255,8 @@ div.amp .fa-unlock-alt {
 .webix_warn .webix_button {
     background: #ff9800 !important;
     color: #fff !important;
+}
+.webix_dark .webix_inp_bottom_label {
+   color: lightgray;
+   font-style: oblique;
 }

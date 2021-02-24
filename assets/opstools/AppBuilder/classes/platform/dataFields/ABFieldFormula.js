@@ -1,11 +1,13 @@
-var ABFieldFormulaCore = require("../../core/dataFields/ABFieldFormulaCore");
-var ABFieldComponent = require("./ABFieldComponent");
+const ABFieldFormulaCore = require("../../core/dataFields/ABFieldFormulaCore");
+const ABFieldComponent = require("./ABFieldComponent");
+const RowFilter = require("../RowFilter");
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
 }
 
 var ids = {
+   field: "ab-field-formula-field",
    fieldList: "ab-field-formula-field-list"
 };
 
@@ -21,6 +23,11 @@ var ABFieldFormulaComponent = new ABFieldComponent({
 
    elements: (App, field) => {
       ids = field.idsUnique(ids, App);
+
+      ABFieldFormulaComponent.rowFilter = new RowFilter(
+         App,
+         "ab.dataField.formula.panel"
+      );
 
       return [
          {
@@ -44,6 +51,7 @@ var ABFieldFormulaComponent = new ABFieldComponent({
             ]
          },
          {
+            id: ids.field,
             view: "richselect",
             name: "field",
             label: L("ab.dataField.formula.field", "*Field"),
@@ -56,8 +64,14 @@ var ABFieldFormulaComponent = new ABFieldComponent({
                   template: field.logic.itemTemplate,
                   data: []
                }
+            },
+            on: {
+               onChange: (newValue) => {
+                  ABFieldFormulaComponent.logic.refreshFilter();
+               }
             }
-         }
+         },
+         ABFieldFormulaComponent.rowFilter.ui
       ];
    },
 
@@ -112,11 +126,20 @@ var ABFieldFormulaComponent = new ABFieldComponent({
          return template;
       },
 
-      show: function(pass_ids) {
+      show: function() {
          var list = this.getFieldList();
 
          $$(ids.fieldList).clearAll();
          $$(ids.fieldList).parse(list);
+      },
+
+      getSelectedField: () => {
+         let selectedId = $$(ids.field).getValue(); // fieldId:fieldLinkId
+         let selectedField = $$(ids.field)
+            .getList()
+            .data.find({ id: selectedId })[0];
+
+         return selectedField;
       },
 
       populate: (ids, values) => {
@@ -129,21 +152,49 @@ var ABFieldFormulaComponent = new ABFieldComponent({
          } else {
             $$(ids.field).setValue("");
          }
+
+         ABFieldFormulaComponent.logic.refreshFilter();
+         ABFieldFormulaComponent.rowFilter.setValue(
+            values.settings.where || {}
+         );
       },
 
       values: (ids, values) => {
-         var selectedId = $$(ids.field).getValue(); // fieldId:fieldLinkId
-
-         var selectedField = $$(ids.field)
-            .getList()
-            .data.find({ id: selectedId })[0];
+         let selectedField = ABFieldFormulaComponent.logic.getSelectedField();
          if (selectedField) {
             values.settings.field = selectedField.field.id;
             values.settings.fieldLink = selectedField.fieldLink.id;
             values.settings.object = selectedField.fieldLink.object.id;
+         } else {
+            values.settings.field = "";
+            values.settings.fieldLink = "";
+            values.settings.object = "";
          }
 
+         values.settings.where = ABFieldFormulaComponent.rowFilter.getValue();
+
          return values;
+      },
+
+      refreshFilter: () => {
+         let selectedField = ABFieldFormulaComponent.logic.getSelectedField();
+         if (
+            selectedField &&
+            selectedField.fieldLink &&
+            selectedField.fieldLink.object
+         ) {
+            ABFieldFormulaComponent.rowFilter.applicationLoad(
+               selectedField.fieldLink.object.application
+            );
+            ABFieldFormulaComponent.rowFilter.fieldsLoad(
+               selectedField.fieldLink.object.fields()
+            );
+            // ABFieldFormulaComponent.rowFilter.setValue({});
+         } else {
+            ABFieldFormulaComponent.rowFilter.applicationLoad(null);
+            ABFieldFormulaComponent.rowFilter.fieldsLoad([]);
+            // ABFieldFormulaComponent.rowFilter.setValue({});
+         }
       }
 
       // isValid: function (ids, isValid) {
@@ -173,7 +224,9 @@ var ABFieldFormulaComponent = new ABFieldComponent({
    // @param {obj} ids  the hash of id values for all the current form elements.
    //					 it should have your elements + the default Header elements:
    //						.label, .columnName, .fieldDescription, .showIcon
-   init: function(ids) {}
+   init: function(ids) {
+      ABFieldFormulaComponent.rowFilter.init({});
+   }
 });
 
 module.exports = class ABFieldFormula extends ABFieldFormulaCore {
@@ -251,4 +304,3 @@ module.exports = class ABFieldFormula extends ABFieldFormulaCore {
       return detailComponentSetting;
    }
 };
-

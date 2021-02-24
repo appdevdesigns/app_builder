@@ -13,10 +13,13 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
       return {
          name: `${id}_name`,
          objectID: `${id}_objectID`,
-         fieldValues: `${id}_fieldValues`
+         fieldValues: `${id}_fieldValues`,
+
+         repeatLayout: `${id}_repeatLayout`,
+         repeatMode: `${id}_repeatMode`,
+         repeatColumn: `${id}_repeatColumn`
       };
    }
-
    /**
     * @method propertiesShow()
     * display the properties panel for this Process Element.
@@ -28,6 +31,17 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
       let objectList = this.application.objects().map((o) => {
          return { id: o.id, value: o.label || o.name };
       });
+
+      let repeatColumnList = this.objectOfStartElement
+         ? this.objectOfStartElement
+              .fields((f) => f.key == "connectObject")
+              .map((f) => {
+                 return {
+                    id: f.id,
+                    value: f.label
+                 };
+              })
+         : [];
 
       let getFieldOptions = (object) => {
          let result = [];
@@ -77,18 +91,10 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
          if (!object) return;
 
          // Pull object & fields of start step
-         let startElemObj;
-         let startElemObjFields = [];
-         let startElem = this.startElement;
-         if (startElem) {
-            startElemObj = this.application.objects(
-               (o) => o.id == startElem.objectID
-            )[0];
-
-            if (startElemObj) {
-               startElemObjFields = getFieldOptions(startElemObj);
-            }
-         }
+         let startElemObj = this.objectOfStartElement;
+         let startElemObjFields = startElemObj
+            ? getFieldOptions(startElemObj)
+            : [];
 
          // Pull object & fields of previous step
          let prevElemObj;
@@ -102,6 +108,37 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             if (prevElemObj) {
                prevElemObjFields = getFieldOptions(prevElemObj);
             }
+         }
+
+         let setOptions = [
+            { id: 0, value: "Not Set" },
+            { id: 1, value: "Set by custom value" },
+            {
+               id: 2,
+               value: `Set by the root data [${
+                  startElemObj ? startElemObj.label : ""
+               }]`
+            },
+            {
+               id: 3,
+               value: `Set by previous step data [${
+                  prevElemObj ? prevElemObj.label : ""
+               }]`
+            },
+            { id: 4, value: "Set by formula format" }
+         ];
+
+         let repeatObjectFields = [];
+         let fieldRepeat = this.fieldRepeat;
+         if (fieldRepeat && fieldRepeat.datasourceLink) {
+            setOptions.push({
+               id: 5,
+               value: `Set by the instance [${
+                  this.fieldRepeat ? this.fieldRepeat.label : ""
+               }]`
+            });
+
+            repeatObjectFields = getFieldOptions(fieldRepeat.datasourceLink);
          }
 
          // field options to the form
@@ -125,23 +162,7 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
                         {
                            name: "setSelector",
                            view: "select",
-                           options: [
-                              { id: 0, value: "Not Set" },
-                              { id: 1, value: "Set by custom value" },
-                              {
-                                 id: 2,
-                                 value: `Set by the root data [${
-                                    startElemObj ? startElemObj.label : ""
-                                 }]`
-                              },
-                              {
-                                 id: 3,
-                                 value: `Set by previous step data [${
-                                    prevElemObj ? prevElemObj.label : ""
-                                 }]`
-                              },
-                              { id: 4, value: "Set by formula format" }
-                           ],
+                           options: setOptions,
                            on: {
                               onChange: function(newVal, oldVal) {
                                  let $parent = this.getParentView();
@@ -169,7 +190,12 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
                                  view: "select",
                                  options: prevElemObjFields
                               },
-                              { batch: 4, view: "text" }
+                              { batch: 4, view: "text" },
+                              {
+                                 batch: 5,
+                                 view: "select",
+                                 options: repeatObjectFields
+                              }
                            ]
                         }
                      ]
@@ -210,6 +236,55 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
                }
             },
             {
+               id: ids.repeatLayout,
+               hidden: true,
+               cols: [
+                  {
+                     id: ids.repeatMode,
+                     view: "select",
+                     label: L("ab.process.insertRecord.repeatMode", "*Repeat"),
+                     value: this.repeatMode,
+                     name: "repeatMode",
+                     width: 330,
+                     options: [
+                        {
+                           id: "rootData",
+                           value: L(
+                              "ab.process.insertRecord.repeatConnectRootData",
+                              "*For Connection in root data"
+                           )
+                        }
+                     ],
+                     on: {
+                        onChange: (newVal) => {
+                           this.repeatMode = newVal;
+                           refreshFieldValues();
+                        }
+                     }
+                  },
+                  {
+                     id: ids.repeatColumn,
+                     view: "select",
+                     label: "",
+                     value: this.repeatColumn,
+                     name: "repeatColumn",
+                     options: repeatColumnList,
+                     on: {
+                        onChange: (newVal) => {
+                           this.repeatColumn = newVal;
+                           refreshFieldValues();
+                        }
+                     }
+                  }
+               ],
+               on: {
+                  onViewShow: () => {
+                     this.propertiesStash(id);
+                     refreshFieldValues();
+                  }
+               }
+            },
+            {
                view: "fieldset",
                label: "Values",
                body: {
@@ -225,6 +300,18 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
       webix.ui(ui, $$(id));
 
       $$(id).show();
+
+      // Show/Hide repeat option UI
+      let $$repeatLayout = $$(ids.repeatLayout);
+      if ($$repeatLayout) {
+         $$repeatLayout.blockEvent();
+
+         this.isRepeat
+            ? $$(ids.repeatLayout).show()
+            : $$(ids.repeatLayout).hide();
+
+         $$repeatLayout.unblockEvent();
+      }
 
       refreshFieldValues();
    }
@@ -242,10 +329,24 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
       // TIP: keep the .settings entries == ids[s] keys and this will
       // remain simple:
       this.defaults.settings.forEach((s) => {
-         if (s === "fieldValues") {
-            this[s] = this.getFieldValues(id);
-         } else {
-            this[s] = this.property(ids[s]);
+         switch (s) {
+            case "fieldValues":
+               this[s] = this.getFieldValues(id);
+               break;
+            case "isRepeat":
+               // .isRepeat is set in .onChange
+               break;
+            case "repeatMode":
+            case "repeatColumn":
+               if (!this.isRepeat) {
+                  this[s] = "";
+                  break;
+               }
+            // no break;
+            // eslint-disable-next-line no-fallthrough
+            default:
+               this[s] = this.property(ids[s]);
+               break;
          }
       });
    }
@@ -301,4 +402,29 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
 
       return result;
    }
+
+   onChange(defElement, id) {
+      super.onChange(defElement);
+
+      let loopCharacteristics =
+         defElement.loopCharacteristics ||
+         defElement.businessObject.loopCharacteristics ||
+         {};
+
+      let ids = this.propertyIDs(id),
+         $repeatLayout = $$(ids.repeatLayout);
+      if (!$repeatLayout) return;
+
+      if (
+         loopCharacteristics.$type == "bpmn:MultiInstanceLoopCharacteristics" &&
+         loopCharacteristics.isSequential
+      ) {
+         this.isRepeat = true;
+         $repeatLayout.show();
+      } else {
+         this.isRepeat = false;
+         $repeatLayout.hide();
+      }
+   }
 };
+

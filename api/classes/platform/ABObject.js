@@ -924,9 +924,9 @@ module.exports = class ABClassObject extends ABObjectCore {
                            }
                            // Anonymous
                            else if (
-			      !this.viewName && // It have to be ABObject (not ABObjectQuery)
-			      scopeWhere.rules.length == 0
-			   ) {
+                              !this.viewName && // It have to be ABObject (not ABObjectQuery)
+                              scopeWhere.rules.length == 0
+                           ) {
                               return next(true);
                            }
                            // Process filter policies
@@ -953,505 +953,7 @@ module.exports = class ABClassObject extends ABObjectCore {
 
                      // Apply filters
                      if (!_.isEmpty(where)) {
-                        sails.log.info(
-                           "ABClassObject.populateFindConditions(): .where condition:",
-                           JSON.stringify(where, null, 4)
-                        );
-
-                        // @function parseCondition
-                        // recursive fn() to step through each of our provided conditions and
-                        // translate them into query.XXXX() operations.
-                        // @param {obj} condition  a QueryBuilder compatible condition object
-                        // @param {ObjectionJS Query} Query the query object to perform the operations.
-                        // @param {string} glue ["and" || "or"]- needs to set .orWhere or .where inside Grouping query of knex. https://github.com/knex/knex/issues/1254
-                        var parseCondition = (
-                           condition,
-                           Query,
-                           glue = "and"
-                        ) => {
-                           // 'have_no_relation' condition will be applied below
-                           if (
-                              condition == null ||
-                              condition.rule == "have_no_relation"
-                           )
-                              return;
-
-                           // FIX: some improper inputs:
-                           // if they didn't provide a .glue, then default to 'and'
-                           // current webix behavior, might not return this
-                           // so if there is a .rules property, then there should be a .glue:
-                           if (condition.rules) {
-                              condition.glue = condition.glue || "and";
-                           }
-
-                           // if this is a grouping condition, then decide how to group and
-                           // process our sub rules:
-                           if (condition.glue) {
-                              var nextCombineKey = "andWhere";
-                              if (condition.glue == "or") {
-                                 nextCombineKey = "orWhere";
-                              }
-
-                              Query[nextCombineKey](function() {
-                                 (condition.rules || []).forEach((r) => {
-                                    parseCondition(
-                                       r,
-                                       this,
-                                       condition.glue || "and"
-                                    );
-                                 });
-                              });
-
-                              return;
-                           }
-
-                           // Convert field id to column name
-                           if (AppBuilder.rules.isUuid(condition.key)) {
-                              var field = this.fields((f) => {
-                                 return (
-                                    f.id == condition.key &&
-                                    (!condition.alias ||
-                                       f.alias == condition.alias)
-                                 );
-                              })[0];
-                              if (field) {
-                                 // convert field's id to column name
-                                 condition.key = "{prefix}.`{columnName}`"
-                                    .replace("{prefix}", field.dbPrefix())
-                                    .replace("{columnName}", field.columnName);
-
-                                 // if we are searching a multilingual field it is stored in translations so we need to search JSON
-                                 if (field.isMultilingual) {
-                                    // TODO: move to ABOBjectExternal.js
-                                    if (
-                                       !this.viewName && // NOTE: check if this object is a query, then it includes .translations already
-                                       (field.object.isExternal ||
-                                          field.object.isImported)
-                                    ) {
-                                       let transTable = field.object.dbTransTableName();
-
-                                       let prefix = "";
-                                       if (field.alias) {
-                                          prefix = "{alias}_Trans".replace(
-                                             "{alias}",
-                                             field.alias
-                                          );
-                                       } else {
-                                          prefix = "{databaseName}.{tableName}"
-                                             .replace(
-                                                "{databaseName}",
-                                                field.object.dbSchemaName()
-                                             )
-                                             .replace(
-                                                "{tableName}",
-                                                transTable
-                                             );
-                                       }
-
-                                       condition.key = "{prefix}.{columnName}"
-                                          .replace("{prefix}", prefix)
-                                          .replace(
-                                             "{columnName}",
-                                             field.columnName
-                                          );
-
-                                       let languageWhere = '`{prefix}`.`language_code` = "{languageCode}"'
-                                          .replace("{prefix}", prefix)
-                                          .replace(
-                                             "{languageCode}",
-                                             userData.languageCode
-                                          );
-
-                                       if (glue == "or")
-                                          Query.orWhereRaw(languageWhere);
-                                       else Query.whereRaw(languageWhere);
-                                    } else {
-                                       let transCol;
-                                       // If it is a query
-                                       if (this.viewName)
-                                          transCol = "`{prefix}.translations`";
-                                       else transCol = "{prefix}.translations";
-
-                                       transCol = transCol.replace(
-                                          "{prefix}",
-                                          field.dbPrefix().replace(/`/g, "")
-                                       );
-
-                                       condition.key = ABMigration.connection().raw(
-                                          'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({transCol}, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({transCol}, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))'
-                                             .replace(/{transCol}/g, transCol)
-                                             .replace(
-                                                /{languageCode}/g,
-                                                userData.languageCode
-                                             )
-                                             .replace(
-                                                /{columnName}/g,
-                                                field.columnName
-                                             )
-                                       );
-                                    }
-                                 }
-
-                                 // if this is from a LIST, then make sure our value is the .ID
-                                 else if (
-                                    field.key == "list" &&
-                                    field.settings &&
-                                    field.settings.options &&
-                                    field.settings.options.filter
-                                 ) {
-                                    // NOTE: Should get 'id' or 'text' from client ??
-                                    var inputID = field.settings.options.filter(
-                                       (option) =>
-                                          option.id == condition.value ||
-                                          option.text == condition.value
-                                    )[0];
-                                    if (inputID) condition.value = inputID.id;
-                                 }
-
-                                 // DATE (not DATETIME)
-                                 else if (
-                                    field.key == "date" &&
-                                    condition.rule != "last_days" &&
-                                    condition.rule != "next_days"
-                                 ) {
-                                    condition.key = `DATE(${condition.key})`;
-                                    condition.value = `DATE("${condition.value}")`;
-                                 }
-
-                                 // Search string value of FK column
-                                 else if (
-                                    field.key == "connectObject" &&
-                                    (condition.rule == "contains" ||
-                                       condition.rule == "not_contains" ||
-                                       condition.rule == "equals" ||
-                                       condition.rule == "not_equal")
-                                 ) {
-                                    this.convertConnectFieldCondition(
-                                       field,
-                                       condition
-                                    );
-                                 }
-                              }
-                           }
-
-                           // sails.log.verbose('... basic condition:', JSON.stringify(condition, null, 4));
-
-                           // We are going to use the 'raw' queries for knex becuase the '.'
-                           // for JSON searching is misinterpreted as a sql identifier
-                           // our basic where statement will be:
-                           var whereRaw = "{fieldName} {operator} {input}";
-
-                           // make sure a value is properly Quoted:
-                           function quoteMe(value) {
-                              return "'" + value + "'";
-                           }
-
-                           // remove fields from rules
-                           var fieldTypes = [
-                              "number_",
-                              "string_",
-                              "date_",
-                              "boolean_",
-                              "user_",
-                              "list_",
-                              "connectObject_"
-                           ];
-
-                           // convert QB Rule to SQL operation:
-                           var conversionHash = {
-                              equals: "=",
-                              not_equal: "<>",
-                              is_empty: "=",
-                              is_not_empty: "<>",
-                              greater: ">",
-                              greater_or_equal: ">=",
-                              less: "<",
-                              less_or_equal: "<=",
-                              greater_current: ">",
-                              greater_or_equal_current: ">=",
-                              less_current: "<",
-                              less_or_equal_current: "<=",
-                              last_days: "BETWEEN",
-                              next_days: "BETWEEN"
-                           };
-
-                           // normal field name:
-                           var columnName = condition.key;
-                           if (typeof columnName == "string") {
-                              // make sure to ` ` columnName (if it isn't our special '1' condition )
-                              // see Policy:ABModelConvertSameAsUserConditions  for when that is applied
-                              if (
-                                 columnName != "1" &&
-                                 columnName.indexOf("`") == -1
-                              ) {
-                                 // if columnName is  a  table.field  then be sure to `` each one individually
-                                 var parts = columnName.split(".");
-                                 for (var p = 0; p < parts.length; p++) {
-                                    parts[p] = "`" + parts[p] + "`";
-                                 }
-                                 columnName = parts.join(".");
-                              }
-
-                              // ABClassQuery:
-                              // If this is query who create MySQL view, then column name does not have `
-                              if (this.viewName) {
-                                 columnName =
-                                    "`" + columnName.replace(/`/g, "") + "`";
-                              }
-                           }
-
-                           // remove the field type from the rule
-                           var rule = condition.rule;
-                           fieldTypes.forEach((f) => {
-                              rule = rule.replace(f, "");
-                           });
-                           condition.rule = rule;
-                           // basic case:  simple conversion
-                           var operator = conversionHash[condition.rule];
-                           var value = condition.value;
-
-                           // If a function, then ignore quote. like DATE('05-05-2020')
-                           if (!RegExp("^[A-Z]+[(].*[)]$").test(value)) {
-                              value = quoteMe(value);
-                           }
-
-                           // special operation cases:
-                           switch (condition.rule) {
-                              case "begins_with":
-                                 operator = "LIKE";
-                                 value = quoteMe(condition.value + "%");
-                                 break;
-
-                              case "not_begins_with":
-                                 operator = "NOT LIKE";
-                                 value = quoteMe(condition.value + "%");
-                                 break;
-
-                              case "contains":
-                                 operator = "LIKE";
-                                 value = quoteMe("%" + condition.value + "%");
-                                 break;
-
-                              case "not_contains":
-                                 operator = "NOT LIKE";
-                                 value = quoteMe("%" + condition.value + "%");
-                                 break;
-
-                              case "ends_with":
-                                 operator = "LIKE";
-                                 value = quoteMe("%" + condition.value);
-                                 break;
-
-                              case "not_ends_with":
-                                 operator = "NOT LIKE";
-                                 value = quoteMe("%" + condition.value);
-                                 break;
-
-                              case "between":
-                                 operator = "BETWEEN";
-                                 value = condition.value
-                                    .map(function(v) {
-                                       return quoteMe(v);
-                                    })
-                                    .join(" AND ");
-                                 break;
-
-                              case "not_between":
-                                 operator = "NOT BETWEEN";
-                                 value = condition.value
-                                    .map(function(v) {
-                                       return quoteMe(v);
-                                    })
-                                    .join(" AND ");
-                                 break;
-
-                              case "is_current_user":
-                                 operator = "=";
-                                 value = quoteMe(userData.username);
-                                 break;
-
-                              case "is_not_current_user":
-                                 operator = "<>";
-                                 value = quoteMe(userData.username);
-                                 break;
-
-                              case "contain_current_user":
-                                 columnName = `JSON_SEARCH(JSON_EXTRACT(${columnName}, '$[*].id'), 'one', '${userData.username}')`;
-                                 operator = "IS NOT";
-                                 value = "NULL";
-                                 break;
-
-                              case "not_contain_current_user":
-                                 columnName = `JSON_SEARCH(JSON_EXTRACT(${columnName}, '$[*].id'), 'one', '${userData.username}')`;
-                                 operator = "IS";
-                                 value = "NULL";
-                                 break;
-
-                              case "is_null":
-                                 operator = "IS NULL";
-                                 value = "";
-                                 break;
-
-                              case "is_not_null":
-                                 operator = "IS NOT NULL";
-                                 value = "";
-                                 break;
-
-                              case "in":
-                                 operator = "IN";
-
-                                 // If condition.value is MySQL query command - (SELECT .. FROM ?)
-                                 if (
-                                    typeof condition.value == "string" &&
-                                    RegExp("^[(].*[)]$").test(condition.value)
-                                 ) {
-                                    value = condition.value;
-                                 }
-                                 // if we wanted an IN clause, but there were no values sent, then we
-                                 // want to make sure this condition doesn't return anything
-                                 else if (
-                                    Array.isArray(condition.value) &&
-                                    condition.value.length > 0
-                                 ) {
-                                    value =
-                                       "(" +
-                                       condition.value
-                                          .map(function(v) {
-                                             return quoteMe(v);
-                                          })
-                                          .join(", ") +
-                                       ")";
-                                 } else {
-                                    // send a false by resetting the whereRaw to a fixed value.
-                                    // any future attempts to replace this will be ignored.
-                                    whereRaw = " 1=0 ";
-                                 }
-                                 break;
-
-                              case "not_in":
-                                 operator = "NOT IN";
-
-                                 // If condition.value is MySQL query command - (SELECT .. FROM ?)
-                                 if (
-                                    typeof condition.value == "string" &&
-                                    RegExp("^[(].*[)]$").test(condition.value)
-                                 ) {
-                                    value = condition.value;
-                                 }
-                                 // if we wanted a NOT IN clause, but there were no values sent, then we
-                                 // want to make sure this condition returns everything (not filtered)
-                                 else if (
-                                    Array.isArray(condition.value) &&
-                                    condition.value.length > 0
-                                 ) {
-                                    value =
-                                       "(" +
-                                       condition.value
-                                          .map(function(v) {
-                                             return quoteMe(v);
-                                          })
-                                          .join(", ") +
-                                       ")";
-                                 } else {
-                                    // send a TRUE value so nothing gets filtered
-                                    whereRaw = " 1=1 ";
-                                 }
-                                 break;
-
-                              case "greater_current":
-                              case "greater_or_equal_current":
-                              case "less_current":
-                              case "less_or_equal_current":
-                                 value = "NOW()";
-                                 break;
-
-                              case "last_days":
-                                 value = `DATE_SUB(NOW(), INTERVAL ${condition.value} DAY) AND NOW()`;
-                                 break;
-                              case "next_days":
-                                 value = `NOW() AND DATE_ADD(NOW(), INTERVAL ${condition.value} DAY)`;
-                                 break;
-                           }
-
-                           // validate input
-                           if (columnName == null || operator == null) return;
-
-                           // // if we are searching a multilingual field it is stored in translations so we need to search JSON
-                           // if (field && field.settings.supportMultilingual == 1) {
-                           // 	fieldName = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
-                           // 					.replace(/{tableName}/g, field.object.dbTableName(true))
-                           // 					.replace(/{languageCode}/g, userData.languageCode)
-                           // 					.replace(/{columnName}/g, field.columnName);
-                           // }
-
-                           // // if this is from a LIST, then make sure our value is the .ID
-                           // if (field && field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
-                           //     // NOTE: Should get 'id' or 'text' from client ??
-                           //     var inputID = field.settings.options.filter(option => (option.id == value || option.text == value))[0];
-                           //     if (inputID)
-                           //         value = inputID.id;
-                           // }
-
-                           // update our where statement:
-                           if (columnName && operator) {
-                              whereRaw = whereRaw
-                                 .replace("{fieldName}", columnName)
-                                 .replace("{operator}", operator)
-                                 .replace(
-                                    "{input}",
-                                    value != null ? value : ""
-                                 );
-
-                              // Now we add in our where
-                              if (glue == "or") Query.orWhereRaw(whereRaw);
-                              else Query.whereRaw(whereRaw);
-                           }
-                        };
-
-                        parseCondition(where, query);
-
-                        // Special Case:  'have_no_relation'
-                        // 1:1 - Get rows that no relation with
-                        var noRelationRules = (where.rules || []).filter(
-                           (r) => r.rule == "have_no_relation"
-                        );
-                        noRelationRules.forEach((r) => {
-                           // var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
-
-                           // var objectLink = field.objectLink();
-                           // if (!objectLink) return;
-
-                           // Query
-                           // 	.leftJoinRelation(relation_name)
-                           // 	.whereRaw('{relation_name}.{primary_name} IS NULL'
-                           // 		.replace('{relation_name}', relation_name)
-                           // 		.replace('{primary_name}', objectLink.PK()));
-
-                           // {
-                           //	key: "COLUMN_NAME", // no need to include object name
-                           //	rule: "have_no_relation",
-                           //	value: "LINK_OBJECT_PK_NAME"
-                           // }
-
-                           var field = this.fields((f) => f.id == r.key)[0];
-
-                           var relation_name = AppBuilder.rules.toFieldRelationFormat(
-                              field.columnName
-                           );
-
-                           var objectLink = field.datasourceLink;
-                           if (!objectLink) return;
-
-                           r.value = objectLink.PK();
-
-                           query
-                              .leftJoinRelation(relation_name)
-                              .whereRaw(
-                                 "{relation_name}.{primary_name} IS NULL"
-                                    .replace("{relation_name}", relation_name)
-                                    .replace("{primary_name}", r.value)
-                              );
-                        });
+                        this.populateWhereClause(query, where, userData);
                      }
 
                      // Apply Sorts
@@ -1680,7 +1182,7 @@ module.exports = class ABClassObject extends ABObjectCore {
                            query.omit(this.model(), ["id"]);
                      }
 
-                     this.selectFormulaFields(query);
+                     this.selectFormulaFields(query, userData);
 
                      // sails.log.debug('SQL:', query.toString() );
 
@@ -1688,6 +1190,467 @@ module.exports = class ABClassObject extends ABObjectCore {
                   })
             )
       );
+   }
+
+   populateWhereClause(query, where = {}, userData = {}) {
+      sails.log.info(
+         "ABClassObject.populateFindConditions(): .where condition:",
+         JSON.stringify(where, null, 4)
+      );
+
+      // @function parseCondition
+      // recursive fn() to step through each of our provided conditions and
+      // translate them into query.XXXX() operations.
+      // @param {obj} condition  a QueryBuilder compatible condition object
+      // @param {ObjectionJS Query} Query the query object to perform the operations.
+      // @param {string} glue ["and" || "or"]- needs to set .orWhere or .where inside Grouping query of knex. https://github.com/knex/knex/issues/1254
+      var parseCondition = (condition, Query, glue = "and") => {
+         // 'have_no_relation' condition will be applied below
+         if (condition == null || condition.rule == "have_no_relation") return;
+
+         // FIX: some improper inputs:
+         // if they didn't provide a .glue, then default to 'and'
+         // current webix behavior, might not return this
+         // so if there is a .rules property, then there should be a .glue:
+         if (condition.rules) {
+            condition.glue = condition.glue || "and";
+         }
+
+         // if this is a grouping condition, then decide how to group and
+         // process our sub rules:
+         if (condition.glue) {
+            var nextCombineKey = "andWhere";
+            if (condition.glue == "or") {
+               nextCombineKey = "orWhere";
+            }
+
+            Query[nextCombineKey](function() {
+               (condition.rules || []).forEach((r) => {
+                  parseCondition(r, this, condition.glue || "and");
+               });
+            });
+
+            return;
+         }
+
+         // Convert field id to column name
+         if (AppBuilder.rules.isUuid(condition.key)) {
+            var field = this.fields((f) => {
+               return (
+                  f.id == condition.key &&
+                  (!condition.alias || f.alias == condition.alias)
+               );
+            })[0];
+            if (field) {
+               // convert field's id to column name
+               condition.key = "{prefix}.`{columnName}`"
+                  .replace("{prefix}", field.dbPrefix())
+                  .replace("{columnName}", field.columnName);
+
+               // if we are searching a multilingual field it is stored in translations so we need to search JSON
+               if (field.isMultilingual) {
+                  // TODO: move to ABOBjectExternal.js
+                  if (
+                     !this.viewName && // NOTE: check if this object is a query, then it includes .translations already
+                     (field.object.isExternal || field.object.isImported)
+                  ) {
+                     let transTable = field.object.dbTransTableName();
+
+                     let prefix = "";
+                     if (field.alias) {
+                        prefix = "{alias}_Trans".replace(
+                           "{alias}",
+                           field.alias
+                        );
+                     } else {
+                        prefix = "{databaseName}.{tableName}"
+                           .replace(
+                              "{databaseName}",
+                              field.object.dbSchemaName()
+                           )
+                           .replace("{tableName}", transTable);
+                     }
+
+                     condition.key = "{prefix}.{columnName}"
+                        .replace("{prefix}", prefix)
+                        .replace("{columnName}", field.columnName);
+
+                     let languageWhere = '`{prefix}`.`language_code` = "{languageCode}"'
+                        .replace("{prefix}", prefix)
+                        .replace("{languageCode}", userData.languageCode);
+
+                     if (glue == "or") Query.orWhereRaw(languageWhere);
+                     else Query.whereRaw(languageWhere);
+                  } else {
+                     let transCol;
+                     // If it is a query
+                     if (this.viewName) transCol = "`{prefix}.translations`";
+                     else transCol = "{prefix}.translations";
+
+                     transCol = transCol.replace(
+                        "{prefix}",
+                        field.dbPrefix().replace(/`/g, "")
+                     );
+
+                     condition.key = ABMigration.connection().raw(
+                        'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({transCol}, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({transCol}, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))'
+                           .replace(/{transCol}/g, transCol)
+                           .replace(/{languageCode}/g, userData.languageCode)
+                           .replace(/{columnName}/g, field.columnName)
+                     );
+                  }
+               }
+
+               // if this is from a LIST, then make sure our value is the .ID
+               else if (
+                  field.key == "list" &&
+                  field.settings &&
+                  field.settings.options &&
+                  field.settings.options.filter
+               ) {
+                  // NOTE: Should get 'id' or 'text' from client ??
+                  var inputID = field.settings.options.filter(
+                     (option) =>
+                        option.id == condition.value ||
+                        option.text == condition.value
+                  )[0];
+                  if (inputID) condition.value = inputID.id;
+               }
+
+               // DATE (not DATETIME)
+               else if (
+                  field.key == "date" &&
+                  condition.rule != "last_days" &&
+                  condition.rule != "next_days"
+               ) {
+                  condition.key = `DATE(${condition.key})`;
+                  condition.value = `DATE("${condition.value}")`;
+               }
+
+               // Search string value of FK column
+               else if (
+                  field.key == "connectObject" &&
+                  (condition.rule == "contains" ||
+                     condition.rule == "not_contains" ||
+                     condition.rule == "equals" ||
+                     condition.rule == "not_equal")
+               ) {
+                  this.convertConnectFieldCondition(field, condition);
+               }
+            }
+         }
+
+         // sails.log.verbose('... basic condition:', JSON.stringify(condition, null, 4));
+
+         // We are going to use the 'raw' queries for knex becuase the '.'
+         // for JSON searching is misinterpreted as a sql identifier
+         // our basic where statement will be:
+         var whereRaw = "{fieldName} {operator} {input}";
+
+         // make sure a value is properly Quoted:
+         function quoteMe(value) {
+            return "'" + value + "'";
+         }
+
+         // remove fields from rules
+         var fieldTypes = [
+            "number_",
+            "string_",
+            "date_",
+            "boolean_",
+            "user_",
+            "list_",
+            "connectObject_"
+         ];
+
+         // convert QB Rule to SQL operation:
+         var conversionHash = {
+            equals: "=",
+            not_equal: "<>",
+            is_empty: "=",
+            is_not_empty: "<>",
+            greater: ">",
+            greater_or_equal: ">=",
+            less: "<",
+            less_or_equal: "<=",
+            greater_current: ">",
+            greater_or_equal_current: ">=",
+            less_current: "<",
+            less_or_equal_current: "<=",
+            last_days: "BETWEEN",
+            next_days: "BETWEEN"
+         };
+
+         // normal field name:
+         var columnName = condition.key;
+         if (typeof columnName == "string") {
+            // make sure to ` ` columnName (if it isn't our special '1' condition )
+            // see Policy:ABModelConvertSameAsUserConditions  for when that is applied
+            if (columnName != "1" && columnName.indexOf("`") == -1) {
+               // if columnName is  a  table.field  then be sure to `` each one individually
+               var parts = columnName.split(".");
+               for (var p = 0; p < parts.length; p++) {
+                  parts[p] = "`" + parts[p] + "`";
+               }
+               columnName = parts.join(".");
+            }
+
+            // ABClassQuery:
+            // If this is query who create MySQL view, then column name does not have `
+            if (this.viewName) {
+               columnName = "`" + columnName.replace(/`/g, "") + "`";
+            }
+         }
+
+         // remove the field type from the rule
+         var rule = condition.rule;
+         fieldTypes.forEach((f) => {
+            rule = rule.replace(f, "");
+         });
+         condition.rule = rule;
+         // basic case:  simple conversion
+         var operator = conversionHash[condition.rule];
+         var value = condition.value;
+
+         // If a function, then ignore quote. like DATE('05-05-2020')
+         if (!RegExp("^[A-Z]+[(].*[)]$").test(value)) {
+            value = quoteMe(value);
+         }
+
+         // special operation cases:
+         switch (condition.rule) {
+            case "begins_with":
+               operator = "LIKE";
+               value = quoteMe(condition.value + "%");
+               break;
+
+            case "not_begins_with":
+               operator = "NOT LIKE";
+               value = quoteMe(condition.value + "%");
+               break;
+
+            case "contains":
+               operator = "LIKE";
+               value = quoteMe("%" + condition.value + "%");
+               break;
+
+            case "not_contains":
+               operator = "NOT LIKE";
+               value = quoteMe("%" + condition.value + "%");
+               break;
+
+            case "ends_with":
+               operator = "LIKE";
+               value = quoteMe("%" + condition.value);
+               break;
+
+            case "not_ends_with":
+               operator = "NOT LIKE";
+               value = quoteMe("%" + condition.value);
+               break;
+
+            case "between":
+               operator = "BETWEEN";
+               value = condition.value
+                  .map(function(v) {
+                     return quoteMe(v);
+                  })
+                  .join(" AND ");
+               break;
+
+            case "not_between":
+               operator = "NOT BETWEEN";
+               value = condition.value
+                  .map(function(v) {
+                     return quoteMe(v);
+                  })
+                  .join(" AND ");
+               break;
+
+            case "is_current_user":
+               operator = "=";
+               value = quoteMe(userData.username);
+               break;
+
+            case "is_not_current_user":
+               operator = "<>";
+               value = quoteMe(userData.username);
+               break;
+
+            case "contain_current_user":
+               columnName = `JSON_SEARCH(JSON_EXTRACT(${columnName}, '$[*].id'), 'one', '${userData.username}')`;
+               operator = "IS NOT";
+               value = "NULL";
+               break;
+
+            case "not_contain_current_user":
+               columnName = `JSON_SEARCH(JSON_EXTRACT(${columnName}, '$[*].id'), 'one', '${userData.username}')`;
+               operator = "IS";
+               value = "NULL";
+               break;
+
+            case "is_null":
+               operator = "IS NULL";
+               value = "";
+               break;
+
+            case "is_not_null":
+               operator = "IS NOT NULL";
+               value = "";
+               break;
+
+            case "in":
+               operator = "IN";
+
+               // If condition.value is MySQL query command - (SELECT .. FROM ?)
+               if (
+                  typeof condition.value == "string" &&
+                  RegExp("^[(].*[)]$").test(condition.value)
+               ) {
+                  value = condition.value;
+               }
+               // if we wanted an IN clause, but there were no values sent, then we
+               // want to make sure this condition doesn't return anything
+               else if (
+                  Array.isArray(condition.value) &&
+                  condition.value.length > 0
+               ) {
+                  value =
+                     "(" +
+                     condition.value
+                        .map(function(v) {
+                           return quoteMe(v);
+                        })
+                        .join(", ") +
+                     ")";
+               } else {
+                  // send a false by resetting the whereRaw to a fixed value.
+                  // any future attempts to replace this will be ignored.
+                  whereRaw = " 1=0 ";
+               }
+               break;
+
+            case "not_in":
+               operator = "NOT IN";
+
+               // If condition.value is MySQL query command - (SELECT .. FROM ?)
+               if (
+                  typeof condition.value == "string" &&
+                  RegExp("^[(].*[)]$").test(condition.value)
+               ) {
+                  value = condition.value;
+               }
+               // if we wanted a NOT IN clause, but there were no values sent, then we
+               // want to make sure this condition returns everything (not filtered)
+               else if (
+                  Array.isArray(condition.value) &&
+                  condition.value.length > 0
+               ) {
+                  value =
+                     "(" +
+                     condition.value
+                        .map(function(v) {
+                           return quoteMe(v);
+                        })
+                        .join(", ") +
+                     ")";
+               } else {
+                  // send a TRUE value so nothing gets filtered
+                  whereRaw = " 1=1 ";
+               }
+               break;
+
+            case "greater_current":
+            case "greater_or_equal_current":
+            case "less_current":
+            case "less_or_equal_current":
+               value = "NOW()";
+               break;
+
+            case "last_days":
+               value = `DATE_SUB(NOW(), INTERVAL ${condition.value} DAY) AND NOW()`;
+               break;
+            case "next_days":
+               value = `NOW() AND DATE_ADD(NOW(), INTERVAL ${condition.value} DAY)`;
+               break;
+         }
+
+         // validate input
+         if (columnName == null || operator == null) return;
+
+         // // if we are searching a multilingual field it is stored in translations so we need to search JSON
+         // if (field && field.settings.supportMultilingual == 1) {
+         // 	fieldName = ('JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({tableName}.translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({tableName}.translations, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))')
+         // 					.replace(/{tableName}/g, field.object.dbTableName(true))
+         // 					.replace(/{languageCode}/g, userData.languageCode)
+         // 					.replace(/{columnName}/g, field.columnName);
+         // }
+
+         // // if this is from a LIST, then make sure our value is the .ID
+         // if (field && field.key == "list" && field.settings && field.settings.options && field.settings.options.filter) {
+         //     // NOTE: Should get 'id' or 'text' from client ??
+         //     var inputID = field.settings.options.filter(option => (option.id == value || option.text == value))[0];
+         //     if (inputID)
+         //         value = inputID.id;
+         // }
+
+         // update our where statement:
+         if (columnName && operator) {
+            whereRaw = whereRaw
+               .replace("{fieldName}", columnName)
+               .replace("{operator}", operator)
+               .replace("{input}", value != null ? value : "");
+
+            // Now we add in our where
+            if (glue == "or") Query.orWhereRaw(whereRaw);
+            else Query.whereRaw(whereRaw);
+         }
+      };
+
+      parseCondition(where, query);
+
+      // Special Case:  'have_no_relation'
+      // 1:1 - Get rows that no relation with
+      var noRelationRules = (where.rules || []).filter(
+         (r) => r.rule == "have_no_relation"
+      );
+      noRelationRules.forEach((r) => {
+         // var relation_name = AppBuilder.rules.toFieldRelationFormat(field.columnName);
+
+         // var objectLink = field.objectLink();
+         // if (!objectLink) return;
+
+         // Query
+         // 	.leftJoinRelation(relation_name)
+         // 	.whereRaw('{relation_name}.{primary_name} IS NULL'
+         // 		.replace('{relation_name}', relation_name)
+         // 		.replace('{primary_name}', objectLink.PK()));
+
+         // {
+         //	key: "COLUMN_NAME", // no need to include object name
+         //	rule: "have_no_relation",
+         //	value: "LINK_OBJECT_PK_NAME"
+         // }
+
+         var field = this.fields((f) => f.id == r.key)[0];
+
+         var relation_name = AppBuilder.rules.toFieldRelationFormat(
+            field.columnName
+         );
+
+         var objectLink = field.datasourceLink;
+         if (!objectLink) return;
+
+         r.value = objectLink.PK();
+
+         query
+            .leftJoinRelation(relation_name)
+            .whereRaw(
+               "{relation_name}.{primary_name} IS NULL"
+                  .replace("{relation_name}", relation_name)
+                  .replace("{primary_name}", r.value)
+            );
+      });
    }
 
    /**
@@ -1863,13 +1826,13 @@ module.exports = class ABClassObject extends ABObjectCore {
       });
    }
 
-   selectFormulaFields(query) {
+   selectFormulaFields(query, userData) {
       let raw = ABMigration.connection().raw;
 
       // Formula fields
       let formulaFields = this.fields((f) => f.key == "formula");
       (formulaFields || []).forEach((f) => {
-         let selectSQL = this.convertFormulaField(f);
+         let selectSQL = this.convertFormulaField(f, userData);
          if (selectSQL) {
             // selectSQL += ` AS ${this.dbTableName(true)}.${f.columnName}`;
             selectSQL += ` AS \`${f.columnName}\``;
@@ -1882,7 +1845,7 @@ module.exports = class ABClassObject extends ABObjectCore {
          query = query.select(`${this.dbTableName(true)}.*`);
    }
 
-   convertFormulaField(formulaField) {
+   convertFormulaField(formulaField, userData) {
       if (formulaField == null || formulaField.key != "formula") return "";
 
       let settings = formulaField.settings || {};
@@ -1910,6 +1873,38 @@ module.exports = class ABClassObject extends ABObjectCore {
          count: "COUNT"
       };
 
+      // Generate where clause of formula field
+      let whereClause = "";
+      if (
+         formulaField &&
+         formulaField.settings &&
+         formulaField.settings.where &&
+         formulaField.settings.where.rules &&
+         formulaField.settings.where.rules.length
+      ) {
+         let formulaFieldQuery = connectedObj.model().query();
+
+         connectedObj.populateWhereClause(
+            formulaFieldQuery,
+            formulaField.settings.where,
+            userData
+         );
+
+         let whereString = "";
+         try {
+            whereString = formulaFieldQuery.toString(); // select `DB_NAME`.`AB_TABLE_NAME`.* from `DB_NAME`.`AB_TABLE_NAME` where (`DB_NAME`.`AB_TABLE_NAME`.`COLUMN` LIKE '%VALUE%')
+
+            // get only where clause
+            let wherePosition = whereString.indexOf("where");
+            whereString = whereString.substring(
+               wherePosition + 5,
+               whereString.length
+            ); // It should be (`DB_NAME`.`AB_TABLE_NAME`.`COLUMN` LIKE '%VALUE%')
+
+            if (whereString) whereClause = ` AND ${whereString}`;
+         } catch (e) {}
+      }
+
       // M:1 , 1:1 isSource: false
       if (
          (connectedField.settings.linkType == "many" &&
@@ -1918,13 +1913,17 @@ module.exports = class ABClassObject extends ABObjectCore {
             connectedField.settings.linkViaType == "one" &&
             !connectedField.settings.isSource)
       ) {
-         selectSQL = `(SELECT ${type[settings.type]}(\`${
+         selectSQL = `(SELECT IFNULL(${type[settings.type]}(\`${
             numberField.columnName
-         }\`)
+         }\`), 0)
                   FROM ${connectedObj.dbTableName(true)}
                   WHERE ${connectedObj.dbTableName(true)}.\`${
             linkField.columnName
-         }\` = ${this.dbTableName(true)}.\`${this.PK()}\`)`;
+         }\` = ${this.dbTableName(true)}.\`${
+            connectedField.indexField
+               ? connectedField.indexField.columnName
+               : this.PK()
+         }\` ${whereClause})`;
       }
       // 1:M , 1:1 isSource: true
       else if (
@@ -1934,15 +1933,17 @@ module.exports = class ABClassObject extends ABObjectCore {
             connectedField.settings.linkViaType == "one" &&
             connectedField.settings.isSource)
       ) {
-         selectSQL = `(SELECT ${type[settings.type]}(\`${
+         selectSQL = `(SELECT IFNULL(${type[settings.type]}(\`${
             numberField.columnName
-         }\`)
+         }\`), 0)
                   FROM ${connectedObj.dbTableName(true)}
-                  WHERE ${connectedObj.dbTableName(
-                     true
-                  )}.\`${connectedObj.PK()}\` = ${this.dbTableName(true)}.\`${
+                  WHERE ${connectedObj.dbTableName(true)}.\`${
+            connectedField.indexField
+               ? connectedField.indexField.columnName
+               : connectedObj.PK()
+         }\` = ${this.dbTableName(true)}.\`${
             connectedField.columnName
-         }\`)`;
+         }\` ${whereClause})`;
       }
       // M:N
       else if (
@@ -1952,9 +1953,9 @@ module.exports = class ABClassObject extends ABObjectCore {
          let joinTable = connectedField.joinTableName(true),
             joinColumnNames = connectedField.joinColumnNames();
 
-         selectSQL = `(SELECT ${type[settings.type]}(\`${
+         selectSQL = `(SELECT IFNULL(${type[settings.type]}(\`${
             numberField.columnName
-         }\`)
+         }\`), 0)
                FROM ${connectedObj.dbTableName(true)}
                INNER JOIN ${joinTable}
                ON ${joinTable}.\`${
@@ -1962,7 +1963,7 @@ module.exports = class ABClassObject extends ABObjectCore {
          }\` = ${connectedObj.dbTableName(true)}.${connectedObj.PK()}
                WHERE ${joinTable}.\`${
             joinColumnNames.sourceColumnName
-         }\` = ${this.dbTableName(true)}.\`${this.PK()}\`)`;
+         }\` = ${this.dbTableName(true)}.\`${this.PK()}\` ${whereClause})`;
       }
 
       return selectSQL;
@@ -2046,4 +2047,3 @@ module.exports = class ABClassObject extends ABObjectCore {
       return AppBuilder.rules.isUuid(text);
    }
 };
-
