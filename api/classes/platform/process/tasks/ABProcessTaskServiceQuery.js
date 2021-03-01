@@ -49,7 +49,7 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
     */
    do(instance) {
       return new Promise((resolve, reject) => {
-         var myState = this.myState(instance);
+         // var myState = this.myState(instance);
 
          if (!this.qlObj) {
             var msg = `ABProcessTaskServiceQuery.do(): ${this.id} : Unable to create instance of our QL operations.`;
@@ -61,9 +61,12 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
          // tell our QueryLanguage Operation to .do() it's thang
          this.qlObj
             .do(instance)
-            .then(() => {
+            .then((result) => {
                // this resolves when all the operations are finished
                // so we are done!
+               this.stateUpdate(instance, {
+                  data: result ? result.data : null
+               });
 
                this.log(instance, `${this.name} completed successfully`);
                this.stateCompleted(instance);
@@ -79,5 +82,19 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
                reject(err);
             });
       });
+   }
+
+   /**
+    * @method processData()
+    * return the current value requested for the given data key.
+    * @param {obj} instance
+    * @return {mixed} | null
+    */
+   processData(instance, key) {
+      let myState = this.myState(instance);
+      let data = myState.data;
+      if (data == null) return null;
+
+      return key ? data[key] : data;
    }
 };

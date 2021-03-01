@@ -1,4 +1,5 @@
 const InsertRecordTaskCore = require("../../../core/process/tasks/ABProcessTaskServiceInsertRecordCore.js");
+const ABProcessTaskServiceQuery = require("./ABProcessTaskServiceQuery.js");
 
 const AB = require("ab-utils");
 const reqAB = AB.reqAB({}, {});
@@ -26,18 +27,6 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
          this.log(instance, errorMessage);
          return Promise.reject(new Error(errorMessage));
       }
-
-      let startElement = this.startElement;
-      if (startElement)
-         this.objectOfStartElem = this.application.objects(
-            (o) => o.id == startElement.objectID
-         )[0];
-
-      let previousElement = this.previousElement;
-      if (previousElement)
-         this.objectOfPrevElem = this.application.objects(
-            (o) => o.id == previousElement.objectID
-         )[0];
 
       let tasks = [];
       let pullDataTasks = [];
@@ -162,9 +151,15 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
       let prevElem = this.process.connectionPreviousTask(this)[0];
       if (!prevElem) return null;
 
-      if (!(prevElem instanceof InsertRecord)) return null;
+      let result = null;
 
-      let result = prevElem.processData(instance);
+      if (
+         prevElem instanceof InsertRecord ||
+         prevElem instanceof ABProcessTaskServiceQuery
+      ) {
+         result = prevElem.processData(instance);
+      }
+
       return result;
    }
 
@@ -241,14 +236,14 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                break;
             case "2": // update with root data
                result[field.columnName] = getFieldValue(
-                  this.objectOfStartElem,
+                  this.objectOfStartElement,
                   item.value,
                   startData
                );
                break;
             case "3": // update with previous data step
                result[field.columnName] = getFieldValue(
-                  this.objectOfPrevElem,
+                  this.objectOfPrevElement,
                   item.value,
                   previousData
                );

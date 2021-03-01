@@ -97,17 +97,10 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             : [];
 
          // Pull object & fields of previous step
-         let prevElemObj;
+         let prevElemObj = this.objectOfPrevElement;
          let prevElemObjFields = [];
-         let prevElem = this.process.connectionPreviousTask(this)[0];
-         if (prevElem) {
-            prevElemObj = this.application.objects(
-               (o) => o.id == prevElem.objectID
-            )[0];
-
-            if (prevElemObj) {
-               prevElemObjFields = getFieldOptions(prevElemObj);
-            }
+         if (prevElemObj) {
+            prevElemObjFields = getFieldOptions(prevElemObj);
          }
 
          let setOptions = [
@@ -427,4 +420,3 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
       }
    }
 };
-
