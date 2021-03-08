@@ -278,13 +278,22 @@ var ABFieldListComponent = new ABFieldComponent({
             css: "webix_primary",
             value: L("ab.dataField.list.addNewOption", "*Add new option"),
             click: function() {
-               var itemId = webix.uid();
-               var nextHex = getNextHex();
-               $$(ids.options).add(
-                  { id: itemId, value: "", hex: nextHex },
-                  $$(ids.options).count()
+               let itemId = webix.uid();
+               let nextHex = getNextHex();
+               let optionElem = $$(ids.options);
+               if (!optionElem) return;
+
+               optionElem.add(
+                  {
+                     id: itemId,
+                     value: "",
+                     hex: nextHex,
+                     isNew: true
+                  },
+                  optionElem.count()
                );
-               if ($$(ids.options).exists(itemId)) $$(ids.options).edit(itemId);
+
+               if (optionElem.exists(itemId)) optionElem.edit(itemId);
             }
          },
          {
@@ -413,8 +422,20 @@ var ABFieldListComponent = new ABFieldComponent({
          // Get options list from UI, then set them to settings
          values.settings.options = [];
          $$(ids.options).data.each((opt) => {
+            let optionId = opt.id;
+
+            // If it is a new option item, then .id uses string instead of UID
+            // for support custom index
+            if (
+               opt.isNew &&
+               opt.value &&
+               !values.settings.options.filter((o) => o.id == opt.value).length
+            ) {
+               optionId = opt.value;
+            }
+
             values.settings.options.push({
-               id: opt.id,
+               id: optionId,
                text: opt.value,
                hex: opt.hex,
                translations: opt.translations
