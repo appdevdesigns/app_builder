@@ -135,6 +135,11 @@ module.exports = class ABFieldDateTime extends ABFieldDateTimeCore {
       let myParameter = super.requestParam(allParameters);
       if (!myParameter || !myParameter[this.columnName]) return;
 
+      // Set current date
+      if (myParameter[this.columnName] == "ab-current-date") {
+         myParameter[this.columnName] = new Date();
+      }
+
       // not a valid date.
       if (myParameter[this.columnName] == "") {
          //// TODO:

@@ -210,12 +210,39 @@ module.exports = class RowUpdater extends ABComponent {
                inputView = formFieldComponent.ui;
 
             // WORKAROUND: add '[Current User]' option to the user data field
-            if (field.key == "user") {
-               inputView.options = inputView.options || [];
-               inputView.options.unshift({
-                  id: "ab-current-user",
-                  value: "*[Current User]"
-               });
+            switch (field.key) {
+               case "user":
+                  inputView.options = inputView.options || [];
+                  inputView.options.unshift({
+                     id: "ab-current-user",
+                     value: "*[Current User]"
+                  });
+                  break;
+               case "date":
+               case "datetime":
+                  inputView = {
+                     view: "layout",
+                     rows: [
+                        {
+                           view: "checkbox",
+                           labelWidth: 0,
+                           labelRight: "*Current Date/Time",
+                           on: {
+                              onChange: function(newVal) {
+                                 let layout = this.getParentView();
+                                 if (!layout) return;
+
+                                 let datePicker = layout.getChildViews()[1];
+                                 if (!datePicker) return;
+
+                                 newVal ? datePicker.hide() : datePicker.show();
+                              }
+                           }
+                        },
+                        inputView
+                     ]
+                  };
+                  break;
             }
 
             // Change component to display value
@@ -275,8 +302,19 @@ module.exports = class RowUpdater extends ABComponent {
 
                   let fieldInfo = _Object.fields((f) => f.id == fieldId)[0];
 
-                  // Get value from data field manager
-                  let val = fieldInfo.getValue($valueElem);
+                  let val;
+                  if (fieldInfo.key == "date" || fieldInfo.key == "datetime") {
+                     let currDateCheckbox = $valueElem.getChildViews()[0];
+                     if (currDateCheckbox.getValue() == true) {
+                        val = "ab-current-date";
+                     } else {
+                        let datePicker = $valueElem.getChildViews()[1];
+                        val = fieldInfo.getValue(datePicker);
+                     }
+                  } else {
+                     // Get value from data field manager
+                     val = fieldInfo.getValue($valueElem);
+                  }
 
                   // Add to output
                   result.push({
