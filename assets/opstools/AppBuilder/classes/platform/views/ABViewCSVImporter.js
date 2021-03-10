@@ -1544,11 +1544,11 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
          import: () => {
             // get ABDatacollection
             let dv = this.datacollection;
-            if (dv == null) return Promise.resolve();
+            if (dv == null) return Promise.resolve(); // TODO: refactor in v2
 
             // get ABObject
             let obj = dv.datasource;
-            if (obj == null) return Promise.resolve();
+            if (obj == null) return Promise.resolve(); // TODO: refactor in v2
 
             // get ABModel
             let model = dv.model;

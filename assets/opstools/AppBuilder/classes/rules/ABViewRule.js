@@ -320,7 +320,7 @@ module.exports = class ABViewRule {
    // @return {Promise}
    process(options) {
       var currentAction = this.currentAction();
-      if (!currentAction) return Promise.resolve();
+      if (!currentAction) return Promise.resolve(); // TODO: refactor in v2
 
       let isValid = this.isValid(options.data);
       if (isValid) {

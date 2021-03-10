@@ -194,10 +194,10 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
          options.componentId = options.componentId || ids.component;
 
          let dc = this.datacollection;
-         if (!dc) return Promise.resolve();
+         if (!dc) return Promise.resolve(); // TODO: refactor in v2
 
          let object = dc.datasource;
-         if (!object) return Promise.resolve();
+         if (!object) return Promise.resolve(); // TODO: refactor in v2
 
          let populateData = () => {
             let data = dc.getData();

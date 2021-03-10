@@ -140,10 +140,10 @@ module.exports = class ABViewPropertyEditPage extends ABViewPropertyAddPage {
             return Promise.resolve();
 
          let form = this._application.urlResolve(this.settings.editForm);
-         if (!form) return Promise.resolve();
+         if (!form) return Promise.resolve(); // TODO: refactor in v2
 
          let page = form.pageParent();
-         if (!page) return Promise.resolve();
+         if (!page) return Promise.resolve(); // TODO: refactor in v2
 
          return comp.openFormPopup(page);
       };

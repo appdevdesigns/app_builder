@@ -72,10 +72,10 @@ let getCsvWidget = ({ appID, pageID, viewID }) => {
 
 let getSQL = ({ defCSV, userData, extraWhere }) => {
    let dc = defCSV.___csv_datacollection;
-   if (!dc) return Promise.resolve();
+   if (!dc) return Promise.resolve(); // TODO: refactor in v2
 
    let obj = dc.datasource;
-   if (!obj) return Promise.resolve();
+   if (!obj) return Promise.resolve(); // TODO: refactor in v2
 
    let where = {
       glue: "and",

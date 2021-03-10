@@ -584,7 +584,7 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
          },
 
          save: () => {
-            if (!this._datacollection) return Promise.resolve();
+            if (!this._datacollection) return Promise.resolve(); // TODO: refactor in v2
 
             this._logic.busy();
 

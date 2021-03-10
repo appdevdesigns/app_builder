@@ -1335,11 +1335,11 @@ module.exports = class ABViewForm extends ABViewFormCore {
 
       // get ABDatacollection
       var dv = this.datacollection;
-      if (dv == null) return Promise.resolve();
+      if (dv == null) return Promise.resolve(); // TODO: refactor in v2
 
       // get ABObject
       var obj = dv.datasource;
-      if (obj == null) return Promise.resolve();
+      if (obj == null) return Promise.resolve(); // TODO: refactor in v2
 
       // get ABModel
       var model = dv.model;

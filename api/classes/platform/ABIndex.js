@@ -132,7 +132,7 @@ module.exports = class ABIndex extends ABIndexCore {
    }
 
    migrateCreate(knex) {
-      if (this.fields == null || !this.fields.length) return Promise.resolve();
+      if (this.fields == null || !this.fields.length) return Promise.resolve(); // TODO: refactor in v2
 
       let indexName = this.indexName;
       let tableName = this.object.dbTableName();
@@ -200,7 +200,7 @@ module.exports = class ABIndex extends ABIndexCore {
    }
 
    migrateDrop(knex) {
-      if (this.fields == null || !this.fields.length) return Promise.resolve();
+      if (this.fields == null || !this.fields.length) return Promise.resolve(); // TODO: refactor in v2
 
       let indexName = this.indexName;
       let tableName = this.object.dbTableName();
