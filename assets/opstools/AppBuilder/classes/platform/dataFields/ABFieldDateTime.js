@@ -715,4 +715,8 @@ module.exports = class ABFieldDateTime extends ABFieldDateTimeCore {
 
       return detailComponentSetting;
    }
+
+   dateToString(dateFormat, dateData) {
+      return webix.Date.dateToStr(dateFormat)(dateData);
+   }
 };
