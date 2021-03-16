@@ -197,8 +197,9 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       return new Promise((resolve, reject) => {
          // if (JE.status == complete) this has already been done, so skip
          if (
+            this.jeStatusField &&
             journalEntry[this.jeStatusField.columnName] ==
-            this.fieldJEStatusComplete
+               this.fieldJEStatusComplete
          ) {
             resolve();
             return;
@@ -221,6 +222,8 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             journalEntry
          )
             .then(() => {
+               if (this.jeStatusField == null) return resolve();
+
                // set JE.status = Complete
                journalEntry[
                   this.jeStatusField.columnName
