@@ -16,11 +16,11 @@ module.exports = {
    // GET: /app_builder/user/roles
    getRoles: function(req, res) {
       Permissions.getUserRoles(req, true)
-         .fail(function(err) {
-            res.AD.error(err);
-         })
          .then(function(result) {
             res.AD.success(result);
+         })
+         .fail(function(err) {
+            res.AD.error(err);
          });
 
       // let username = req.user.username();
@@ -44,11 +44,11 @@ module.exports = {
             select: ["username", "image_id"]
          }
       )
-         .fail(function(err) {
-            res.AD.error(err);
-         })
          .then(function(result) {
             res.AD.success(result || []);
+         })
+         .fail(function(err) {
+            res.AD.error(err);
          });
    },
 
@@ -57,10 +57,10 @@ module.exports = {
       let username = req.param("user");
 
       getRoles({ username, userdata: req.user.data })
-         .catch(res.AD.error)
          .then((roles) => {
             res.AD.success(roles || []);
-         });
+         })
+         .catch(res.AD.error);
    },
 
    // GET: /app_builder/user/myscopes
