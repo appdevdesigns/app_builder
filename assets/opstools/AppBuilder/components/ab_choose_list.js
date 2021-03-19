@@ -45,6 +45,7 @@ module.exports = class ABChooseList extends ABComponent {
          component: this.unique("component"),
 
          uploader: this.unique("uploader"),
+         exporter: this.unique("exporter"),
          list: this.unique("list"),
          toolBar: this.unique("toolbar"),
          buttonCreateNewApplication: this.unique("buttonNewApp")
@@ -140,6 +141,20 @@ module.exports = class ABChooseList extends ABComponent {
                               onFileUploadError: function(details, response) {
                                  _logic.onFileUploadError(details, response);
                               }
+                           }
+                        },
+                        {
+                           view: "button",
+                           id: ids.exporter,
+                           label: labels.common.export,
+                           autowidth: true,
+                           type: "icon",
+                           icon: "fa fa-download",
+                           css: "webix_transparent",
+                           click: function() {
+                              window.location.assign(
+                                 "/app_builder/appJSONall?download=1"
+                              );
                            }
                         }
                      ]
