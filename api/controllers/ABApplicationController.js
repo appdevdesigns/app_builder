@@ -98,15 +98,20 @@ module.exports = {
       var appID = req.param("id");
       var forDownload = req.param("download");
 
-      var Application = SystemObject.getApplication();
+      var Application = ABSystemObject.getApplication();
 
+      var nameTag = "app";
+      var Application = ABApplication.applicationForID(appID);
+      if (Application && Application.name) {
+         nameTag = _.camelCase(Application.name);
+      }
       var dateTag = moment().format("YYYYMMDD");
       AppBuilderExport.appToJSON(appID)
          .then(function(data) {
             if (forDownload) {
                res.set(
                   "Content-Disposition",
-                  `attachment; filename="app_${dateTag}.json"`
+                  `attachment; filename="${nameTag}_${dateTag}.json"`
                );
             }
             res.json(data);
@@ -174,7 +179,7 @@ module.exports = {
             if (forDownload) {
                res.set(
                   "Content-Disposition",
-                  `attachment; filename="app_${dateTag}.json"`
+                  `attachment; filename="appbuilder_${dateTag}.json"`
                );
             }
             res.json(exportData);
