@@ -78,6 +78,8 @@ module.exports = {
    /* Live display */
 
    /* Import & Export */
+   "get /app_builder/appJSONall":
+      "app_builder/ABApplicationController.jsonExportAll",
    "get /app_builder/appJSON/:id":
       "app_builder/ABApplicationController.jsonExport",
 

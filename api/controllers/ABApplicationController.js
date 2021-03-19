@@ -10,6 +10,9 @@ var fs = require("fs");
 var _ = require("lodash");
 var path = require("path");
 
+var ABApplication = require("../classes/platform/ABApplication");
+const moment = require("moment");
+
 module.exports = {
    // _config: {
    //    model: "abapplication", // all lowercase model name
@@ -95,15 +98,86 @@ module.exports = {
       var appID = req.param("id");
       var forDownload = req.param("download");
 
+      var Application = SystemObject.getApplication();
+
+      var dateTag = moment().format("YYYYMMDD");
       AppBuilderExport.appToJSON(appID)
          .then(function(data) {
             if (forDownload) {
                res.set(
                   "Content-Disposition",
-                  'attachment; filename="app.json"'
+                  `attachment; filename="app_${dateTag}.json"`
                );
             }
             res.json(data);
+         })
+         .catch(function(err) {
+            console.log(err);
+            res.AD.error(err);
+         });
+   },
+
+   /**
+    * GET /app_builder/appJSONall/
+    *
+    * Export an app in JSON format
+    */
+   jsonExportAll: function(req, res) {
+      var appID = req.param("id");
+      var forDownload = req.param("download");
+
+      var allExports = [];
+      // {array} of promises
+      // Tracks each of the .appToJSON() functions so we know when they
+      // are complete.
+
+      var exportData = null;
+      // {obj}
+      // this will mimic the final output format to return to the request.
+      // {
+      //    abVersion: "x.x.x",
+      //    definitions; [ {def}, ... ]
+      // }
+
+      var dataHash = {};
+      // {hash}  {def.id : def }
+      // we use this to exclude any duplicate definitions. We parse this into
+      // our final list at the end.
+
+      var allApps = ABApplication.applications();
+      (allApps || []).forEach((app) => {
+         allExports.push(
+            AppBuilderExport.appToJSON(app.id).then(function(data) {
+               if (!exportData) {
+                  exportData = data;
+               }
+               (data.definitions || []).forEach((def) => {
+                  dataHash[def.id] = def;
+               });
+            })
+         );
+      });
+
+      Promise.all(allExports)
+         .then(function(data) {
+            // reset our export.definitions
+            exportData.definitions = [];
+
+            // parse each entry in our dataHash & store it in our
+            // definitions
+            Object.keys(dataHash).forEach((k) => {
+               exportData.definitions.push(dataHash[k]);
+            });
+
+            var dateTag = moment().format("YYYYMMDD");
+
+            if (forDownload) {
+               res.set(
+                  "Content-Disposition",
+                  `attachment; filename="app_${dateTag}.json"`
+               );
+            }
+            res.json(exportData);
          })
          .catch(function(err) {
             console.log(err);
