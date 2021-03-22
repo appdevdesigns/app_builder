@@ -879,7 +879,9 @@ module.exports = class ABClassObject extends ABObjectCore {
                            (scopes || []).forEach((s) => {
                               if (
                                  !s ||
-                                 (s.objectIds || []).indexOf(this.id) < 0
+                                 (s.objectIds || []).filter((objId) =>
+                                    objectIds.includes(objId)
+                                 ).length < 1 // intersection values from 2 arrays
                               )
                                  return;
 
@@ -2047,3 +2049,4 @@ module.exports = class ABClassObject extends ABObjectCore {
       return AppBuilder.rules.isUuid(text);
    }
 };
+
