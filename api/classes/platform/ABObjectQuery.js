@@ -687,7 +687,7 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
             }
 
             let colFormat = (
-               "(SELECT {FN}({linkTable}.{linkColumn}) " +
+               "(SELECT {FN}({linkTable}.`{linkColumn}`) " +
                "FROM {linkTable} " +
                joinClause +
                " WHERE " +
