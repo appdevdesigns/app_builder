@@ -1170,14 +1170,15 @@ module.exports = class ABClassObject extends ABObjectCore {
                            relationNames.push("translations");
                         }
 
-                        if (relationNames.length > 0)
-                           console.log(relationNames);
-                        query.eager(`[${relationNames.join(", ")}]`, {
-                           // if the linked object's PK is uuid, then exclude .id
-                           unselectId: (builder) => {
-                              builder.omit(["id"]);
-                           }
-                        });
+                        if (relationNames.length > 0) {
+                           // console.log(relationNames);
+                           query.eager(`[${relationNames.join(", ")}]`, {
+                              // if the linked object's PK is uuid, then exclude .id
+                              unselectId: (builder) => {
+                                 builder.omit(["id"]);
+                              }
+                           });
+                        }
 
                         // Exclude .id column
                         if (this.PK() === "uuid")
@@ -2053,4 +2054,3 @@ module.exports = class ABClassObject extends ABObjectCore {
       return AppBuilder.rules.isUuid(text);
    }
 };
-
