@@ -94,14 +94,14 @@ module.exports = {
                   .forEach((def) => {
                      hashSaved[def.id] = def;
                      allSaves.push(
-                        ABDefinitionModel.create(def).catch((err) => {
+                        ABDefinition.create(def).catch((err) => {
                            //                            console.log(`>>>>>>>>>>>>>>>>>>>>>>
                            // ${err.toString()}
                            // >>>>>>>>>>>>>>>>>>>>>>`);
 
                            if (err.toString().indexOf("already exists") > -1) {
                               // console.log("===> trying an update instead.");
-                              return ABDefinitionModel.update(def.id, def);
+                              return ABDefinition.update(def.id, def);
                            }
                         })
                      );
@@ -275,14 +275,14 @@ ${err.toString()}
                (data.definitions || []).forEach((def) => {
                   if (def && !hashSaved[def.id]) {
                      allSaves.push(
-                        ABDefinitionModel.create(def).catch((err) => {
+                        ABDefinition.create(def).catch((err) => {
                            if (err.toString().indexOf("already exists") > -1) {
                               // console.log("===> trying an update instead.");
-                              return ABDefinitionModel.update(def.id, def);
+                              return ABDefinition.update(def.id, def);
                            }
 
                            console.log(`>>>>>>>>>>>>>>>>>>>>>>
-ABDefinitionModel.create() error:
+ABDefinition.create() error:
 ${err.toString()}
 >>>>>>>>>>>>>>>>>>>>>>`);
                         })

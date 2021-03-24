@@ -15,11 +15,28 @@ module.exports = class ABDefinition extends ABDefinitionCore {
     *
     * create a given ABDefinition
     *
-    * @param {obj} data   the values of the ABDefinition obj
+    * @param {object} data   the values of the ABDefinition obj
+    * @param {object} logOption - {
+    *                                  user: "username" | "AB_PROCESS",
+    *                                  type: "create" | "update" | "delete" | "import",
+    *                                  json: {Object} | {String}
+    *                               }
     * @return {Promise}   the updated value of the ABDefinition entry from the server.
     */
-   static create(data) {
-      return ABDefinitionModel.create(data);
+   static create(data, logOption = {}) {
+      return new Promise((resolve, reject) => {
+         ABDefinitionModel.create(data)
+            .catch(reject)
+            .then((result) => {
+               // Log
+               logOption.type = logOption.type || "create";
+               logOption.definitionId = result.id;
+               if (logOption.json == null) logOption.json = data;
+               ABDefinitionLogger.add(logOption);
+
+               resolve(result);
+            });
+      });
    }
 
    /**
@@ -28,10 +45,29 @@ module.exports = class ABDefinition extends ABDefinitionCore {
     * remove a given ABDefinition
     *
     * @param {obj} data   the values of the ABDefinition obj
+    * @param {object} logOption - {
+    *                                  user: "username" | "AB_PROCESS",
+    *                                  type: "create" | "update" | "delete" | "import",
+    *                                  json: {Object} | {String}
+    *                               }
     * @return {Promise}   the updated value of the ABDefinition entry from the server.
     */
-   static destroy(id) {
-      return ABDefinitionModel.destroy(id);
+   static destroy(id, logOption = {}) {
+      let defJson = this.definition(id);
+
+      return new Promise((resolve, reject) => {
+         ABDefinitionModel.destroy(id)
+            .catch(reject)
+            .then(() => {
+               // Log
+               logOption.type = "delete";
+               logOption.definitionId = id;
+               logOption.json = defJson;
+               ABDefinitionLogger.add(logOption);
+
+               resolve();
+            });
+      });
    }
 
    /**
@@ -52,10 +88,27 @@ module.exports = class ABDefinition extends ABDefinitionCore {
     *
     * @param {string} id  the id of the definition to update
     * @param {obj} data   the values of the ABDefinition obj
+    * @param {object} logOption - {
+    *                                  user: "username" | "AB_PROCESS",
+    *                                  type: "create" | "update" | "delete" | "import",
+    *                                  json: {Object} | {String}
+    *                               }
     * @return {Promise}   the updated value of the ABDefinition entry from the server.
     */
-   static update(id, data) {
-      return ABDefinitionModel.update({ id: id }, data);
+   static update(id, data, logOption = {}) {
+      return new Promise((resolve, reject) => {
+         ABDefinitionModel.update({ id: id }, data)
+            .catch(reject)
+            .then(() => {
+               // Log
+               logOption.type = "update";
+               logOption.definitionId = id;
+               logOption.json = data;
+               ABDefinitionLogger.add(logOption);
+
+               resolve();
+            });
+      });
    }
 
    /**
