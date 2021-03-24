@@ -28,10 +28,15 @@ module.exports = class ABDefinition extends ABDefinitionCore {
          ABDefinitionModel.create(data)
             .catch(reject)
             .then((result) => {
+               // this ABDefinitionModel instance does not create
+               if (result == null) return resolve();
+
                // Log
+               logOption = logOption || {};
                logOption.type = logOption.type || "create";
                logOption.definitionId = result.id;
-               if (logOption.json == null) logOption.json = data;
+               logOption.json = logOption.json || data;
+               logOption.user = logOption.user || "AB_UNKNOWN";
                ABDefinitionLogger.add(logOption);
 
                resolve(result);
@@ -60,9 +65,11 @@ module.exports = class ABDefinition extends ABDefinitionCore {
             .catch(reject)
             .then(() => {
                // Log
+               logOption = logOption || {};
                logOption.type = "delete";
                logOption.definitionId = id;
                logOption.json = defJson;
+               logOption.user = logOption.user || "AB_UNKNOWN";
                ABDefinitionLogger.add(logOption);
 
                resolve();
@@ -101,9 +108,11 @@ module.exports = class ABDefinition extends ABDefinitionCore {
             .catch(reject)
             .then(() => {
                // Log
-               logOption.type = "update";
+               logOption = logOption || {};
+               logOption.type = logOption.type || "update";
                logOption.definitionId = id;
-               logOption.json = data;
+               logOption.json = logOption.json || data;
+               logOption.user = logOption.user || "AB_UNKNOWN";
                ABDefinitionLogger.add(logOption);
 
                resolve();
