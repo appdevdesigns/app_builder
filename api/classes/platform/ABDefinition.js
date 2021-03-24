@@ -2,6 +2,16 @@
 
 var ABDefinitionCore = require("../core/ABDefinitionCore");
 
+function addLogging(definitionId, type, json, user) {
+   // Log
+   let logOption = {};
+   logOption.definitionId = definitionId;
+   logOption.type = type;
+   logOption.json = json;
+   logOption.user = user || "AB_UNKNOWN";
+   ABDefinitionLogger.add(logOption);
+}
+
 module.exports = class ABDefinition extends ABDefinitionCore {
    ///
    /// Static Methods
@@ -32,12 +42,12 @@ module.exports = class ABDefinition extends ABDefinitionCore {
                if (result == null) return resolve();
 
                // Log
-               logOption = logOption || {};
-               logOption.type = logOption.type || "create";
-               logOption.definitionId = result.id;
-               logOption.json = logOption.json || data;
-               logOption.user = logOption.user || "AB_UNKNOWN";
-               ABDefinitionLogger.add(logOption);
+               addLogging(
+                  result.id,
+                  logOption.type || "create",
+                  logOption.json || data,
+                  logOption.user || "AB_UNKNOWN"
+               );
 
                resolve(result);
             });
@@ -65,12 +75,12 @@ module.exports = class ABDefinition extends ABDefinitionCore {
             .catch(reject)
             .then(() => {
                // Log
-               logOption = logOption || {};
-               logOption.type = "delete";
-               logOption.definitionId = id;
-               logOption.json = defJson;
-               logOption.user = logOption.user || "AB_UNKNOWN";
-               ABDefinitionLogger.add(logOption);
+               addLogging(
+                  id,
+                  "delete",
+                  defJson,
+                  (logOption || {}).user || "AB_UNKNOWN"
+               );
 
                resolve();
             });
@@ -109,11 +119,12 @@ module.exports = class ABDefinition extends ABDefinitionCore {
             .then(() => {
                // Log
                logOption = logOption || {};
-               logOption.type = logOption.type || "update";
-               logOption.definitionId = id;
-               logOption.json = logOption.json || data;
-               logOption.user = logOption.user || "AB_UNKNOWN";
-               ABDefinitionLogger.add(logOption);
+               addLogging(
+                  id,
+                  logOption.type || "update",
+                  logOption.json || data,
+                  logOption.user || "AB_UNKNOWN"
+               );
 
                resolve();
             });

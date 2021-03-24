@@ -20,10 +20,9 @@ module.exports = {
 
    create: (req, res) => {
       let data = actionUtil.parseValues(req);
-      let username = (req.user.data || {}).username;
 
       ABDefinition.create(data, {
-         user: username
+         user: (req.user.data || {}).username
       })
          .catch((err) => res.negotiate(err))
          .then((newInstance) => {
@@ -58,9 +57,10 @@ module.exports = {
       // Listen when .res done
       res.on("finish", function() {
          // Logging
-         let pk = actionUtil.requirePk(req);
-         let data = actionUtil.parseValues(req);
-         let username = (req.user.data || {}).username;
+         let pk = actionUtil.requirePk(req),
+            data = actionUtil.parseValues(req),
+            username = (req.user.data || {}).username;
+
          ABDefinitionLogger.add({
             user: username,
             type: "update",
@@ -90,9 +90,8 @@ module.exports = {
          .then(
             (def) =>
                new Promise((next, bad) => {
-                  let username = (req.user.data || {}).username;
                   ABDefinitionLogger.add({
-                     user: username,
+                     user: (req.user.data || {}).username,
                      type: "delete",
                      definitionId: pk,
                      json: def.json
