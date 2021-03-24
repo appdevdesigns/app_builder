@@ -8,7 +8,7 @@
 module.exports = {
    tableName: "appbuilder_definition_logs",
 
-   // migrate: "safe",
+   migrate: "alter",
 
    attributes: {
       id: { type: "number", autoIncrement: true, primaryKey: true },
