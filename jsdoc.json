@@ -1,0 +1,30 @@
+{
+   "recurseDepth": 15,
+   "source": {
+      "include": ["./api/"],
+      "exclude": ["./api/classes/platform/dataFields/[template].js"],
+      "includePattern": ".+\\.js(doc|x)?$",
+      "excludePattern": "(^|\\/|\\\\)_"
+   },
+   "sourceType": "module",
+   "tags": {
+      "allowUnknownTags": true,
+      "dictionaries": ["jsdoc", "closure"]
+   },
+   "opts": {
+      "template": "./node_modules/jsd-jekyll",
+      "destination": "./docs/",
+      "recurse": true,
+      "repoUrls": [
+         {
+            "folder": "app_builder",
+            "url": "https://github.com/appdevdesigns/app_builder/blob/master"
+         },
+         {
+            "folder": "core",
+            "url": "https://github.com/appdevdesigns/appbuilder_class_core/blob/master/"
+         }
+      ]
+   },
+   "plugins": ["plugins/markdown", "./node_modules/jsd-jekyll"]
+}

@@ -20,7 +20,7 @@ coverage
 # Compiled binary addons (http://nodejs.org/api/addons.html)
 build/Release
 
-# .adn is our appdev cli config file. 
+# .adn is our appdev cli config file.
 .adn
 
 # ignore any mockup files
@@ -47,3 +47,6 @@ assets/opstools/BuildApp/BuildApp.js
 assets/opstools/BuildApp/BuildApp.js.map
 assets/opstools/BuildApp/OP_Bundle.js
 assets/opstools/BuildApp/OP_Bundle.js.map
+
+# JSDoc Output
+docs/*
