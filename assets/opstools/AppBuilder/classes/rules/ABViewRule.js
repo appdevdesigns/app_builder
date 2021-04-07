@@ -409,7 +409,7 @@ module.exports = class ABViewRule {
          // if we have multiple rules we need to check if value is already a number before converting.
          if (typeof text == "number") return text;
 
-         return parseFloat(text.replace(/[^0-9.]/g, ""));
+         return parseFloat(text.replace(/[^-0-9.]/g, ""));
       };
 
       // Fix string data in number type
@@ -458,3 +458,4 @@ module.exports = class ABViewRule {
       return currentAction.isPreProcess || false;
    }
 };
+
