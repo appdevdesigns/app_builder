@@ -1,8 +1,8 @@
 /**
- * ABModelConvertSameAsUserConditions
+ * @module      ABModelConvertSameAsUserConditions
  *
- * @module      :: Policy
- * @description :: Scan any provided conditions to see if we have a 'same_as_user'
+ * @description :: Policy
+ *              :: Scan any provided conditions to see if we have a 'same_as_user'
  *                 or 'not_same_as_user' clause.  If we do, convert it to an IN or NOT IN
  *                 clause.
  * @docs        :: http://sailsjs.org/#!documentation/policies

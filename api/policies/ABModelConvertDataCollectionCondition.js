@@ -1,8 +1,8 @@
 /**
- * ABModelConvertDataCollectionCondition
+ * @module ABModelConvertDataCollectionCondition
  *
- * @module      :: Policy
- * @description :: Scan any provided conditions to see if we have a 'in_data_collection'
+ * @description :: Policy
+ *              :: Scan any provided conditions to see if we have a 'in_data_collection'
  *                 or 'not_in_data_collection' clause.  If we do, convert it to an IN or NOT IN
  *                 clause. The assumption is that the current object is in this data collection.
  * @docs        :: http://sailsjs.org/#!documentation/policies

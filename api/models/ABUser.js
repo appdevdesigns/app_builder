@@ -1,7 +1,5 @@
 /**
- * SiteUser
- *
- * @module      :: Model
+ * @module SiteUser
  * @description :: Database store of user accounts on the site
  * @docs        :: http://sailsjs.org/#!documentation/models
  */

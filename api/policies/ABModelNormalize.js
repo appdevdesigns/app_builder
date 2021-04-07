@@ -1,8 +1,8 @@
 /**
- * ABModelNormalize
+ * @module      ABModelNormalize
  *
- * @module      :: Policy
- * @description :: Ensures our inputs for a .find clause are normaized into
+ * @description :: Policy
+ *              :: Ensures our inputs for a .find clause are normaized into
  *                 a common structure: { where:{}, skip:xx, limit:xx }
  * @docs        :: http://sailsjs.org/#!documentation/policies
  *

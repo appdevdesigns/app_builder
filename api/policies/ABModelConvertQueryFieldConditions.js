@@ -1,8 +1,8 @@
 /**
- * ABModelConvertQueryFieldConditions
  *
- * @module      :: Policy
- * @description :: Scan any provided conditions to see if we have a 'in_query_field'
+ * @module      ABModelConvertQueryFieldConditions
+ * @description :: Policy
+ *              :: Scan any provided conditions to see if we have a 'in_query_field'
  *                 or 'not_in_query_field' clause.  If we do, convert it to an IN or NOT IN
  *                 clause. This will filter by the selected field.
  * @docs        :: http://sailsjs.org/#!documentation/policies

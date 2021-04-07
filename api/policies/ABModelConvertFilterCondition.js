@@ -1,8 +1,8 @@
 /**
- * ABModelConvertFilterCondition
+ * @module ABModelConvertFilterCondition
  *
- * @module      :: Policy
- * @description :: Convert any provided Filter condition is in our QueryBuilder like
+ * @description :: Policy
+ *              :: Convert any provided Filter condition is in our QueryBuilder like
  *                 condition format.
  * @docs        :: http://sailsjs.org/#!documentation/policies
  *
