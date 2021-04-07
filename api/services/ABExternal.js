@@ -108,11 +108,13 @@ function getModelName(tableName) {
 
 /**
  * @method getAssociations
- * Get associations of sails.model from table name
+ * @description Get associations of sails.model from table name
  *
  * @param {string} tableName
  *
- * @return {array} [
+ * @return {object[]}
+ * @example <caption> Example return </caption>
+ * [
  * 		{
  * 			alias: 'ATTRIBUTE_NAME',
  * 			type: 'model',
@@ -142,9 +144,9 @@ function getAssociations(tableName) {
 module.exports = {
    /**
     * @method getConnectionList
-    * Get the list of DB connection name from sails.config.connections
+    * @description Get the list of DB connection name from sails.config.connections
     *
-    * @return {Array} - [string, string2, ..., stringN]
+    * @return {String[]}
     */
    getConnectionList: () => {
       var connectionNames = [];
@@ -167,12 +169,13 @@ module.exports = {
 
    /**
     * @method getTableList
-    * Get the list of table name
+    * @description Get the list of table name
     *
     * @param {guid} appID - The id of ABApplication
     * @param {string} connName - The name of database connection
     *
-    * @return Promise -
+    * @return {Promise}
+    * @example
     * 			return {Array} [
     * 				tableName {string}, ..., tableNameN {string}
     * 			]
@@ -281,7 +284,7 @@ module.exports = {
 
    /**
     * @method getColumns
-    * Get the column info list of a table
+    * @description Get the column info list of a table
     *
     * @param {string} tableName
     * @param {string} [connName]
@@ -289,7 +292,8 @@ module.exports = {
     *		By default the table is assumed to be from the 'appBuilder'
     *		connection.
     *
-    * @return Promise -
+    * @return {Promise}
+    * @example
     * 			return {
     * 				columnName: {
     * 								defaultValue: {null|string|integer},
@@ -448,17 +452,15 @@ module.exports = {
     * Imports an existing MySql table for use in an AB application.
     * An AB object will be created for that model.
     *
-    * @param integer	appID
-    * @param string	tableName
-    * @param [{
-    *		 name: string,
-    *		 label: string,
-    * 		fieldKey: string,
-    * 		isHidden: bool
-    * }] columnList
-    * @param string	[connName]
-    * @return Promise
-    *		Resolves with the data of the new imported object
+    * @param {integer}	appID
+    * @param {string}	tableName
+    * @param {object[]} columnList
+    * @param {string} columnList[].name
+    * @param {string} columnList[].label
+    * @param {string} columnList[].fieldKey
+    * @param {boolean} columnList[].isHidden
+    * @param {string}	[connName]
+    * @return {Promise}	Resolves with the data of the new imported object
     **/
    tableToObject: function(
       appID,

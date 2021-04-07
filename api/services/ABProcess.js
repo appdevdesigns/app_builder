@@ -12,7 +12,7 @@ module.exports = {
     /**
      * run
      * find a running ABProcessInstance and signal it to run() again.
-     * @param {array[string]} instanceID  the uuids of the ABProcessInstances
+     * @param {string[]} instanceID  the uuids of the ABProcessInstances
      * @return {Promise}
      */
     run: function(instanceID) {
@@ -104,7 +104,7 @@ module.exports = {
     /**
      * reset
      * find a running ABProcessInstance and signal it to reset().
-     * @param {array[string]} instanceID  the uuids of the ABProcessInstances
+     * @param {string[]} instanceID  the uuids of the ABProcessInstances
      * @param {string} taskID the diagramID of the ABProcessTask to reset
      * @return {Promise}
      */
