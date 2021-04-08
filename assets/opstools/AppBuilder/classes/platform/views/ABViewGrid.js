@@ -1119,8 +1119,31 @@ module.exports = class ABViewGrid extends ABViewGridCore {
             $$(ids.buttonSort).define("badge", sortRules.length || null);
             $$(ids.buttonSort).refresh();
 
-            // client sort data
-            $$(DataTable.ui.id).sort(PopupSortDataTableComponent.sort);
+            let gridElem = $$(DataTable.ui.id);
+            Promise.resolve()
+               // NOTE: Webix's client sorting does not support dynamic loading.
+               // If the data does not be loaded, then load all data.
+               .then(() => {
+                  if (gridElem.data.find({}).length < gridElem.data.count()) {
+                     return new Promise((next, bad) => {
+                        this.datacollection
+                           .reloadData(0, 0)
+                           .catch(bad)
+                           .then(() => {
+                              // wait until the grid component will done to repaint UI
+                              setTimeout(() => {
+                                 next();
+                              }, 777);
+                           });
+                     });
+                  } else {
+                     return Promise.resolve();
+                  }
+               })
+               // client sort data
+               .then(() => {
+                  gridElem.sort(PopupSortDataTableComponent.sort);
+               });
          },
 
          callbackFilterData: (fnFilter, filterRules) => {
