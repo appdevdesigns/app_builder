@@ -23,7 +23,7 @@ module.exports = {
    },
 
    // "parser": "babel-eslint",
-   extends: ["eslint:recommended", "prettier"], // extending recommended config and config derived from eslint-config-prettier
+   extends: ["eslint:recommended", "prettier", "plugin:jsdoc/recommended"], // extending recommended config and config derived from eslint-config-prettier
    plugins: ["prettier"], // activating esling-plugin-prettier (--fix stuff)
    rules: {
       "prettier/prettier": [
@@ -36,7 +36,7 @@ module.exports = {
             "tabWidth": 3
          }
       ],
-      "no-console": 0, // "off", 
+      "no-console": 0, // "off",
       // eqeqeq: ["error", "always"] // adding some custom ESLint rules
    }
 };
