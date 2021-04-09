@@ -15,16 +15,19 @@
       "template": "./node_modules/jsd-jekyll",
       "destination": "./docs/",
       "recurse": true,
-      "repoUrls": [
+      "repos": [
          {
             "folder": "app_builder",
-            "url": "https://github.com/appdevdesigns/app_builder/blob/master"
+            "name": "appdevdesigns/app_builder"
          },
          {
             "folder": "core",
-            "url": "https://github.com/appdevdesigns/appbuilder_class_core/blob/master/"
+            "name": "appdevdesigns/appbuilder_class_core"
          }
-      ]
+      ],
+      "includeAll": true,
+      "functionFix": true,
+      "folderCategory": true
    },
    "plugins": ["plugins/markdown", "./node_modules/jsd-jekyll"]
 }

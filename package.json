@@ -68,7 +68,7 @@
     "eslint-plugin-prettier": "^3.1.4",
     "extract-text-webpack-plugin": "^2.1.2",
     "file-loader": "^4.2.0",
-    "jsd-jekyll": "^0.1.1",
+    "jsd-jekyll": "^0.2.0",
     "jsdoc": "^3.6.6",
     "jsdom": "13.2.0",
     "jsdom-global": "3.0.2",
