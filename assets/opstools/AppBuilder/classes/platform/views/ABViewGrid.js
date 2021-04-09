@@ -1177,18 +1177,25 @@ module.exports = class ABViewGrid extends ABViewGridCore {
 
                         let limit = null;
 
-                        // limit pull data to reduce time and performance loading
-                        if (dc.__dataCollection.count() > 300) limit = 300;
+                        // // limit pull data to reduce time and performance loading
+                        // if (dc.totalCount > 300) limit = 300;
 
                         // Load all data
-                        dc.reloadData(0, limit)
-                           .catch(err)
-                           .then(() => {
-                              // Should set .loadAll to this data collection ?
-                              if (limit == null) dc.settings.loadAll = true;
+                        let gridElem = $$(DataTable.ui.id);
+                        if (
+                           gridElem.data.find({}).length < gridElem.data.count()
+                        ) {
+                           dc.reloadData(0, limit)
+                              .catch(err)
+                              .then(() => {
+                                 // Should set .loadAll to this data collection ?
+                                 if (limit == null) dc.settings.loadAll = true;
 
-                              next();
-                           });
+                                 next();
+                              });
+                        } else {
+                           next();
+                        }
                      })
                )
                // client filter data
