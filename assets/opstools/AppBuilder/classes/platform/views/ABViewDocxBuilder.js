@@ -715,10 +715,14 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
                         dcValues.push(resultData);
                      });
 
-                     // If data sources have more than 1, then add label of data source
+                     // If data sources have more than 1 or the result data more than 1 items, then add label of data source
                      let datacollectionData =
                         dcValues.length > 1 ? dcValues : dcValues[0];
-                     if (isDcLabelAdded) {
+                     if (
+                        isDcLabelAdded ||
+                        (Array.isArray(datacollectionData) &&
+                           datacollectionData.length > 1)
+                     ) {
                         (dc.translations || []).forEach((tran) => {
                            reportValues[tran.label] = datacollectionData;
                         });
@@ -1107,3 +1111,4 @@ module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
       };
    }
 };
+
