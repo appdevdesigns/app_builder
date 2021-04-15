@@ -22,10 +22,31 @@ function _onShow(App, compId, instance, component) {
    let rowData = {},
       node = elem.$view;
 
+   // we need to use the element id stored in the settings to find out what the
+   // ui component id is so later we can use it to look up its current value
+   let filterValue = null;
+   // we also need the id of the field that we are going to filter on
+   let filterKey = null;
+   // the value stored is hash1:hash2 hash1 = component view id of the element
+   // we want to get the value from and hash2 = the id of the field we are using
+   // to filter our options
+   if (
+      instance.settings.filterConnectedValue &&
+      instance.settings.filterConnectedValue.indexOf(":") > -1
+   ) {
+      filterValue =
+         instance.parent.viewComponents[
+            instance.settings.filterConnectedValue.split(":")[0]
+         ].ui.id;
+      filterKey = instance.settings.filterConnectedValue.split(":")[1];
+   }
+
    field.customDisplay(rowData, App, node, {
       editable: true,
       formView: instance.settings.formView,
       filters: instance.settings.objectWorkspace.filterConditions,
+      filterValue: filterValue,
+      filterKey: filterKey,
       editable: instance.settings.disable == 1 ? false : true,
       editPage:
          !instance.settings.editForm || instance.settings.editForm == "none"
@@ -268,6 +289,22 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
                            }
                         }
                      ]
+                  },
+                  {
+                     rows: [
+                        {
+                           view: "label",
+                           label: L(
+                              "ab.component.connect.filterConnectedValue",
+                              "*Filter by Connected Field Value:"
+                           )
+                        },
+                        {
+                           view: "combo",
+                           name: "filterConnectedValue",
+                           options: [] // we will add these in propertyEditorPopulate
+                        }
+                     ]
                   }
                ]
             }
@@ -278,9 +315,67 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
    static propertyEditorPopulate(App, ids, view) {
       super.propertyEditorPopulate(App, ids, view);
 
+      // Default set of options for filter connected combo
+      let filterConnectedOptions = [{ id: "", value: "" }];
+      // get the definitions for the connected field
+      let fieldDefs = view.application.definitionForID(view.settings.fieldId);
+      // get the definition for the object that the field is related to
+      let objectDefs = view.application.definitionForID(
+         fieldDefs.settings.linkObject
+      );
+      // we need these definitions later as we check to find out which field
+      // we are filtering by so push them into an array for later
+      let fieldsDefs = [];
+      objectDefs.fieldIDs.forEach((fld) => {
+         fieldsDefs.push(view.application.definitionForID(fld));
+      });
+      // find out what connected objects this field has
+      let connectedObjs = view.application.connectedObjects(
+         fieldDefs.settings.linkObject
+      );
+      // loop through the form's elements (need to ensure that just looking at parent is okay in all cases)
+      view.parent.views().forEach((element) => {
+         // identify if element is a connected field
+         if (element.key == "connect") {
+            // we need to get the fields defs to find out what it is connected to
+            let formElementsDefs = view.application.definitionForID(
+               element.settings.fieldId
+            );
+            // loop through the connected objects discovered above
+            connectedObjs.forEach((connObj) => {
+               // see if the connected object matches the connected object of the form element
+               if (connObj.id == formElementsDefs.settings.linkObject) {
+                  // get the ui id of this component that matches the link Object
+                  let fieldToCheck;
+                  fieldsDefs.forEach((fdefs) => {
+                     if (
+                        fdefs.settings.linkObject &&
+                        fdefs.settings.linkType == "one" &&
+                        fdefs.settings.linkObject ==
+                           formElementsDefs.settings.linkObject
+                     ) {
+                        fieldToCheck = fdefs.id;
+                     }
+                  });
+                  // only add optinos that have a fieldToCheck
+                  if (fieldToCheck) {
+                     // get the component we are referencing so we can display its label
+                     let formComponent = view.parent.viewComponents[element.id]; // need to ensure that just looking at parent is okay in all cases
+                     filterConnectedOptions.push({
+                        id: element.id + ":" + fieldToCheck, // store the element id because the ui id changes on each load
+                        value: formComponent.ui.name // should be the translated field label
+                     });
+                  }
+               }
+            });
+         }
+      });
+
       // Set the options of the possible edit forms
       this.addPageProperty.setSettings(view, view.settings);
       this.editPageProperty.setSettings(view, view.settings);
+      $$(ids.filterConnectedValue).define("options", filterConnectedOptions);
+      $$(ids.filterConnectedValue).setValue(view.settings.filterConnectedValue);
 
       $$(ids.popupWidth).setValue(
          view.settings.popupWidth ||
@@ -314,6 +409,9 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
       view.settings.popupWidth = $$(ids.popupWidth).getValue();
       view.settings.popupHeight = $$(ids.popupHeight).getValue();
+      view.settings.filterConnectedValue = $$(
+         ids.filterConnectedValue
+      ).getValue();
       view.settings.objectWorkspace = {
          filterConditions: FilterComponent.getValue()
       };
