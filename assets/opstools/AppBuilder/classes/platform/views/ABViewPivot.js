@@ -1,5 +1,6 @@
 const ABViewPivotCore = require("../../core/views/ABViewPivotCore");
 const ABFieldNumber = require("../dataFields/ABFieldNumber");
+const ABObjectQuery = require("../ABObjectQuery");
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -199,6 +200,16 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
          let object = dc.datasource;
          if (!object) return Promise.resolve(); // TODO: refactor in v2
 
+         let $pivotComp = $$(ids.component);
+         if ($pivotComp && object instanceof ABObjectQuery) {
+            let customLabels = {};
+            object.fields().forEach((f) => {
+               customLabels[f.columnName] = f.label;
+            });
+
+            $pivotComp.define("fieldMap", customLabels);
+         }
+
          let populateData = () => {
             let data = dc.getData();
             let dataMapped = data.map((d) => {
@@ -262,3 +273,4 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
       };
    }
 };
+
