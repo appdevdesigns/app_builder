@@ -595,8 +595,8 @@ var ABFieldConnectComponent = new ABFieldComponent({
 });
 
 module.exports = class ABFieldConnect extends ABFieldConnectCore {
-   constructor(values, object) {
-      super(values, object);
+   constructor(values, object, fieldDefaults) {
+      super(values, object, fieldDefaults);
    }
 
    /*

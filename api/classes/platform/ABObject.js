@@ -1762,10 +1762,6 @@ module.exports = class ABClassObject extends ABObjectCore {
       return super.fields(filter, getAll);
    }
 
-   connectFields(getAll = true) {
-      return this.fields((f) => f && f.key == "connectObject", getAll);
-   }
-
    /**
     * @method processFilterPolicy
     *

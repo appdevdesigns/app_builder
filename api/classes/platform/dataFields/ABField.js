@@ -268,7 +268,7 @@ module.exports = class ABField extends ABFieldCore {
 
       if (
          !_.isUndefined(allParameters[this.columnName]) &&
-         this.key == "connectObject"
+         (this.key == "connectObject" || this.key == "user")
       ) {
          myParameter = {};
          myParameter[this.columnName] = allParameters[this.columnName];

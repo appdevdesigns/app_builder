@@ -1,3 +1,4 @@
+var ABMLClass = require("../ABMLClass");
 var ABFieldUserCore = require("../../core/dataFields/ABFieldUserCore");
 var ABFieldComponent = require("./ABFieldComponent");
 
@@ -71,6 +72,7 @@ var ABFieldUserComponent = new ABFieldComponent({
             view: "checkbox",
             name: "isShowProfileImage",
             id: ids.isShowProfileImage,
+            hidden: true, // NOTE: The user field equal to the connect field
             labelRight: L(
                "ab.dataField.user.isShowProfileImage",
                "*Show Profile Image"
@@ -81,6 +83,7 @@ var ABFieldUserComponent = new ABFieldComponent({
             view: "checkbox",
             name: "isShowUsername",
             id: ids.isShowUsername,
+            hidden: true, // NOTE: The user field equal to the connect field
             labelRight: L("ab.dataField.user.showUsername", "*Show Username"),
             labelWidth: App.config.labelWidthCheckbox
          }
@@ -155,361 +158,433 @@ module.exports = class ABFieldUser extends ABFieldUserCore {
    /// Working with Actual Object Values:
    ///
 
+   save() {
+      // Add new
+      if (this.id == null) {
+         const SITE_USER_OBJECT_ID = "228e3d91-5e42-49ec-b37c-59323ae433a1"; // TODO: How to get the id of SITE_USER object properly ?
+         this.settings.linkObject = SITE_USER_OBJECT_ID;
+
+         if (this.settings.isMultiple) {
+            this.settings.linkType = "many";
+            this.settings.linkViaType = "many";
+            this.settings.isSource = 1;
+         } else {
+            this.settings.linkType = "one";
+            this.settings.linkViaType = "many";
+            this.settings.isSource = 1;
+         }
+
+         let linkObject = this.datasourceLink;
+         let linkCol = linkObject.fieldNew({
+            key: ABFieldUserCore.defaults().key,
+            columnName: this.object.tableName,
+            label: this.object.label,
+            settings: {
+               showIcon: this.settings.showIcon,
+               linkObject: this.object.id,
+               linkType: this.settings.linkViaType,
+               linkViaType: this.settings.linkType,
+               isCustomFK: false,
+               isSource: 0
+            }
+         });
+
+         return (
+            Promise.resolve()
+               // Create definitions of the connected fields
+               .then(() => ABMLClass.prototype.save.call(this))
+               .then(() => {
+                  linkCol.settings.linkColumn = this.id;
+                  return ABMLClass.prototype.save.call(linkCol);
+               })
+               // Update the id value of linked field to connect together
+               .then(() => {
+                  this.settings.linkColumn = linkCol.id;
+                  return ABMLClass.prototype.save.call(this);
+               })
+
+               // Add fields to Objects
+               .then(() => this.object.fieldAdd(this))
+               .then(() => linkObject.fieldAdd(linkCol))
+
+               // Create column to DB
+               .then(() => this.migrateCreate())
+               // .then(() => linkCol.migrateCreate())
+               .then(() => {
+                  this.object.model().refresh();
+                  linkCol.object.model().refresh();
+
+                  return Promise.resolve(this);
+               })
+         );
+      } else {
+         return super.save();
+      }
+   }
+
    // return the grid column header definition for this instance of ABFieldUser
    columnHeader(options) {
       options = options || {};
+      options.editable = this.settings.editable;
+      return super.columnHeader(options);
 
-      var config = super.columnHeader(options);
-      var field = this;
-      var App = App;
+      //    options = options || {};
 
-      var editable = options.editable;
-      var width = options.width;
+      //    var config = super.columnHeader(options);
+      //    var field = this;
+      //    var App = App;
 
-      // Multiple select list
-      if (field.settings.isMultiple) {
-         config.template = (row) => {
-            if (row.$group) return row[field.columnName];
+      //    var editable = options.editable;
+      //    var width = options.width;
 
-            var node = document.createElement("div");
-            node.classList.add("list-data-values");
-            if (typeof width != "undefined") {
-               node.style.marginLeft = width + "px";
-            }
+      //    // Multiple select list
+      //    if (field.settings.isMultiple) {
+      //       config.template = (row) => {
+      //          if (row.$group) return row[field.columnName];
 
-            var domNode = node;
+      //          var node = document.createElement("div");
+      //          node.classList.add("list-data-values");
+      //          if (typeof width != "undefined") {
+      //             node.style.marginLeft = width + "px";
+      //          }
 
-            var readOnly = false;
-            if (editable != null && editable == false) {
-               readOnly = true;
-            }
+      //          var domNode = node;
 
-            var placeholder = "";
-            if (field.settings.editable && readOnly == false) {
-               placeholder = L(
-                  "ab.dataField.user.placeHolder_single",
-                  "*Select users"
-               );
-            }
+      //          var readOnly = false;
+      //          if (editable != null && editable == false) {
+      //             readOnly = true;
+      //          }
 
-            var data = row[field.columnName];
-            if (data == "") data = [];
+      //          var placeholder = "";
+      //          if (field.settings.editable && readOnly == false) {
+      //             placeholder = L(
+      //                "ab.dataField.user.placeHolder_single",
+      //                "*Select users"
+      //             );
+      //          }
 
-            field.selectivityRender(
-               domNode,
-               {
-                  multiple: true,
-                  placeholder: placeholder,
-                  data: data,
-                  isUsers: true,
-                  readOnly: readOnly
-               },
-               App,
-               row
-            );
+      //          var data = row[field.columnName];
+      //          if (data == "") data = [];
 
-            return node.outerHTML;
-         };
-      }
-      // Single select list
-      else {
-         var formClass = "";
-         var placeHolder = "";
-         if (editable) {
-            formClass = " form-entry";
-            placeHolder =
-               "<span style='color: #CCC; padding: 0 5px;'>" +
-               L("ab.dataField.user.placeholder_single", "*Select user") +
-               "</span>";
-         }
+      //          field.selectivityRender(
+      //             domNode,
+      //             {
+      //                multiple: true,
+      //                placeholder: placeholder,
+      //                data: data,
+      //                isUsers: true,
+      //                readOnly: readOnly
+      //             },
+      //             App,
+      //             row
+      //          );
 
-         config.template = (obj) => {
-            if (obj.$group) return obj[field.columnName];
+      //          return node.outerHTML;
+      //       };
+      //    }
+      //    // Single select list
+      //    else {
+      //       var formClass = "";
+      //       var placeHolder = "";
+      //       if (editable) {
+      //          formClass = " form-entry";
+      //          placeHolder =
+      //             "<span style='color: #CCC; padding: 0 5px;'>" +
+      //             L("ab.dataField.user.placeholder_single", "*Select user") +
+      //             "</span>";
+      //       }
 
-            var myHex = "#666666";
-            var myText = placeHolder;
-            var imageId = "";
-            var users = field.getUsers();
+      //       config.template = (obj) => {
+      //          if (obj.$group) return obj[field.columnName];
 
-            users.forEach((h) => {
-               if (h.id == obj[field.columnName]) {
-                  myText = h.value;
-                  imageId = h.image;
-               }
-            });
-            if (obj[field.columnName]) {
-               var removeIcon = editable
-                  ? ' <a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>'
-                  : "";
-               var profileImage =
-                  '<i style="opacity: 0.6;" class="fa fa-user"></i> ';
-               if (field.settings.isShowProfileImage && imageId) {
-                  profileImage =
-                     "<img src='/opsportal/image/UserProfile/" +
-                     imageId +
-                     "' style='border-radius:100%; object-fit: cover; margin: 0 5px 0 -10px;' width='28' height='28' />";
-               }
-               if (!field.settings.isShowUsername) {
-                  myText = "";
-               }
-               return (
-                  '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;">' +
-                  profileImage +
-                  myText +
-                  removeIcon +
-                  " </span>"
-               );
-            } else {
-               return myText;
-            }
-         };
+      //          var myHex = "#666666";
+      //          var myText = placeHolder;
+      //          var imageId = "";
+      //          var users = field.getUsers();
 
-         if ((field.settings.editable = 1)) {
-            config.editor = "richselect";
-            config.options = field.getUsers();
-         }
-      }
-      return config;
+      //          users.forEach((h) => {
+      //             if (h.id == obj[field.columnName]) {
+      //                myText = h.value;
+      //                imageId = h.image;
+      //             }
+      //          });
+      //          if (obj[field.columnName]) {
+      //             var removeIcon = editable
+      //                ? ' <a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>'
+      //                : "";
+      //             var profileImage =
+      //                '<i style="opacity: 0.6;" class="fa fa-user"></i> ';
+      //             if (field.settings.isShowProfileImage && imageId) {
+      //                profileImage =
+      //                   "<img src='/opsportal/image/UserProfile/" +
+      //                   imageId +
+      //                   "' style='border-radius:100%; object-fit: cover; margin: 0 5px 0 -10px;' width='28' height='28' />";
+      //             }
+      //             if (!field.settings.isShowUsername) {
+      //                myText = "";
+      //             }
+      //             return (
+      //                '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;">' +
+      //                profileImage +
+      //                myText +
+      //                removeIcon +
+      //                " </span>"
+      //             );
+      //          } else {
+      //             return myText;
+      //          }
+      //       };
+
+      //       if ((field.settings.editable = 1)) {
+      //          config.editor = "richselect";
+      //          config.options = field.getUsers();
+      //       }
+      //    }
+      //    return config;
    }
 
-   /*
-    * @function customDisplay
-    * perform any custom display modifications for this field.
-    * @param {object} row is the {name=>value} hash of the current row of data.
-    * @param {App} App the shared ui App object useful more making globally
-    *					unique id references.
-    * @param {HtmlDOM} node  the HTML Dom object for this field's display.
-    */
+   // /*
+   //  * @function customDisplay
+   //  * perform any custom display modifications for this field.
+   //  * @param {object} row is the {name=>value} hash of the current row of data.
+   //  * @param {App} App the shared ui App object useful more making globally
+   //  *					unique id references.
+   //  * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+   //  */
    customDisplay(row, App, node, options) {
-      // sanity check.
-      if (!node) {
-         return;
-      }
-
       options = options || {};
+      options.editable = this.settings.editable;
+      return super.customDisplay(row, App, node, options);
 
-      if (this.settings.isMultiple) {
-         var readOnly = false;
-         if (options.editable != null && options.editable == false) {
-            readOnly = true;
-         }
+      //    // sanity check.
+      //    if (!node) {
+      //       return;
+      //    }
 
-         var domNode = node.querySelector(".list-data-values");
+      //    options = options || {};
 
-         // var readOnly = true;
-         var placeholder = "";
-         if (this.settings.editable && readOnly == false) {
-            // readOnly = false;
-            placeholder = L(
-               "ab.dataField.user.placeHolder_multiple",
-               "*Select users"
-            );
-         }
+      //    if (this.settings.isMultiple) {
+      //       var readOnly = false;
+      //       if (options.editable != null && options.editable == false) {
+      //          readOnly = true;
+      //       }
 
-         var data = row[this.columnName];
-         if (data == "") data = [];
+      //       var domNode = node.querySelector(".list-data-values");
 
-         this.selectivityRender(
-            domNode,
-            {
-               multiple: true,
-               placeholder: placeholder,
-               data: data,
-               items: this.getUsers(),
-               isUsers: true,
-               // ajax: {
-               // 	url: 'It will call url in .getOptions function', // require
-               // 	minimumInputLength: 0,
-               // 	quietMillis: 0,
-               // 	fetch: (url, init, queryOptions) => {
-               // 		return this.getUsers().then(function (data) {
-               // 			return {
-               // 				results: data
-               // 			};
-               // 		});
-               // 	}
-               // },
-               readOnly: readOnly
-            },
-            App,
-            row
-         );
+      //       // var readOnly = true;
+      //       var placeholder = "";
+      //       if (this.settings.editable && readOnly == false) {
+      //          // readOnly = false;
+      //          placeholder = L(
+      //             "ab.dataField.user.placeHolder_multiple",
+      //             "*Select users"
+      //          );
+      //       }
 
-         if (domNode && row.id && node) {
-            // Listen event when selectivity value updates
-            domNode.addEventListener(
-               "change",
-               (e) => {
-                  // update just this value on our current this.model
-                  var values = {};
-                  values[this.columnName] = this.selectivityGet(domNode);
+      //       var data = row[this.columnName];
+      //       if (data == "") data = [];
 
-                  // pass null because it could not put empty array in REST api
-                  if (values[this.columnName].length == 0)
-                     values[this.columnName] = [];
+      //       this.selectivityRender(
+      //          domNode,
+      //          {
+      //             multiple: true,
+      //             placeholder: placeholder,
+      //             data: data,
+      //             items: this.getUsers(),
+      //             isUsers: true,
+      //             // ajax: {
+      //             // 	url: 'It will call url in .getOptions function', // require
+      //             // 	minimumInputLength: 0,
+      //             // 	quietMillis: 0,
+      //             // 	fetch: (url, init, queryOptions) => {
+      //             // 		return this.getUsers().then(function (data) {
+      //             // 			return {
+      //             // 				results: data
+      //             // 			};
+      //             // 		});
+      //             // 	}
+      //             // },
+      //             readOnly: readOnly
+      //          },
+      //          App,
+      //          row
+      //       );
 
-                  if (row.id) {
-                     this.object
-                        .model()
-                        .update(row.id, values)
-                        .then(() => {
-                           // update the client side data object as well so other data changes won't cause this save to be reverted
-                           if ($$(node) && $$(node).updateItem)
-                              $$(node).updateItem(row.id, values);
-                        })
-                        .catch((err) => {
-                           node.classList.add("webix_invalid");
-                           node.classList.add("webix_invalid_cell");
+      //       if (domNode && row.id && node) {
+      //          // Listen event when selectivity value updates
+      //          domNode.addEventListener(
+      //             "change",
+      //             (e) => {
+      //                // update just this value on our current this.model
+      //                var values = {};
+      //                values[this.columnName] = this.selectivityGet(domNode);
 
-                           OP.Error.log("Error updating our entry.", {
-                              error: err,
-                              row: row,
-                              values: values
-                           });
-                        });
-                  }
-               },
-               false
-            );
-         }
-      } else {
-         if (!node.querySelector) return;
+      //                // pass null because it could not put empty array in REST api
+      //                if (values[this.columnName].length == 0)
+      //                   values[this.columnName] = [];
 
-         var clearButton = node.querySelector(
-            ".selectivity-multiple-selected-item-remove"
-         );
-         if (clearButton) {
-            clearButton.addEventListener("click", (e) => {
-               e.stopPropagation();
-               var values = {};
-               values[this.columnName] = "";
-               this.object
-                  .model()
-                  .update(row.id, values)
-                  .then(() => {
-                     // update the client side data object as well so other data changes won't cause this save to be reverted
-                     if ($$(node) && $$(node).updateItem)
-                        $$(node).updateItem(row.id, values);
-                  })
-                  .catch((err) => {
-                     node.classList.add("webix_invalid");
-                     node.classList.add("webix_invalid_cell");
+      //                if (row.id) {
+      //                   this.object
+      //                      .model()
+      //                      .update(row.id, values)
+      //                      .then(() => {
+      //                         // update the client side data object as well so other data changes won't cause this save to be reverted
+      //                         if ($$(node) && $$(node).updateItem)
+      //                            $$(node).updateItem(row.id, values);
+      //                      })
+      //                      .catch((err) => {
+      //                         node.classList.add("webix_invalid");
+      //                         node.classList.add("webix_invalid_cell");
 
-                     OP.Error.log("Error updating our entry.", {
-                        error: err,
-                        row: row,
-                        values: ""
-                     });
-                  });
-            });
-         }
-      }
+      //                         OP.Error.log("Error updating our entry.", {
+      //                            error: err,
+      //                            row: row,
+      //                            values: values
+      //                         });
+      //                      });
+      //                }
+      //             },
+      //             false
+      //          );
+      //       }
+      //    } else {
+      //       if (!node.querySelector) return;
+
+      //       var clearButton = node.querySelector(
+      //          ".selectivity-multiple-selected-item-remove"
+      //       );
+      //       if (clearButton) {
+      //          clearButton.addEventListener("click", (e) => {
+      //             e.stopPropagation();
+      //             var values = {};
+      //             values[this.columnName] = "";
+      //             this.object
+      //                .model()
+      //                .update(row.id, values)
+      //                .then(() => {
+      //                   // update the client side data object as well so other data changes won't cause this save to be reverted
+      //                   if ($$(node) && $$(node).updateItem)
+      //                      $$(node).updateItem(row.id, values);
+      //                })
+      //                .catch((err) => {
+      //                   node.classList.add("webix_invalid");
+      //                   node.classList.add("webix_invalid_cell");
+
+      //                   OP.Error.log("Error updating our entry.", {
+      //                      error: err,
+      //                      row: row,
+      //                      values: ""
+      //                   });
+      //                });
+      //          });
+      //       }
+      //    }
    }
 
-   /*
-    * @function customEdit
-    *
-    * @param {object} row is the {name=>value} hash of the current row of data.
-    * @param {App} App the shared ui App object useful more making globally
-    *					unique id references.
-    * @param {HtmlDOM} node  the HTML Dom object for this field's display.
-    */
-   customEdit(row, App, node) {
-      if (this.settings.isMultiple == true) {
-         var domNode = node.querySelector(".list-data-values");
+   // /*
+   //  * @function customEdit
+   //  *
+   //  * @param {object} row is the {name=>value} hash of the current row of data.
+   //  * @param {App} App the shared ui App object useful more making globally
+   //  *					unique id references.
+   //  * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+   //  */
+   // customEdit(row, App, node) {
+   //    if (this.settings.isMultiple == true) {
+   //       var domNode = node.querySelector(".list-data-values");
 
-         if (domNode.selectivity != null) {
-            // Open selectivity
-            domNode.selectivity.open();
-            return false;
-         }
-         return false;
-      }
-   }
+   //       if (domNode.selectivity != null) {
+   //          // Open selectivity
+   //          domNode.selectivity.open();
+   //          return false;
+   //       }
+   //       return false;
+   //    }
+   // }
 
-   /*
-    * @funciton formComponent
-    * returns a drag and droppable component that is used on the UI
-    * interface builder to place form components related to this ABField.
-    *
-    * an ABField defines which form component is used to edit it's contents.
-    * However, what is returned here, needs to be able to create an instance of
-    * the component that will be stored with the ABViewForm.
-    */
-   formComponent() {
-      // NOTE: what is being returned here needs to mimic an ABView CLASS.
-      // primarily the .common() and .newInstance() methods.
-      var formComponentSetting = super.formComponent();
+   // /*
+   //  * @funciton formComponent
+   //  * returns a drag and droppable component that is used on the UI
+   //  * interface builder to place form components related to this ABField.
+   //  *
+   //  * an ABField defines which form component is used to edit it's contents.
+   //  * However, what is returned here, needs to be able to create an instance of
+   //  * the component that will be stored with the ABViewForm.
+   //  */
+   // formComponent() {
+   //    // NOTE: what is being returned here needs to mimic an ABView CLASS.
+   //    // primarily the .common() and .newInstance() methods.
+   //    var formComponentSetting = super.formComponent();
 
-      // .common() is used to create the display in the list
-      formComponentSetting.common = () => {
-         if (this.settings.isMultiple) {
-            return {
-               key: "fieldcustom"
-            };
-         } else {
-            return {
-               key: "selectsingle",
-               options: this.getUsers()
-            };
-         }
-      };
+   //    // .common() is used to create the display in the list
+   //    formComponentSetting.common = () => {
+   //       if (this.settings.isMultiple) {
+   //          return {
+   //             key: "fieldcustom"
+   //          };
+   //       } else {
+   //          return {
+   //             key: "selectsingle",
+   //             options: this.getUsers()
+   //          };
+   //       }
+   //    };
 
-      return formComponentSetting;
-   }
+   //    return formComponentSetting;
+   // }
 
-   detailComponent() {
-      var detailComponentSetting = super.detailComponent();
+   // detailComponent() {
+   //    var detailComponentSetting = super.detailComponent();
 
-      detailComponentSetting.common = () => {
-         return {
-            key: this.settings.isMultiple ? "detailselectivity" : "detailtext"
-         };
-      };
+   //    detailComponentSetting.common = () => {
+   //       return {
+   //          key: this.settings.isMultiple ? "detailselectivity" : "detailtext"
+   //       };
+   //    };
 
-      return detailComponentSetting;
-   }
+   //    return detailComponentSetting;
+   // }
 
-   getValue(item, rowData) {
-      var values = {};
-      if (this.settings.isMultiple) {
-         var domNode = item.$view.querySelector(".list-data-values");
-         values = this.selectivityGet(domNode);
-      } else {
-         values = $$(item).getValue();
-      }
-      return values;
-   }
+   // getValue(item, rowData) {
+   //    var values = {};
+   //    if (this.settings.isMultiple) {
+   //       var domNode = item.$view.querySelector(".list-data-values");
+   //       values = this.selectivityGet(domNode);
+   //    } else {
+   //       values = $$(item).getValue();
+   //    }
+   //    return values;
+   // }
 
-   setValue(item, rowData) {
-      var val = rowData[this.columnName];
-      // Select "[Current user]" to update
-      if (val == "ab-current-user") val = OP.User.username();
+   // setValue(item, rowData) {
+   //    var val = rowData[this.columnName];
+   //    // Select "[Current user]" to update
+   //    if (val == "ab-current-user") val = OP.User.username();
 
-      if (this.settings.isMultiple) {
-         // get selectivity dom
-         var domSelectivity = item.$view.querySelector(".list-data-values");
-         // set value to selectivity
-         this.selectivitySet(domSelectivity, val, this.App);
-      } else {
-         item.setValue(rowData[this.columnName]);
-      }
-   }
+   //    if (this.settings.isMultiple) {
+   //       // get selectivity dom
+   //       var domSelectivity = item.$view.querySelector(".list-data-values");
+   //       // set value to selectivity
+   //       this.selectivitySet(domSelectivity, val, this.App);
+   //    } else {
+   //       item.setValue(rowData[this.columnName]);
+   //    }
+   // }
 
-   getUsers() {
-      return OP.User.userlist().map((u) => {
-         var result = {
-            id: u.username,
-            image: u.image_id
-         };
+   // getUsers() {
+   //    return OP.User.userlist().map((u) => {
+   //       var result = {
+   //          id: u.username,
+   //          image: u.image_id
+   //       };
 
-         if (this.settings.isMultiple) {
-            result.text = u.username;
-         } else {
-            result.value = u.username;
-         }
+   //       if (this.settings.isMultiple) {
+   //          result.text = u.username;
+   //       } else {
+   //          result.value = u.username;
+   //       }
 
-         return result;
-      });
-   }
+   //       return result;
+   //    });
+   // }
 };

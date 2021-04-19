@@ -373,8 +373,23 @@ module.exports = class AB_Work_Object_Workspace_PopupNewDataField extends ABComp
 
                      // update changed values to old data
                      var updateValues = _.cloneDeep(oldData);
-                     for (var key in vals) {
-                        updateValues[key] = vals[key];
+                     for (let key in vals) {
+                        // update each values of .settings
+                        if (
+                           key == "settings" &&
+                           vals["settings"] &&
+                           typeof vals["settings"] == "object"
+                        ) {
+                           updateValues["settings"] =
+                              updateValues["settings"] || {};
+
+                           for (let keySetting in vals["settings"]) {
+                              updateValues["settings"][keySetting] =
+                                 vals["settings"][keySetting];
+                           }
+                        } else {
+                           updateValues[key] = vals[key];
+                        }
                      }
 
                      _editField.fromValues(updateValues);

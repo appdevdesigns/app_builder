@@ -10,6 +10,12 @@ const ABObjectQueryCore = require(path.join(
 const ABObjectExternal = require(path.join(__dirname, "ABObjectExternal"));
 const ABObjectImport = require(path.join(__dirname, "ABObjectImport"));
 
+const ABFieldConnect = require(path.join(
+   __dirname,
+   "dataFields",
+   "ABFieldConnect"
+));
+
 const Model = require("objection").Model;
 
 module.exports = class ABClassQuery extends ABObjectQueryCore {
@@ -449,7 +455,7 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
          let obj = f.object;
 
          // Connect fields
-         if (f.key == "connectObject") {
+         if (f instanceof ABFieldConnect) {
             let selectField = "";
             let objLink = f.datasourceLink;
             let fieldLink = f.fieldLink;

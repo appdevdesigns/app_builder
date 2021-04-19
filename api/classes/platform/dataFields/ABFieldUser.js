@@ -35,94 +35,8 @@ module.exports = class ABFieldUser extends ABFieldUserCore {
    }
 
    ///
-   /// DB Migrations
-   ///
-
-   /**
-    * @function migrateCreate
-    * perform the necessary sql actions to ADD this column to the DB table.
-    * @param {knex} knex the Knex connection.
-    */
-   migrateCreate(knex) {
-      return new Promise((resolve, reject) => {
-         var tableName = this.object.dbTableName();
-
-         // if this column doesn't already exist (you never know)
-         knex.schema.hasColumn(tableName, this.columnName).then((exists) => {
-            // create one if it doesn't exist:
-            if (!exists) {
-               return knex.schema
-                  .table(tableName, (t) => {
-                     var newCol = t.json(this.columnName).nullable();
-
-                     // // field is required (not null)
-                     // if (this.settings.required) {
-                     // 	var newCol = t.json(this.columnName).notNullable();
-                     // }
-                     // else {
-                     // 	var newCol = t.json(this.columnName).nullable();
-                     // }
-                  })
-                  .then(() => {
-                     resolve();
-                  })
-                  .catch(reject);
-            } else {
-               // there is already a column for this, so move along.
-               resolve();
-            }
-         });
-      });
-   }
-
-   /**
-    * @function migrateDrop
-    * perform the necessary sql actions to drop this column from the DB table.
-    * @param {knex} knex the Knex connection.
-    */
-   // NOTE: ABField.migrateDrop() is pretty good for most cases.
-   // migrateDrop (knex) {
-   // 	return new Promise(
-   // 		(resolve, reject) => {
-   // 			// do your special drop operations here.
-   // 		}
-   // 	)
-   // }
-
-   ///
    /// DB Model Services
    ///
-
-   /**
-    * @method jsonSchemaProperties
-    * register your current field's properties here:
-    */
-   jsonSchemaProperties(obj) {
-      // take a look here:  http://json-schema.org/example1.html
-
-      // if our field is not already defined:
-      if (!obj[this.columnName]) {
-         if (this.settings.isMultiple == true) {
-            // store array value of selectivity
-            obj[this.columnName] = {
-               anyOf: [
-                  { type: "array" },
-                  { type: "null" },
-                  {
-                     // allow empty string because it could not put empty array in REST api
-                     type: "string",
-                     maxLength: 0
-                  }
-               ]
-            };
-         } else {
-            // storing the uuid as a string.
-            obj[this.columnName] = {
-               type: ["string", "null"]
-            };
-         }
-      }
-   }
 
    /**
     * @method requestParam
@@ -149,18 +63,5 @@ module.exports = class ABFieldUser extends ABFieldUserCore {
       var errors = [];
 
       return errors;
-   }
-
-   /**
-    * @method postGet
-    * Perform any final conditioning of data returned from our DB table before
-    * it is returned to the client.
-    * @param {obj} data  a json object representing the current table row
-    */
-   postGet(data) {
-      return new Promise((resolve, reject) => {
-         //Not doing anything here...yet
-         resolve();
-      });
    }
 };
