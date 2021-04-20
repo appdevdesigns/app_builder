@@ -1,8 +1,8 @@
 /**
- * ABModelConvertSailsCondition
+ * @module      ABModelConvertSailsCondition
  *
- * @module      :: Policy
- * @description :: Convert any provided Sails condition into our QB like
+ * @description :: Policy
+ *              :: Convert any provided Sails condition into our QB like
  *                 condition format.
  * @docs        :: http://sailsjs.org/#!documentation/policies
  *

@@ -22,9 +22,9 @@ module.exports = {
    // },
 
    /**
-    * GET /app_builder/page/:action_key/role
+    * @route {GET} /app_builder/page/:action_key/role
     *
-    * Request the current page's list of permission roles as well as all possible roles with descriptions
+    * @description Request the current page's list of permission roles as well as all possible roles with descriptions
     */
    getPageRoles: function(req, res) {
       var action_key = req.param("action_key");
@@ -50,9 +50,9 @@ module.exports = {
    },
 
    /**
-    * PUT /app_builder/page/:action_key/role
+    * @route {PUT} /app_builder/page/:action_key/role
     *
-    * Add new role to the current page's list of permission roles
+    * @description Add new role to the current page's list of permission roles
     */
    addPageRoles: function(req, res) {
       var role_id = req.param("role_id");
@@ -70,9 +70,9 @@ module.exports = {
    },
 
    /**
-    * DELETE /app_builder/page/:action_key/role
+    * @route{DELETE} /app_builder/page/:action_key/role
     *
-    * Delete role from the current page's list of permission roles
+    * @description Delete role from the current page's list of permission roles
     */
    deletePageRoles: function(req, res) {
       var role_id = req.param("role_id");
@@ -90,9 +90,9 @@ module.exports = {
    },
 
    /**
-    * GET /app_builder/appJSON/:id?download=1
+    * @route {GET} /app_builder/appJSON/:id?download=1
     *
-    * Export an app in JSON format
+    * @description Export an app in JSON format
     */
    jsonExport: function(req, res) {
       var appID = req.param("id");
@@ -123,9 +123,9 @@ module.exports = {
    },
 
    /**
-    * GET /app_builder/appJSONall/
+    * @route {GET} /app_builder/appJSONall/
     *
-    * Export an app in JSON format
+    * @description Export an app in JSON format
     */
    jsonExportAll: function(req, res) {
       var appID = req.param("id");
@@ -191,9 +191,9 @@ module.exports = {
    },
 
    /**
-    * POST /app_builder/appJSON
+    * @route {POST} /app_builder/appJSON
     *
-    * Import an app from uploaded JSON data file.
+    * @description Import an app from uploaded JSON data file.
     *
     * The file is expected to be uploaded via the Webix uploader widget.
     */
@@ -245,9 +245,9 @@ module.exports = {
    /* An Application may have one or more Mobile Apps. */
 
    /**
-    * GET /app_builder/mobile/apps
+    * @route {GET} /app_builder/mobile/apps
     *
-    * return a list of all Mobile Apps across all Applications.
+    * @description return a list of all Mobile Apps across all Applications.
     * (administrative)
     *
     * the returned list is a list of { .id  .label .appID }

@@ -1,6 +1,6 @@
 /**
- * ABQRAppUser
- * @module      :: Model
+ * @module ABQRAppUser
+ * @description Model
  * Create a unique QR Token to link together a Mobile App + User
  *
  */
@@ -88,13 +88,13 @@ module.exports = {
          // Save to database
          ABQRAppUser.query(
             `
-                
+
                 REPLACE INTO appbuilder_qr_appuser
                 SET
                     siteuser = ?,
                     mobile = ?,
                     token = SHA2(CONCAT(RAND(), UUID()), 224)
-                
+
             `,
             [userGUID, MobileAppID],
             (err) => {

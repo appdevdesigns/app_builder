@@ -1,5 +1,10 @@
 const ABIndexCore = require("../core/ABIndexCore");
-
+/**
+ * @class
+ * @augments ABIndexCore
+ * @param {object} attributes Description
+ * @param {object} object     Description
+ */
 module.exports = class ABIndex extends ABIndexCore {
    constructor(attributes, object) {
       super(attributes, object);
@@ -8,7 +13,7 @@ module.exports = class ABIndex extends ABIndexCore {
    /**
     * @method exportIDs()
     * export any relevant .ids for the necessary operation of this ABIndex.
-    * @param {array} ids
+    * @param {Array} ids
     *         the array of relevant ids to store our .ids into.
     */
    exportIDs(ids) {
@@ -48,7 +53,7 @@ module.exports = class ABIndex extends ABIndexCore {
    ///
 
    /**
-    * migrateCheckIsCorrect()
+    * @function migrateCheckIsCorrect()
     * verify the current definition of the table matches what our
     * definition expectes it to be.
     * @param {Knex} knex
@@ -131,6 +136,11 @@ module.exports = class ABIndex extends ABIndexCore {
          });
    }
 
+   /**
+    * @function migrateCreate
+    * @param {Knex} knex Description
+    * @returns {Promise}
+    */
    migrateCreate(knex) {
       if (this.fields == null || !this.fields.length) return Promise.resolve(); // TODO: refactor in v2
 
@@ -199,6 +209,11 @@ module.exports = class ABIndex extends ABIndexCore {
       );
    }
 
+   /**
+    * @function migrateDrop
+    * @param {Knex} knex Description
+    * @returns {Promise}
+    */
    migrateDrop(knex) {
       if (this.fields == null || !this.fields.length) return Promise.resolve(); // TODO: refactor in v2
 

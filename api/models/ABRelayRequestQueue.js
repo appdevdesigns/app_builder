@@ -1,6 +1,6 @@
 /**
- * ABRelayRequestQueue
- * @module      :: Model
+ * @module  ABRelayRequestQueue
+ * @description    :: Model
  * Store any Relay Requests that are currently in process of processing.
  * If a request is successfully processed, it should be removed from the Queue.
  * Any remaining requests that are > 25s old, treat as if they are missing responses

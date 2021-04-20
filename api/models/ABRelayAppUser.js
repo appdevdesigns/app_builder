@@ -1,6 +1,6 @@
 /**
- * ABRelayAppUser
- * @module      :: Model
+ * @module ABRelayAppUser
+ * @description   :: Model
  * An individual ABRelayUser in the system can have numerous Mobile App setups. (one on a Phone, an iPad, etc...)
  *
  * Each instance of a Mobile App will generate a unique AppUUID + AES key combo.
