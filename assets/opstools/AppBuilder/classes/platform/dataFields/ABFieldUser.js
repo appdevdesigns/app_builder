@@ -162,13 +162,18 @@ module.exports = class ABFieldUser extends ABFieldUserCore {
       // Add new
       if (this.id == null) {
          const SITE_USER_OBJECT_ID = "228e3d91-5e42-49ec-b37c-59323ae433a1"; // TODO: How to get the id of SITE_USER object properly ?
+         const USERNAME_FIELD_ID = "5760560b-c078-47ca-98bf-e18ac492a561"; // TODO
+
          this.settings.linkObject = SITE_USER_OBJECT_ID;
+         this.settings.isCustomFK = 1;
 
          if (this.settings.isMultiple) {
+            this.settings.indexField2 = USERNAME_FIELD_ID;
             this.settings.linkType = "many";
             this.settings.linkViaType = "many";
             this.settings.isSource = 1;
          } else {
+            this.settings.indexField = USERNAME_FIELD_ID;
             this.settings.linkType = "one";
             this.settings.linkViaType = "many";
             this.settings.isSource = 1;
@@ -225,7 +230,8 @@ module.exports = class ABFieldUser extends ABFieldUserCore {
    // return the grid column header definition for this instance of ABFieldUser
    columnHeader(options) {
       options = options || {};
-      options.editable = this.settings.editable;
+      options.editable =
+         this.settings.editable != null ? this.settings.editable : true;
       return super.columnHeader(options);
 
       //    options = options || {};
@@ -353,7 +359,8 @@ module.exports = class ABFieldUser extends ABFieldUserCore {
    //  */
    customDisplay(row, App, node, options) {
       options = options || {};
-      options.editable = this.settings.editable;
+      options.editable =
+         this.settings.editable != null ? this.settings.editable : true;
       return super.customDisplay(row, App, node, options);
 
       //    // sanity check.
