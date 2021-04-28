@@ -169,12 +169,17 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
       var defaultHeight = 0;
       var minHeight = 0;
       var imageFields = obj.fields((f) => f.key == "image");
+      var hiddenFields = obj.objectWorkspace.hiddenFields;
       imageFields.forEach(function(f) {
-         if (
-            parseInt(f.settings.useHeight) == 1 &&
-            parseInt(f.settings.imageHeight) > minHeight
-         ) {
-            minHeight = parseInt(f.settings.imageHeight) + 20;
+         if (hiddenFields.indexOf(f.columnName) == -1) {
+            if (
+               parseInt(f.settings.useHeight) == 1 &&
+               parseInt(f.settings.imageHeight) > minHeight
+            ) {
+               minHeight = parseInt(f.settings.imageHeight) + 20;
+            } else {
+               minHeight = 100;
+            }
          }
       });
       if (minHeight > 0) {
