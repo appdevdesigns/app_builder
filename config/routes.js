@@ -222,6 +222,14 @@ module.exports = {
    "post /process/inbox/:uuid":
       "app_builder/ABProcessController.userInboxUpdate",
 
+   /* Process Trigger Timer */
+   "PUT /process/timer/:elementId/start":
+      "app_builder/ABProcessTimerController.start",
+   "PUT /process/timer/:elementId/stop":
+      "app_builder/ABProcessTimerController.stop",
+   "GET /process/timer/:elementId":
+      "app_builder/ABProcessTimerController.getStatus",
+
    /* CSV Export */
    "GET /app_builder/application/:appID/page/:pageID/view/:viewID/csv":
       "app_builder/ABCsvController.exportCsv"
