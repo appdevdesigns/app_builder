@@ -163,13 +163,13 @@ module.exports = class ABWorkObjectWorkspaceTrack extends ABComponent {
       let application = this.CurrentObject.application;
       application
          .objectTrack(this.CurrentObject.id, rowId)
-         .catch((err) => {
-            console.error(err);
-            $timeline.hideProgress();
-         })
          .then((data) => {
             $timeline.clearAll(true);
             $timeline.parse(data);
+            $timeline.hideProgress();
+         })
+         .catch((err) => {
+            console.error(err);
             $timeline.hideProgress();
          });
    }

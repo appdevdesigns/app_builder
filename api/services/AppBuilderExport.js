@@ -19,6 +19,8 @@ const ABApplication = require(path.join(
    "ABApplication"
 ));
 
+const uuidv4 = require("uuid");
+
 module.exports = {
    /**
     * Export an application's metadata to JSON
@@ -60,6 +62,92 @@ module.exports = {
             if (id) {
                // NOTE: go directly to the Model to get the full ABDefinition entry:
                data.definitions.push(ABDefinitionModel.objForID(id));
+            }
+         });
+
+         var SiteUser = data.definitions.find(
+            (d) => d.id == "228e3d91-5e42-49ec-b37c-59323ae433a1"
+         );
+         var USERNAME_FIELD_ID = "5760560b-c078-47ca-98bf-e18ac492a561";
+
+         var userFields = data.definitions.filter(
+            (d) => d.type == "field" && d.json.key == "user"
+         );
+         console.log(`converting ${userFields.length} user fields.`);
+
+         (userFields || []).forEach((fDef) => {
+            var field = fDef.json;
+
+            // find field's object
+            var objDef = data.definitions.find(
+               (d) =>
+                  d.type == "object" && d.json.fieldIDs.indexOf(field.id) > -1
+            );
+            if (objDef) {
+               var object = objDef.json;
+
+               field.settings.linkObject = SiteUser.id;
+               field.settings.isCustomFK = 1;
+               field.settings.isSource = 1;
+
+               if (field.settings.isMultiple) {
+                  field.settings.indexField2 = USERNAME_FIELD_ID;
+                  field.settings.linkType = "many";
+                  field.settings.linkViaType = "many";
+               } else {
+                  field.settings.indexField = USERNAME_FIELD_ID;
+                  field.settings.linkType = "one";
+                  field.settings.linkViaType = "many";
+               }
+
+               var uuidLinkF = uuidv4();
+               field.settings.linkColumn = uuidLinkF;
+
+               // now new field on SiteUser:
+               var linkF = {
+                  type: "field",
+                  key: "connectObject",
+                  icon: "external-link",
+                  isImported: "0",
+                  columnName: object.tableName,
+                  settings: {
+                     showIcon: field.settings.showIcon,
+                     linkObject: object.id,
+                     linkType: field.settings.linkViaType,
+                     linkViaType: field.settings.linkType,
+                     isCustomFK: 0,
+                     indexField: "",
+                     indexField2: "",
+                     isSource: 0,
+                     width: 100,
+                     required: 0,
+                     unique: 0,
+                     linkColumn: field.id
+                  },
+                  translations: [
+                     {
+                        language_code: "en",
+                        label:
+                           object.translations[0].label +
+                           "." +
+                           field.translations[0].label
+                     }
+                  ],
+                  id: uuidLinkF
+               };
+
+               SiteUser.json.fieldIDs.push(linkF.id);
+
+               var defLinkF = {
+                  id: linkF.id,
+                  type: linkF.type,
+                  name: "USER->" + linkF.translations[0].label,
+                  json: linkF,
+                  createdAt: fDef.createdAt,
+                  updatedAt: fDef.updatedAt
+               };
+
+               data.definitions.push(defLinkF);
             }
          });
          resolve(data);
