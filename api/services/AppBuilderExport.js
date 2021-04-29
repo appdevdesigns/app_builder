@@ -19,8 +19,6 @@ const ABApplication = require(path.join(
    "ABApplication"
 ));
 
-const uuidv4 = require("uuid");
-
 module.exports = {
    /**
     * Export an application's metadata to JSON
