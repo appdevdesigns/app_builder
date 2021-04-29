@@ -11,7 +11,10 @@ module.exports = class ABProcessTriggerTimer extends ABProcessTriggerTimerCore {
          Promise.resolve()
             .then(() => super.save())
             // Restart the timer
-            .then(() => ABProcessTimer.start(this))
+            .then((result) => {
+               ABProcessTimer.start(this);
+               return Promise.resolve(result);
+            })
       );
    }
 };
