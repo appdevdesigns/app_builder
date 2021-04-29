@@ -41,7 +41,7 @@ module.exports = {
       JOB_POOLS[element.id] = cron.schedule(cronExpression, () => {
          // start the processs task
          sails.log.info(
-            `::: Trigger CRON job [${cronExpression}] - ${element.id}`
+            `::: Trigger CRON job [${cronExpression}] - ${element.id} - ${element.triggerKey}`
          );
          ABProcess.trigger(element.triggerKey).then(() => {});
       });

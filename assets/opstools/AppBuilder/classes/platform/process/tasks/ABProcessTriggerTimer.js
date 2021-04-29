@@ -1,5 +1,9 @@
 const ABProcessTriggerTimerCore = require("../../../core/process/tasks/ABProcessTriggerTimerCore.js");
 
+const START_URL = "/process/timer/#id#/start";
+const STOP_URL = "/process/timer/#id#/stop";
+const STATUS_URL = "/process/timer/#id#";
+
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
 }
@@ -213,9 +217,10 @@ module.exports = class ABProcessTriggerTimer extends ABProcessTriggerTimerCore {
 
                         $$(ids.toggleButton).disable();
                         OP.Comm.Service.put({
-                           url: `/process/timer/${this.id}/${
-                              this.isRunning ? "stop" : "start"
-                           }`
+                           url: (this.isRunning ? STOP_URL : START_URL).replace(
+                              "#id#",
+                              this.id
+                           )
                         })
                            .then((result) => {
                               if (result) {
@@ -245,7 +250,7 @@ module.exports = class ABProcessTriggerTimer extends ABProcessTriggerTimerCore {
 
       // Load status of this timer job
       OP.Comm.Service.get({
-         url: `/process/timer/${this.id}`
+         url: STATUS_URL.replace("#id#", this.id)
       }).then((result) => {
          this.isRunning = result.isRunning;
 
@@ -268,6 +273,9 @@ module.exports = class ABProcessTriggerTimer extends ABProcessTriggerTimerCore {
       this.repeatDaily = $$(ids.repeatDaily).getValue();
       this.repeatWeekly = $$(ids.repeatWeekly).getValue();
       this.repeatMonthly = $$(ids.repeatMonthly).getValue();
-      this.triggerKey = `timer.${this.id || OP.Util.uuid()}`;
+      this.triggerKey =
+         this.triggerKey == null || this.triggerKey == "triggerKey.??"
+            ? `timer.${this.id || OP.Util.uuid()}`
+            : this.triggerKey;
    }
 };
