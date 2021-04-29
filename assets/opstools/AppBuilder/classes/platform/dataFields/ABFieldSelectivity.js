@@ -101,7 +101,12 @@ module.exports = class ABFieldSelectivity extends ABField {
 								style="background-color: #eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"
 								data-item-id="${options.id}" data-field-id="${settings.field}">
 								<i class="fa fa-user" style="color: #666; opacity: 0.6;"></i> 
-								${options.text}
+                        ${
+                           settings.additionalText
+                              ? settings.additionalText(options)
+                              : ""
+                        }
+								${!settings.isLabelHidden ? options.text : ""}
 								${
                            options.removable
                               ? ` <a class="selectivity-multiple-selected-item-remove" style="color: #333;"><i class="fa fa-remove"></i></a>`
@@ -123,7 +128,12 @@ module.exports = class ABFieldSelectivity extends ABField {
                               ? ` <a class="selectivity-multiple-selected-item-edit"><i class="fa fa-edit"></i></a>`
                               : ""
                         }
-                        ${options.text}
+                        ${
+                           settings.additionalText
+                              ? settings.additionalText(options)
+                              : ""
+                        }
+                        ${!settings.isLabelHidden ? options.text : ""}
                         ${
                            options.removable
                               ? ` <a class="selectivity-multiple-selected-item-remove"><i class="fa fa-remove"></i></a>`
@@ -148,7 +158,12 @@ module.exports = class ABFieldSelectivity extends ABField {
                            ? '<a class="selectivity-single-selected-item-edit"><i class="fa fa-edit"></i></a>'
                            : ""
                      }
-							${options.text}
+                     ${
+                        settings.additionalText
+                           ? settings.additionalText(options)
+                           : ""
+                     }
+                     ${!settings.isLabelHidden ? options.text : ""}
                      ${
                         options.removable
                            ? '<a class="selectivity-single-selected-item-remove"><i class="fa fa-remove"></i></a>'

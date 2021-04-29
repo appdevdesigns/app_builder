@@ -72,7 +72,6 @@ var ABFieldUserComponent = new ABFieldComponent({
             view: "checkbox",
             name: "isShowProfileImage",
             id: ids.isShowProfileImage,
-            hidden: true, // NOTE: The user field equal to the connect field
             labelRight: L(
                "ab.dataField.user.isShowProfileImage",
                "*Show Profile Image"
@@ -83,7 +82,6 @@ var ABFieldUserComponent = new ABFieldComponent({
             view: "checkbox",
             name: "isShowUsername",
             id: ids.isShowUsername,
-            hidden: true, // NOTE: The user field equal to the connect field
             labelRight: L("ab.dataField.user.showUsername", "*Show Username"),
             labelWidth: App.config.labelWidthCheckbox
          }
@@ -228,10 +226,10 @@ module.exports = class ABFieldUser extends ABFieldUserCore {
    }
 
    // return the grid column header definition for this instance of ABFieldUser
+
    columnHeader(options) {
-      options = options || {};
-      options.editable =
-         this.settings.editable != null ? this.settings.editable : true;
+      options = this.setDisplayOptions(options);
+
       return super.columnHeader(options);
 
       //    options = options || {};
@@ -358,9 +356,8 @@ module.exports = class ABFieldUser extends ABFieldUserCore {
    //  * @param {HtmlDOM} node  the HTML Dom object for this field's display.
    //  */
    customDisplay(row, App, node, options) {
-      options = options || {};
-      options.editable =
-         this.settings.editable != null ? this.settings.editable : true;
+      options = this.setDisplayOptions(options);
+
       return super.customDisplay(row, App, node, options);
 
       //    // sanity check.
@@ -486,6 +483,27 @@ module.exports = class ABFieldUser extends ABFieldUserCore {
       //          });
       //       }
       //    }
+   }
+
+   setDisplayOptions(options) {
+      options = options || {};
+      options.editable =
+         this.settings.editable != null ? this.settings.editable : true;
+
+      options.isLabelHidden =
+         this.settings.isShowUsername != null
+            ? !this.settings.isShowUsername
+            : false;
+
+      options.additionalText = (opt) => {
+         if (!this.settings.isShowProfileImage) return "";
+
+         if (opt.image_id)
+            return `<img src='/opsportal/image/UserProfile/${opt.image_id}' style='border-radius:100%; object-fit: cover; margin: 0 5px 0 -10px;' width='28' height='28' />`;
+         else return '<i style="opacity: 0.6;" class="fa fa-user"></i> ';
+      };
+
+      return options;
    }
 
    // /*

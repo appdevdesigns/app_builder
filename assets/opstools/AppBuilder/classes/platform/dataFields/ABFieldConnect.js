@@ -745,8 +745,6 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          // get selected values
          var selectedData = field.pullRelationValues(row);
 
-         var multiselect = field.settings.linkType == "many";
-
          // Render selectivity
          if (!options.skipRenderSelectivity) {
             field.selectivityRender(
@@ -755,6 +753,8 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                   multiple: multiselect,
                   readOnly: readOnly,
                   editPage: options.editPage,
+                  isLabelHidden: options.isLabelHidden,
+                  additionalText: options.additionalText,
                   placeholder: placeholder,
                   data: selectedData
                },
@@ -823,6 +823,8 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
             placeholder: placeholder,
             readOnly: readOnly,
             editPage: options.editPage,
+            isLabelHidden: options.isLabelHidden,
+            additionalText: options.additionalText,
             ajax: {
                url: "It will call url in .getOptions function", // require
                minimumInputLength: 0,
