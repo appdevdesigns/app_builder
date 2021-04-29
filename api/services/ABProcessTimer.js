@@ -33,7 +33,12 @@ module.exports = {
     * @param {ABProcessTriggerTimer} element
     */
    start: (element) => {
-      if (element == null || JOB_POOLS[element.id] != null) return;
+      if (element == null) return;
+
+      // Stop
+      if (JOB_POOLS[element.id] != null) {
+         ABProcessTimer.stop(element.id);
+      }
 
       let cronExpression = element.getCronExpression();
       sails.log.info(`::: Start CRON job [${cronExpression}] - ${element.id}`);
