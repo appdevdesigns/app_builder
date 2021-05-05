@@ -218,6 +218,18 @@ let getSQL = ({ defCSV, userData, extraWhere }) => {
                         select = `IFNULL(\`${columnName}\`, '')`;
                      }
                      break;
+                  case "user":
+                     if (f.settings.isMultiple) {
+                        select = `JSON_EXTRACT(\`${columnName}\`, "$[*].text")`;
+                        select = `REPLACE(${select}, '"', "'")`;
+                        select = `REPLACE(${select}, '[', "")`;
+                        select = `REPLACE(${select}, ']', "")`;
+                        select = `IFNULL(${select}, '')`;
+                        select = knex.raw(select);
+                     } else {
+                        select = `IFNULL(\`${columnName}\`, '')`;
+                     }
+                     break;
                   default:
                      select = `IFNULL(\`${columnName}\`, '')`;
                      break;
@@ -330,4 +342,3 @@ let ABCsvController = {
 };
 
 module.exports = ABCsvController;
-
