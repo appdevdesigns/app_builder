@@ -10,7 +10,7 @@ module.exports = {
          if (!p) return;
 
          let triggerTimers = p.elements(
-            (e) => e instanceof ABProcessTriggerTimer
+            (e) => e instanceof ABProcessTriggerTimer && e.isEnabled
          );
 
          if (triggerTimers && triggerTimers.length) {
@@ -33,7 +33,7 @@ module.exports = {
     * @param {ABProcessTriggerTimer} element
     */
    start: (element) => {
-      if (element == null) return;
+      if (element == null || !element.isEnabled) return;
 
       // Stop
       if (JOB_POOLS[element.id] != null) {

@@ -2,7 +2,6 @@ const ABProcessTriggerTimerCore = require("../../../core/process/tasks/ABProcess
 
 const START_URL = "/process/timer/#id#/start";
 const STOP_URL = "/process/timer/#id#/stop";
-const STATUS_URL = "/process/timer/#id#";
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -18,7 +17,7 @@ module.exports = class ABProcessTriggerTimer extends ABProcessTriggerTimerCore {
          repeatDaily: `${id}_repeatDaily`,
          repeatWeekly: `${id}_repeatWeekly`,
          repeatMonthly: `${id}_repeatMonthly`,
-         toggleButton: `${id}_toggleButton`
+         isEnabled: `${id}_isEnabled`
       };
    }
 
@@ -43,16 +42,6 @@ module.exports = class ABProcessTriggerTimer extends ABProcessTriggerTimerCore {
          id: "L",
          value: "Last"
       });
-
-      function updateButtonLabel(isRunning) {
-         $$(ids.toggleButton).define(
-            "label",
-            isRunning
-               ? L("ab.process.timer.stop", "Stop")
-               : L("ab.process.timer.start", "Start")
-         );
-         $$(ids.toggleButton).refresh();
-      }
 
       const LABEL_WIDTH = 120;
       let ui = {
@@ -205,38 +194,11 @@ module.exports = class ABProcessTriggerTimer extends ABProcessTriggerTimerCore {
                ]
             },
             {
-               cols: [
-                  { width: LABEL_WIDTH },
-                  {
-                     id: ids.toggleButton,
-                     view: "button",
-                     label: "Loading ...",
-                     disabled: true,
-                     click: () => {
-                        if (this.id == null) return;
-
-                        $$(ids.toggleButton).disable();
-                        OP.Comm.Service.put({
-                           url: (this.isRunning ? STOP_URL : START_URL).replace(
-                              "#id#",
-                              this.id
-                           )
-                        })
-                           .then((result) => {
-                              if (result) {
-                                 this.isRunning = !this.isRunning;
-                              }
-                              updateButtonLabel(this.isRunning);
-
-                              $$(ids.toggleButton).enable();
-                           })
-                           .catch((err) => {
-                              console.error(err);
-                              $$(ids.toggleButton).enable();
-                           });
-                     }
-                  }
-               ]
+               id: ids.isEnabled,
+               view: "switch",
+               label: L("ab.process.task.trigger.timer.enable", "*Enable"),
+               labelWidth: LABEL_WIDTH,
+               value: this.isEnabled
             }
          ]
       };
@@ -247,16 +209,6 @@ module.exports = class ABProcessTriggerTimer extends ABProcessTriggerTimerCore {
       $$(ids.repeatOnPanel).showBatch(
          this.repeatEvery || defaultValues.repeatEvery
       );
-
-      // Load status of this timer job
-      OP.Comm.Service.get({
-         url: STATUS_URL.replace("#id#", this.id)
-      }).then((result) => {
-         this.isRunning = result.isRunning;
-
-         updateButtonLabel(this.isRunning);
-         $$(ids.toggleButton).enable();
-      });
    }
 
    /**
@@ -273,6 +225,7 @@ module.exports = class ABProcessTriggerTimer extends ABProcessTriggerTimerCore {
       this.repeatDaily = $$(ids.repeatDaily).getValue();
       this.repeatWeekly = $$(ids.repeatWeekly).getValue();
       this.repeatMonthly = $$(ids.repeatMonthly).getValue();
+      this.isEnabled = $$(ids.isEnabled).getValue();
       this.triggerKey =
          this.triggerKey == null || this.triggerKey == "triggerKey.??"
             ? `timer.${this.id || OP.Util.uuid()}`
@@ -290,11 +243,12 @@ module.exports = class ABProcessTriggerTimer extends ABProcessTriggerTimerCore {
             .then(() => super.save())
             // Restart the timer
             .then((result) => {
-               return this.isRunning
-                  ? OP.Comm.Service.put({
-                       url: START_URL.replace("#id#", this.id)
-                    })
-                  : Promise.resolve(result);
+               return OP.Comm.Service.put({
+                  url: (this.isEnabled ? START_URL : STOP_URL).replace(
+                     "#id#",
+                     this.id
+                  )
+               });
             })
       );
    }
