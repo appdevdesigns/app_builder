@@ -114,7 +114,7 @@ module.exports = {
                      key: "connectObject",
                      icon: "external-link",
                      isImported: "0",
-                     columnName: object.tableName,
+                     columnName: `${object.tableName}_${field.columnName}`,
                      settings: {
                         showIcon: field.settings.showIcon,
                         linkObject: object.id,
