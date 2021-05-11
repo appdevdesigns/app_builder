@@ -53,9 +53,7 @@ module.exports = {
          var ids = [];
          Application.exportIDs(ids);
 
-         // for a thorough list, there will be duplicate ids, so lets only include
-         // unique entries:
-         // ids = _.uniq(ids);
+         // make sure there aren't any null values in our list
          ids.forEach((id) => {
             if (id) {
                // NOTE: go directly to the Model to get the full ABDefinition entry:
@@ -76,77 +74,95 @@ module.exports = {
          (userFields || []).forEach((fDef) => {
             var field = fDef.json;
 
-            // find field's object
-            var objDef = data.definitions.find(
-               (d) =>
-                  d.type == "object" && d.json.fieldIDs.indexOf(field.id) > -1
+            // only do this if we have not RE-IMPORTED this field:
+            // in this case, a user field will NOT have a field.settings.linkColumn defined:
+            var prevExport = ABDefinitionModel.objForID(
+               field.settings.linkColumn
             );
-            if (objDef) {
-               var object = objDef.json;
+            if (!prevExport) {
+               // find field's object
+               var objDef = data.definitions.find(
+                  (d) =>
+                     d.type == "object" &&
+                     d.json.fieldIDs.indexOf(field.id) > -1
+               );
+               if (objDef) {
+                  var object = objDef.json;
 
-               field.settings.linkObject = SiteUser.id;
-               field.settings.isCustomFK = 1;
-               field.settings.isSource = 1;
+                  // Convert the Old User field definitions to the new ConnectObject
+                  // format:
+                  field.settings.linkObject = SiteUser.id;
+                  field.settings.isCustomFK = 1;
+                  field.settings.isSource = 1;
 
-               if (field.settings.isMultiple) {
-                  field.settings.indexField2 = USERNAME_FIELD_ID;
-                  field.settings.linkType = "many";
-                  field.settings.linkViaType = "many";
-               } else {
-                  field.settings.indexField = USERNAME_FIELD_ID;
-                  field.settings.linkType = "one";
-                  field.settings.linkViaType = "many";
+                  if (field.settings.isMultiple) {
+                     field.settings.indexField2 = USERNAME_FIELD_ID;
+                     field.settings.linkType = "many";
+                     field.settings.linkViaType = "many";
+                  } else {
+                     field.settings.indexField = USERNAME_FIELD_ID;
+                     field.settings.linkType = "one";
+                     field.settings.linkViaType = "many";
+                  }
+
+                  var uuidLinkF = uuidv4();
+                  field.settings.linkColumn = uuidLinkF;
+
+                  // now new ConnectObject Field on SiteUser:
+                  var linkF = {
+                     type: "field",
+                     key: "connectObject",
+                     icon: "external-link",
+                     isImported: "0",
+                     columnName: object.tableName,
+                     settings: {
+                        showIcon: field.settings.showIcon,
+                        linkObject: object.id,
+                        linkType: field.settings.linkViaType,
+                        linkViaType: field.settings.linkType,
+                        isCustomFK: field.settings.isCustomFK,
+                        indexField: field.settings.indexField,
+                        indexField2: field.settings.indexField2,
+                        isSource: 0,
+                        width: 100,
+                        required: 0,
+                        unique: 0,
+                        linkColumn: field.id
+                     },
+                     translations: [
+                        {
+                           language_code: "en",
+                           label:
+                              object.translations[0].label +
+                              "." +
+                              field.translations[0].label
+                        }
+                     ],
+                     id: uuidLinkF
+                  };
+
+                  SiteUser.json.fieldIDs.push(linkF.id);
+
+                  // Bundle the LinkField json into a proper Defintiion:
+                  var defLinkF = {
+                     id: linkF.id,
+                     type: linkF.type,
+                     name: "USER->" + linkF.translations[0].label,
+                     json: linkF,
+                     createdAt: fDef.createdAt,
+                     updatedAt: fDef.updatedAt
+                  };
+
+                  data.definitions.push(defLinkF);
+               } // if objDef
+            } else {
+               // be sure to include the definition for our previously created
+               // linkField if it isn't already included:
+               var exists = data.definitions.find((d) => d.id == prevExport.id);
+               if (!exists) {
+                  data.definitions.push(prevExport);
                }
-
-               var uuidLinkF = uuidv4();
-               field.settings.linkColumn = uuidLinkF;
-
-               // now new field on SiteUser:
-               var linkF = {
-                  type: "field",
-                  key: "connectObject",
-                  icon: "external-link",
-                  isImported: "0",
-                  columnName: object.tableName,
-                  settings: {
-                     showIcon: field.settings.showIcon,
-                     linkObject: object.id,
-                     linkType: field.settings.linkViaType,
-                     linkViaType: field.settings.linkType,
-                     isCustomFK: 0,
-                     indexField: "",
-                     indexField2: "",
-                     isSource: 0,
-                     width: 100,
-                     required: 0,
-                     unique: 0,
-                     linkColumn: field.id
-                  },
-                  translations: [
-                     {
-                        language_code: "en",
-                        label:
-                           object.translations[0].label +
-                           "." +
-                           field.translations[0].label
-                     }
-                  ],
-                  id: uuidLinkF
-               };
-
-               SiteUser.json.fieldIDs.push(linkF.id);
-
-               var defLinkF = {
-                  id: linkF.id,
-                  type: linkF.type,
-                  name: "USER->" + linkF.translations[0].label,
-                  json: linkF,
-                  createdAt: fDef.createdAt,
-                  updatedAt: fDef.updatedAt
-               };
-
-               data.definitions.push(defLinkF);
-            }
+            } // if !reimport
          });
          resolve(data);
       });
