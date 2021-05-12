@@ -607,4 +607,36 @@ module.exports = class ABFieldDate extends ABFieldDateCore {
    dateToString(dateFormat, dateData) {
       return webix.Date.dateToStr(dateFormat)(dateData);
    }
+
+   setValue(item, rowData, defaultValue) {
+      if (!item) return;
+
+      let val;
+
+      if (
+         (rowData == null || rowData[this.columnName] == null) &&
+         defaultValue != null
+      ) {
+         val = defaultValue;
+      } else if (rowData && rowData[this.columnName] != null) {
+         val = rowData[this.columnName];
+      } else {
+         val = rowData;
+      }
+
+      if (item.setValue) {
+         item.setValue(val);
+      } else {
+         let $checkbox = item.queryView({ view: "checkbox" }, false);
+         let $datepicker = item.queryView({ view: "datepicker" }, false);
+         if (val == "ab-current-date") {
+            $checkbox ? $checkbox.setValue(true) : null;
+            $datepicker ? $datepicker.setValue(null) : null;
+         } else {
+            $checkbox ? $checkbox.setValue(false) : null;
+            $datepicker ? $datepicker.setValue(val) : null;
+         }
+      }
+   }
 };
+
