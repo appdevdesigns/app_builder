@@ -27,7 +27,14 @@ OP.Model.extend(
          });
       },
 
-      roleSave: function(role) {
+      roleCreate: function(role) {
+         return OP.Comm.Service.post({
+            url: `/app_builder/role`,
+            data: role
+         });
+      },
+
+      roleUpdate: function(role) {
          return OP.Comm.Service.put({
             url: `/app_builder/role`,
             data: role
@@ -73,9 +80,16 @@ OP.Model.extend(
          });
       },
 
-      scopeSave: function(scope, roleId) {
+      scopeCreate: function(scope, roleId) {
+         return OP.Comm.Service.post({
+            url: `/app_builder/scope${roleId ? `?roleID=${roleId}` : ""}`,
+            data: scope
+         });
+      },
+
+      scopeUpdate: function(scope, roleId) {
          return OP.Comm.Service.put({
-            url: `/app_builder/scope?roleID=${roleId}`,
+            url: `/app_builder/scope${roleId ? `?roleID=${roleId}` : ""}`,
             data: scope
          });
       },
