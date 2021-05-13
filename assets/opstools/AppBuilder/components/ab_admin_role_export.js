@@ -1,4 +1,5 @@
 const ABComponent = require("../classes/platform/ABComponent");
+const ABApplication = require("../classes/platform/ABApplication");
 
 module.exports = class AB_Work_Admin_Role_List_Export extends ABComponent {
    constructor(App) {
@@ -123,9 +124,15 @@ module.exports = class AB_Work_Admin_Role_List_Export extends ABComponent {
             // Scopes
             let $scopes = $$(ids.scopes);
             if ($scopes) {
+               let allObjects = new ABApplication({}).objects();
                result.role.scopes = $scopes
                   .find({ _isExport: true })
-                  .map((s) => s.toObj());
+                  .map((s) => {
+                     s._objects = allObjects.filter(
+                        (o) => (s.objectIds || "").indexOf(o.id) > -1
+                     );
+                     return s.toObj();
+                  });
             }
 
             // Users
