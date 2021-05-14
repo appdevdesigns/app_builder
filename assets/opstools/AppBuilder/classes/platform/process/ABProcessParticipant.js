@@ -25,7 +25,7 @@ function loadUsers() {
          .then(function(list) {
             list.forEach(function(l) {
                __Users.push({
-                  id: l.uuid || l.id,
+                  id: l.username, // <-- v2 now uses .username  l.uuid || l.id,
                   value: l.username
                });
             });
