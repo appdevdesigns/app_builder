@@ -1,5 +1,6 @@
 const ABComponent = require("../classes/platform/ABComponent");
 const ABRole = require("../classes/platform/ABRole");
+const ABFieldUser = require("../classes/platform/dataFields/ABFieldUser");
 
 module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
    constructor(App) {
@@ -46,6 +47,10 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 
          buttonImport: this.unique("buttonImport")
       };
+
+      let userField = new ABFieldUser({
+         settings: {}
+      });
 
       let _logic = {
          show: () => {
@@ -142,8 +147,14 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
 
             // users
             let userData = (this._importData.users || []).map((u) => {
+               let isExists =
+                  this._userList
+                     .map((uItem) => uItem.id || uItem.value || uItem)
+                     .filter((uItem) => uItem == u).length > 0;
+
                return {
-                  _isImport: true,
+                  _isImport: isExists,
+                  _isDisabled: !isExists,
                   name: u
                };
             });
@@ -166,9 +177,15 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
          },
 
          itemTemplate: (item, common) => {
-            return `${common.status(item)} ${common.markCheckbox(item)} ${
-               item.name
-            }`;
+            if (item._isDisabled) {
+               return `<span style="color: #989898;">${common.disableItem(
+                  item
+               )} ${item.name}</span>`;
+            } else {
+               return `${common.status(item)} ${common.markCheckbox(item)} ${
+                  item.name
+               }`;
+            }
          },
 
          itemStatus: (item) => {
@@ -205,6 +222,10 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
                (item._isImport ? "check-" : "") +
                "square-o'></span>"
             );
+         },
+
+         disableTemplate: () => {
+            return "<span class='webix_icon fa fa-ban'></span>";
          },
 
          toggleCheck: (itemId, $list) => {
@@ -485,7 +506,8 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
                                  template: _logic.itemTemplate,
                                  type: {
                                     status: _logic.itemStatus,
-                                    markCheckbox: _logic.checkboxTemplate
+                                    markCheckbox: _logic.checkboxTemplate,
+                                    disableItem: _logic.disableTemplate
                                  },
                                  tooltip: {
                                     template: _logic.itemErrorTooltip
@@ -548,6 +570,8 @@ module.exports = class AB_Work_Admin_Role_Import extends ABComponent {
          webix.ui(this.ui);
 
          if ($$(ids.list)) webix.extend($$(ids.list), webix.ProgressBar);
+
+         this._userList = userField.getUsers() || [];
       };
 
       //
