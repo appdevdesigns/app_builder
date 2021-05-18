@@ -368,7 +368,10 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
                         let customFK = view.application.definitionForID(
                            fdefs.settings.indexField
                         );
-                        fieldToCheck = fdefs.id + ":" + customFK.columnName;
+                        // if the index definitions were found
+                        if (customFK) {
+                           fieldToCheck = fdefs.id + ":" + customFK.columnName;
+                        }
                      } else if (
                         fdefs.settings.linkObject &&
                         fdefs.settings.linkType == "one" &&
