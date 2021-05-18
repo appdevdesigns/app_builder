@@ -92,12 +92,12 @@ var ABFieldImageComponent = new ABFieldComponent({
                   view: "uploader",
                   id: ids.defaultImageUrl,
                   template:
-                     '<div class="default-image-holder" style="height:66; width:100; position:relative;">' +
-                     '<div class="image-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 8px;">' +
-                     '<i class="fa fa-picture-o fa-2x" style="opacity: 0.6; font-size: 32px; margin-bottom: 5px;"></i>' +
-                     "<br/>Drag and drop or click here" +
+                     '<div class="default-image-holder">' +
+                     '<div class="image-data-field-icon">' +
+                     '<i class="fa fa-picture-o fa-2x"></i>' +
+                     "<div>Drag and drop or click here</div>" +
                      "</div>" +
-                     '<div class="image-data-field-image" style="display:none; width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; position: relative;">' +
+                     '<div class="image-data-field-image" style="display:none;">' +
                      '<a style="" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image" style="display:none;"></i></a>' +
                      "</div>" +
                      "</div>",
@@ -106,7 +106,7 @@ var ABFieldImageComponent = new ABFieldComponent({
                   multiple: false,
                   disabled: true,
                   name: "defaultImageUrl",
-                  height: 66,
+                  height: 150,
                   width: 100,
                   on: {
                      // when a file is added to the uploader
@@ -416,43 +416,66 @@ module.exports = class ABFieldImage extends ABFieldImageCore {
       config.editor = false; // 'text';  // '[edit_type]'   for your unique situation
       // config.sort   = 'string' // '[sort_type]'   for your unique situation
 
-      var height = "100%";
+      var containerHeight = "100%";
+      var imageHeight = "100%";
       var width = "100%";
-      if (this.settings.useWidth) {
+      var imageSrcHeight = "100%";
+      if (field.settings.useWidth) {
          config.width = field.settings.imageWidth || 100;
-         height = (field.settings.imageHeight || 33) + "px";
+         var heightVal =
+            field.settings.useHeight && field.settings.imageHeight
+               ? field.settings.imageHeight + 20
+               : 80;
+         containerHeight = heightVal + "px";
          width = (field.settings.imageWidth || 100) + "px";
+         imageHeight =
+            field.settings.useHeight && field.settings.imageHeight
+               ? field.settings.imageHeight
+               : 80;
+         imageHeight = imageHeight + "px";
+         imageSrcHeight =
+            field.settings.useHeight && field.settings.imageHeight
+               ? field.settings.imageHeight
+               : 60;
+         imageSrcHeight = imageSrcHeight + "px";
       }
-      if (options.height) {
-         height = options.height + "px";
-      }
-      if (options.width) {
-         width = options.width + "px";
+      if (field.settings.useHeight) {
+         containerHeight = parseInt(field.settings.imageHeight) + 20;
+         containerHeight = containerHeight + "px";
+         imageHeight = parseInt(field.settings.imageHeight);
+         imageHeight = imageHeight + "px";
+         imageSrcHeight = parseInt(field.settings.imageHeight);
+         imageSrcHeight = imageSrcHeight + "px";
       }
 
       var editable = options.editable;
 
       // populate our default template:
+      // debugger;
       config.template = (obj) => {
          if (obj.$group) return obj[this.columnName];
 
          var widthStyle = "width: #width#; height: #height#"
             .replace("#width#", width)
-            .replace("#height#", height);
+            .replace("#height#", containerHeight);
+
+         var imageStyle = "width: #width#; height: #height#"
+            .replace("#width#", width)
+            .replace("#height#", imageHeight);
 
          var imgDiv = [
-            '<div class="ab-image-data-field" style="float: left; #useWidth#">'.replace(
+            '<div class="ab-image-data-field" style="#useWidth#">'.replace(
                "#useWidth#",
                widthStyle
             ),
             '<div class="webix_view ab-image-holder" style="#useWidth#">'.replace(
                "#useWidth#",
-               widthStyle
+               imageStyle
             ),
             '<div class="webix_template">',
             this.imageTemplate(obj, {
                editable: editable,
-               height: height,
+               height: imageSrcHeight,
                width: width
             }),
             "</div>",
@@ -661,12 +684,15 @@ module.exports = class ABFieldImage extends ABFieldImageCore {
          // store upload id into html element (it will be used in .customEdit)
          node.dataset["uploaderId"] = uploader.config.id;
 
-         // open file upload dialog when's click
-         node.addEventListener("click", (e) => {
-            if (e.target.className.indexOf("delete-image") > -1) {
-               this.deleteImage = true;
-            }
-         });
+         // if we are working in a datagrid we need to add a click event to
+         // check if the user is clicking on the delete button
+         if (node.className == "webix_cell") {
+            node.addEventListener("click", (e) => {
+               if (e.target.className.indexOf("delete-image") > -1) {
+                  this.deleteImage = true;
+               }
+            });
+         }
       }
    }
 
@@ -678,9 +704,11 @@ module.exports = class ABFieldImage extends ABFieldImageCore {
     *					unique id references.
     * @param {HtmlDOM} node  the HTML Dom object for this field's display.
     */
-   customEdit(row, App, node) {
-      if (this.deleteImage == true) {
-         // remove the property because it is only needed to prevent the file dialog from showing
+   customEdit(row, App, node, id, evt) {
+      if (
+         (evt && evt.target.className.indexOf("delete-image") > -1) ||
+         this.deleteImage
+      ) {
          delete this.deleteImage;
          if (!row.removeDefaultImage) {
             row.removeDefaultImage = [];
@@ -726,7 +754,7 @@ module.exports = class ABFieldImage extends ABFieldImageCore {
                }
             }
          });
-      } else if (!row[this.columnName]) {
+      } else {
          var uploaderId = node.dataset["uploaderId"],
             uploader = $$(uploaderId);
 
@@ -806,15 +834,13 @@ module.exports = class ABFieldImage extends ABFieldImageCore {
       }
 
       var html = [
-         '<div class="image-data-field-icon" style="text-align: center; height: inherit; display: table-cell; vertical-align: middle; border: 2px dotted #CCC; background: #FFF; border-radius: 10px; font-size: 11px; line-height: 13px; padding: 0 8px; ' +
-            iconDisplay +
-            '"><i class="fa fa-picture-o fa-2x" style="opacity: 0.6; font-size: 32px; margin-bottom: 5px;"></i>#drag#</div>',
-         `<div class="image-data-field-image" style="${imageDisplay} width:${options.width}; height:${options.height}; background-repeat: no-repeat; background-position: center center; background-size: cover; ${imageURL}">#remove#</div>`
+         `<div class="image-data-field-icon" style="${iconDisplay}"><i class="fa fa-picture-o fa-2x"></i>#drag#</div>` +
+            `<div class="image-data-field-image" style="${imageDisplay} width:${options.width}; height:${options.height}; ${imageURL}">#remove#</div>`
       ].join("");
 
       html = html.replace(
          "#drag#",
-         options.editable ? "<br/>Drag and drop or click here" : ""
+         options.editable ? "<div>Drag and drop or click here</div>" : ""
       );
       html = html.replace(
          "#remove#",
@@ -867,7 +893,7 @@ module.exports = class ABFieldImage extends ABFieldImageCore {
       }
 
       var imageIcon = domNode.querySelector(".image-data-field-icon");
-      if (imageIcon) imageIcon.style.display = val ? "none" : "block";
+      if (imageIcon) imageIcon.style.display = val ? "none" : "";
 
       var image = domNode.querySelector(".image-data-field-image");
       if (image) {
