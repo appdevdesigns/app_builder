@@ -866,7 +866,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                         var filter = {
                            key: options.filterKey,
                            rule: "equals",
-                           value: parentVal.uuid
+                           value: parentVal[options.filterColumn]
                         };
                         combineFilters.rules.push(filter);
                      }
