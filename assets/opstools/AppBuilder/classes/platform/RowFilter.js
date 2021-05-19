@@ -519,17 +519,6 @@ module.exports = class RowFilter extends RowFilterCore {
                               id: "is_not_current_user"
                            },
                            {
-                              value:
-                                 labels.component.containsCurrentUserCondition,
-                              id: "contain_current_user"
-                           },
-                           {
-                              value:
-                                 labels.component
-                                    .notContainsCurrentUserCondition,
-                              id: "not_contain_current_user"
-                           },
-                           {
                               value: labels.component.equalListCondition,
                               id: "equals"
                            },
@@ -540,6 +529,33 @@ module.exports = class RowFilter extends RowFilterCore {
                         ]
                            .concat(instance.queryFieldOptions)
                            .concat(instance.recordRuleOptions),
+                        on: {
+                           onChange: function(condition) {
+                              var $viewComparer = this.getParentView();
+                              var $viewCond = $viewComparer.getParentView();
+                              _logic.onChangeRule(condition, $viewCond);
+                              _logic.onChange();
+                           }
+                        }
+                     },
+                     // Multiple - users
+                     {
+                        batch: "multipleUser",
+                        view: "combo",
+                        value: "contain_current_user",
+                        options: [
+                           {
+                              value:
+                                 labels.component.containsCurrentUserCondition,
+                              id: "contain_current_user"
+                           },
+                           {
+                              value:
+                                 labels.component
+                                    .notContainsCurrentUserCondition,
+                              id: "not_contain_current_user"
+                           }
+                        ].concat(instance.recordRuleOptions),
                         on: {
                            onChange: function(condition) {
                               var $viewComparer = this.getParentView();
@@ -894,7 +910,15 @@ module.exports = class RowFilter extends RowFilterCore {
          // Special this object query
          else if (batchName == "LongText" || batchName == "combined")
             batchName = "string";
-         else if (field.key == "formula") batchName = "number";
+         else if (field.key == "formula" || field.key == "AutoIndex")
+            batchName = "number";
+         else if (field.key == "user") {
+            if (field.settings && field.settings.isMultiple) {
+               batchName = "multipleUser";
+            } else {
+               batchName = "user";
+            }
+         }
          var isQueryField =
             this._QueryFields.filter((f) => {
                return f.id == field.id;
@@ -1418,4 +1442,3 @@ module.exports = class RowFilter extends RowFilterCore {
       logic.unblockOnChange();
    }
 };
-
