@@ -1,4 +1,6 @@
 const ABViewPivotCore = require("../../core/views/ABViewPivotCore");
+const ABFieldCalculate = require("../dataFields/ABFieldCalculate");
+const ABFieldFormula = require("../dataFields/ABFieldFormula");
 const ABFieldNumber = require("../dataFields/ABFieldNumber");
 const ABObjectQuery = require("../ABObjectQuery");
 
@@ -216,7 +218,11 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
                let result = {};
 
                object.fields(null, true).forEach((f) => {
-                  if (f instanceof ABFieldNumber)
+                  if (
+                     f instanceof ABFieldCalculate ||
+                     f instanceof ABFieldFormula ||
+                     f instanceof ABFieldNumber
+                  )
                      result[f.columnName] = d[f.columnName];
                   else result[f.columnName] = f.format(d);
                });
