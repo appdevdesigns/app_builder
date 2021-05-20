@@ -162,6 +162,10 @@ module.exports = {
                if (!exists) {
                   data.definitions.push(prevExport);
                }
+               // and make sure our SiteUser.fieldIDs include the .id
+               if (SiteUser.json.fieldIDs.indexOf(prevExport.id) == -1) {
+                  SiteUser.json.fieldIDs.push(prevExport.id);
+               }
             } // if !reimport
          });
          resolve(data);
