@@ -125,6 +125,13 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
                "*Highlighting of a cell(s) with the biggest value in a row."
             ),
             labelWidth: App.config.labelWidthCheckbox
+         },
+         {
+            name: "decimalPlaces",
+            view: "counter",
+            min: 1,
+            label: L("ab.components.pivot.decimalPlaces", "*Decimal Places"),
+            labelWidth: App.config.labelWidthXLarge
          }
       ]);
    }
@@ -149,6 +156,9 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
       $$(ids.min).setValue(view.settings.min);
       $$(ids.max).setValue(view.settings.max);
       $$(ids.height).setValue(view.settings.height);
+      $$(ids.decimalPlaces).setValue(
+         view.settings.decimalPlaces == null ? 2 : view.settings.decimalPlaces
+      );
    }
 
    static propertyEditorValues(ids, view) {
@@ -162,6 +172,7 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
       view.settings.min = $$(ids.min).getValue();
       view.settings.max = $$(ids.max).getValue();
       view.settings.height = $$(ids.height).getValue();
+      view.settings.decimalPlaces = $$(ids.decimalPlaces).getValue();
    }
 
    /*
@@ -188,7 +199,13 @@ module.exports = class ABViewPivot extends ABViewPivotCore {
          separateLabel: this.settings.separateLabel,
          min: this.settings.min,
          max: this.settings.max,
-         height: this.settings.height
+         height: this.settings.height,
+         format: (value) => {
+            let decimalPlaces = this.settings.decimalPlaces || 2;
+            return value && value != "0"
+               ? parseFloat(value).toFixed(decimalPlaces || 0)
+               : value;
+         }
       };
 
       // make sure each of our child views get .init() called
