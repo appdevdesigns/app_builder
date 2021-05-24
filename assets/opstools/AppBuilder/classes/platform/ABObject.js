@@ -525,15 +525,17 @@ module.exports = class ABObject extends ABObjectCore {
       if (rowIds != null) {
          rowIds.forEach((id) => {
             var row = data.getItem(id);
-            fields.forEach((f) => {
-               var node = DataTable.getItemNode({
-                  row: row.id,
-                  column: f.columnName
+            if (row) {
+               fields.forEach((f) => {
+                  var node = DataTable.getItemNode({
+                     row: row.id,
+                     column: f.columnName
+                  });
+                  f.customDisplay(row, App, node, {
+                     editable: isEditable
+                  });
                });
-               f.customDisplay(row, App, node, {
-                  editable: isEditable
-               });
-            });
+            }
          });
       } else {
          var id = data.getFirstId();
