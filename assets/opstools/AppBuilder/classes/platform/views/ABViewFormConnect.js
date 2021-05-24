@@ -734,6 +734,7 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
          labelWidth: 0,
          paddingY: 0,
          paddingX: 0,
+         label: field.label,
          css: "ab-custom-field",
          name: field.columnName,
          body: {
