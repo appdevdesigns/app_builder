@@ -61,9 +61,9 @@ module.exports = {
             }
          });
 
-         var SiteUser = data.definitions.find(
-            (d) => d.id == "228e3d91-5e42-49ec-b37c-59323ae433a1"
-         );
+         const SITE_USER_OBJECT_ID = "228e3d91-5e42-49ec-b37c-59323ae433a1";
+         let SiteUser = ABDefinitionModel.objForID(SITE_USER_OBJECT_ID);
+
          var USERNAME_FIELD_ID = "5760560b-c078-47ca-98bf-e18ac492a561";
 
          var userFields = data.definitions.filter(
