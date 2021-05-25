@@ -106,7 +106,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
          () =>
             new Promise((next, bad) => {
                this.stateUpdate(instance, {
-                  data: results
+                  data: results[0]
                });
                this.stateCompleted(instance);
                next(true);
@@ -148,17 +148,13 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
     * @return {mixed} | null
     */
    processDataPrevious(instance) {
-      let prevElem = this.process.connectionPreviousTask(this)[0];
+      let prevElem = (this.process.connectionPreviousTask(this) || []).filter(
+         (t) =>
+            t instanceof InsertRecord || t instanceof ABProcessTaskServiceQuery
+      )[0];
       if (!prevElem) return null;
 
-      let result = null;
-
-      if (
-         prevElem instanceof InsertRecord ||
-         prevElem instanceof ABProcessTaskServiceQuery
-      ) {
-         result = prevElem.processData(instance);
-      }
+      let result = prevElem.processData(instance);
 
       return result;
    }
@@ -277,3 +273,4 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
       return result;
    }
 };
+
