@@ -18,7 +18,9 @@ module.exports = {
    "get /app_builder/scope/:id/roles":
       "app_builder/ABScopeController.scopeRole",
 
-   "put /app_builder/scope": "app_builder/ABScopeController.save",
+   "post /app_builder/scope": "app_builder/ABScopeController.create",
+
+   "put /app_builder/scope": "app_builder/ABScopeController.update",
 
    "delete /app_builder/scope/:id": "app_builder/ABScopeController.destroy",
 
@@ -41,7 +43,9 @@ module.exports = {
 
    "get /app_builder/role/:id": "app_builder/ABRoleController.findOne",
 
-   "put /app_builder/role": "app_builder/ABRoleController.save",
+   "post /app_builder/role": "app_builder/ABRoleController.create",
+
+   "put /app_builder/role": "app_builder/ABRoleController.update",
 
    "delete /app_builder/role/:id": "app_builder/ABRoleController.destroy",
 
