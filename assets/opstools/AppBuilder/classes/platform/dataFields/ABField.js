@@ -640,6 +640,10 @@ module.exports = class ABField extends ABFieldCore {
             ) + config.header;
       }
 
+      config.template = (obj, common, value, col, ind) => {
+         return (value || "").toString();
+      };
+
       return config;
    }
 
