@@ -129,8 +129,50 @@ module.exports = class ABFieldJson extends ABFieldJsonCore {
     * the component that will be stored with the ABViewForm.
     */
    formComponent() {
-      // read-only for now
-      return super.formComponent("fieldreadonly");
+      var formComponentSetting = super.formComponent();
+
+      // .common() is used to create the display in the list
+      formComponentSetting.common = () => {
+         return {
+            key: "json"
+         };
+      };
+
+      return formComponentSetting;
+   }
+
+   /**
+    * @method getValue
+    * this function uses for form component and mass update popup
+    * to get value of fields that apply custom editor
+    *
+    * @param {Object} item - Webix element
+    * @param {Object} rowData - data of row
+    *
+    * @return {Object}
+    */
+   getValue(item, rowData) {
+      debugger;
+      return item.getValue();
+   }
+   setValue(item, rowData, defaultValue) {
+      debugger;
+      if (!item) return;
+
+      var val;
+
+      if (
+         (rowData == null || rowData[this.columnName] == null) &&
+         defaultValue != null
+      ) {
+         val = defaultValue;
+      } else if (rowData && rowData[this.columnName] != null) {
+         val = rowData[this.columnName];
+      } else {
+         val = rowData;
+      }
+
+      item.setValue(val);
    }
 
    detailComponent() {
