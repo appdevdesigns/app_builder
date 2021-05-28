@@ -683,6 +683,18 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                                        reportRow[col] || 0
                                     );
                                     break;
+                                 case "date":
+                                 case "datetime":
+                                    reportRow[col] = row[columnName];
+                                    if (
+                                       reportRow[col] &&
+                                       !(reportRow[col] instanceof Date)
+                                    ) {
+                                       reportRow[col] = new Date(
+                                          row[columnName]
+                                       );
+                                    }
+                                    break;
                               }
                            });
                            reportData.push(reportRow);
