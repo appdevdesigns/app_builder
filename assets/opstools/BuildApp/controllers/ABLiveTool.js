@@ -1741,9 +1741,9 @@ steal(
                            translatePrefix = "[" + translateLang + "] ";
                         }
                         if (
-                           valueLabel.indexOf("[" + translateLang + "]") ==
-                              -1 &&
-                           !missingTranslate
+                           (valueLabel || "").indexOf(
+                              "[" + translateLang + "]" - 1 && !missingTranslate
+                           )
                         ) {
                            completed++;
                         }
