@@ -715,3 +715,4 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
       };
    }
 };
+
