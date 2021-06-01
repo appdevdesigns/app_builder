@@ -996,7 +996,9 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
                      f.rule == "less_current" ||
                      f.rule == "greater_current" ||
                      f.rule == "less_or_equal_current" ||
-                     f.rule == "greater_or_equal_current")
+                     f.rule == "greater_or_equal_current" ||
+                     f.rule == "is_empty" ||
+                     f.rule == "is_not_empty")
                ) {
                   allComplete = allComplete && true;
                } else {
