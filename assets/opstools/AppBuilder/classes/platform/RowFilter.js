@@ -61,6 +61,11 @@ module.exports = class RowFilter extends RowFilterCore {
             ),
             isCondition: L("ab.filter_fields.isCondition", "*is"),
             isNotCondition: L("ab.filter_fields.isNotCondition", "*is not"),
+            isEmpty: L("ab.filter_fields.isEmptyCondition", "*is empty"),
+            isNotEmpty: L(
+               "ab.filter_fields.isNotEmptyCondition",
+               "*is not empty"
+            ),
 
             beforeCondition: L(
                "ab.filter_fields.beforeCondition",
@@ -570,6 +575,14 @@ module.exports = class RowFilter extends RowFilterCore {
                            {
                               value: labels.component.isNotCondition,
                               id: "not_equal"
+                           },
+                           {
+                              value: labels.component.isEmpty,
+                              id: "is_empty"
+                           },
+                           {
+                              value: labels.component.isNotEmpty,
+                              id: "is_not_empty"
                            }
                         ]
                            .concat(instance.queryFieldOptions)
@@ -1016,6 +1029,8 @@ module.exports = class RowFilter extends RowFilterCore {
             case "greater_current":
             case "less_or_equal_current":
             case "greater_or_equal_current":
+            case "is_empty":
+            case "is_not_empty":
                // clear and disable the value field
                $viewCond.$$(ids.inputValue).showBatch("empty");
                _logic.onChange();
