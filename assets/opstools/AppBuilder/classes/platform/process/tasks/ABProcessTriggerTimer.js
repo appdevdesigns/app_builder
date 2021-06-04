@@ -32,16 +32,16 @@ module.exports = class ABProcessTriggerTimer extends ABProcessTriggerTimerCore {
       let defaultValues = ABProcessTriggerTimer.defaults();
 
       let dayOptions = [];
-      for (let day = 1; day <= 30; day++) {
+      for (let day = 1; day <= 31; day++) {
          dayOptions.push({
             id: day,
             value: day
          });
       }
-      dayOptions.push({
-         id: "L",
-         value: "Last"
-      });
+      // dayOptions.push({
+      //    id: "L",
+      //    value: "Last"
+      // });
 
       const LABEL_WIDTH = 120;
       let ui = {
