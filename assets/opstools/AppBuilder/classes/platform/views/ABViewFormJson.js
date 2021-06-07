@@ -175,6 +175,7 @@ module.exports = class ABViewFormJson extends ABViewFormJsonCore {
       component.init = (options, accessLevel) => {
          if (this.settings.type == "filter") {
             let filterField = component.logic.getFilterField(this);
+            if (!$$(filterField)) return;
             $$(filterField).attachEvent("onChange", function(values) {
                component.logic.refreshFilter(values);
             });
