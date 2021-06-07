@@ -4,6 +4,7 @@ const ABViewFormCustom = require("./ABViewFormCustom");
 const ABViewFormComponent = require("./ABViewFormComponent");
 const ABViewFormSelectMultiple = require("./ABViewFormSelectMultiple");
 const ABViewFormTextbox = require("./ABViewFormTextbox");
+const ABViewFormJson = require("./ABViewFormJson");
 
 const ABRecordRule = require("../../rules/ABViewRuleListFormRecordRules");
 const ABSubmitRule = require("../../rules/ABViewRuleListFormSubmitRules");
@@ -267,7 +268,7 @@ module.exports = class ABViewForm extends ABViewFormCore {
          if (selectedDv) {
             PopupRecordRule.objectLoad(selectedDv.datasource);
          }
-	 PopupRecordRule.formLoad(currView);
+         PopupRecordRule.formLoad(currView);
          PopupRecordRule.fromSettings(currView.settings.recordRules);
          PopupRecordRule.show();
 
@@ -788,7 +789,10 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   let Form = $$(ids.component);
                   if (Form) {
                      Form.disable();
-                     if (Form.showProgress) Form.showProgress({ type: "icon" });
+                     if (Form.showProgress)
+                        Form.showProgress({
+                           type: "icon"
+                        });
                   }
                }
             });
@@ -962,7 +966,10 @@ module.exports = class ABViewForm extends ABViewFormCore {
                   comp instanceof ABViewFormCustom ||
                   // rich text
                   (comp instanceof ABViewFormTextbox &&
-                     comp.settings.type == "rich")
+                     comp.settings.type == "rich") ||
+                  // JSON filter UI
+                  (comp instanceof ABViewFormJson &&
+                     comp.settings.type == "filter")
                );
             });
 
@@ -1025,6 +1032,10 @@ module.exports = class ABViewForm extends ABViewFormCore {
 
                   if (comp.logic && comp.logic.refresh)
                      comp.logic.refresh(rowData);
+
+                  // use the components setValue if it has one (used for filter UI)
+                  if (comp.logic && comp.logic.setValue)
+                     comp.logic.setValue(rowData[f.field().columnName]);
                });
             }
          },
@@ -1198,7 +1209,12 @@ module.exports = class ABViewForm extends ABViewFormCore {
       var customFields = this.fieldComponents(
          (comp) => comp instanceof ABViewFormCustom
       );
-      customFields.forEach((f) => {
+      // get JSON filters
+      var jsonFilterFields = this.fieldComponents((comp) => {
+         if (comp instanceof ABViewFormJson && comp.settings.type == "filter")
+            return true;
+      });
+      customFields.concat(jsonFilterFields).forEach((f) => {
          var vComponent = this.viewComponents[f.id];
          if (vComponent == null) return;
 
@@ -1357,7 +1373,10 @@ module.exports = class ABViewForm extends ABViewFormCore {
       }
 
       // show progress icon
-      if (formView.showProgress) formView.showProgress({ type: "icon" });
+      if (formView.showProgress)
+         formView.showProgress({
+            type: "icon"
+         });
 
       // form ready function
       var formReady = (newFormVals) => {

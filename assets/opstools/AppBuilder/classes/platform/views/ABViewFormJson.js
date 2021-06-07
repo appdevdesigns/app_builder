@@ -107,17 +107,33 @@ module.exports = class ABViewFormJson extends ABViewFormJsonCore {
             placeholder: L(
                "ab.component.json.filter.field.placeholder",
                "*Select a field to filter by"
-            ),
-            options: [
-               { id: 1, value: "Field 1" },
-               { id: 2, value: "Field 2" }
-            ]
+            )
+            // options: look at propertyEditorPopulate
          }
       ]);
    }
 
    static propertyEditorPopulate(App, ids, view) {
       super.propertyEditorPopulate(App, ids, view);
+
+      // set the options for the filterField
+      let filterFieldOptions = [{ id: "", value: "" }];
+      view.parent.views().forEach((element) => {
+         if (element.key == "json" && element.settings.type == "systemObject") {
+            let formElementsDefs = view.application.definitionForID(
+               element.settings.fieldId
+            );
+            let formComponent = view.parent.viewComponents[element.id];
+            filterFieldOptions.push({
+               id: element.id,
+               value: formComponent.ui.label
+            });
+         }
+      });
+      $$(ids.filterField).define("options", filterFieldOptions);
+
+      if (view.settings.filterField)
+         $$(ids.filterField).setValue(view.settings.filterField);
 
       $$(ids.type).setValue(
          view.settings.type || ABViewFormJsonPropertyComponentDefaults.type
@@ -128,6 +144,7 @@ module.exports = class ABViewFormJson extends ABViewFormJsonCore {
       super.propertyEditorValues(ids, view);
 
       view.settings.type = $$(ids.type).getValue();
+      view.settings.filterField = $$(ids.filterField).getValue();
    }
 
    /*
@@ -145,8 +162,89 @@ module.exports = class ABViewFormJson extends ABViewFormJsonCore {
       };
 
       component.rowFilter = new RowFilter(App, "ab.view.form.json.filter");
+      component.rowFilter.init({
+         onChange: () => {
+            var vals = component.logic.getValue();
+            component.ui.value = vals;
+         },
+         showObjectName: true
+      });
 
       component.ui.id = ids.component;
+
+      component.init = (options, accessLevel) => {
+         if (this.settings.type == "filter") {
+            let filterField = component.logic.getFilterField(this);
+            $$(filterField).attachEvent("onChange", function(values) {
+               component.logic.refreshFilter(values);
+            });
+         }
+      };
+
+      component.logic = {
+         displayData: () => {},
+
+         getFilterField: (instance) => {
+            if (instance.settings.filterField) {
+               let filterField =
+                  instance.parent.viewComponents[instance.settings.filterField];
+
+               if (filterField.ui && filterField.ui.id) {
+                  return filterField.ui.id;
+               } else {
+                  return "";
+               }
+            } else {
+               return "";
+            }
+         },
+
+         getSystemObjects: () => {
+            // get list of all objects in the app
+            let objects = this.application.objects();
+            // reformat objects into simple array for Webix multicombo
+            // if you do not the data causes a maximum stack error
+            let objectsArray = [];
+            objects.forEach((obj) => {
+               objectsArray.push({ id: obj.id, label: obj.label });
+            });
+            // return the simple array
+            return objectsArray;
+         },
+
+         refreshFilter: (values) => {
+            if (values) {
+               let fieldDefs = [];
+               values.forEach((obj) => {
+                  let object = this.application.objectByID(obj);
+                  let fields = object.fields();
+                  if (fields.length) {
+                     fields.forEach((f) => {
+                        fieldDefs.push(f);
+                     });
+                  }
+               });
+               component.rowFilter.applicationLoad(this.application);
+               component.rowFilter.fieldsLoad(fieldDefs);
+               if (component.ui.value)
+                  component.rowFilter.setValue(component.ui.value);
+            } else {
+               component.rowFilter.applicationLoad(null);
+               component.rowFilter.fieldsLoad([]);
+               if (component.ui.value)
+                  component.rowFilter.setValue(component.ui.value);
+            }
+         },
+
+         getValue: () => {
+            return component.rowFilter._logic.getValue();
+         },
+
+         setValue: (formVals) => {
+            component.ui.value = formVals;
+            component.rowFilter.setValue(formVals);
+         }
+      };
 
       switch (
          this.settings.type ||
@@ -163,41 +261,22 @@ module.exports = class ABViewFormJson extends ABViewFormJsonCore {
                "*Select one or more system objects"
             );
             component.ui.button = false;
+            // fetch an array of system objects
+            let systemObjects = component.logic.getSystemObjects();
             component.ui.suggest = {
                selectAll: true,
                body: {
-                  data: [
-                     { id: 1, label: "System Object 1" },
-                     { id: 2, label: "System Object 2" },
-                     { id: 3, label: "System Object 3" },
-                     { id: 4, label: "System Object 4" },
-                     { id: 5, label: "System Object 5" }
-                  ],
+                  data: systemObjects,
                   template: webix.template("#label#")
                }
             };
-            // component.ui.on = {
-            //    onChange: function() {
-            //       webix.message("Data was changed");
-            //    }
-            // };
             break;
          case "filter":
             component.ui.view = "forminput";
-            component.ui.css = "ab-rich-text";
+            component.ui.css = "ab-custom-field";
             component.ui.body = component.rowFilter.ui;
             break;
       }
-
-      component.onShow = () => {};
-
-      component.init = (options, accessLevel) => {
-         if (this.settings.type == "filter") {
-            debugger;
-            console.log(this);
-            component.rowFilter.setValue({});
-         }
-      };
 
       return webix.copy(component);
    }

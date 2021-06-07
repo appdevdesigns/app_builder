@@ -210,7 +210,7 @@ module.exports = class RowFilter extends RowFilterCore {
 
             // include object's name to options
             if (this._settings.showObjectName && f.object) {
-               label = f.object.label + "." + f.label;
+               label = f.object.label + " ›› " + f.label;
             }
 
             return {
@@ -1340,7 +1340,19 @@ module.exports = class RowFilter extends RowFilterCore {
 
          if ($viewCond == null) return;
 
+         // if we do not have any fields we should not have any conditions
+         if (!this._Fields) {
+            logic.removeNewFilter($viewCond);
+            return;
+         }
+
          var field = this._Fields.filter((col) => col.id == f.key)[0];
+
+         // if field does not match available list we need to remove the condition
+         if (!field) {
+            logic.removeNewFilter($viewCond);
+            return;
+         }
 
          // "and" "or"
          $viewCond.$$(ids.glue).define("value", config_settings.glue);
@@ -1418,4 +1430,3 @@ module.exports = class RowFilter extends RowFilterCore {
       logic.unblockOnChange();
    }
 };
-
