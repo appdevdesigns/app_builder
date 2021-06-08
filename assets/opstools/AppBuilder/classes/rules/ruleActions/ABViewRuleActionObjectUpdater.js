@@ -1049,7 +1049,7 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
                            value[field.datasourceLink.PK()];
                         objectToUpdate[field.columnName][
                            field.datasourceLink.PK()
-                        ] = value[field.datasourceLink.PK()];
+                        ] = value[field.datasourceLink.PK()] || value;
 
                         field.datasourceLink
                            .fields(
