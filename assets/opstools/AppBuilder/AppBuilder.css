@@ -609,19 +609,27 @@ label {
 .ab-background-gray .webix_view.webix_layout_form {
 	background: transparent;
 }
+.webix_carousel .image {
+   background: #333;
+}
+.webix_nav_panel .webix_nav_item {
+   box-sizing: border-box;
+}
 .ab-carousel-image-container {
 	position: relative;
+   height: 100%;
 }
 .ab-carousel-image-container img {
 	width: 100%;
-	height: auto;
+	height: 100%;
+   object-fit: contain;
 }
 .ab-carousel-image-title {
 	position: absolute;
-	top: 0;
-	left: 0;
+   top: -4px;
+   left: -12px;
 	font-size: 18px;
-	padding: 4px;
+	padding: 5px 10px;
 	background: rgba(0, 0, 0, 0.4);
 	border-bottom-right-radius: 8px;
 	color: #fff;
@@ -629,18 +637,26 @@ label {
 .ab-carousel-image-icon {
 	position: absolute;
 	top: 0px;
-	right: 0px;
-	font-size: 20px;
-	border-bottom-left-radius: 8px;
-	background: rgba(255, 255, 255, 0.4);
+	right: -7px;
+	font-size: 15px;
  }
 .ab-carousel-image-icon span {
-	opacity: 0.6;
-	margin: 6px;
+   /* background: rgba(0,0,0,0.4); */
+   margin: 0 0 0 5px;
+   color: white;
+   width: 30px;
+   height: 30px;
+   display: inline-block;
+   line-height: 30px;
+   text-align: center;
+   border-radius: 100%;
 }
 .ab-carousel-image-icon span:hover {
-	opacity: 1;
+	background: rgba(0,0,0,0.4);
 	cursor: pointer;
+}
+.webix_win_body .ab-carousel-fullscreen {
+   display: none;
 }
 .ab-detail-view .webix_accordionitem {
 	border-radius: 5px;
