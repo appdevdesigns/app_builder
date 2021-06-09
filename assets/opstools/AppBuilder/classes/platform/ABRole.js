@@ -70,7 +70,17 @@ module.exports = class ABRole extends ABRoleCore {
    }
 
    save() {
-      return this.Model.staticData.roleSave(this.toObj());
+      return this.id
+         ? this.Model.staticData.roleUpdate(this.toObj())
+         : this.Model.staticData.roleCreate(this.toObj());
+   }
+
+   create() {
+      return this.Model.staticData.roleCreate(this.toObj());
+   }
+
+   update() {
+      return this.Model.staticData.roleUpdate(this.toObj());
    }
 
    destroy() {

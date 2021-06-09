@@ -410,9 +410,17 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
       let filterUI = this.filterHelper.component(App, idBase);
       let linkPage = this.linkPageHelper.component(App, idBase);
 
+      let spacer = {};
+      if (this.settings.width == 0) {
+         spacer = {
+            width: 1
+         };
+      }
+
       let _ui = {
          borderless: true,
          cols: [
+            spacer, // spacer
             {
                borderless: true,
                rows: [
@@ -437,7 +445,7 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
                   }
                ]
             },
-            {} // spacer
+            spacer // spacer
          ]
       };
 
@@ -491,6 +499,8 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
                   (this.settings.editPage || this.settings.editTab
                      ? `<span ab-row-id="${row.id}" class="ab-carousel-edit webix_icon fa fa-pencil"></span>`
                      : "") +
+                  `<span class="webix_icon ab-carousel-fullscreen fa fa-arrows-alt"></span>` +
+                  `<span style="display: none;" class="webix_icon ab-carousel-exit-fullscreen fa fa-times"></span>` +
                   `</div>` +
                   `</div>`;
 
@@ -576,6 +586,7 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
 
                   images.push({
                      css: "image",
+                     borderless: true,
                      template: _logic.myTemplate,
                      data: imgData
                   });
@@ -632,39 +643,27 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
             // link pages events
             var editPage = this.settings.editPage;
             var detailsPage = this.settings.detailsPage;
-            if (detailsPage || editPage) {
-               $$(ids.component).$view.onclick = (e) => {
-                  var clicked = false;
-                  if (editPage) {
-                     for (let p of e.path) {
-                        if (
-                           p.className &&
-                           p.className.indexOf("ab-carousel-edit") > -1
-                        ) {
-                           clicked = true;
-
-                           let rowId = p.getAttribute("ab-row-id");
-                           linkPage.changePage(editPage, rowId);
-
-                           break;
-                        }
-                     }
+            // if (detailsPage || editPage) {
+            $$(ids.component).$view.onclick = (e) => {
+               if (e.target.className) {
+                  if (e.target.className.indexOf("ab-carousel-edit") > -1) {
+                     webix.fullscreen.exit();
+                     let rowId = e.target.getAttribute("ab-row-id");
+                     linkPage.changePage(editPage, rowId);
+                  } else if (
+                     e.target.className.indexOf("ab-carousel-detail") > -1
+                  ) {
+                     webix.fullscreen.exit();
+                     let rowId = e.target.getAttribute("ab-row-id");
+                     linkPage.changePage(detailsPage, rowId);
+                  } else if (
+                     e.target.className.indexOf("ab-carousel-fullscreen") > -1
+                  ) {
+                     webix.fullscreen.set(ids.component);
                   }
-                  if (detailsPage && !clicked) {
-                     for (let p of e.path) {
-                        if (
-                           p.className &&
-                           p.className.indexOf("ab-carousel-detail") > -1
-                        ) {
-                           let rowId = p.getAttribute("ab-row-id");
-                           linkPage.changePage(detailsPage, rowId);
-
-                           break;
-                        }
-                     }
-                  }
-               };
-            }
+               }
+            };
+            // }
          },
 
          showFilterPopup: ($view) => {

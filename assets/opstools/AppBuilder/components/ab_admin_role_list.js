@@ -1,7 +1,8 @@
 const ABComponent = require("../classes/platform/ABComponent");
 const ABRole = require("../classes/platform/ABRole");
 
-// const ABAdminRoleImport = require("./ab_admin_role_import");
+const ABAdminRoleImport = require("./ab_admin_role_import");
+const ABAdminRoleExport = require("./ab_admin_role_export");
 
 module.exports = class AB_Work_Admin_Role_List extends ABComponent {
    constructor(App) {
@@ -26,7 +27,8 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
          search: this.unique("search")
       };
 
-      // let RoleImport = new ABAdminRoleImport(App);
+      let RoleImport = new ABAdminRoleImport(App);
+      let RoleExport = new ABAdminRoleExport(App);
 
       // Our webix UI definition:
       this.ui = {
@@ -78,6 +80,14 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
                   // 	css: { 'text-align': 'center' }
                   // },
                   {
+                     id: "export",
+                     header: "",
+                     width: 40,
+                     template:
+                        "<div class='export'><span class='webix_icon fa fa-upload'></span></div>",
+                     css: { "text-align": "center" }
+                  },
+                  {
                      id: "remove",
                      header: "",
                      width: 40,
@@ -95,20 +105,42 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
                   // "exclude": (event, data, target) => {
                   // 	_logic.exclude(data.row);
                   // },
+                  export: (event, data, target) => {
+                     _logic.showExportPopup(data.row);
+                  },
                   remove: (event, data, target) => {
                      _logic.remove(data.row);
                   }
                }
             },
             {
-               view: "button",
-               css: "webix_primary",
-               type: "icon",
-               icon: "fa fa-plus",
-               label: "Create new role",
-               click: () => {
-                  _logic.createNewRole();
-               }
+               cols: [
+                  {
+                     view: "button",
+                     type: "icon",
+                     icon: "fa fa-download",
+                     label: L(
+                        "ab.application.form.importRoleButton",
+                        "*Import role"
+                     ),
+                     click: () => {
+                        _logic.showImportPopup();
+                     }
+                  },
+                  {
+                     view: "button",
+                     css: "webix_primary",
+                     type: "icon",
+                     icon: "fa fa-plus",
+                     label: L(
+                        "ab.application.form.createNewRoleButton",
+                        "*Create new role"
+                     ),
+                     click: () => {
+                        _logic.createNewRole();
+                     }
+                  }
+               ]
             }
          ]
       };
@@ -117,6 +149,9 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
       this.init = (roleDC) => {
          if ($$(ids.datatable))
             webix.extend($$(ids.datatable), webix.ProgressBar);
+
+         RoleImport.init(roleDC);
+         RoleExport.init();
 
          this._roleDC = roleDC;
          if (this._roleDC) {
@@ -131,8 +166,6 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
 
                $$(ids.datatable).unblockEvent();
             });
-
-            // RoleImport.init(this._roleDC);
          } else {
             $$(ids.datatable).data.unsync();
          }
@@ -241,6 +274,17 @@ module.exports = class AB_Work_Admin_Role_List extends ABComponent {
          // 		})
 
          // },
+
+         showImportPopup: () => {
+            RoleImport.show();
+         },
+
+         showExportPopup: (roleId) => {
+            let role = this._roleDC.getItem(roleId);
+            if (!role) return;
+
+            RoleExport.show(role);
+         },
 
          remove: (roleId) => {
             let role = this._roleDC.getItem(roleId);

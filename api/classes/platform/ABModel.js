@@ -732,7 +732,7 @@ module.exports = class ABModel extends ABModelCore {
             // We are going to use the 'raw' queries for knex becuase the '.'
             // for JSON searching is misinterpreted as a sql identifier
             // our basic where statement will be:
-            var whereRaw = "{fieldName} {operator} {input}";
+            var whereRaw = "({fieldName} {operator} {input})";
 
             // make sure a value is properly Quoted:
             function quoteMe(value) {
@@ -826,14 +826,15 @@ module.exports = class ABModel extends ABModelCore {
                   value = quoteMe("%" + condition.value + "%");
                   break;
 
-               case "ends_with":
-                  operator = "LIKE";
-                  value = quoteMe("%" + condition.value);
-                  break;
 
-               case "not_ends_with":
-                  operator = "NOT LIKE";
-                  value = quoteMe("%" + condition.value);
+               case "is_empty":
+                  operator = `IS NULL OR ${columnName} = ""`;
+                  value = "";
+                  break;
+   
+               case "is_not_empty":
+                  operator = `IS NOT NULL AND ${columnName} <> ""`;
+                  value = "";
                   break;
 
                case "between":

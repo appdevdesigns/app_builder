@@ -383,6 +383,7 @@ label {
 }
 .webix_cell .ab-image-data-field {
 	padding: 10px 0;
+   pointer-events: none;
 }
 .ab-image-data-field {
 	width: 100%;
@@ -608,19 +609,27 @@ label {
 .ab-background-gray .webix_view.webix_layout_form {
 	background: transparent;
 }
+.webix_carousel .image {
+   background: #333;
+}
+.webix_nav_panel .webix_nav_item {
+   box-sizing: border-box;
+}
 .ab-carousel-image-container {
 	position: relative;
+   height: 100%;
 }
 .ab-carousel-image-container img {
 	width: 100%;
-	height: auto;
+	height: 100%;
+   object-fit: contain;
 }
 .ab-carousel-image-title {
 	position: absolute;
-	top: 0;
-	left: 0;
+   top: -4px;
+   left: -12px;
 	font-size: 18px;
-	padding: 4px;
+	padding: 5px 10px;
 	background: rgba(0, 0, 0, 0.4);
 	border-bottom-right-radius: 8px;
 	color: #fff;
@@ -628,18 +637,26 @@ label {
 .ab-carousel-image-icon {
 	position: absolute;
 	top: 0px;
-	right: 0px;
-	font-size: 20px;
-	border-bottom-left-radius: 8px;
-	background: rgba(255, 255, 255, 0.4);
+	right: -7px;
+	font-size: 15px;
  }
 .ab-carousel-image-icon span {
-	opacity: 0.6;
-	margin: 6px;
+   /* background: rgba(0,0,0,0.4); */
+   margin: 0 0 0 5px;
+   color: white;
+   width: 30px;
+   height: 30px;
+   display: inline-block;
+   line-height: 30px;
+   text-align: center;
+   border-radius: 100%;
 }
 .ab-carousel-image-icon span:hover {
-	opacity: 1;
+	background: rgba(0,0,0,0.4);
 	cursor: pointer;
+}
+.webix_win_body .ab-carousel-fullscreen {
+   display: none;
 }
 .ab-detail-view .webix_accordionitem {
 	border-radius: 5px;
@@ -693,11 +710,76 @@ label {
 
 .image-data-field-image {
 	position: relative;
+   background-repeat: no-repeat; 
+   background-position: center center; 
+   background-size: cover;
+   pointer-events: none;
 }
-.ab-delete-photo {
-	position: absolute;
-	top: 0;
-	right: 0;
+.webix_view.ab-image-holder {
+   position: relative;
+}
+.ab-image-holder .webix_template {
+   align-items: stretch;
+}
+.customField .ab-image-data-field {
+   width: auto !important;
+}
+.webix_view.customFieldCls {
+   overflow: visible;
+}
+.image-data-field-icon {
+   text-align: center; 
+   height: inherit; 
+   display: flex;
+   vertical-align: middle; 
+   border: 2px dotted #CCC; 
+   background: #FFF; 
+   border-radius: 10px; 
+   font-size: 11px; 
+   line-height: 13px; 
+   padding: 10px;
+   align-items: center;
+   justify-content: center;
+   flex-direction: column;
+}
+.image-data-field-icon i.fa {
+   opacity: 0.6; 
+   font-size: 32px; 
+   margin-bottom: 5px;
+   display: flex;
+}
+.image-data-field-icon div {
+   display: flex;
+}
+.ab-delete-photo, .ab-delete-photo:active, .ab-delete-photo:focus, .ab-delete-photo:hover {
+   position: absolute;
+   top: 0px;
+   right: 0;
+   color: white;
+   background: red;
+   width: 20px;
+   height: 20px;
+   text-align: center;
+   line-height: 20px;
+   border-radius: 5px;
+   z-index: 1000;
+   pointer-events: all;
+   border-top-right-radius: 0;
+   border-bottom-right-radius: 0;
+   border-top-left-radius: 0;
+}
+.ab-delete-photo .delete-image {
+   padding: 3px 4px;
+}
+.ab-image-data-field .webix_template {
+    padding: 0;
+}
+.webix_view.ab-image-holder .webix_view.ab-image-holder {
+   width: inherit !important;
+   height: inherit !important;
+}
+.customField.left .ab-image-data-field {
+   display: flex;
 }
 .hasDataCollection {
 	color: #1ca1c1;

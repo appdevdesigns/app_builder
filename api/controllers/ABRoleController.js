@@ -66,12 +66,18 @@ let ABRoleController = {
       });
    },
 
-   // PUT /app_builder/role
-   save: function(req, res) {
+   // POST /app_builder/role
+   create: function(req, res) {
       req.params["objID"] = ABSystemObject.getObjectRoleId();
 
-      if (!req.body.id) return ABModelController.create(req, res);
-      else return ABModelController.update(req, res);
+      return ABModelController.create(req, res);
+   },
+
+   // PUT /app_builder/role
+   update: function(req, res) {
+      req.params["objID"] = ABSystemObject.getObjectRoleId();
+
+      return ABModelController.update(req, res);
    },
 
    // DELETE /app_builder/role/:id
