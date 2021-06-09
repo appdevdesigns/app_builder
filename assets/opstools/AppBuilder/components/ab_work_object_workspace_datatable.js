@@ -82,6 +82,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
       var columnSplitRight = 0;
       var columnSplitLeft = 0;
       var validationError = false;
+      var beginEditing = false;
 
       var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App, idBase);
 
@@ -155,7 +156,8 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                }
             },
             onBeforeEditStart: function(id) {
-               if (!this.getItem(id) == "appbuilder_select_item") return false;
+               beginEditing = true;
+               if (id.column == "appbuilder_select_item") return false;
             },
             onCheck: function(row, col, val) {
                // Update checkbox data
@@ -207,6 +209,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                // return passValidate;
             },
             onAfterEditStop: function(state, editor, ignoreUpdate) {
+               beginEditing = false;
                if (validationError == false)
                   _logic.onAfterEditStop(state, editor, ignoreUpdate);
             },
@@ -382,12 +385,12 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
          };
 
          DataTable.attachEvent("onAfterRender", function(data) {
-            DataTable.resize();
-
+            // DataTable.resize();
             // items = [];
             // data.order.each(function (i) {
             //     if (typeof i != "undefined") items.push(i);
             // });
+            if (beginEditing) return false;
 
             if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
             throttleCustomDisplay = setTimeout(() => {
