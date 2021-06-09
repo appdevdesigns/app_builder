@@ -1,6 +1,7 @@
 /**
  * Import and export AppBuilder apps.
  */
+const _ = require("lodash");
 const fs = require("fs");
 const path = require("path");
 const uuidv4 = require("uuid");
@@ -61,14 +62,54 @@ module.exports = {
             }
          });
 
-         const SITE_USER_OBJECT_ID = "228e3d91-5e42-49ec-b37c-59323ae433a1";
-         let SiteUser = ABDefinitionModel.objForID(SITE_USER_OBJECT_ID);
-
-         var USERNAME_FIELD_ID = "5760560b-c078-47ca-98bf-e18ac492a561";
-
          var userFields = data.definitions.filter(
             (d) => d.type == "field" && d.json.key == "user"
          );
+
+         const SITE_USER_OBJECT_ID = "228e3d91-5e42-49ec-b37c-59323ae433a1";
+         let SiteUser = data.definitions.find(
+            (f) => f.id == SITE_USER_OBJECT_ID
+         );
+         if (!SiteUser) {
+            SiteUser = ABDefinitionModel.objForID(SITE_USER_OBJECT_ID);
+
+            if (userFields.length > 0) {
+               // we need to add SITEUSER defs to our output:
+               var ObjSiteUser = Application.objects(
+                  (o) => o.id == SITE_USER_OBJECT_ID
+               )[0];
+               if (!ObjSiteUser) {
+                  return reject(
+                     new Error("Unable to find live SiteUser Object by ID")
+                  );
+               }
+
+               // add to our ids:
+               ObjSiteUser.exportIDs(ids);
+               ids = _.uniq(ids);
+
+               // Rebuild data.definitions
+               data.definitions = [];
+               ids.forEach((id) => {
+                  if (id) {
+                     // NOTE: go directly to the Model to get the full ABDefinition entry:
+                     data.definitions.push(ABDefinitionModel.objForID(id));
+                  }
+               });
+
+               // NOTE: must pull userFields & SiteUser from data.definitions
+               userFields = data.definitions.filter(
+                  (d) => d.type == "field" && d.json.key == "user"
+               );
+
+               SiteUser = data.definitions.find(
+                  (f) => f.id == SITE_USER_OBJECT_ID
+               );
+            }
+         }
+
+         var USERNAME_FIELD_ID = "5760560b-c078-47ca-98bf-e18ac492a561";
+
          console.log(`converting ${userFields.length} user fields.`);
 
          (userFields || []).forEach((fDef) => {
