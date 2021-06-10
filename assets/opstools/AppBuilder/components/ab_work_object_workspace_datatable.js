@@ -385,7 +385,7 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
          };
 
          DataTable.attachEvent("onAfterRender", function(data) {
-            // DataTable.resize();
+            DataTable.resize();
             // items = [];
             // data.order.each(function (i) {
             //     if (typeof i != "undefined") items.push(i);
