@@ -23,6 +23,12 @@ export default function customEvents() {
                 extends: ["bpmn:SignalEventDefinition"],
                 // extends: ["bpmn:FlowNode"],
                 properties: []
+            },
+            {
+                name: "SignalTriggerTimer",
+                extends: ["bpmn:SignalEventDefinition"],
+                // extends: ["bpmn:FlowNode"],
+                properties: []
             }
         ],
         emumerations: [],

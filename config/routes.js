@@ -18,7 +18,9 @@ module.exports = {
    "get /app_builder/scope/:id/roles":
       "app_builder/ABScopeController.scopeRole",
 
-   "put /app_builder/scope": "app_builder/ABScopeController.save",
+   "post /app_builder/scope": "app_builder/ABScopeController.create",
+
+   "put /app_builder/scope": "app_builder/ABScopeController.update",
 
    "delete /app_builder/scope/:id": "app_builder/ABScopeController.destroy",
 
@@ -41,7 +43,9 @@ module.exports = {
 
    "get /app_builder/role/:id": "app_builder/ABRoleController.findOne",
 
-   "put /app_builder/role": "app_builder/ABRoleController.save",
+   "post /app_builder/role": "app_builder/ABRoleController.create",
+
+   "put /app_builder/role": "app_builder/ABRoleController.update",
 
    "delete /app_builder/role/:id": "app_builder/ABRoleController.destroy",
 
@@ -221,6 +225,14 @@ module.exports = {
    "get /process/inbox": "app_builder/ABProcessController.userInbox",
    "post /process/inbox/:uuid":
       "app_builder/ABProcessController.userInboxUpdate",
+
+   /* Process Trigger Timer */
+   "PUT /process/timer/:elementId/start":
+      "app_builder/ABProcessTimerController.start",
+   "PUT /process/timer/:elementId/stop":
+      "app_builder/ABProcessTimerController.stop",
+   "GET /process/timer/:elementId":
+      "app_builder/ABProcessTimerController.getStatus",
 
    /* CSV Export */
    "GET /app_builder/application/:appID/page/:pageID/view/:viewID/csv":

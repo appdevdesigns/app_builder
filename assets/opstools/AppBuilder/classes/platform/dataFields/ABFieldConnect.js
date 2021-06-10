@@ -814,13 +814,50 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          options.filters = {};
       }
 
+      // if this field's options are filtered off another field's value we need
+      // to make sure the UX helps the user know what to do.
+      var placeholderReadOnly = null;
+      if (options.filterValue && options.filterKey) {
+         if (!$$(options.filterValue)) {
+            // this happens in the Interface Builder when only the single form UI is displayed
+            readOnly = true;
+            let select1 = L(
+               "ab.dataField.connect.placeholder_parentElementSelect1",
+               "Must select item from '"
+            );
+            let select2 = L(
+               "ab.dataField.connect.placeholder_parentElementSelect2",
+               "' first."
+            );
+            placeholderReadOnly = select1 + "PARENT ELEMENT" + select2;
+         } else {
+            let val = this.getValue($$(options.filterValue));
+            if (!val) {
+               // if there isn't a value on the parent select element set this one to readonly and change placeholder text
+               readOnly = true;
+               let label = $$(options.filterValue);
+               let select1 = L(
+                  "ab.dataField.connect.placeholder_parentElementSelect1",
+                  "Must select item from '"
+               );
+               let select2 = L(
+                  "ab.dataField.connect.placeholder_parentElementSelect2",
+                  "' first."
+               );
+               placeholderReadOnly = select1 + label.config.label + select2;
+            }
+         }
+      }
+
       // Render selectivity
       this.selectivityRender(
          domNode,
          {
             multiple: multiselect,
             data: selectedData,
-            placeholder: placeholder,
+            placeholder: placeholderReadOnly
+               ? placeholderReadOnly
+               : placeholder,
             readOnly: readOnly,
             editPage: options.editPage,
             ajax: {
@@ -828,8 +865,29 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                minimumInputLength: 0,
                quietMillis: 250,
                fetch: (url, init, queryOptions) => {
+                  // if we are filtering based off another selectivity's value we
+                  // need to do it on fetch each time because the value can change
+                  // copy the filters so we don't add to them every time there is a change
+                  var combineFilters = JSON.parse(
+                     JSON.stringify(options.filters)
+                  );
+                  // only add filters if we pass valid value and key
+                  if (options.filterValue && options.filterKey) {
+                     // get the current value of the parent select box
+                     let parentVal = this.getValue($$(options.filterValue));
+                     if (parentVal) {
+                        // if there is a value create a new filter rule
+                        var filter = {
+                           key: options.filterKey,
+                           rule: "equals",
+                           value: parentVal[options.filterColumn]
+                        };
+                        combineFilters.rules.push(filter);
+                     }
+                  }
+
                   return this.getOptions(
-                     options.filters,
+                     combineFilters,
                      queryOptions.term
                   ).then(function(data) {
                      return {
@@ -908,6 +966,38 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                },
                false
             );
+            // add a change listener to the selectivity instance we are filtering our options list by.
+            if (options.filterValue && $$(options.filterValue)) {
+               var parentDomNode = $$(options.filterValue).$view.querySelector(
+                  ".connect-data-values"
+               );
+               parentDomNode.addEventListener(
+                  "change",
+                  (e) => {
+                     let parentVal = this.selectivityGet(parentDomNode);
+                     if (parentVal) {
+                        // if there is a value set allow the user to edit and
+                        // put back the placeholder text to the orignal value
+                        domNode.selectivity.setOptions({
+                           readOnly: false,
+                           placeholder: placeholder
+                        });
+                        // clear any previous value because it could be invalid
+                        domNode.selectivity.setValue(null);
+                     } else {
+                        // if there is not a value set make field read only and
+                        // set the placeholder text to a read only version
+                        domNode.selectivity.setOptions({
+                           readOnly: true,
+                           placeholder: placeholderReadOnly
+                        });
+                        // clear any previous value because it could be invalid
+                        domNode.selectivity.setValue(null);
+                     }
+                  },
+                  false
+               );
+            }
          }
       }
    }

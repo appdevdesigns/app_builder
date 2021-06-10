@@ -109,7 +109,7 @@ module.exports = class AB_Work_Admin_Role_Role extends ABComponent {
                      view: "button",
                      type: "icon",
                      icon: "fa fa-download",
-                     label: "Import scope",
+                     label: "Include scope",
                      click: () => {
                         ScopeImport.show();
                      }

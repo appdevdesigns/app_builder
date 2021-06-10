@@ -972,6 +972,8 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
                               .catch(bad)
                               .then(() => next());
                         });
+                  } else {
+                     next();
                   }
                });
             })

@@ -2,6 +2,16 @@
 
 var ABDefinitionCore = require("../core/ABDefinitionCore");
 
+function addLogging(definitionId, type, json, user) {
+   // Log
+   let logOption = {};
+   logOption.definitionId = definitionId;
+   logOption.type = type;
+   logOption.json = json;
+   logOption.user = user || "AB_UNKNOWN";
+   ABDefinitionLogger.add(logOption);
+}
+
 module.exports = class ABDefinition extends ABDefinitionCore {
    ///
    /// Static Methods
@@ -15,11 +25,33 @@ module.exports = class ABDefinition extends ABDefinitionCore {
     *
     * create a given ABDefinition
     *
-    * @param {obj} data   the values of the ABDefinition obj
+    * @param {object} data   the values of the ABDefinition obj
+    * @param {object} logOption - {
+    *                                  user: "username" | "AB_PROCESS",
+    *                                  type: "create" | "update" | "delete" | "import",
+    *                                  json: {Object} | {String}
+    *                               }
     * @return {Promise}   the updated value of the ABDefinition entry from the server.
     */
-   static create(data) {
-      return ABDefinitionModel.create(data);
+   static create(data, logOption = {}) {
+      return new Promise((resolve, reject) => {
+         ABDefinitionModel.create(data)
+            .then((result) => {
+               // this ABDefinitionModel instance does not create
+               if (result == null) return resolve();
+
+               // Log
+               addLogging(
+                  result.id,
+                  logOption.type || "create",
+                  logOption.json || data,
+                  logOption.user || "AB_UNKNOWN"
+               );
+
+               resolve(result);
+            })
+            .catch(reject);
+      });
    }
 
    /**
@@ -28,10 +60,31 @@ module.exports = class ABDefinition extends ABDefinitionCore {
     * remove a given ABDefinition
     *
     * @param {obj} data   the values of the ABDefinition obj
+    * @param {object} logOption - {
+    *                                  user: "username" | "AB_PROCESS",
+    *                                  type: "create" | "update" | "delete" | "import",
+    *                                  json: {Object} | {String}
+    *                               }
     * @return {Promise}   the updated value of the ABDefinition entry from the server.
     */
-   static destroy(id) {
-      return ABDefinitionModel.destroy(id);
+   static destroy(id, logOption = {}) {
+      let defJson = this.definition(id);
+
+      return new Promise((resolve, reject) => {
+         ABDefinitionModel.destroy(id)
+            .then(() => {
+               // Log
+               addLogging(
+                  id,
+                  "delete",
+                  defJson,
+                  (logOption || {}).user || "AB_UNKNOWN"
+               );
+
+               resolve();
+            })
+            .catch(reject);
+      });
    }
 
    /**
@@ -52,10 +105,30 @@ module.exports = class ABDefinition extends ABDefinitionCore {
     *
     * @param {string} id  the id of the definition to update
     * @param {obj} data   the values of the ABDefinition obj
+    * @param {object} logOption - {
+    *                                  user: "username" | "AB_PROCESS",
+    *                                  type: "create" | "update" | "delete" | "import",
+    *                                  json: {Object} | {String}
+    *                               }
     * @return {Promise}   the updated value of the ABDefinition entry from the server.
     */
-   static update(id, data) {
-      return ABDefinitionModel.update({ id: id }, data);
+   static update(id, data, logOption = {}) {
+      return new Promise((resolve, reject) => {
+         ABDefinitionModel.update({ id: id }, data)
+            .then(() => {
+               // Log
+               logOption = logOption || {};
+               addLogging(
+                  id,
+                  logOption.type || "update",
+                  logOption.json || data,
+                  logOption.user || "AB_UNKNOWN"
+               );
+
+               resolve();
+            })
+            .catch(reject);
+      });
    }
 
    /**

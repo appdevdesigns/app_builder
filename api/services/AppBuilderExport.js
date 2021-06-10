@@ -1,7 +1,9 @@
 /**
  * Import and export AppBuilder apps.
  */
-var path = require("path");
+const fs = require("fs");
+const path = require("path");
+const uuidv4 = require("uuid");
 const ABDefinition = require(path.join(
    __dirname,
    "..",
@@ -69,14 +71,59 @@ module.exports = {
     *
     * @param JSON data
     *      This is the JSON object produced by appToJSON()
+    * @param userData {Object} -  {
+    *                               username: STRING
+    *                             }
     */
-   appFromJSON: function(data) {
+   appFromJSON: function(data, userData) {
       var Application = ABSystemObject.getApplication();
       var hashSaved = {};
       var allObjects = [];
 
+      let importFolder = path.join(
+         sails.config.appPath,
+         sails.config.appbuilder.pathFiles,
+         "import"
+      );
+      let importFileName = `${uuidv4()}.json`;
+
       return new Promise((resolve, reject) => {
          Promise.resolve()
+            .then(
+               () =>
+                  // Check/Create the import logging folder
+                  new Promise((next, bad) => {
+                     console.log(
+                        "::: IMPORT : checking/creating the import logging folder"
+                     );
+                     fs.stat(importFolder, (err) => {
+                        // exists
+                        if (!err) return next();
+
+                        // create the import folder
+                        fs.mkdir(importFolder, () => {
+                           next();
+                        });
+                     });
+                  })
+            )
+            .then(
+               () =>
+                  // Save the JSON definition to a log file
+                  new Promise((next, bad) => {
+                     console.log(
+                        "::: IMPORT : storing the definition JSON to a logging file"
+                     );
+                     fs.writeFile(
+                        path.join(importFolder, importFileName),
+                        JSON.stringify((data || {}).definitions || ""),
+                        (err) => {
+                           if (err) return bad(err);
+                           next();
+                        }
+                     );
+                  })
+            )
             .then(() => {
                // Insert all the ABDefinitions for Applications, fields and objects:
                console.log(
@@ -94,14 +141,22 @@ module.exports = {
                   .forEach((def) => {
                      hashSaved[def.id] = def;
                      allSaves.push(
-                        ABDefinitionModel.create(def).catch((err) => {
+                        ABDefinition.create(def, {
+                           user: userData.username,
+                           json: { filename: importFileName },
+                           type: "import"
+                        }).catch((err) => {
                            //                            console.log(`>>>>>>>>>>>>>>>>>>>>>>
                            // ${err.toString()}
                            // >>>>>>>>>>>>>>>>>>>>>>`);
 
                            if (err.toString().indexOf("already exists") > -1) {
                               // console.log("===> trying an update instead.");
-                              return ABDefinitionModel.update(def.id, def);
+                              return ABDefinition.update(def.id, def, {
+                                 user: userData.username,
+                                 json: { filename: importFileName },
+                                 type: "import"
+                              });
                            }
                         })
                      );
@@ -275,14 +330,22 @@ ${err.toString()}
                (data.definitions || []).forEach((def) => {
                   if (def && !hashSaved[def.id]) {
                      allSaves.push(
-                        ABDefinitionModel.create(def).catch((err) => {
+                        ABDefinition.create(def, {
+                           user: userData.username,
+                           json: { filename: importFileName },
+                           type: "import"
+                        }).catch((err) => {
                            if (err.toString().indexOf("already exists") > -1) {
                               // console.log("===> trying an update instead.");
-                              return ABDefinitionModel.update(def.id, def);
+                              return ABDefinition.update(def.id, def, {
+                                 user: userData.username,
+                                 json: { filename: importFileName },
+                                 type: "import"
+                              });
                            }
 
                            console.log(`>>>>>>>>>>>>>>>>>>>>>>
-ABDefinitionModel.create() error:
+ABDefinition.create() error:
 ${err.toString()}
 >>>>>>>>>>>>>>>>>>>>>>`);
                         })

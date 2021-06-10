@@ -15,7 +15,8 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
       let labels = {
          common: App.labels,
          component: {
-            newScope: L("ab.scope.new.title", "*Add new scope")
+            newScope: L("ab.scope.new.title", "*Add new scope"),
+            editScope: L("ab.scope.edit.title", "*Edit a scope")
          }
       };
 
@@ -179,6 +180,18 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
                $$(ids.form).setValues({});
             }
 
+            // Set header title of the popup
+            let $popup = $$(ids.popup);
+            $popup
+               .getHead()
+               .define(
+                  "template",
+                  currScope
+                     ? labels.component.editScope
+                     : labels.component.newScope
+               );
+            $popup.getHead().refresh();
+
             // Pull objects of this page (has mock ABApplication)
             let objects = this._objects.filter(
                (obj) =>
@@ -285,7 +298,8 @@ module.exports = class AB_Work_Admin_Role_Scope_Form extends ABComponent {
          },
 
          show: () => {
-            if ($$(ids.popup)) $$(ids.popup).show();
+            let $popup = $$(ids.popup);
+            if ($popup) $popup.show();
 
             _logic.busy();
 

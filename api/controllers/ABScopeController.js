@@ -105,15 +105,24 @@ let ABScopeController = {
       );
    },
 
-   // PUT /app_builder/scope
-   save: function(req, res) {
+   // POST /app_builder/scope
+   create: function(req, res) {
       let roleID = req.query.roleID;
-      if (roleID) req.body.roles = [roleID];
+      if (roleID != null) req.body.roles = [roleID];
 
       req.params["objID"] = ABSystemObject.getObjectScopeId();
 
-      if (!req.body.id) return ABModelController.create(req, res);
-      else return ABModelController.update(req, res);
+      return ABModelController.create(req, res);
+   },
+
+   // PUT /app_builder/scope
+   update: function(req, res) {
+      let roleID = req.query.roleID;
+      if (roleID != null) req.body.roles = [roleID];
+
+      req.params["objID"] = ABSystemObject.getObjectScopeId();
+
+      return ABModelController.update(req, res);
    },
 
    // DELETE /app_builder/scope/:id'

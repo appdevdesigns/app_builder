@@ -77,7 +77,9 @@ module.exports = function(cb) {
             addSDCAppInfo,
             defaultEmailNotificationInvite,
             addSDCAppDataDirectory,
-            addSDCObjectLifecycleBeforeCreate
+            addSDCObjectLifecycleBeforeCreate,
+
+            triggerProcessTimer
          ],
          (err, data) => {
             if (err) {
@@ -1024,4 +1026,9 @@ function initialSystemObjects(next) {
       .then(() => {
          next();
       });
+}
+
+function triggerProcessTimer(next) {
+   ABProcessTimer.startAll();
+   next();
 }

@@ -794,9 +794,17 @@ function processRequests(allRequests, done) {
          cb();
       } else {
          var request = list.shift();
-         ABRelay.request(request).then(() => {
-            processRequestSequential(list, cb);
-         });
+         ABRelay.request(request)
+            .then(() => {
+               processRequestSequential(list, cb);
+            })
+            .catch((err) => {
+               ADCore.error.log(
+                  "::: ABRelay.processRequestSequential(): caught error: ",
+                  err.message || err
+               );
+               cb(err);
+            });
       }
    }
 

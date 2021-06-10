@@ -215,7 +215,7 @@ module.exports = {
                } else {
                   try {
                      var jsonData = JSON.parse(data.toString());
-                     AppBuilderExport.appFromJSON(jsonData)
+                     AppBuilderExport.appFromJSON(jsonData, req.user.data)
                         .then(function() {
                            res.AD.success({ done: true });
                            // unless we need to return the data to the browser:
