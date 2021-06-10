@@ -36,7 +36,6 @@ module.exports = class ABDefinition extends ABDefinitionCore {
    static create(data, logOption = {}) {
       return new Promise((resolve, reject) => {
          ABDefinitionModel.create(data)
-            .catch(reject)
             .then((result) => {
                // this ABDefinitionModel instance does not create
                if (result == null) return resolve();
@@ -50,7 +49,8 @@ module.exports = class ABDefinition extends ABDefinitionCore {
                );
 
                resolve(result);
-            });
+            })
+            .catch(reject);
       });
    }
 
@@ -72,7 +72,6 @@ module.exports = class ABDefinition extends ABDefinitionCore {
 
       return new Promise((resolve, reject) => {
          ABDefinitionModel.destroy(id)
-            .catch(reject)
             .then(() => {
                // Log
                addLogging(
@@ -83,7 +82,8 @@ module.exports = class ABDefinition extends ABDefinitionCore {
                );
 
                resolve();
-            });
+            })
+            .catch(reject);
       });
    }
 
@@ -115,7 +115,6 @@ module.exports = class ABDefinition extends ABDefinitionCore {
    static update(id, data, logOption = {}) {
       return new Promise((resolve, reject) => {
          ABDefinitionModel.update({ id: id }, data)
-            .catch(reject)
             .then(() => {
                // Log
                logOption = logOption || {};
@@ -127,7 +126,8 @@ module.exports = class ABDefinition extends ABDefinitionCore {
                );
 
                resolve();
-            });
+            })
+            .catch(reject);
       });
    }
 

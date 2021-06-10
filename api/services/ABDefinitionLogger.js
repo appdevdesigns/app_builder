@@ -18,8 +18,8 @@ module.exports = {
             type: type,
             json: json
          })
-            .catch(reject)
-            .then((result) => resolve(result));
+            .then((result) => resolve(result))
+            .catch(reject);
       });
    }
 };

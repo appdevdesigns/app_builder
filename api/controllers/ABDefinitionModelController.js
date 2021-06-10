@@ -24,7 +24,6 @@ module.exports = {
       ABDefinition.create(data, {
          user: (req.user.data || {}).username
       })
-         .catch((err) => res.negotiate(err))
          .then((newInstance) => {
             // NOTE : Just copy those from node_modules/sails/lib/hooks/blueprints/actions/create.js
             // Could not use create.js directly because I want .id of the newInstance
@@ -50,7 +49,8 @@ module.exports = {
 
             // Send JSONP-friendly response if it's supported
             res.created(newInstance);
-         });
+         })
+         .catch((err) => res.negotiate(err));
    },
 
    update: (req, res) => {
