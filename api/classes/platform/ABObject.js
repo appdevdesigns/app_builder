@@ -94,6 +94,15 @@ module.exports = class ABClassObject extends ABObjectCore {
       this._stashIndexes = [];
    }
 
+   applyIndexNormal() {
+      this._indexes = this._stashIndexNormal || [];
+   }
+
+   getStashedIndexNormals() {
+      if (!this._stashIndexNormal) return null;
+      return this._stashIndexNormal;
+   }
+
    /**
     * @method getStashedIndexes()
     * return the array of stashed indexes.
@@ -167,6 +176,11 @@ module.exports = class ABClassObject extends ABObjectCore {
             });
          }
       });
+   }
+
+   stashIndexNormal() {
+      this._stashIndexNormal = this._indexes;
+      this._indexes = [];
    }
 
    ///
