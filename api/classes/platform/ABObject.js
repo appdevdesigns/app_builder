@@ -292,11 +292,66 @@ module.exports = class ABClassObject extends ABObjectCore {
                      .catch(reject);
                } else {
                   sails.log.verbose("... already there.");
-                  resolve();
+                  // the Object might already exist,  but we need to make sure any added
+                  // fields are created.
+                  this.migrateCreateFields(/* req,*/ knex)
+                     .then(resolve)
+                     .catch(reject);
                }
             })
             .catch(reject);
       });
+   }
+
+   /**
+    * @method migrateCreateFields()
+    * Step through all our fields and have them perform their .migrateCreate()
+    * actions.  These fields need to be created in a specific order:
+    *    normal Fields
+    *    indexes
+    *    connect Fields
+    *
+    * @param {ABUtil.reqService} req
+    *        the request object for the job driving the migrateCreate().
+    * @param {knex} knex
+    *        the Knex connection.
+    * @return {Promise}
+    */
+   migrateCreateFields(/* req,*/ knex) {
+      var connectFields = this.connectFields();
+      return Promise.resolve()
+         .then(() => {
+            //// NOTE: NOW the table is created
+            //// let's go add our Fields to it:
+            let fieldUpdates = [];
+            let normalFields = this.fields(
+               (f) =>
+                  f &&
+                  !connectFields.find(
+                     (c) => c.id == f.id
+                  ) /* f.key != "connectObject" */
+            );
+            normalFields.forEach((f) => {
+               fieldUpdates.push(this.migrateField(f, /* req,*/ knex));
+            });
+            return Promise.all(fieldUpdates);
+         })
+         .then(() => {
+            // Now Create our indexes
+            let fieldUpdates = [];
+            this.indexes().forEach((idx) => {
+               fieldUpdates.push(this.migrateField(idx, /* req,*/ knex));
+            });
+            return Promise.all(fieldUpdates);
+         })
+         .then(() => {
+            // finally create any connect Fields
+            let fieldUpdates = [];
+            connectFields.forEach((f) => {
+               fieldUpdates.push(this.migrateField(f, /* req,*/ knex));
+            });
+            return Promise.all(fieldUpdates);
+         });
    }
 
    /**
@@ -339,6 +394,30 @@ module.exports = class ABClassObject extends ABObjectCore {
                   .catch(reject);
             })
             .catch(reject);
+      });
+   }
+
+   /**
+    * @method migrateField()
+    * tell a given field to perform it's .migrateCreate() action.
+    * this is part of the .migrateCreate() => .migrateCreateFields() => migrageField()
+    * process.
+    * @param {ABField} f
+    *        the current field we need to perform our migration.
+    * @param {ABUtil.reqService} req
+    *        the request object for the job driving the migrateCreate().
+    * @param {knex} knex
+    *        the Knex connection.
+    * @return {Promise}
+    */
+   migrateField(f, /* req,*/ knex) {
+      return f.migrateCreate(/* req,*/ knex).catch((err) => {
+         // req.notify.developer(err, {
+         //    context: `field[${f.name || f.label}].migrateCreate(): error:`,
+         //    field: f,
+         //    AB: this.AB
+         // });
+         throw err;
       });
    }
 
