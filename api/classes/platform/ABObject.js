@@ -1967,7 +1967,11 @@ module.exports = class ABClassObject extends ABObjectCore {
          connectedField.settings.linkType == "many" &&
          connectedField.settings.linkViaType == "many"
       ) {
-         let joinTable = connectedField.joinTableName(true),
+         let joinPrefixTableName = connectedField
+               .joinTableName(true)
+               .split(".")[0],
+            joinTableName = connectedField.joinTableName(true).split(".")[1],
+            joinTable = `\`${joinPrefixTableName}\`.\`${joinTableName}\``,
             joinColumnNames = connectedField.joinColumnNames();
 
          selectSQL = `(SELECT IFNULL(${type[settings.type]}(\`${
