@@ -43,6 +43,7 @@ module.exports = class ABCustomFormIOPreview extends ABEmitter {
             var formComponents = config.formComponents
                ? config.formComponents
                : {};
+            debugger;
             var formData = config.formData ? config.formData : {};
             // we need to find out when we are passing an array of objects and reduce it down to an array of IDs
             for (var data in formData) {

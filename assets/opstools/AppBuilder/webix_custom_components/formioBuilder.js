@@ -84,6 +84,221 @@ module.exports = class ABCustomFormIOBuilder {
 
       // our internal business logic
       var _logic = {
+         /** @method fieldSchema
+          *
+          * @param field
+          * @param appName
+          * @param prefix
+          */
+         fieldSchema: (field, appName, prefix) => {
+            if (!field || !field.key) return;
+            let fieldKey = field.key;
+            if (prefix) {
+               fieldKey = prefix + "[" + field.id + "]";
+            }
+            switch (field.key) {
+               case "boolean":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "checkbox",
+                     disabled: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
+                  };
+                  break;
+               case "calculate":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "textfield",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true,
+                     inputType: "text",
+                     disabled: true,
+                     calculateValue:
+                        "value = " +
+                        field.settings.formula
+                           .replace(/{/g, "data['")
+                           .replace(/}/g, "']")
+                  };
+                  break;
+               case "connectObject":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "textfield",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true,
+                     inputType: "text",
+                     disabled: true,
+                     calculateValue: `value = data['${field.key}.format']`
+                     // ,calculateValue: `value = '${entry.field.settings.textFormula}'`
+                  };
+                  break;
+
+               case "date":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "datetime",
+                     disabled: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true,
+                     format:
+                        field.settings.timeFormat == 1
+                           ? "MMMM d, yyyy"
+                           : "MMMM d, yyyy h:mm a"
+                  };
+                  break;
+               case "email":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     disabled: true,
+                     type: "email",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
+                  };
+                  break;
+               case "file":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "htmlelement",
+                     tag: "a",
+                     className: "btn btn-primary btn-block",
+                     content:
+                        "<i class='fa fa-paperclip'></i>  " +
+                        "{{JSON.parse(data['" +
+                        field.key +
+                        "']).filename}}",
+                     attrs: [
+                        {
+                           attr: "href",
+                           value:
+                              "/opsportal/file/" +
+                              appName +
+                              "/" +
+                              "{{JSON.parse(data['" +
+                              field.key +
+                              "']).uuid}}"
+                        },
+                        {
+                           attr: "target",
+                           value: "_blank"
+                        }
+                     ],
+                     refreshOnChange: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     disabled: true,
+                     input: false
+                  };
+                  break;
+               case "image":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "htmlelement",
+                     tag: "img",
+                     className: "img-thumbnail max100",
+                     content: "",
+                     attrs: [
+                        {
+                           attr: "src",
+                           value:
+                              "/opsportal/image/" +
+                              appName +
+                              "/" +
+                              "{{data['" +
+                              field.key +
+                              "']}}"
+                        }
+                     ],
+                     refreshOnChange: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: false
+                  };
+                  break;
+               case "list":
+                  var vals = [];
+                  field.settings.options.forEach((opt) => {
+                     vals.push({
+                        label: opt.text,
+                        value: opt.id
+                     });
+                  });
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "select",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     disabled: true,
+                     input: true,
+                     data: {
+                        values: vals
+                     },
+                     multiple: field.settings.isMultiple
+                  };
+                  break;
+               case "LongText":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "textarea",
+                     disabled: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
+                  };
+                  break;
+               case "number":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     disabled: true,
+                     type: "number",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
+                  };
+                  break;
+               case "TextFormula":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "textfield",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true,
+                     inputType: "text",
+                     disabled: true,
+                     calculateValue:
+                        "value = '" + field.settings.textFormula + "'"
+                  };
+                  break;
+               default:
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "textfield",
+                     disabled: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
+                  };
+                  break;
+            }
+         },
+
          /**
           * @method parseDataObjects
           *
@@ -104,15 +319,10 @@ module.exports = class ABCustomFormIOBuilder {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "checkbox",
-                           disabled: true,
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true
-                        }
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
                      };
                      break;
                   case "calculate":
@@ -120,21 +330,10 @@ module.exports = class ABCustomFormIOBuilder {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "textfield",
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true,
-                           inputType: "text",
-                           disabled: true,
-                           calculateValue:
-                              "value = " +
-                              entry.field.settings.formula
-                                 .replace(/{/g, "data['")
-                                 .replace(/}/g, "']")
-                        }
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
                      };
                      break;
                   case "connectObject":
@@ -142,17 +341,41 @@ module.exports = class ABCustomFormIOBuilder {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
+                     };
+                     debugger;
+                     let connectedObjectFields = entry.field.datasourceLink.fields();
+                     let fieldSchemas = [];
+                     connectedObjectFields.forEach((cof) => {
+                        fieldSchemas.push(
+                           _logic.fieldSchema(
+                              cof,
+                              entry.object.application.name,
+                              entry.key
+                           )
+                        );
+                     });
+
+                     components[entry.key + "_accordion"] = {
+                        title: entry.label + " Accordion",
+                        key: entry.key + "_accordion",
+                        icon: "list",
                         schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "textfield",
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true,
-                           inputType: "text",
-                           disabled: true,
-                           calculateValue: `value = data['${entry.key}.format']`
-                           // ,calculateValue: `value = '${entry.field.settings.textFormula}'`
+                           label: entry.label,
+                           customClass: "customList",
+                           disableAddingRemovingRows: true,
+                           // templates: {
+                           //    header: " ",
+                           //    row: "<div class='editRow'></div>"
+                           // },
+                           key: "editGrid",
+                           type: "editgrid",
+                           input: false,
+                           components: fieldSchemas,
+                           path: "editGrid"
                         }
                      };
                      break;
@@ -162,19 +385,10 @@ module.exports = class ABCustomFormIOBuilder {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "datetime",
-                           disabled: true,
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true,
-                           format:
-                              entry.field.settings.timeFormat == 1
-                                 ? "MMMM d, yyyy"
-                                 : "MMMM d, yyyy h:mm a"
-                        }
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
                      };
                      break;
                   case "email":
@@ -182,15 +396,10 @@ module.exports = class ABCustomFormIOBuilder {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           disabled: true,
-                           type: "email",
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true
-                        }
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
                      };
                      break;
                   case "file":
@@ -198,39 +407,10 @@ module.exports = class ABCustomFormIOBuilder {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "htmlelement",
-                           tag: "a",
-                           className: "btn btn-primary btn-block",
-                           content:
-                              "<i class='fa fa-paperclip'></i>  " +
-                              "{{JSON.parse(data['" +
-                              entry.key +
-                              "']).filename}}",
-                           attrs: [
-                              {
-                                 attr: "href",
-                                 value:
-                                    "/opsportal/file/" +
-                                    entry.field.object.application.name +
-                                    "/" +
-                                    "{{JSON.parse(data['" +
-                                    entry.key +
-                                    "']).uuid}}"
-                              },
-                              {
-                                 attr: "target",
-                                 value: "_blank"
-                              }
-                           ],
-                           refreshOnChange: true,
-                           key: entry.key,
-                           _key: entry.key,
-                           disabled: true,
-                           input: false
-                        }
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
                      };
                      break;
                   case "image":
@@ -238,57 +418,21 @@ module.exports = class ABCustomFormIOBuilder {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "htmlelement",
-                           tag: "img",
-                           className: "img-thumbnail max100",
-                           content: "",
-                           attrs: [
-                              {
-                                 attr: "src",
-                                 value:
-                                    "/opsportal/image/" +
-                                    entry.field.object.application.name +
-                                    "/" +
-                                    "{{data['" +
-                                    entry.key +
-                                    "']}}"
-                              }
-                           ],
-                           refreshOnChange: true,
-                           key: entry.key,
-                           _key: entry.key,
-                           input: false
-                        }
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
                      };
                      break;
                   case "list":
-                     var vals = [];
-                     entry.field.settings.options.forEach((opt) => {
-                        vals.push({
-                           label: opt.text,
-                           value: opt.id
-                        });
-                     });
                      components[entry.key] = {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "select",
-                           key: entry.key,
-                           _key: entry.key,
-                           disabled: true,
-                           input: true,
-                           data: {
-                              values: vals
-                           },
-                           multiple: entry.field.settings.isMultiple
-                        }
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
                      };
                      break;
                   case "LongText":
@@ -296,15 +440,10 @@ module.exports = class ABCustomFormIOBuilder {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "textarea",
-                           disabled: true,
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true
-                        }
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
                      };
                      break;
                   case "number":
@@ -312,15 +451,10 @@ module.exports = class ABCustomFormIOBuilder {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           disabled: true,
-                           type: "number",
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true
-                        }
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
                      };
                      break;
                   case "TextFormula":
@@ -328,20 +462,10 @@ module.exports = class ABCustomFormIOBuilder {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "textfield",
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true,
-                           inputType: "text",
-                           disabled: true,
-                           calculateValue:
-                              "value = '" +
-                              entry.field.settings.textFormula +
-                              "'"
-                        }
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
                      };
                      break;
                   default:
@@ -349,15 +473,10 @@ module.exports = class ABCustomFormIOBuilder {
                         title: entry.label,
                         key: entry.key,
                         icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "textfield",
-                           disabled: true,
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true
-                        }
+                        schema: _logic.fieldSchema(
+                           entry.field,
+                           entry.object.application.name
+                        )
                      };
                      break;
                }
