@@ -1049,7 +1049,21 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
                            value[field.datasourceLink.PK()];
                         objectToUpdate[field.columnName][
                            field.datasourceLink.PK()
-                        ] = value[field.datasourceLink.PK()] || value;
+                        ] = value[field.datasourceLink.PK()];
+
+                        // If the connect field use the custom FK, then it requires to pass value of the custom FK.
+                        if (field.settings.isCustomFK) {
+                           if (field.indexField) {
+                              objectToUpdate[field.columnName][
+                                 field.indexField.columnName
+                              ] = value[field.indexField.columnName];
+                           }
+                           if (field.indexField2) {
+                              objectToUpdate[field.columnName][
+                                 field.indexField2.columnName
+                              ] = value[field.indexField2.columnName];
+                           }
+                        }
 
                         field.datasourceLink
                            .fields(
@@ -1306,3 +1320,4 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
       return settings;
    }
 };
+
