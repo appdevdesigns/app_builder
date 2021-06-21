@@ -1042,37 +1042,44 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
                   switch (op.op) {
                      case "set":
                         if (!value) break;
-                        // if we are setting a connection we do not want to pass the full object because
-                        // batch creates payload gets too large
-                        objectToUpdate[field.columnName] = {};
-                        objectToUpdate[field.columnName].id =
-                           value[field.datasourceLink.PK()];
-                        objectToUpdate[field.columnName][
-                           field.datasourceLink.PK()
-                        ] = value[field.datasourceLink.PK()];
 
-                        // If the connect field use the custom FK, then it requires to pass value of the custom FK.
-                        if (field.settings.isCustomFK) {
-                           if (field.indexField) {
-                              objectToUpdate[field.columnName][
-                                 field.indexField.columnName
-                              ] = value[field.indexField.columnName];
+                        if (field.key == "connectObject") {
+                           // if we are setting a connection we do not want to pass the full object because
+                           // batch creates payload gets too large
+                           objectToUpdate[field.columnName] = {};
+                           objectToUpdate[field.columnName].id =
+                              value[field.datasourceLink.PK()];
+                           objectToUpdate[field.columnName][
+                              field.datasourceLink.PK()
+                           ] = value[field.datasourceLink.PK()];
+
+                           // If the connect field use the custom FK, then it requires to pass value of the custom FK.
+                           if (field.settings.isCustomFK) {
+                              if (field.indexField) {
+                                 objectToUpdate[field.columnName][
+                                    field.indexField.columnName
+                                 ] = value[field.indexField.columnName];
+                              }
+                              if (field.indexField2) {
+                                 objectToUpdate[field.columnName][
+                                    field.indexField2.columnName
+                                 ] = value[field.indexField2.columnName];
+                              }
                            }
-                           if (field.indexField2) {
-                              objectToUpdate[field.columnName][
-                                 field.indexField2.columnName
-                              ] = value[field.indexField2.columnName];
-                           }
+
+                           field.datasourceLink
+                              .fields(
+                                 (f) =>
+                                    f.key == "combined" || f.key == "AutoIndex"
+                              )
+                              .forEach((f) => {
+                                 objectToUpdate[field.columnName][
+                                    f.columnName
+                                 ] = value[f.columnName];
+                              });
+                        } else {
+                           objectToUpdate[field.columnName] = value;
                         }
-
-                        field.datasourceLink
-                           .fields(
-                              (f) => f.key == "combined" || f.key == "AutoIndex"
-                           )
-                           .forEach((f) => {
-                              objectToUpdate[field.columnName][f.columnName] =
-                                 value[f.columnName];
-                           });
 
                         break;
                   }
