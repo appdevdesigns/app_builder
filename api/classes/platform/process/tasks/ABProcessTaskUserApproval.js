@@ -89,6 +89,41 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
             if (parseInt(this.toUsers.useAccount) == 1) {
                jobData.users = this.toUsers.account;
             }
+
+            if (parseInt(this.toUsers.useField) == 1) {
+               // pull user data from the field list
+               let startElement = this.startElement;
+               if (startElement) {
+                  jobData.users = jobData.users || [];
+
+                  // Copy the array because I don't want to mess up this.toUsers.account
+                  jobData.users = jobData.users.slice(0, jobData.users.length);
+
+                  let processData = startElement.myState(instance).data || {};
+                  let userFields = this.objectOfStartElement.fields(
+                     (f) => (this.toUsers.fields || []).indexOf(f.id) > -1
+                  );
+
+                  (userFields || []).forEach((f) => {
+                     let userData = processData[f.columnName];
+                     if (!userData) return;
+
+                     if (!Array.isArray(userData)) userData = [userData];
+
+                     userData.forEach((uData) => {
+                        if (uData == null) return;
+                        let username = uData.id || uData.text || uData;
+
+                        // Check exists
+                        if (jobData.users.indexOf(username) < 0) {
+                           // Add username to the list
+                           // NOTE: thankfully "process_manager.userform.create" service supports both user id and username
+                           jobData.users.push(username);
+                        }
+                     });
+                  });
+               }
+            }
          } else {
             // get roles & users from Lane
 

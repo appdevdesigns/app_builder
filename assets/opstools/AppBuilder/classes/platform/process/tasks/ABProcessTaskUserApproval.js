@@ -78,7 +78,13 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
 
       var toUserUI = ABProcessParticipant.selectUsersUi(
          id + "_who_",
-         this.toUsers || {}
+         this.toUsers || {},
+         {
+            isFieldVisible: true,
+            fields: this.objectOfStartElement
+               ? this.objectOfStartElement.fields()
+               : []
+         }
       );
 
       var whoOptions = [

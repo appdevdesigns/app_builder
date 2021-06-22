@@ -181,7 +181,9 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
          role: `${id}_role`,
          useRole: `${id}_useRoles`,
          useAccount: `${id}_useAccounts`,
-         account: `${id}_account`
+         useField: `${id}_useField`,
+         account: `${id}_account`,
+         fields: `${id}_fields`
       };
    }
    /**
@@ -262,7 +264,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
     * @param {string} id
     *        the webix $$(id) of the properties panel area.
     */
-   static selectUsersUi(id, obj) {
+   static selectUsersUi(id, obj, options = {}) {
       var ids = ABProcessParticipant.propertyIDs(id);
 
       return {
@@ -325,7 +327,46 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                         stringResult: false /* returns data as an array of [id] */
                      }
                   ]
-               }
+               },
+               options.isFieldVisible
+                  ? {
+                       cols: [
+                          {
+                             view: "checkbox",
+                             id: ids.useField,
+                             labelRight: "by Field",
+                             labelWidth: 0,
+                             width: 120,
+                             value: obj.useField ? obj.useField : 0,
+                             click: function(id /*, event */) {
+                                if (this.getValue()) {
+                                   $$(ids.fields).enable();
+                                } else {
+                                   $$(ids.fields).disable();
+                                }
+                             }
+                          },
+                          {
+                             id: ids.fields,
+                             view: "multicombo",
+                             value: obj.fields || [],
+                             disabled: obj.useField ? false : true,
+                             suggest: (options.fields || [])
+                                .filter((f) => f && f.key == "user")
+                                .map((f) => {
+                                   return {
+                                      id: f.id,
+                                      value: f.label
+                                   };
+                                }),
+                             labelAlign: "left",
+                             placeholder:
+                                "Click or type to add user fields ...",
+                             stringResult: false
+                          }
+                       ]
+                    }
+                  : { fillspace: true }
             ]
          }
       };
@@ -433,6 +474,16 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
          obj.account = $$(ids.account).getValue(/*{ options: true }*/);
       } else {
          obj.account = null;
+      }
+
+      if ($$(ids.useField)) {
+         obj.useField = $$(ids.useField).getValue();
+      }
+
+      if ($$(ids.fields) && obj.useField) {
+         obj.fields = $$(ids.fields).getValue();
+      } else {
+         obj.fields = [];
       }
 
       return obj;
