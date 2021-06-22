@@ -55,7 +55,7 @@ class ABQLFind extends ABQLFindCore {
             var reducedCondition = this.conditionReduce(cond, instance);
             context.object
                .modelAPI()
-               .findAll(reducedCondition)
+               .findAll({ where: reducedCondition, populate: true })
                .then((rows) => {
                   nextContext.data = rows;
                   if (!rows) {

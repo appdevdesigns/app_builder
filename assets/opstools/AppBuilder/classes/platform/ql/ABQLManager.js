@@ -207,12 +207,15 @@ var ABQLManager = {
 
          // get which operation was selected
          // find the operation selector (skip any indents)
+         var value = null;
          var views = row.getChildViews();
-         var selector = views.shift();
-         while (!selector.getValue) {
-            selector = views.shift();
+         if (views.length > 0) {
+            var selector = views.shift();
+            while (selector && !selector.getValue) {
+               selector = views.shift();
+            }
+            value = selector ? selector.getValue() : null;
          }
-         var value = selector.getValue();
 
          // figure out the QLOP object
          var OP = options.find((o) => {
