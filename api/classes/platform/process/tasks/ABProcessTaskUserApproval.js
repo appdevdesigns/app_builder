@@ -54,114 +54,155 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
    }
 
    _requestNewForm(instance) {
-      return new Promise((resolve, reject) => {
-         var jobData = {
-            name: this.name,
-            process: instance.id,
-            definition: this.process.id,
-            ui: this.formBuilder
-         };
+      return Promise.resolve()
+         .then(
+            () =>
+               new Promise((resolve, reject) => {
+                  var jobData = {
+                     name: this.name,
+                     process: instance.id,
+                     definition: this.process.id,
+                     ui: this.formBuilder
+                  };
 
-         var processData = {};
-         var listDataFields = this.process.processDataFields(this);
-         listDataFields.forEach((entry) => {
-            processData[entry.key] = this.process.processData(this, [
-               instance,
-               entry.key
-            ]);
+                  var processData = {};
+                  var listDataFields = this.process.processDataFields(this);
+                  listDataFields.forEach((entry) => {
+                     processData[entry.key] = this.process.processData(this, [
+                        instance,
+                        entry.key
+                     ]);
 
-            if (entry && entry.field && entry.field.key == "connectObject") {
-               processData[
-                  `${entry.key}.format`
-               ] = this.process.processData(this, [
-                  instance,
-                  `${entry.key}.format`
-               ]);
-            }
-         });
-         jobData.data = processData;
-
-         if (parseInt(this.who) == 1) {
-            if (parseInt(this.toUsers.useRole) == 1) {
-               jobData.roles = this.toUsers.role;
-            }
-
-            if (parseInt(this.toUsers.useAccount) == 1) {
-               jobData.users = this.toUsers.account;
-            }
-
-            if (parseInt(this.toUsers.useField) == 1) {
-               // pull user data from the field list
-               let startElement = this.startElement;
-               if (startElement) {
-                  jobData.users = jobData.users || [];
-
-                  // Copy the array because I don't want to mess up this.toUsers.account
-                  jobData.users = jobData.users.slice(0, jobData.users.length);
-
-                  let processData = startElement.myState(instance).data || {};
-                  let userFields = this.objectOfStartElement.fields(
-                     (f) => (this.toUsers.fields || []).indexOf(f.id) > -1
-                  );
-
-                  (userFields || []).forEach((f) => {
-                     let userData = processData[f.columnName];
-                     if (!userData) return;
-
-                     if (!Array.isArray(userData)) userData = [userData];
-
-                     userData.forEach((uData) => {
-                        if (uData == null) return;
-                        let username = uData.id || uData.text || uData;
-
-                        // Check exists
-                        if (jobData.users.indexOf(username) < 0) {
-                           // Add username to the list
-                           // NOTE: thankfully "process_manager.userform.create" service supports both user id and username
-                           jobData.users.push(username);
-                        }
-                     });
+                     if (
+                        entry &&
+                        entry.field &&
+                        entry.field.key == "connectObject"
+                     ) {
+                        processData[
+                           `${entry.key}.format`
+                        ] = this.process.processData(this, [
+                           instance,
+                           `${entry.key}.format`
+                        ]);
+                     }
                   });
-               }
-            }
-         } else {
-            // get roles & users from Lane
+                  jobData.data = processData;
 
-            var myLane = this.myLane();
-            if (!myLane) {
-               var configError = new Error(
-                  `Misconfiguration: no lane found for id:[${this.laneDiagramID}]`
-               );
-               reject(configError);
-               return;
-            }
-            if (myLane.useRole) {
-               jobData.roles = myLane.role;
-            }
-            if (myLane.useAccount) {
-               jobData.users = myLane.account;
-            }
-         }
+                  if (parseInt(this.who) == 1) {
+                     if (parseInt(this.toUsers.useRole) == 1) {
+                        jobData.roles = this.toUsers.role;
+                     }
 
-         reqAB.serviceRequest(
-            "process_manager.userform.create",
-            jobData,
-            (err, userForm) => {
-               if (err) {
-                  this.log(
-                     instance,
-                     "Error creating user form: " + err.toString()
+                     if (parseInt(this.toUsers.useAccount) == 1) {
+                        jobData.users = this.toUsers.account;
+                     }
+
+                     if (parseInt(this.toUsers.useField) == 1) {
+                        // pull user data from the field list
+                        let startElement = this.startElement;
+                        if (startElement) {
+                           jobData.users = jobData.users || [];
+
+                           // Copy the array because I don't want to mess up this.toUsers.account
+                           jobData.users = jobData.users.slice(
+                              0,
+                              jobData.users.length
+                           );
+
+                           let processData =
+                              startElement.myState(instance).data || {};
+
+                           // ABUserField
+                           let userFields = this.objectOfStartElement.fields(
+                              (f) =>
+                                 (this.toUsers.fields || []).indexOf(f.id) > -1
+                           );
+
+                           let usernames = [];
+                           (userFields || []).forEach((f) => {
+                              let userData = processData[f.columnName];
+                              if (!userData) return;
+
+                              if (!Array.isArray(userData))
+                                 userData = [userData];
+
+                              usernames = usernames.concat(
+                                 userData.map(
+                                    (uData) => uData.id || uData.text || uData
+                                 )
+                              );
+                           });
+
+                           usernames = usernames.filter((uName) => uName);
+
+                           // Pull uuid of users by username
+                           SiteUser.find({ username: usernames })
+                              .then((listUsers) => {
+                                 jobData.users = jobData.users.concat(
+                                    listUsers.map((u) => u.uuid || u.id)
+                                 );
+
+                                 jobData.users = _.uniq(
+                                    jobData.users.filter((u) => u),
+                                    false,
+                                    (u) => u.toString() // support compare with different types
+                                 );
+
+                                 resolve(jobData);
+                              })
+                              .catch(reject);
+                        }
+                     } else {
+                        resolve(jobData);
+                     }
+                  } else {
+                     // get roles & users from Lane
+
+                     var myLane = this.myLane();
+                     if (!myLane) {
+                        var configError = new Error(
+                           `Misconfiguration: no lane found for id:[${this.laneDiagramID}]`
+                        );
+                        reject(configError);
+                        return;
+                     }
+                     if (myLane.useRole) {
+                        jobData.roles = myLane.role;
+                     }
+                     if (myLane.useAccount) {
+                        jobData.users = myLane.account;
+                     }
+
+                     resolve(jobData);
+                  }
+               })
+         )
+         .then(
+            (jobData) =>
+               new Promise((resolve, reject) => {
+                  reqAB.serviceRequest(
+                     "process_manager.userform.create",
+                     jobData,
+                     (err, userForm) => {
+                        if (err) {
+                           this.log(
+                              instance,
+                              "Error creating user form: " + err.toString()
+                           );
+                           reject(err);
+                           return;
+                        }
+                        this.log(
+                           instance,
+                           `created  user form [${userForm.uuid}]`
+                        );
+                        var data = { userFormID: userForm.uuid };
+                        this.stateUpdate(instance, data);
+                        resolve(false);
+                     }
                   );
-                  reject(err);
-                  return;
-               }
-               this.log(instance, `created  user form [${userForm.uuid}]`);
-               var data = { userFormID: userForm.uuid };
-               this.stateUpdate(instance, data);
-               resolve(false);
-            }
+               })
          );
-      });
    }
 
    _requestFormStatus(instance) {
