@@ -35,7 +35,7 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
    //// Process Instance Methods
    ////
 
-   laneUserEmails(allLanes) {
+   laneUserEmails(allLanes, instance) {
       if (!Array.isArray(allLanes)) {
          allLanes = [allLanes];
       }
@@ -46,8 +46,12 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
          async.each(
             allLanes,
             (myLane, cb) => {
+               let startElementData = this.startElement
+                  ? this.startElement.myState(instance).data
+                  : null;
+
                myLane
-                  .users()
+                  .users(this.objectOfStartElement, startElementData)
                   .then((list) => {
                      list.forEach((l) => {
                         if (l.email) {
@@ -126,7 +130,7 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
                   return;
                }
 
-               this.laneUserEmails(myLanes)
+               this.laneUserEmails(myLanes, instance)
                   .then((emails) => {
                      var data = {};
                      data[field] = emails;
@@ -148,7 +152,7 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
                   this.process,
                   this.application
                );
-               this.laneUserEmails(tempLane)
+               this.laneUserEmails(tempLane, instance)
                   .then((emails) => {
                      var data = {};
                      data[field] = emails;

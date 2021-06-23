@@ -97,61 +97,38 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                         jobData.users = this.toUsers.account;
                      }
 
+                     // pull user data from the user fields
                      if (parseInt(this.toUsers.useField) == 1) {
-                        // pull user data from the field list
-                        let startElement = this.startElement;
-                        if (startElement) {
-                           jobData.users = jobData.users || [];
+                        this._getUserListOfStartElement(instance)
+                           .then((userList) => {
+                              jobData.users = jobData.users || [];
 
-                           // Copy the array because I don't want to mess up this.toUsers.account
-                           jobData.users = jobData.users.slice(
-                              0,
-                              jobData.users.length
-                           );
-
-                           let processData =
-                              startElement.myState(instance).data || {};
-
-                           // ABUserField
-                           let userFields = this.objectOfStartElement.fields(
-                              (f) =>
-                                 (this.toUsers.fields || []).indexOf(f.id) > -1
-                           );
-
-                           let usernames = [];
-                           (userFields || []).forEach((f) => {
-                              let userData = processData[f.columnName];
-                              if (!userData) return;
-
-                              if (!Array.isArray(userData))
-                                 userData = [userData];
-
-                              usernames = usernames.concat(
-                                 userData.map(
-                                    (uData) => uData.id || uData.text || uData
-                                 )
+                              // Copy the array because I don't want to mess up this.toUsers.account
+                              jobData.users = jobData.users.slice(
+                                 0,
+                                 jobData.users.length
                               );
-                           });
 
-                           usernames = usernames.filter((uName) => uName);
+                              // Combine user id from Account & Field options
+                              jobData.users = jobData.users.concat(
+                                 userList.map((u) => u.uuid || u.id)
+                              );
 
-                           // Pull uuid of users by username
-                           SiteUser.find({ username: usernames })
-                              .then((listUsers) => {
-                                 jobData.users = jobData.users.concat(
-                                    listUsers.map((u) => u.uuid || u.id)
-                                 );
+                              // Remove empty items
+                              jobData.users = jobData.users.filter(
+                                 (uId) => uId
+                              );
 
-                                 jobData.users = _.uniq(
-                                    jobData.users.filter((u) => u),
-                                    false,
-                                    (u) => u.toString() // support compare with different types
-                                 );
+                              // Remove duplicate items
+                              jobData.users = _.uniq(
+                                 jobData.users,
+                                 false,
+                                 (u) => u.toString() // support compare with different types
+                              );
 
-                                 resolve(jobData);
-                              })
-                              .catch(reject);
-                        }
+                              resolve(jobData);
+                           })
+                           .catch(reject);
                      } else {
                         resolve(jobData);
                      }
@@ -248,5 +225,26 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
             }
          );
       });
+   }
+
+   _getUserListOfStartElement(instance) {
+      let startElement = this.startElement;
+      let objectOfStartElement = this.objectOfStartElement;
+
+      if (
+         !this.toUsers.fields ||
+         !this.toUsers.fields.length ||
+         startElement == null ||
+         objectOfStartElement == null
+      )
+         return Promise.resolve([]);
+
+      let processData = startElement.myState(instance).data || {};
+      let abParticipant = new ABProcessParticipant(
+         this.toUsers,
+         this.process,
+         this.application
+      );
+      return abParticipant.usersForFields(objectOfStartElement, processData);
    }
 };

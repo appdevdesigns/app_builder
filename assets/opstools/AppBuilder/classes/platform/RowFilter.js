@@ -314,6 +314,14 @@ module.exports = class RowFilter extends RowFilterCore {
                               id: "not_equal"
                            },
                            {
+                              value: labels.component.isEmpty,
+                              id: "is_empty"
+                           },
+                           {
+                              value: labels.component.isNotEmpty,
+                              id: "is_not_empty"
+                           },
+                           {
                               value: labels.component.sameAsUser,
                               id: "same_as_user"
                            },
