@@ -2,6 +2,7 @@
  * Import and export AppBuilder apps.
  */
 const _ = require("lodash");
+const async = require("async");
 const fs = require("fs");
 const path = require("path");
 const uuidv4 = require("uuid");
@@ -20,6 +21,22 @@ const ABApplication = require(path.join(
    "ABApplication"
 ));
 
+// NOTE: taken from api/controllers/OPImageUploadController:
+function destinationPath(appKey) {
+   // in case settings are not set ...
+   sails.config.opsportal.opimageupload =
+      sails.config.opsportal.opimageupload || {};
+   sails.config.opsportal.opimageupload.basePath =
+      sails.config.opsportal.opimageupload.basePath ||
+      path.join("data", "opimageupload");
+
+   return path.join(
+      sails.config.appPath,
+      sails.config.opsportal.opimageupload.basePath,
+      appKey
+   );
+}
+
 module.exports = {
    /**
     * Export an application's metadata to JSON
@@ -33,7 +50,27 @@ module.exports = {
    appToJSON: function(appID) {
       var data = {
          abVersion: "0.0.0",
-         definitions: []
+         definitions: [],
+         files: {
+            /* file.id : {
+               meta: {
+                  // Wanted:
+                  created_at: createdAt
+                  updated_at: updatedAt,
+                  field: {ABField.id},
+                  object: {ABField.object.id},
+                  pathFile: ???
+                  file: {file | image}, // the name of the original file
+                  size: size
+                  uploadedBy: null
+                  type: type
+                  info: info || null
+               },
+               contents: "base64(contents)"
+            }
+            */
+         },
+         errors: []
       };
       var Application = null;
 
@@ -61,6 +98,11 @@ module.exports = {
                data.definitions.push(ABDefinitionModel.objForID(id));
             }
          });
+
+         ///
+         /// Transition Code:
+         /// Gather UserFields and create users as connections
+         ///
 
          var userFields = data.definitions.filter(
             (d) => d.type == "field" && d.json.key == "user"
@@ -209,7 +251,189 @@ module.exports = {
                }
             } // if !reimport
          });
-         resolve(data);
+
+         ///
+         /// Gather any related files and include in json definitions.
+         ///
+
+         async.series(
+            [
+               // start with the ABFieldImage.defaultImage references:
+               // ABFieldImage
+               (done) => {
+                  var imageFields = data.definitions.filter(
+                     (d) => d.type == "field" && d.json.key == "image"
+                  );
+                  var doOne = (cb) => {
+                     if (imageFields.length == 0) {
+                        return cb();
+                     }
+
+                     var fieldDef = imageFields.shift();
+                     var imageID = fieldDef.json.settings.defaultImageUrl;
+                     var objectOfField = null;
+                     Application.objectsAll().forEach((o) => {
+                        if (!objectOfField) {
+                           if (
+                              o.fields((f) => f.id == fieldDef.id).length > 0
+                           ) {
+                              objectOfField = o;
+                           }
+                        }
+                     });
+
+                     OPImageUpload.find({
+                        uuid: imageID
+                     })
+                        .then(function(opImage) {
+                           console.log("opImage:", opImage);
+                           if (opImage.length == 0) {
+                              var errmsg = `Error: unable to find default image row for field[${fieldDef.id}] defaultImageUrl[${imageID}]`;
+                              console.error(errmsg);
+                              data.errors.push(errmsg);
+                              doOne(cb); // keep going
+                              return;
+                           }
+
+                           var image = opImage[0];
+                           data.files[imageID] = {
+                              meta: {
+                                 // Wanted:
+                                 created_at: AppBuilder.rules.toSQLDateTime(
+                                    image.createdAt
+                                 ),
+                                 updated_at: AppBuilder.rules.toSQLDateTime(
+                                    image.updatedAt
+                                 ),
+                                 field: fieldDef.id,
+                                 object: objectOfField
+                                    ? objectOfField.id
+                                    : null,
+                                 // pathFile: ???
+                                 file: image.image, // the name of the original file
+                                 size: image.size,
+                                 uploadedBy: null,
+                                 type: image.type,
+                                 info: null
+                              },
+                              contents: "--data--"
+                           };
+
+                           var pathFile = path.join(
+                              destinationPath(image.app_key),
+                              image.image
+                           );
+                           fs.readFile(
+                              pathFile,
+                              { encoding: "base64" },
+                              (err, fileData) => {
+                                 if (err) {
+                                    var fileErr = `Error: unable to find default image file for field[${fieldDef.id}] path[${pathFile}]`;
+                                    console.error(fileErr);
+                                    data.errors.push(fileErr);
+                                    // data.files[imageID].contents = null;
+                                 }
+                                 data.files[imageID].contents = fileData;
+                                 doOne(cb);
+                              }
+                           );
+                        })
+                        .catch(function(err) {
+                           var strErr = err.toString();
+                           console.error(strErr);
+                           data.errors.push(strErr);
+                           doOne(cb); // keep going
+                        });
+                  };
+
+                  doOne((err) => {
+                     done(err);
+                  });
+               },
+
+               // Now lookup any docx views and pull the embedded templates:
+               (done) => {
+                  var templateViews = data.definitions.filter(
+                     (d) => d.type == "view" && d.json.key == "docxBuilder"
+                  );
+
+                  var doOne = (cb) => {
+                     if (templateViews.length == 0) {
+                        return cb();
+                     }
+
+                     var viewDef = templateViews.shift();
+                     var fileID = viewDef.json.settings.filename;
+
+                     OPFileUpload.find({ uuid: fileID })
+                        .then((files) => {
+                           if (files.length == 0) {
+                              var errmsg = `Error: unable to find docx template[${fileID}] for view[${viewDef.id}]`;
+                              console.error(errmsg);
+                              data.errors.push(errmsg);
+                              doOne(cb); // keep going
+                              return;
+                           }
+
+                           var file = files[0];
+                           data.files[fileID] = {
+                              meta: {
+                                 // Wanted:
+                                 created_at: AppBuilder.rules.toSQLDateTime(
+                                    file.createdAt
+                                 ),
+                                 updated_at: AppBuilder.rules.toSQLDateTime(
+                                    file.updatedAt
+                                 ),
+                                 field: null,
+                                 object: null,
+                                 // pathFile: ???
+                                 file: file.file, // the name of the original file
+                                 size: file.size,
+                                 uploadedBy: null,
+                                 type: file.type,
+                                 info: null
+                              },
+                              contents: "--data--"
+                           };
+
+                           var pathFile = path.join(file.pathFile, file.file);
+                           fs.readFile(
+                              pathFile,
+                              { encoding: "base64" },
+                              (err, fileData) => {
+                                 if (err) {
+                                    var fileErr = `Error: unable to find docx file for field[${viewDef.id}] path[${pathFile}]`;
+                                    console.error(fileErr);
+                                    data.errors.push(fileErr);
+                                    // data.files[imageID].contents = null;
+                                 }
+                                 data.files[fileID].contents = fileData;
+                                 doOne(cb);
+                              }
+                           );
+                        })
+                        .catch(function(err) {
+                           var strErr = err.toString();
+                           console.error(strErr);
+                           data.errors.push(strErr);
+                           doOne(cb); // keep going
+                        });
+                  };
+
+                  doOne((err) => {
+                     done(err);
+                  });
+               }
+            ],
+            (err) => {
+               if (err) {
+                  return reject(err);
+               }
+
+               resolve(data);
+            }
+         );
       });
    },
 
