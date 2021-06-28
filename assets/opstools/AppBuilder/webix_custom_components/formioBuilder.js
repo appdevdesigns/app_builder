@@ -312,173 +312,214 @@ module.exports = class ABCustomFormIOBuilder {
             //     var fields = obj.fields();
             //     console.log(fields);
             fields.forEach((entry) => {
-               if (!entry.field) return;
-               switch (entry.field.key) {
-                  case "boolean":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
+               // check to see if we are given a set of plucked data
+               // check to see if we are not given any field information
+               // if so this is an array of objects that we want to display
+               // in an accrodian.
+               if (!entry.field && entry.set == true) {
+                  debugger;
+                  let objectFields = entry.object.fields();
+                  let fieldSchemas = [];
+                  objectFields.forEach((cof) => {
+                     fieldSchemas.push(
+                        _logic.fieldSchema(
+                           cof,
+                           entry.object.application.name,
+                           entry.key
                         )
-                     };
-                     break;
-                  case "calculate":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
-                        )
-                     };
-                     break;
-                  case "connectObject":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
-                        )
-                     };
-                     debugger;
-                     let connectedObjectFields = entry.field.datasourceLink.fields();
-                     let fieldSchemas = [];
-                     connectedObjectFields.forEach((cof) => {
-                        fieldSchemas.push(
-                           _logic.fieldSchema(
-                              cof,
-                              entry.object.application.name,
-                              entry.key
+                     );
+                  });
+
+                  components[entry.key + "_accordion"] = {
+                     title: entry.label + " Accordion",
+                     key: entry.key + "_accordion",
+                     icon: "list",
+                     schema: {
+                        label: entry.label,
+                        customClass: "customList",
+                        disableAddingRemovingRows: true,
+                        // templates: {
+                        //    header: " ",
+                        //    row: "<div class='editRow'></div>"
+                        // },
+                        key: "editGrid",
+                        type: "editgrid",
+                        input: false,
+                        components: fieldSchemas,
+                        path: "editGrid"
+                     }
+                  };
+               } else if (entry.field && entry.set == true) {
+                  // Check if this is a set of data and if we do have a field
+                  // if so this is an array of values and we need to display
+                  // them in an accordian.
+                  debugger;
+                  let fieldSchemas = [];
+                  fieldSchemas.push(
+                     _logic.fieldSchema(
+                        entry.field,
+                        entry.object.application.name,
+                        entry.key
+                     )
+                  );
+
+                  components[entry.key + "_accordion"] = {
+                     title: entry.label + " Accordion",
+                     key: entry.key + "_accordion",
+                     icon: "list",
+                     schema: {
+                        label: entry.label,
+                        customClass: "customList",
+                        disableAddingRemovingRows: true,
+                        // templates: {
+                        //    header: " ",
+                        //    row: "<div class='editRow'></div>"
+                        // },
+                        key: "editGrid",
+                        type: "editgrid",
+                        input: false,
+                        components: fieldSchemas,
+                        path: "editGrid"
+                     }
+                  };
+               } else {
+                  if (!entry.field) return;
+                  // all other fields we display as single form components
+                  switch (entry.field.key) {
+                     case "boolean":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
                            )
-                        );
-                     });
+                        };
+                        break;
+                     case "calculate":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "connectObject":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
 
-                     components[entry.key + "_accordion"] = {
-                        title: entry.label + " Accordion",
-                        key: entry.key + "_accordion",
-                        icon: "list",
-                        schema: {
-                           label: entry.label,
-                           customClass: "customList",
-                           disableAddingRemovingRows: true,
-                           // templates: {
-                           //    header: " ",
-                           //    row: "<div class='editRow'></div>"
-                           // },
-                           key: "editGrid",
-                           type: "editgrid",
-                           input: false,
-                           components: fieldSchemas,
-                           path: "editGrid"
-                        }
-                     };
-                     break;
-
-                  case "date":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
-                        )
-                     };
-                     break;
-                  case "email":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
-                        )
-                     };
-                     break;
-                  case "file":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
-                        )
-                     };
-                     break;
-                  case "image":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
-                        )
-                     };
-                     break;
-                  case "list":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
-                        )
-                     };
-                     break;
-                  case "LongText":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
-                        )
-                     };
-                     break;
-                  case "number":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
-                        )
-                     };
-                     break;
-                  case "TextFormula":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
-                        )
-                     };
-                     break;
-                  default:
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: _logic.fieldSchema(
-                           entry.field,
-                           entry.object.application.name
-                        )
-                     };
-                     break;
+                     case "date":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "email":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "file":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "image":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "list":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "LongText":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "number":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "TextFormula":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     default:
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                  }
                }
             });
             // });
