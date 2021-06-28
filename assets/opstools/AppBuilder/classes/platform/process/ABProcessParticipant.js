@@ -9,6 +9,10 @@ var ABProcessParticipantCore = require("../../core/process/ABProcessParticipantC
 
 var ABRole = require("../ABRole.js");
 
+function L(key, altText) {
+   return AD.lang.label.getLabel(key) || altText;
+}
+
 let __Roles = null;
 let __Users = null;
 let __alertCount = 0;
@@ -334,7 +338,10 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                           {
                              view: "checkbox",
                              id: ids.useField,
-                             labelRight: "by Field",
+                             labelRight: L(
+                                "ab.process.participant.isFieldEnable",
+                                "*by Field"
+                             ),
                              labelWidth: 0,
                              width: 120,
                              value: obj.useField ? obj.useField : 0,
@@ -360,8 +367,10 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                                    };
                                 }),
                              labelAlign: "left",
-                             placeholder:
-                                "Click or type to add user fields ...",
+                             placeholder: L(
+                                "ab.process.participant.selectFields",
+                                "*Click or type to add user fields ..."
+                             ),
                              stringResult: false
                           }
                        ]
