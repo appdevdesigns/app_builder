@@ -647,18 +647,21 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
             $$(ids.component).$view.onclick = (e) => {
                if (e.target.className) {
                   if (e.target.className.indexOf("ab-carousel-edit") > -1) {
+                     $$(ids.component).define("css", "");
                      webix.fullscreen.exit();
                      let rowId = e.target.getAttribute("ab-row-id");
                      linkPage.changePage(editPage, rowId);
                   } else if (
                      e.target.className.indexOf("ab-carousel-detail") > -1
                   ) {
+                     $$(ids.component).define("css", "");
                      webix.fullscreen.exit();
                      let rowId = e.target.getAttribute("ab-row-id");
                      linkPage.changePage(detailsPage, rowId);
                   } else if (
                      e.target.className.indexOf("ab-carousel-fullscreen") > -1
                   ) {
+                     $$(ids.component).define("css", "fullscreen");
                      webix.fullscreen.set(ids.component);
                   }
                }
