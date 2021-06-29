@@ -647,14 +647,20 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
             $$(ids.component).$view.onclick = (e) => {
                if (e.target.className) {
                   if (e.target.className.indexOf("ab-carousel-edit") > -1) {
-                     $$(ids.component).define("css", "");
+                     webix.html.removeCss(
+                        $$(ids.component).getNode(),
+                        "fullscreen"
+                     );
                      webix.fullscreen.exit();
                      let rowId = e.target.getAttribute("ab-row-id");
                      linkPage.changePage(editPage, rowId);
                   } else if (
                      e.target.className.indexOf("ab-carousel-detail") > -1
                   ) {
-                     $$(ids.component).define("css", "");
+                     webix.html.removeCss(
+                        $$(ids.component).getNode(),
+                        "fullscreen"
+                     );
                      webix.fullscreen.exit();
                      let rowId = e.target.getAttribute("ab-row-id");
                      linkPage.changePage(detailsPage, rowId);
@@ -662,7 +668,26 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
                      e.target.className.indexOf("ab-carousel-fullscreen") > -1
                   ) {
                      $$(ids.component).define("css", "fullscreen");
-                     webix.fullscreen.set(ids.component);
+                     webix.fullscreen.set(ids.component, {
+                        head: {
+                           view: "toolbar",
+                           css: "webix_dark",
+                           elements: [
+                              {},
+                              {
+                                 view: "icon",
+                                 icon: "fa fa-times",
+                                 click: function() {
+                                    webix.html.removeCss(
+                                       $$(ids.component).getNode(),
+                                       "fullscreen"
+                                    );
+                                    webix.fullscreen.exit();
+                                 }
+                              }
+                           ]
+                        }
+                     });
                   }
                }
             };
