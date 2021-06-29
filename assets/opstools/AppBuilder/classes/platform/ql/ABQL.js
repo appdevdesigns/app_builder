@@ -327,7 +327,7 @@ class ABQL extends ABQLCore {
                value: this.objectID,
                options: options,
                on: {
-                  onChange: (newValue, oldValue) => {
+                  onChange: (newValue /*, oldValue */) => {
                      this.params = this.params || {};
                      if (newValue != this.params[pDef.name]) {
                         this.params[pDef.name] = newValue;
@@ -448,7 +448,7 @@ class ABQL extends ABQLCore {
                this.params[pDef.name] = condition;
 
                var shortHand = $$(this.ids.shorthand);
-               console.log(Filter.toShortHand());
+               // console.log(Filter.toShortHand());
                shortHand.define({
                   label: Filter.toShortHand()
                });
@@ -456,11 +456,11 @@ class ABQL extends ABQLCore {
 
                // NOTE: the hidden element is a text field, so convert the
                // {condition object} => a string
-               var condition = $$(this.ids.condition);
-               condition.define({
+               var elCondition = $$(this.ids.condition);
+               elCondition.define({
                   value: JSON.stringify(this.params[pDef.name])
                });
-               condition.refresh();
+               elCondition.refresh();
             });
 
             // create the initial condition value from our inputs.
