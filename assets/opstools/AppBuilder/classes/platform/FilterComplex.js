@@ -1,5 +1,47 @@
 const FilterComplexCore = require("../core/FilterComplexCore");
 
+/**
+ * @function _toInternal()
+ * translate our external QB conditions into our internal format that
+ * makes the cond.rule unique by adding the field.id to the rule.
+ * @param {obj} cond
+ *        the QB condition format we use exernally in our AB system.
+ */
+function _toInternal(cond) {
+   if (cond.key) {
+      if (cond.rule && cond.rule.indexOf(cond.key) == -1) {
+         cond.rule = `${cond.key}_${cond.rule}`;
+      }
+   }
+
+   if (cond.rules && cond.rules.length) {
+      (cond.rules || []).forEach((r) => {
+         _toInternal(r);
+      });
+   }
+}
+
+/**
+ * @function _toExternal()
+ * translate our internal QB conditions into our external format that
+ * where the cond.rule no longer has the field.id.
+ * @param {obj} cond
+ *        the QB condition format we use internally
+ */
+function _toExternal(cond) {
+   if (cond.key) {
+      if (cond.rule && cond.rule.indexOf(cond.key) > -1) {
+         cond.rule = cond.rule.replace(`${cond.key}_`, "");
+      }
+   }
+
+   if (cond.rules && cond.rules.length) {
+      (cond.rules || []).forEach((r) => {
+         _toExternal(r);
+      });
+   }
+}
+
 module.exports = class FilterComplex extends FilterComplexCore {
    constructor(App, idBase) {
       idBase = idBase || "ab_row_filter";
@@ -268,25 +310,26 @@ module.exports = class FilterComplex extends FilterComplexCore {
 
       if ($$(this.ids.querybuilder)) {
          let qbSettings = _.cloneDeep(settings);
-         /*
-         // Convert .key from UUID to COLUMN NAME
-         // because ABModel returns row data with column name
-         let convertToColName = (cond = {}) => {
-            if (cond.key) {
-               let field = (this._Fields || []).filter(
-                  (f) => f.id == cond.key
-               )[0];
 
-               if (field && field.columnName) cond.key = field.columnName;
-            }
+         // Settings should match a condition built upon our QB format:
+         // {
+         //    glue:"and",
+         //    rules:[
+         //       {
+         //          key:"uuid",
+         //          rule:"",
+         //          value:""
+         //       }
+         //    ]
+         // }
+         // externally our key should be the field.id and the rules should be
+         // the "contains", "not_contains", "equal" ... keywords.
+         // However, internally, we convert these rules into .ids that are
+         // unique for each field (see uiInit()).  So when we bring in settings
+         // we need to translate them into our internal format:
 
-            if (cond.rules && cond.rules.length) {
-               (cond.rules || []).forEach((r) => convertToColName(r));
-            }
-         };
+         _toInternal(qbSettings);
 
-         convertToColName(qbSettings);
-         */
          $$(this.ids.querybuilder).setValue(qbSettings);
 
          // Update custom value
@@ -308,25 +351,11 @@ module.exports = class FilterComplex extends FilterComplexCore {
       if ($$(this.ids.querybuilder)) {
          let settings = _.cloneDeep($$(this.ids.querybuilder).getValue() || {});
 
-         /*
-         // Convert .key from COLUMN NAME to UUID
-         let convertToUUID = (cond = {}) => {
-            if (cond.key) {
-               let field = (this._Fields || []).filter(
-                  (f) => f.columnName == cond.key
-               )[0];
-
-               if (field) cond.key = field.id;
-            }
-
-            if (cond.rules && cond.rules.length) {
-               (cond.rules || []).forEach((r) => convertToUUID(r));
-            }
-         };
-
-         convertToUUID(settings);
-*/
-
+         // what we pull out of the QB will have .rules in our internal format:
+         // {field.id}_{rule}  (see uiInit() )
+         // But we need to store them in our generic QB format for use outside
+         // our FilterComplex widget.
+         _toExternal(settings);
          this.condition = settings;
       }
 
@@ -349,13 +378,21 @@ module.exports = class FilterComplex extends FilterComplexCore {
          el.define("fields", this.fieldsToQB());
 
          // Set filters
+         // the filters here are an array of Condition Options for each field.
          el.config.filters.clearAll();
          (this.filtersToQB() || []).forEach((filter) => {
+            // .filtersToQB() generates an array of filters for each field,
+            // but the filter.id here is the type of condition rule: contains, not_contains, etc...
+            // we need the ID's to be unique, so we will make them unique to each field by adding
+            // {field.id}_{condition.rule} so make the unique id.
+
             let type = Object.keys(filter.type)[0];
             // make sure to only update the filter.id 1x
             if (filter.id.indexOf(type) == -1) {
                filter.id = type + "_" + filter.id;
             }
+
+            // now filter.id is unique.
 
             el.config.filters.add(filter);
          });
@@ -493,4 +530,3 @@ module.exports = class FilterComplex extends FilterComplexCore {
       this.myPopup.show();
    }
 };
-
