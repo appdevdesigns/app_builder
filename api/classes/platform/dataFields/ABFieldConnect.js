@@ -252,6 +252,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                  .references(linkFK)
                                  .inTable(linkTableName)
                                  .onDelete("SET NULL")
+                                 .onUpdate("CASCADE")
                                  .withKeyName(
                                     getConstraintName(
                                        this.object.name,
@@ -331,6 +332,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                  .references(linkFK)
                                  .inTable(linkTableName)
                                  .onDelete("SET NULL")
+                                 .onUpdate("CASCADE")
                                  .withKeyName(
                                     getConstraintName(
                                        this.object.name,
@@ -435,6 +437,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                                  .references(linkFK)
                                  .inTable(tableName)
                                  .onDelete("SET NULL")
+                                 .onUpdate("CASCADE")
                                  .withKeyName(
                                     getConstraintName(
                                        linkObject.name,
@@ -596,13 +599,15 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                               .references(linkFK)
                               .inTable(tableName)
                               .withKeyName(sourceFkName)
-                              .onDelete("SET NULL");
+                              .onDelete("SET NULL")
+                              .onUpdate("CASCADE");
 
                            linkCol2
                               .references(linkFK2)
                               .inTable(linkTableName)
                               .withKeyName(targetFkName)
-                              .onDelete("SET NULL");
+                              .onDelete("SET NULL")
+                              .onUpdate("CASCADE");
                         } else {
                            console.error(
                               `[M:N] object[${this.object.label}]->Field[${this.label}][${this.id}] skipping linkCol creation: !this.object.isExternal[${this.object.isExternal}] && !linkObject.isExternal[${linkObject.isExternal}] && connName[${this.connName}] == linkObj.connName[${linkObject.connName}]`

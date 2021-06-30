@@ -8,7 +8,8 @@ const ABObjectCore = require(path.join(
    "ABObjectCore.js"
 ));
 const Model = require("objection").Model;
-const ABModel = require(path.join(__dirname, "ABModel.js"));
+
+// const ABModel = require(path.join(__dirname, "ABModel.js"));
 
 // const ABGraphScope = require("../../graphModels/ABScope");
 // const ABObjectScope = require("../../systemObjects/scope");
@@ -1424,14 +1425,22 @@ module.exports = class ABClassObject extends ABObjectCore {
                }
 
                // Search string value of FK column
-               else if (
-                  field.key == "connectObject" &&
-                  (condition.rule == "contains" ||
-                     condition.rule == "not_contains" ||
-                     condition.rule == "equals" ||
-                     condition.rule == "not_equal")
-               ) {
-                  this.convertConnectFieldCondition(field, condition);
+               else if (field.key == "connectObject") {
+                  switch (condition.rule) {
+                     case "contains":
+                     case "not_contains":
+                     case "equals":
+                     case "not_equal":
+                        this.convertConnectFieldCondition(field, condition);
+                        break;
+                     case "is_empty":
+                     case "is_not_empty":
+                        this.convertConnectFieldIsEmptyCondition(
+                           field,
+                           condition
+                        );
+                        break;
+                  }
                }
             }
          }
@@ -1509,11 +1518,11 @@ module.exports = class ABClassObject extends ABObjectCore {
          });
          condition.rule = rule;
          // basic case:  simple conversion
-         var operator = conversionHash[condition.rule];
+         var operator = conversionHash[condition.rule] || condition.rule;
          var value = condition.value;
 
-         // If a function, then ignore quote. like DATE('05-05-2020')
-         if (!RegExp("^[A-Z]+[(].*[)]$").test(value)) {
+         // If a function string or knex.raw(), then ignore quote. like DATE('05-05-2020')
+         if (!RegExp("^[A-Z]+[(].*[)]$").test(value) && value.sql == null) {
             value = quoteMe(value);
          }
 
@@ -2154,6 +2163,52 @@ module.exports = class ABClassObject extends ABObjectCore {
             condition.rule == "contains" || condition.rule == "equals"
                ? "in"
                : "not_in";
+      }
+   }
+
+   convertConnectFieldIsEmptyCondition(field, condition) {
+      let connectType = `${field.settings.linkType}:${field.settings.linkViaType}`;
+      let fieldLink = field.fieldLink;
+      let joinTableName = field.joinTableName(true);
+
+      // One-to-One relation has behaviour same 1:M or M:1
+      // 1:1 isSource == true =>  1:M
+      // 1:1 isSource == false => M:1
+      if (connectType == "one:one") {
+         connectType = field.settings.isSource ? "one:many" : "many:one";
+      }
+
+      switch (connectType) {
+         // 1:M or 1:1 isSource = true
+         case "one:many":
+            condition.key = `${field.dbPrefix()}.\`${field.columnName}\``;
+            break;
+         case "many:one":
+         case "many:many":
+            condition.key = `${field.dbPrefix()}.\`${
+               field.indexField
+                  ? field.indexField.columnName
+                  : field.object.PK()
+            }\``;
+            condition.rule = condition.rule == "is_empty" ? "NOT IN" : "IN";
+
+            // M:1 or 1:1 isSource != true
+            if (connectType == "many:one") {
+               condition.value = ABMigration.connection().raw(
+                  `(SELECT DISTINCT ${fieldLink.dbPrefix()}.\`${
+                     fieldLink.columnName
+                  }\` FROM ${fieldLink.dbPrefix()} WHERE ${fieldLink.dbPrefix()}.\`${
+                     fieldLink.columnName
+                  }\` IS NOT NULL)`
+               );
+            }
+            // M:N
+            else if (connectType == "many:many") {
+               condition.value = ABMigration.connection().raw(
+                  `(SELECT DISTINCT ${joinTableName}.\`${field.object.name}\` FROM ${joinTableName} WHERE ${joinTableName}.\`${field.object.name}\` IS NOT NULL)`
+               );
+            }
+            break;
       }
    }
 
