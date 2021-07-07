@@ -188,7 +188,8 @@ module.exports = class ABWorkObjectPopupExport extends ABComponent {
                                     (_currentObject
                                        ? _currentObject.label
                                        : null),
-                                 filterHTML: true
+                                 filterHTML: true,
+                                 autowidth: true
                               });
                               break;
                            case "PNG":

@@ -635,6 +635,14 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
 
                $inputView = $optionUpdateExsits;
 
+               // update the dataSources option list to UI
+               if ($$(ids.selectDc)) {
+                  $$(ids.selectDc).parse(optionsDataSources);
+                  $$(ids.selectDc).refresh();
+               } else {
+                  $inputView.rows[0].cols[0].options = optionsDataSources;
+               }
+
                // and the upcoming formFieldComponent.init()
                // doesn't need to do anything:
                formFieldComponent = {
