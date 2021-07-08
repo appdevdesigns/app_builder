@@ -1519,7 +1519,7 @@ module.exports = class ABClassObject extends ABObjectCore {
          condition.rule = rule;
          // basic case:  simple conversion
          var operator = conversionHash[condition.rule] || condition.rule;
-         var value = condition.value;
+         var value = condition.value || "";
 
          // If a function string or knex.raw(), then ignore quote. like DATE('05-05-2020')
          if (!RegExp("^[A-Z]+[(].*[)]$").test(value) && value.sql == null) {
