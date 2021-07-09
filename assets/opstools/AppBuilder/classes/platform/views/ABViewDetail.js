@@ -336,7 +336,25 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
          displayData: (rowData) => {
             rowData = rowData || {};
 
-            this.views().forEach((f) => {
+            let views = this.views() || [];
+            views = views.sort((a, b) => {
+               if (!a || !b || !a.field || !b.field) return 0;
+
+               // NOTE: sort order of calculated fields.
+               // FORMULA field type should be calculated before CALCULATE field type
+               if (a.field.key == "formula" && b.field.key == "calculate") {
+                  return -1;
+               } else if (
+                  a.field.key == "calculate" &&
+                  b.field.key == "formula"
+               ) {
+                  return 1;
+               } else {
+                  return 0;
+               }
+            });
+
+            views.forEach((f) => {
                if (f.field) {
                   var field = f.field();
                   var val;
