@@ -1,5 +1,6 @@
 const ABViewDetailCore = require("../../core/views/ABViewDetailCore");
 const ABViewDetailComponent = require("./ABViewDetailComponent");
+const ABObjectQuery = require("../ABObjectQuery");
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -386,6 +387,16 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
                      case "file":
                         val = rowData[field.columnName];
                         break;
+                     case "formula":
+                        if (rowData) {
+                           let dv = this.datacollection;
+                           let ds = dv ? dv.datasource : null;
+                           let needRecalculate =
+                              !ds || ds instanceof ABObjectQuery ? false : true;
+
+                           val = field.format(rowData, needRecalculate);
+                        }
+                        break;
                      default:
                         if (rowData) {
                            val = field.format(rowData);
@@ -502,3 +513,4 @@ module.exports = class ABViewDetail extends ABViewDetailCore {
       return newView;
    }
 };
+
