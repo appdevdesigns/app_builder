@@ -426,14 +426,41 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                                           switch (r.type) {
                                              case "date":
                                              case "datetime":
-                                                if (
-                                                   r.condition.filter &&
-                                                   isString(r.condition.filter)
-                                                ) {
-                                                   // Convert string to Date object
-                                                   r.condition.filter = new Date(
+                                                // Convert string to Date object
+                                                if (r.condition.filter) {
+                                                   if (
+                                                      isString(
+                                                         r.condition.filter
+                                                      )
+                                                   ) {
+                                                      r.condition.filter = new Date(
+                                                         r.condition.filter
+                                                      );
+                                                   }
+
+                                                   if (
                                                       r.condition.filter
-                                                   );
+                                                         .start &&
+                                                      isString(
+                                                         r.condition.filter
+                                                            .start
+                                                      )
+                                                   ) {
+                                                      r.condition.filter.start = new Date(
+                                                         r.condition.filter.start
+                                                      );
+                                                   }
+
+                                                   if (
+                                                      r.condition.filter.end &&
+                                                      isString(
+                                                         r.condition.filter.end
+                                                      )
+                                                   ) {
+                                                      r.condition.filter.end = new Date(
+                                                         r.condition.filter.end
+                                                      );
+                                                   }
                                                 }
                                                 break;
                                           }
