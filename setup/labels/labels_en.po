@@ -2866,3 +2866,15 @@ msgstr "Select a comment field"
 #. key: ab.components.kanban
 msgid "Kanban widget"
 msgstr "Kanban"
+
+#. path: app_builder
+#. code: en
+#. key: ab.process.participant.isFieldEnable
+msgid "Participant by Field"
+msgstr "by Field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.process.participant.selectFields
+msgid "Participant select Fields"
+msgstr "Click or type to add user fields ..."

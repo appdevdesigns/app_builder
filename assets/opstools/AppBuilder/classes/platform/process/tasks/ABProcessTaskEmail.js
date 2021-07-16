@@ -76,11 +76,23 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
 
       var toUserUI = ABProcessParticipant.selectUsersUi(
          id + "_to_",
-         this.toUsers || {}
+         this.toUsers || {},
+         {
+            isFieldVisible: true,
+            fields: this.objectOfStartElement
+               ? this.objectOfStartElement.fields()
+               : []
+         }
       );
       var fromUserUI = ABProcessParticipant.selectUsersUi(
          id + "_from_",
-         this.fromUsers || {}
+         this.fromUsers || {},
+         {
+            isFieldVisible: true,
+            fields: this.objectOfStartElement
+               ? this.objectOfStartElement.fields()
+               : []
+         }
       );
 
       var ui = {

@@ -2830,3 +2830,15 @@ msgstr "เลือกฟิลด์ข้อความ"
 #. key: ab.components.kanban
 msgid "Kanban widget"
 msgstr "คัมบัง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.process.participant.isFieldEnable
+msgid "Participant by Field"
+msgstr "เลือกฟิลด์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.process.participant.selectFields
+msgid "Participant select Fields"
+msgstr "กรุณาเลือกฟิลด์ User..."

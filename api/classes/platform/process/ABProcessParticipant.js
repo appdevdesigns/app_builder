@@ -41,15 +41,16 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
       ids.push(this.id);
    }
 
-   users() {
+   users(object, data) {
       return new Promise((resolve, reject) => {
          var allLookups = [];
          allLookups.push(this.usersForRoles());
          allLookups.push(this.usersForAccounts());
+         allLookups.push(this.usersForFields(object, data));
 
          Promise.all(allLookups)
             .then((results) => {
-               var users = results[0].concat(results[1]);
+               var users = results[0].concat(results[1]).concat(results[2]);
                users = _.uniqBy(users, "uuid");
                resolve(users);
             })
@@ -134,6 +135,57 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                   })
                   .catch(reject);
             });
+      });
+   }
+
+   /**
+    * @function usersForFields
+    * Get the user id list from the field options
+    *
+    * @param {ABObject} object
+    * @param {Object} data - the process data
+    * @returns {Promise} - the user list
+    */
+   usersForFields(object, data) {
+      if (
+         !this.useField ||
+         !this.fields ||
+         !this.fields.length ||
+         object == null ||
+         data == null
+      )
+         return Promise.resolve([]);
+
+      // pull ABFieldUser list
+      let userFields = object.fields(
+         (f) => (this.fields || []).indexOf(f.id) > -1
+      );
+
+      // Collect all usernames
+      let usernames = [];
+      (userFields || []).forEach((f) => {
+         let userData = data[f.columnName];
+         if (!userData) return;
+
+         if (!Array.isArray(userData)) userData = [userData];
+
+         // Add an username to the list
+         usernames = usernames.concat(
+            userData.map((uData) => uData.id || uData.text || uData)
+         );
+      });
+
+      // Remove empty items
+      usernames = usernames.filter((uName) => uName);
+
+      return new Promise((resolve, reject) => {
+         // Pull uuid of users by username
+         SiteUser.find({ username: usernames })
+            .then((listUsers) => {
+               // return user list
+               resolve(listUsers);
+            })
+            .catch(reject);
       });
    }
 };
