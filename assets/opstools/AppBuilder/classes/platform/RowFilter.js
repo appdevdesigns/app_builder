@@ -330,6 +330,14 @@ module.exports = class RowFilter extends RowFilterCore {
                               id: "not_same_as_user"
                            },
                            {
+                              value: labels.component.isEmpty,
+                              id: "is_empty"
+                           },
+                           {
+                              value: labels.component.isNotEmpty,
+                              id: "is_not_empty"
+                           },
+                           {
                               value: labels.component.inDataCollection,
                               id: "in_data_collection"
                            },
@@ -1416,7 +1424,7 @@ module.exports = class RowFilter extends RowFilterCore {
             $viewConditionValue &&
             $viewConditionValue.getChildViews()
          ) {
-            var vals = f.value.split(":");
+            var vals = (f.value || "").split(":");
             var index = 0;
             $viewConditionValue.getChildViews().forEach((element) => {
                $$(element).blockEvent();

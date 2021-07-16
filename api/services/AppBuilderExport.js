@@ -187,6 +187,8 @@ module.exports = {
                (allObjects || []).forEach((object) => {
                   object.stashConnectFields(); // effectively ignores connectFields
                   object.stashIndexFieldsWithConnection();
+                  // NOTE: keep .stashIndexNormal() after .stashIndexFieldsWithConnection()
+                  object.stashIndexNormal();
                   allMigrates.push(
                      ABMigration.createObject(object).catch((err) => {
                         console.log(`>>>>>>>>>>>>>>>>>>>>>>
@@ -199,6 +201,34 @@ ${err.toString()}
                });
 
                return Promise.all(allMigrates);
+            })
+            .then(() => {
+               // Create our normal Indexes:
+               console.log("::: IMPORT : creating Normal Indexes");
+
+               var allIndexes = [];
+               var allUpdates = [];
+
+               (allObjects || []).forEach((object) => {
+                  var stashed = object.getStashedIndexNormals();
+                  if (stashed && stashed.length > 0) {
+                     allIndexes = allIndexes.concat(stashed);
+                     object.applyIndexNormal();
+                  }
+               });
+
+               (allIndexes || []).forEach((indx) => {
+                  if (indx) {
+                     allUpdates.push(ABMigration.createIndex(indx));
+                  }
+               });
+
+               return Promise.all(allUpdates).then(() => {
+                  // Now make sure knex has the latest object data
+                  (allObjects || []).forEach((object) => {
+                     ABMigration.refreshObject(object);
+                  });
+               });
             })
             .then(() => {
                // Now that all the tables are created, we can go back

@@ -44,14 +44,19 @@ module.exports = class ABTotalFooter {
 
                   // array
                   if (data) {
-                     result += parseFloat(data); // we need to use parseFloat because numbers could be decimals
+                     // remove string format
+                     let num = data.toString().replace(/[^\d.-]/g, "");
+                     result += parseFloat(num); // we need to use parseFloat because numbers could be decimals
                   }
                });
 
-               node.innerHTML = result;
+               let resultData = {};
+               resultData[info.field.columnName] = result;
+               node.innerHTML = info.field.format(resultData);
             }
          },
          webix.ui.datafilter.summColumn
       );
    }
 };
+

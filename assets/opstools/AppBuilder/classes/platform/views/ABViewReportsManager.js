@@ -1,3 +1,4 @@
+const { isString } = require("lodash");
 const ABViewReportsManagerCore = require("../../core/views/ABViewReportsManagerCore");
 
 function L(key, altText) {
@@ -409,11 +410,41 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                                        );
                                     });
 
+                                    let queryVal = JSON.parse(
+                                       config.query || "{}"
+                                    );
+
+                                    if (
+                                       queryVal &&
+                                       queryVal.rules &&
+                                       queryVal.rules.length
+                                    ) {
+                                       queryVal.rules.forEach((r) => {
+                                          if (!r || !r.type || !r.condition)
+                                             return;
+
+                                          switch (r.type) {
+                                             case "date":
+                                             case "datetime":
+                                                if (
+                                                   r.condition.filter &&
+                                                   isString(r.condition.filter)
+                                                ) {
+                                                   // Convert string to Date object
+                                                   r.condition.filter = new Date(
+                                                      r.condition.filter
+                                                   );
+                                                }
+                                                break;
+                                          }
+                                       });
+                                    }
+
                                     // create a new query widget to get the filter function
                                     let filterElem = webix.ui({
                                        view: "query",
                                        fields: reportFields,
-                                       value: JSON.parse(config.query || "{}")
+                                       value: queryVal
                                     });
 
                                     // create a new data collection and apply the query filter
@@ -715,4 +746,3 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
       };
    }
 };
-
