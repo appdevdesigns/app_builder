@@ -1728,21 +1728,47 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                matchFields.forEach((f) => {
                   if (!f.field || !f.field || !f.field.key) return;
 
+                  let fValue = data[f.columnIndex];
                   switch (f.field.key) {
                      // case "connectObject":
                      //    // skip
                      //    break;
                      case "number":
-                        if (typeof data[f.columnIndex] != "number") {
+                        if (typeof fValue != "number") {
                            newRowData[f.field.columnName] = (
-                              data[f.columnIndex] || ""
+                              fValue || ""
                            ).replace(/[^-0-9.]/gi, "");
                         } else {
-                           newRowData[f.field.columnName] = data[f.columnIndex];
+                           newRowData[f.field.columnName] = fValue;
                         }
                         break;
+                     case "list":
+                        f.field.settings = f.field.settings || {};
+                        f.field.settings.options =
+                           f.field.settings.options || [];
+
+                        // Pull value of the select item from .settings.options
+                        fValue = (fValue || "").toLowerCase().trim();
+                        fValue = f.field.settings.options.filter((opt) => {
+                           return (
+                              (opt.id || "").toLowerCase().trim() == fValue ||
+                              (opt.text || "").toLowerCase().trim() == fValue ||
+                              (opt.translations || []).filter(
+                                 (tran) =>
+                                    (tran.text || "").toLowerCase().trim() ==
+                                    fValue
+                              ).length
+                           );
+                        })[0];
+
+                        if (fValue) {
+                           fValue = fValue.id || fValue;
+                        }
+
+                        newRowData[f.field.columnName] = fValue;
+                        break;
                      default:
-                        newRowData[f.field.columnName] = data[f.columnIndex];
+                        newRowData[f.field.columnName] = fValue;
                         break;
                   }
                });
