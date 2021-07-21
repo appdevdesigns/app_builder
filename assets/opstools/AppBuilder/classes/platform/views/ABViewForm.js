@@ -1299,8 +1299,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
             if ($forminput) {
                // Y position
                let height = $forminput.$height;
-               if (height <= 38) {
-                  $forminput.define("height", height + 18);
+               if (height < 56) {
+                  $forminput.define("height", 60);
                   $forminput.resize();
                }
 
