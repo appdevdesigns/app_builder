@@ -1293,6 +1293,30 @@ module.exports = class ABViewForm extends ABViewFormCore {
          if (f && !formVals[f.columnName] && formVals[f.columnName] != "0") {
             formView.markInvalid(f.columnName, "*This is a required field.");
             isValid = false;
+
+            // Fix position of invalid message
+            let $forminput = formView.elements[f.columnName];
+            if ($forminput) {
+               // Y position
+               let height = $forminput.$height;
+               if (height <= 38) {
+                  $forminput.define("height", height + 18);
+                  $forminput.resize();
+               }
+
+               // X position
+               let domInvalidMessage = $forminput.$view.getElementsByClassName(
+                  "webix_inp_bottom_label"
+               )[0];
+               if (
+                  domInvalidMessage &&
+                  !domInvalidMessage.style["margin-left"]
+               ) {
+                  domInvalidMessage.style.marginLeft = `${this.settings
+                     .labelWidth ||
+                     ABViewFormPropertyComponentDefaults.labelWidth}px`;
+               }
+            }
          }
       });
 
