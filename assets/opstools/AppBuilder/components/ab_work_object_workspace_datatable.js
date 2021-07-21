@@ -1357,6 +1357,15 @@ module.exports = class ABWorkObjectDatatable extends ABComponent {
                            return count;
                         }
                      ];
+                     // Add .relationName value to display title after commom.treetable
+                     baseGroupMap[f.relationName()] = [
+                        f.relationName(),
+                        function(prop, listData) {
+                           return listData && listData.length
+                              ? listData[0][f.relationName()]
+                              : null;
+                        }
+                     ];
                      break;
                   default:
                      baseGroupMap[f.columnName] = [
