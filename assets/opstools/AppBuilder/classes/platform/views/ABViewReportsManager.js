@@ -276,6 +276,43 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                         );
                      });
 
+                     // NOTE: fix format of date column type
+                     let $report = $$(ids.component);
+                     if ($report) {
+                        let $datatable = $report.queryView({
+                           view: "datatable"
+                        });
+                        if ($datatable) {
+                           if (this.__datatableOnViewShow)
+                              $datatable.detachEvent(
+                                 this.__datatableOnViewShow
+                              );
+                           this.__datatableOnViewShow = $datatable.attachEvent(
+                              "onBeforeRender",
+                              () => {
+                                 ($datatable.config.columns || [])
+                                    .filter((c) => c.type == "date")
+                                    .forEach((c) => {
+                                       c.format = (val) => {
+                                          // check valid date
+                                          if (
+                                             val &&
+                                             val.getTime &&
+                                             !isNaN(val.getTime())
+                                          ) {
+                                             return webix.i18n.dateFormatStr(
+                                                val
+                                             );
+                                          } else {
+                                             return "";
+                                          }
+                                       };
+                                    });
+                              }
+                           );
+                        }
+                     }
+
                      return (
                         Promise.resolve()
                            .then(() => Promise.all(pullDataTasks))
@@ -738,19 +775,22 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                                     break;
                                  case "number":
                                     reportRow[col] = parseFloat(
-                                       reportRow[col] || 0
+                                       (reportRow[col] || 0)
+                                          .toString()
+                                          .replace(/[^\d.-]/g, "")
                                     );
                                     break;
                                  case "date":
                                  case "datetime":
                                     reportRow[col] = row[columnName];
-                                    if (
-                                       reportRow[col] &&
-                                       !(reportRow[col] instanceof Date)
-                                    ) {
-                                       reportRow[col] = new Date(
-                                          row[columnName]
-                                       );
+                                    if (reportRow[col]) {
+                                       if (!(reportRow[col] instanceof Date)) {
+                                          reportRow[col] = new Date(
+                                             moment(row[columnName])
+                                          );
+                                       }
+                                    } else {
+                                       reportRow[col] = "";
                                     }
                                     break;
                               }
@@ -773,3 +813,4 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
       };
    }
 };
+
