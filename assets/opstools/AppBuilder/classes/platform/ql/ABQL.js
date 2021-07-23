@@ -638,7 +638,7 @@ class ABQL extends ABQLCore {
             paramUI = {
                id: this.ids.taskparam,
                view: "text",
-               value: this.taskParam,
+               value: this.params[pDef.name],
                placeholder: "enter parameter name",
                on: {
                   onChange: (newValue, oldValue) => {
