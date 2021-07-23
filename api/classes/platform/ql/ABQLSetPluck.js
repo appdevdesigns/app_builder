@@ -134,6 +134,32 @@ class ABQLSetPluck extends ABQLSetPluckCore {
                      .modelAPI()
                      .findAll({ where: cond, populate: true })
                      .then((rows) => {
+                        
+                        // Special Formatting for Form.io fields.
+                        // Allow displaying connected data that has been .format()ed
+                        // find any connectedObjects
+                        var linkedConnections = linkObj.connectFields();
+                        (linkedConnections || []).forEach((f) => {
+                           // for each row
+                           (rows || []).forEach((r) => {
+                              // insert a formatted entry
+                              r[`${f.columnName}.format`] = f.format(r);
+                           });
+                        });
+                        // Calculate and TextFormula fields do not have stored
+                        // values so we need to run .format() for each instance
+                        var fieldsToFormat = ["calculate","TextFormula"];
+                        var formatFields = linkObj.fields((f) => {
+                           return fieldsToFormat.indexOf(f.key) != -1;
+                        });
+                        (formatFields || []).forEach((f) => {
+                           // for each row
+                           (rows || []).forEach((r) => {
+                              // insert a formatted entry
+                              r[f.columnName] = f.format(r);
+                           });
+                        });
+
                         nextContext._condition = cond;
                         nextContext.object = linkObj;
                         nextContext.data = rows;

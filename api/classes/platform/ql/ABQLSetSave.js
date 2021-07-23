@@ -37,7 +37,7 @@ class ABQLSetSave extends ABQLSetSaveCore {
          var nextContext = {
             label: "ABQLSetSave",
             object: context.object,
-            data: null,
+            data: context.data,
             prev: context
          };
 

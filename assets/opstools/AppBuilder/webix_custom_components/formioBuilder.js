@@ -90,11 +90,11 @@ module.exports = class ABCustomFormIOBuilder {
           * @param appName
           * @param prefix
           */
-         fieldSchema: (field, appName, prefix) => {
-            if (!field || !field.key) return;
+         fieldSchema: (field, appName, source = "data", key) => {
+            if (!field && !field.key) return;
             let fieldKey = field.key;
-            if (prefix) {
-               fieldKey = prefix + "[" + field.id + "]";
+            if (key) {
+               fieldKey = key;
             }
             switch (field.key) {
                case "boolean":
@@ -117,12 +117,7 @@ module.exports = class ABCustomFormIOBuilder {
                      _key: fieldKey,
                      input: true,
                      inputType: "text",
-                     disabled: true,
-                     calculateValue:
-                        "value = " +
-                        field.settings.formula
-                           .replace(/{/g, "data['")
-                           .replace(/}/g, "']")
+                     disabled: true
                   };
                   break;
                case "connectObject":
@@ -135,8 +130,7 @@ module.exports = class ABCustomFormIOBuilder {
                      input: true,
                      inputType: "text",
                      disabled: true,
-                     calculateValue: `value = data['${field.key}.format']`
-                     // ,calculateValue: `value = '${entry.field.settings.textFormula}'`
+                     calculateValue: `value = ${source}['${fieldKey}.format']`
                   };
                   break;
 
@@ -149,10 +143,18 @@ module.exports = class ABCustomFormIOBuilder {
                      key: fieldKey,
                      _key: fieldKey,
                      input: true,
-                     format:
-                        field.settings.timeFormat == 1
-                           ? "MMMM d, yyyy"
-                           : "MMMM d, yyyy h:mm a"
+                     enableTime: false
+                  };
+                  break;
+               case "datetime":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "datetime",
+                     disabled: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
                   };
                   break;
                case "email":
@@ -175,8 +177,10 @@ module.exports = class ABCustomFormIOBuilder {
                      className: "btn btn-primary btn-block",
                      content:
                         "<i class='fa fa-paperclip'></i>  " +
-                        "{{JSON.parse(data['" +
-                        field.key +
+                        "{{JSON.parse(" +
+                        source +
+                        "['" +
+                        fieldKey +
                         "']).filename}}",
                      attrs: [
                         {
@@ -185,8 +189,10 @@ module.exports = class ABCustomFormIOBuilder {
                               "/opsportal/file/" +
                               appName +
                               "/" +
-                              "{{JSON.parse(data['" +
-                              field.key +
+                              "{{JSON.parse(" +
+                              source +
+                              "['" +
+                              fieldKey +
                               "']).uuid}}"
                         },
                         {
@@ -216,8 +222,10 @@ module.exports = class ABCustomFormIOBuilder {
                               "/opsportal/image/" +
                               appName +
                               "/" +
-                              "{{data['" +
-                              field.key +
+                              "{{" +
+                              source +
+                              "['" +
+                              fieldKey +
                               "']}}"
                         }
                      ],
@@ -280,9 +288,7 @@ module.exports = class ABCustomFormIOBuilder {
                      _key: fieldKey,
                      input: true,
                      inputType: "text",
-                     disabled: true,
-                     calculateValue:
-                        "value = '" + field.settings.textFormula + "'"
+                     disabled: true
                   };
                   break;
                default:
@@ -317,17 +323,19 @@ module.exports = class ABCustomFormIOBuilder {
                // if so this is an array of objects that we want to display
                // in an accrodian.
                if (!entry.field && entry.set == true) {
-                  debugger;
                   let objectFields = entry.object.fields();
                   let fieldSchemas = [];
+                  let fieldLabels = [];
                   objectFields.forEach((cof) => {
                      fieldSchemas.push(
                         _logic.fieldSchema(
                            cof,
                            entry.object.application.name,
-                           entry.key
+                           "row",
+                           cof.columnName
                         )
                      );
+                     fieldLabels.push("{{ row['" + cof.label + "'] }}");
                   });
 
                   components[entry.key + "_accordion"] = {
@@ -338,27 +346,32 @@ module.exports = class ABCustomFormIOBuilder {
                         label: entry.label,
                         customClass: "customList",
                         disableAddingRemovingRows: true,
-                        // templates: {
-                        //    header: " ",
-                        //    row: "<div class='editRow'></div>"
-                        // },
-                        key: "editGrid",
+                        templates: {
+                           header: "<h4>" + entry.label + "</h4>",
+                           row:
+                              "<div class='editRow'>" +
+                              fieldLabels.join(" - ") +
+                              "</div>"
+                        },
+                        key: entry.key,
                         type: "editgrid",
+                        hideLabel: true,
+                        disabled: true,
                         input: false,
                         components: fieldSchemas,
-                        path: "editGrid"
+                        path: entry.key
                      }
                   };
                } else if (entry.field && entry.set == true) {
                   // Check if this is a set of data and if we do have a field
                   // if so this is an array of values and we need to display
                   // them in an accordian.
-                  debugger;
                   let fieldSchemas = [];
                   fieldSchemas.push(
                      _logic.fieldSchema(
                         entry.field,
                         entry.object.application.name,
+                        "row",
                         entry.key
                      )
                   );
@@ -371,15 +384,17 @@ module.exports = class ABCustomFormIOBuilder {
                         label: entry.label,
                         customClass: "customList",
                         disableAddingRemovingRows: true,
-                        // templates: {
-                        //    header: " ",
-                        //    row: "<div class='editRow'></div>"
-                        // },
-                        key: "editGrid",
+                        templates: {
+                           header: "<h4>" + entry.label + "</h4>",
+                           row: "<div class='editRow'></div>"
+                        },
+                        key: entry.key,
                         type: "editgrid",
+                        hideLabel: true,
+                        disabled: true,
                         input: false,
                         components: fieldSchemas,
-                        path: "editGrid"
+                        path: entry.key
                      }
                   };
                } else {
@@ -421,6 +436,17 @@ module.exports = class ABCustomFormIOBuilder {
                         break;
 
                      case "date":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "datetime":
                         components[entry.key] = {
                            title: entry.label,
                            key: entry.key,
