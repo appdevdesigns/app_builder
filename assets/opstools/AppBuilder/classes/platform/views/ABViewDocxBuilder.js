@@ -1,11 +1,29 @@
-const { isString } = require("lodash");
-const ABViewReportsManagerCore = require("../../core/views/ABViewReportsManagerCore");
+const ABViewDocxBuilderCore = require("../../core/views/ABViewDocxBuilderCore");
+
+const ABFieldConnect = require("../dataFields/ABFieldConnect");
+const ABFieldImage = require("../dataFields/ABFieldImage");
+const ABObjectQuery = require("../ABObjectQuery");
+
+const ABViewDocxBuilderPropertyComponentDefaults = ABViewDocxBuilderCore.defaultValues();
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
 }
 
-module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
+function letUserDownload(blob, filename) {
+   let url = window.URL.createObjectURL(blob);
+
+   let a = document.createElement("a");
+   a.href = url;
+   a.download = filename;
+   document.body.appendChild(a); // we need to append the element to the dom -> otherwise it will not work in firefox
+   a.click();
+   a.remove(); //afterwards we remove the element again
+
+   window.URL.revokeObjectURL(url);
+}
+
+module.exports = class ABViewDocxBuilder extends ABViewDocxBuilderCore {
    constructor(values, application, parent, defaultValues) {
       super(values, application, parent, defaultValues);
    }
@@ -23,24 +41,16 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
     * @return {Component}
     */
    editorComponent(App, mode) {
-      let idBase = "ABViewReportsManagerEditorComponent";
-      let ids = {
-         component: App.unique(idBase + "_component")
-      };
+      var idBase = "ABViewDocxBuilderEditorComponent";
 
-      let component = this.component(App);
+      var DocxBuilderComponent = this.component(App, idBase);
 
-      component.ui.id = ids.component;
-
-      component.init = (options) => {};
-
-      return component;
+      return DocxBuilderComponent;
    }
 
    //
    // Property Editor
    //
-
    static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
       var commonUI = super.propertyEditorDefaultElements(
          App,
@@ -49,21 +59,335 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
          ObjectDefaults
       );
 
-      return commonUI.concat([]);
+      _logic.validateType = (item) => {
+         // verify file type
+         var acceptableTypes = ["docx"];
+         var type = item.type.toLowerCase();
+         if (acceptableTypes.indexOf(type) == -1) {
+            //// TODO: multilingual
+            webix.message(
+               "Only [" + acceptableTypes.join(", ") + "] files are supported"
+            );
+            return false;
+         } else {
+            // set upload url to uploader
+            let currView = _logic.currentEditObject();
+            let uploadUrl = currView.uploadUrl();
+
+            $$(ids.docxFile).define("upload", uploadUrl);
+            $$(ids.docxFile).refresh();
+
+            return true;
+         }
+      };
+
+      _logic.uploadedFile = (fileInfo) => {
+         if (!fileInfo || !fileInfo.data) return;
+
+         let currView = _logic.currentEditObject();
+         currView.settings.filename = fileInfo.data.uuid;
+         currView.filelabel = fileInfo.name;
+
+         $$(ids.filelabel).setValue(currView.filelabel);
+         $$(ids.docxDownload).show();
+      };
+
+      _logic.downloadFile = () => {
+         let currView = _logic.currentEditObject();
+         let url = currView.downloadUrl();
+
+         fetch(url)
+            .then((response) => response.blob())
+            .then((blob) => {
+               letUserDownload(blob, currView.filelabel);
+            });
+      };
+
+      // Populate language options
+      OP.Comm.Service.get({
+         url: "/appdev-core/sitemultilinguallanguage"
+      }).then((languages) => {
+         let langOptions = (languages || []).map((lang) => {
+            return {
+               id: lang.language_code,
+               value: lang.language_label
+            };
+         });
+
+         $$(ids.language).define("options", langOptions);
+         $$(ids.language).refresh();
+      });
+
+      // in addition to the common .label  values, we
+      // ask for:
+      return commonUI.concat([
+         {
+            view: "fieldset",
+            label: L("ab.component.label.dataSource", "*Data:"),
+            labelWidth: App.config.labelWidthLarge,
+            body: {
+               type: "clean",
+               padding: 10,
+               rows: [
+                  {
+                     name: "datacollection",
+                     // view: 'richselect',
+                     view: "multicombo",
+                     label: L(
+                        "ab.components.docxBuilder.dataSource",
+                        "*Data Source"
+                     ),
+                     labelWidth: App.config.labelWidthLarge
+                  }
+               ]
+            }
+         },
+
+         {
+            view: "fieldset",
+            label: L(
+               "ab.component.docxBuilder.templateFile",
+               "*Template file:"
+            ),
+            labelWidth: App.config.labelWidthLarge,
+            body: {
+               type: "clean",
+               padding: 10,
+               rows: [
+                  {
+                     cols: [
+                        {
+                           view: "label",
+                           label: L(
+                              "ab.component.docxBuilder.title",
+                              "*DOCX file:"
+                           ),
+                           css: "ab-text-bold",
+                           width: App.config.labelWidthXLarge
+                        },
+                        {
+                           view: "uploader",
+                           value: "*Upload",
+                           name: "docxFile",
+                           apiOnly: true,
+                           inputName: "file",
+                           multiple: false,
+                           on: {
+                              onBeforeFileAdd: (item) => {
+                                 return _logic.validateType(item);
+                              },
+
+                              onFileUpload: (file, response) => {
+                                 _logic.uploadedFile(file);
+                              },
+
+                              onFileUploadError: (file, response) => {}
+                           }
+                        }
+                     ]
+                  },
+                  {
+                     name: "filelabel",
+                     view: "text",
+                     label: L(
+                        "ab.components.docxBuilder.filename",
+                        "*Filename"
+                     ),
+                     labelWidth: App.config.labelWidthLarge
+                  },
+                  {
+                     name: "docxDownload",
+                     view: "button",
+                     type: "icon",
+                     css: "webix_primary",
+                     icon: "fa fa-file-word-o",
+                     label: "Download Template File",
+                     click: () => {
+                        _logic.downloadFile();
+                     }
+                  }
+               ]
+            }
+         },
+
+         {
+            view: "fieldset",
+            label: L("ab.component.docxBuilder.language", "*Language:"),
+            labelWidth: App.config.labelWidthLarge,
+            body: {
+               type: "clean",
+               padding: 10,
+               rows: [
+                  {
+                     name: "language",
+                     view: "richselect",
+                     label: L(
+                        "ab.components.docxBuilder.language",
+                        "*Language"
+                     ),
+                     labelWidth: App.config.labelWidthLarge
+                  }
+               ]
+            }
+         },
+
+         {
+            view: "fieldset",
+            label: L(
+               "ab.component.label.customizeDisplay",
+               "*Customize Display:"
+            ),
+            labelWidth: App.config.labelWidthLarge,
+            body: {
+               type: "clean",
+               padding: 10,
+               rows: [
+                  {
+                     name: "buttonlabel",
+                     view: "text",
+                     label: L("ab.components.docxBuilder.text", "*Label"),
+                     labelWidth: App.config.labelWidthXLarge
+                  },
+
+                  {
+                     view: "counter",
+                     name: "width",
+                     label: L("ab.components.docxBuilder.width", "*Width:"),
+                     labelWidth: App.config.labelWidthXLarge
+                  },
+                  {
+                     view: "richselect",
+                     name: "toolbarBackground",
+                     label: L(
+                        "ab.component.page.toolbarBackground",
+                        "*Page background:"
+                     ),
+                     labelWidth: App.config.labelWidthXLarge,
+                     options: [
+                        {
+                           id: "ab-background-default",
+                           value: L(
+                              "ab.component.page.toolbarBackgroundDefault",
+                              "*White (default)"
+                           )
+                        },
+                        {
+                           id: "webix_dark",
+                           value: L(
+                              "ab.component.page.toolbarBackgroundDark",
+                              "*Dark"
+                           )
+                        },
+                        {
+                           id: "ab-background-lightgray",
+                           value: L(
+                              "ab.component.page.toolbarBackgroundDark",
+                              "*Gray"
+                           )
+                        }
+                     ]
+                  },
+
+                  {
+                     view: "richselect",
+                     name: "buttonPosition",
+                     label: L(
+                        "ab.component.page.buttonPosition",
+                        "*Button Position:"
+                     ),
+                     labelWidth: App.config.labelWidthXLarge,
+                     options: [
+                        {
+                           id: "left",
+                           value: L(
+                              "ab.component.page.buttonPositionLeft",
+                              "*Left (default)"
+                           )
+                        },
+                        {
+                           id: "center",
+                           value: L(
+                              "ab.component.page.buttonPositionCenter",
+                              "*Centered"
+                           )
+                        },
+                        {
+                           id: "right",
+                           value: L(
+                              "ab.component.page.buttonPositionRight",
+                              "*Right"
+                           )
+                        }
+                     ]
+                  }
+               ]
+            }
+         }
+      ]);
    }
 
    static propertyEditorPopulate(App, ids, view) {
       super.propertyEditorPopulate(App, ids, view);
+
+      let $DcSelector = $$(ids.datacollection);
+
+      let selectedDvId = view.settings.dataviewID
+         ? view.settings.dataviewID
+         : null;
+
+      $$(ids.toolbarBackground).setValue(
+         view.settings.toolbarBackground ||
+            ABViewDocxBuilderPropertyComponentDefaults.toolbarBackground
+      );
+      $$(ids.buttonPosition).setValue(
+         view.settings.buttonPosition ||
+            ABViewDocxBuilderPropertyComponentDefaults.buttonPosition
+      );
+
+      // Pull data views to options
+      let dcOptions = view.application.datacollections().map((dc) => {
+         return {
+            id: dc.id,
+            value: dc.label
+         };
+      });
+
+      $DcSelector.define("options", dcOptions);
+      $DcSelector.define("value", selectedDvId);
+      $DcSelector.refresh();
+
+      $$(ids.language).setValue(
+         view.settings.language ||
+            ABViewDocxBuilderPropertyComponentDefaults.language
+      );
+
+      $$(ids.filelabel).setValue(view.filelabel || view.settings.filelabel);
+      $$(ids.buttonlabel).setValue(
+         view.buttonlabel || view.settings.buttonlabel
+      );
+      $$(ids.width).setValue(view.settings.width);
+
+      if (view.settings.filename) {
+         $$(ids.docxDownload).show();
+      } else {
+         $$(ids.docxDownload).hide();
+      }
    }
 
    static propertyEditorValues(ids, view) {
       super.propertyEditorValues(ids, view);
 
+      view.buttonlabel = $$(ids.buttonlabel).getValue();
       view.settings.dataviewID = $$(ids.datacollection).getValue();
+      view.settings.width = $$(ids.width).getValue();
+      view.filelabel = $$(ids.filelabel).getValue();
+      view.settings.language = $$(ids.language).getValue();
+      view.settings.toolbarBackground = $$(ids.toolbarBackground).getValue();
+      view.settings.buttonPosition = $$(ids.buttonPosition).getValue();
    }
 
-   /*
-    * @component()
+   /**
+    * @function component()
     * return a UI component based upon this view.
     * @param {obj} App
     * @return {obj} UI component
@@ -71,700 +395,711 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
    component(App) {
       let baseCom = super.component(App);
 
-      let idBase = "ABViewReportManager_" + this.id;
-      let ids = {
-         component: App.unique(idBase + "_component")
+      var idBase = "ABViewDocxBuilder_" + this.id;
+      var ids = {
+         button: App.unique(idBase + "_button"),
+         noFile: App.unique(idBase + "_noFile")
       };
 
-      let compInstance = this;
+      var autowidth = false;
+      var buttonWidth =
+         this.settings.width ||
+         ABViewDocxBuilderPropertyComponentDefaults.width;
+      if (buttonWidth == 0) {
+         autowidth = true;
+      }
 
-      let _ui = {
-         id: ids.component,
-         view: "reports",
-         toolbar: true,
-         override: new Map([
-            [
-               reports.services.Backend,
-               class MyBackend extends reports.services.Backend {
-                  getModules() {
-                     return webix.promise.resolve(
-                        compInstance.settings.moduleList || []
-                     );
-                  }
-                  saveModule(id, data) {
-                     id = id || webix.uid();
-                     compInstance.settings.moduleList =
-                        compInstance.settings.moduleList || [];
+      var leftSpacer = {
+         type: "spacer",
+         width: 1
+      };
+      var rightSpacer = {
+         type: "spacer",
+         width: 1
+      };
+      var buttonPos =
+         this.settings.buttonPosition ||
+         ABViewDocxBuilderPropertyComponentDefaults.buttonPosition;
+      if (buttonPos == "left") {
+         rightSpacer = {
+            type: "spacer"
+         };
+      } else if (buttonPos == "center") {
+         leftSpacer = {
+            type: "spacer"
+         };
+         rightSpacer = {
+            type: "spacer"
+         };
+      } else if (buttonPos == "right") {
+         leftSpacer = {
+            type: "spacer"
+         };
+      }
 
-                     let indexOfModule = null;
-                     let module = compInstance.settings.moduleList.filter(
-                        (m, index) => {
-                           let isExists = m.id == id;
-                           if (isExists) indexOfModule = index;
+      var buttonLabelText = this.buttonlabel || this.settings.buttonlabel;
+      if (!buttonLabelText) {
+         buttonLabelText =
+            ABViewDocxBuilderPropertyComponentDefaults.buttonlabel;
+      }
 
-                           return isExists;
-                        }
-                     )[0];
-
-                     // Update
-                     if (module) {
-                        compInstance.settings.moduleList[indexOfModule] = data;
-                     }
-                     // Add
-                     else {
-                        compInstance.settings.moduleList.push(data);
-                     }
-
-                     return new Promise((resolve, reject) => {
-                        compInstance
-                           .save()
-                           .catch(reject)
-                           .then(() => {
-                              resolve({ id: id });
-                           });
-                     });
-                  }
-                  deleteModule(id) {
-                     compInstance.settings.moduleList =
-                        compInstance.settings.moduleList || [];
-
-                     compInstance.settings.moduleList = compInstance.settings.moduleList.filter(
-                        (m) => m.id != id
-                     );
-
-                     return new Promise((resolve, reject) => {
-                        compInstance
-                           .save()
-                           .catch(reject)
-                           .then(() => {
-                              resolve({ id: id });
-                           });
-                     });
-                  }
-
-                  getModels() {
-                     let reportModels = {};
-
-                     (compInstance.application.datacollections() || []).forEach(
-                        (dc) => {
-                           let obj = dc.datasource;
-                           if (!obj) return;
-
-                           let reportFields = _logic.getReportFields(dc);
-
-                           // get connected data collections
-                           // let linkedFields = [];
-                           // (obj.connectFields() || []).forEach((f, index) => {
-                           //    let connectedDcs = compInstance.application.datacollections(
-                           //       (dColl) =>
-                           //          dColl &&
-                           //          dColl.datasource &&
-                           //          dColl.datasource.id == f.settings.linkObject
-                           //    );
-                           //    (connectedDcs || []).forEach((linkedDc) => {
-                           //       linkedFields.push({
-                           //          id: index + 1,
-                           //          name: linkedDc.label,
-                           //          source: dc.id,
-                           //          target: linkedDc.id
-                           //       });
-                           //    });
-                           // });
-
-                           // // MOCK UP for testing
-                           // let linkedFields = [
-                           //    {
-                           //       id: "id",
-                           //       name: "id",
-                           //       source: "39378ee0-38f0-4b9d-a5aa-dddc61137fcd", // Player
-                           //       target: "0de82362-4ab5-4f0f-8cfa-d1288d173cba" // Team
-                           //    }
-                           // ];
-
-                           reportModels[dc.id] = {
-                              id: dc.id,
-                              name: dc.label,
-                              data: reportFields,
-                              refs: []
-                           };
-                        }
-                     );
-
-                     return webix.promise.resolve(reportModels);
-                  }
-
-                  getQueries() {
-                     return webix.promise.resolve(
-                        compInstance.settings.queryList || []
-                     );
-                  }
-                  saveQuery(id, data) {
-                     id = id || webix.uid();
-                     compInstance.settings.queryList =
-                        compInstance.settings.queryList || [];
-
-                     let indexOfQuery = null;
-                     let query = compInstance.settings.queryList.filter(
-                        (m, index) => {
-                           let isExists = m.id == id;
-                           if (isExists) indexOfQuery = index;
-
-                           return isExists;
-                        }
-                     )[0];
-
-                     // Update
-                     if (query) {
-                        compInstance.settings.queryList[indexOfQuery] = data;
-                     }
-                     // Add
-                     else {
-                        compInstance.settings.queryList.push(data);
-                     }
-
-                     return new Promise((resolve, reject) => {
-                        compInstance
-                           .save()
-                           .catch(reject)
-                           .then(() => {
-                              resolve({ id: id });
-                           });
-                     });
-                  }
-                  deleteQuery(id) {
-                     compInstance.settings.queryList =
-                        compInstance.settings.queryList || [];
-
-                     compInstance.settings.queryList = compInstance.settings.queryList.filter(
-                        (m) => m.id != id
-                     );
-
-                     return new Promise((resolve, reject) => {
-                        compInstance
-                           .save()
-                           .catch(reject)
-                           .then(() => {
-                              resolve({ id: id });
-                           });
-                     });
-                  }
-
-                  getData(config) {
-                     let result = [];
-                     let pullDataTasks = [];
-                     let dcIds = [];
-                     let dcData = {};
-
-                     // pull data of the base and join DCs
-                     dcIds.push(config.data);
-                     (config.joins || []).forEach((j) => {
-                        dcIds.push(j.sid);
-                        dcIds.push(j.tid);
-                     });
-                     dcIds = _.uniq(dcIds);
-                     dcIds.forEach((dcId) => {
-                        pullDataTasks.push(
-                           new Promise((next, bad) => {
-                              _logic
-                                 .getData(dcId)
-                                 .catch(bad)
-                                 .then((data) => {
-                                    dcData[dcId] = data || [];
-                                    next();
-                                 });
-                           })
-                        );
-                     });
-
-                     return (
-                        Promise.resolve()
-                           .then(() => Promise.all(pullDataTasks))
-                           .then(
-                              () =>
-                                 new Promise((next, bad) => {
-                                    // the data result equals data of the base DC
-                                    result = dcData[config.data] || [];
-
-                                    // no join settings
-                                    if (!config.joins || !config.joins.length) {
-                                       return next();
-                                    }
-
-                                    (config.joins || []).forEach((j) => {
-                                       let sourceDc = compInstance.application.datacollections(
-                                          (dc) => dc.id == j.sid
-                                       )[0];
-                                       if (!sourceDc) return;
-
-                                       let sourceObj = sourceDc.datasource;
-                                       if (!sourceObj) return;
-
-                                       let targetDc = compInstance.application.datacollections(
-                                          (dc) => dc.id == j.tid
-                                       )[0];
-                                       if (!targetDc) return;
-
-                                       let targetObj = targetDc.datasource;
-                                       if (!targetObj) return;
-
-                                       let sourceLinkField = sourceObj.fields(
-                                          (f) => f.id == j.sf
-                                       )[0];
-                                       let targetLinkField = targetObj.fields(
-                                          (f) => f.id == j.tf
-                                       )[0];
-                                       if (!sourceLinkField && !targetLinkField)
-                                          return;
-
-                                       let sourceData = dcData[j.sid] || [];
-                                       let targetData = dcData[j.tid] || [];
-                                       sourceData.forEach((sData) => {
-                                          targetData.forEach((tData) => {
-                                             let sVal =
-                                                sData[
-                                                   sourceLinkField
-                                                      ? `${j.sid}.${sourceLinkField.columnName}.id`
-                                                      : `${j.sid}.id`
-                                                ] || [];
-
-                                             let tVal =
-                                                tData[
-                                                   targetLinkField
-                                                      ? `${j.tid}.${targetLinkField.columnName}.id`
-                                                      : `${j.tid}.id`
-                                                ] || [];
-
-                                             if (!Array.isArray(sVal))
-                                                sVal = [sVal];
-                                             if (!Array.isArray(tVal))
-                                                tVal = [tVal];
-
-                                             // Add joined row to the result array
-                                             let matchedVal = sVal.filter(
-                                                (val) => tVal.indexOf(val) > -1
-                                             );
-                                             if (
-                                                matchedVal &&
-                                                matchedVal.length
-                                             ) {
-                                                let updateRows =
-                                                   result.filter(
-                                                      (r) =>
-                                                         r[`${j.sid}.id`] ==
-                                                            sData[
-                                                               `${j.sid}.id`
-                                                            ] &&
-                                                         r[`${j.tid}.id`] ==
-                                                            null
-                                                   ) || [];
-
-                                                if (
-                                                   updateRows &&
-                                                   updateRows.length
-                                                ) {
-                                                   (updateRows || []).forEach(
-                                                      (r) => {
-                                                         for (let key in tData) {
-                                                            if (key != "id")
-                                                               r[key] =
-                                                                  tData[key];
-                                                         }
-                                                      }
-                                                   );
-                                                } else {
-                                                   result.push(
-                                                      Object.assign(
-                                                         _.clone(sData),
-                                                         _.clone(tData)
-                                                      )
-                                                   );
-                                                }
-                                             }
-                                          });
-                                       });
-                                    });
-
-                                    next();
-                                 })
-                           )
-                           // filter & sort
-                           .then(
-                              () =>
-                                 new Promise((next, bad) => {
-                                    let reportFields = [];
-
-                                    dcIds.forEach((dcId) => {
-                                       let dataCol = compInstance.application.datacollections(
-                                          (dc) => dc.id == dcId
-                                       )[0];
-                                       if (!dataCol) return;
-
-                                       reportFields = reportFields.concat(
-                                          _logic
-                                             .getReportFields(dataCol)
-                                             .map((f) => {
-                                                // change format of id to match the report widget
-                                                f.id = `${dcId}.${f.id}`; // dc_id.field_id
-                                                return f;
-                                             })
-                                       );
-                                    });
-
-                                    let queryVal = JSON.parse(
-                                       config.query || "{}"
-                                    );
-
-                                    if (
-                                       queryVal &&
-                                       queryVal.rules &&
-                                       queryVal.rules.length
-                                    ) {
-                                       queryVal.rules.forEach((r) => {
-                                          if (!r || !r.type || !r.condition)
-                                             return;
-
-                                          switch (r.type) {
-                                             case "date":
-                                             case "datetime":
-                                                // Convert string to Date object
-                                                if (r.condition.filter) {
-                                                   if (
-                                                      isString(
-                                                         r.condition.filter
-                                                      )
-                                                   ) {
-                                                      r.condition.filter = new Date(
-                                                         r.condition.filter
-                                                      );
-                                                   }
-
-                                                   if (
-                                                      r.condition.filter
-                                                         .start &&
-                                                      isString(
-                                                         r.condition.filter
-                                                            .start
-                                                      )
-                                                   ) {
-                                                      r.condition.filter.start = new Date(
-                                                         r.condition.filter.start
-                                                      );
-                                                   }
-
-                                                   if (
-                                                      r.condition.filter.end &&
-                                                      isString(
-                                                         r.condition.filter.end
-                                                      )
-                                                   ) {
-                                                      r.condition.filter.end = new Date(
-                                                         r.condition.filter.end
-                                                      );
-                                                   }
-                                                }
-                                                break;
-                                          }
-                                       });
-                                    }
-
-                                    // create a new query widget to get the filter function
-                                    let filterElem = webix.ui({
-                                       view: "query",
-                                       fields: reportFields,
-                                       value: queryVal
-                                    });
-
-                                    // create a new data collection and apply the query filter
-                                    let tempDc = new webix.DataCollection();
-                                    tempDc.parse(result);
-
-                                    // filter
-                                    let filterFn;
-                                    try {
-                                       filterFn = filterElem.getFilterFunction();
-                                    } catch (error) {}
-                                    if (filterFn) tempDc.filter(filterFn);
-
-                                    // sorting
-                                    (config.sort || []).forEach((sort) => {
-                                       if (sort.id)
-                                          tempDc.sort({
-                                             as: "string",
-                                             dir: sort.mod || "asc",
-                                             by: `#${sort.id}#`
-                                          });
-                                    });
-
-                                    result = tempDc.serialize();
-
-                                    // clear
-                                    filterElem.destructor();
-                                    tempDc.destructor();
-
-                                    // group by
-                                    if (config.group && config.group.length) {
-                                       (config.group || []).forEach(
-                                          (groupProp) => {
-                                             result = _(result).groupBy(
-                                                groupProp
-                                             );
-                                          }
-                                       );
-
-                                       result = result
-                                          .map((groupedData, id) => {
-                                             let groupedResult = {};
-
-                                             (config.columns || []).forEach(
-                                                (col) => {
-                                                   let agg = col.split(".")[0];
-                                                   let rawCol = col.replace(
-                                                      /sum.|avg.|count.|max.|min./g,
-                                                      ""
-                                                   );
-
-                                                   switch (agg) {
-                                                      case "sum":
-                                                         groupedResult[
-                                                            col
-                                                         ] = _.sumBy(
-                                                            groupedData,
-                                                            rawCol
-                                                         );
-                                                         break;
-                                                      case "avg":
-                                                         groupedResult[
-                                                            col
-                                                         ] = _.meanBy(
-                                                            groupedData,
-                                                            rawCol
-                                                         );
-                                                         break;
-                                                      case "count":
-                                                         groupedResult[col] = (
-                                                            groupedData || []
-                                                         ).length;
-                                                         break;
-                                                      case "max":
-                                                         groupedResult[col] =
-                                                            (_.maxBy(
-                                                               groupedData,
-                                                               rawCol
-                                                            ) || {})[rawCol] ||
-                                                            "";
-                                                         break;
-                                                      case "min":
-                                                         groupedResult[col] =
-                                                            (_.minBy(
-                                                               groupedData,
-                                                               rawCol
-                                                            ) || {})[rawCol] ||
-                                                            "";
-                                                         break;
-                                                      default:
-                                                         groupedResult[col] =
-                                                            groupedData[0][col];
-                                                         break;
-                                                   }
-                                                }
-                                             );
-
-                                             return groupedResult;
-                                          })
-                                          .value();
-                                    }
-
-                                    next();
-                                 })
-                           )
-                           .then(() => webix.promise.resolve(result))
-                     );
-                  }
-                  getOptions(fields) {
-                     // TODO
-                     // [
-                     //    {"id":"1","value":"South"},
-                     //    {"id":"2","value":"North"},
-                     //    // other options
-                     //  ]
-                     return webix.promise.resolve([]);
-                  }
-                  getFieldData(fieldId) {
-                     // TODO
-                     return webix.promise.resolve([]);
-                  }
+      var _ui = {
+         view: "toolbar",
+         css:
+            this.settings.toolbarBackground ||
+            ABViewDocxBuilderPropertyComponentDefaults.toolbarBackground,
+         cols: [
+            leftSpacer,
+            {
+               id: ids.button,
+               view: "button",
+               css: "webix_primary",
+               type: "icon",
+               icon: "fa fa-file-word-o",
+               label: buttonLabelText,
+               width:
+                  this.settings.width ||
+                  ABViewDocxBuilderPropertyComponentDefaults.width,
+               autowidth: autowidth,
+               click: () => {
+                  _logic.renderFile();
                }
-            ]
-         ])
+            },
+            {
+               id: ids.noFile,
+               view: "label",
+               label: "No template file"
+            },
+            {
+               type: "spacer"
+            },
+            rightSpacer
+         ]
       };
 
       // make sure each of our child views get .init() called
-      let _init = (options) => {
-         options = options || {};
-         options.componentId = options.componentId || ids.component;
+      var _init = (options) => {
+         let DownloadButton = $$(ids.button);
+         let NoFileLabel = $$(ids.noFile);
 
-         return Promise.resolve();
+         if (this.settings.filename) {
+            DownloadButton.show();
+            NoFileLabel.hide();
+         } else {
+            DownloadButton.hide();
+            NoFileLabel.show();
+         }
       };
 
       let _logic = {
-         getReportFields: (dc) => {
-            if (!dc) return [];
+         busy: () => {
+            let DownloadButton = $$(ids.button);
+            if (!DownloadButton) return;
 
-            let object = dc.datasource;
-            if (!object) return [];
+            DownloadButton.disable();
 
-            let fields = [];
+            DownloadButton.define("icon", "fa fa-refresh fa-spin");
+            DownloadButton.refresh();
+         },
 
-            object.fields().forEach((f) => {
-               let columnFormat = f.columnHeader();
+         ready: () => {
+            let DownloadButton = $$(ids.button);
+            if (!DownloadButton) return;
 
-               fields.push({
-                  id: f.columnName,
-                  name: f.label,
-                  filter: f.fieldIsFilterable(),
-                  edit: false,
-                  type: columnFormat.editor || "text",
-                  format: columnFormat.format,
-                  options: columnFormat.options,
-                  ref: "",
-                  key: false,
-                  show: true
-               });
+            DownloadButton.enable();
 
-               if (f.key == "connectObject" && f.settings.isSource) {
-                  let linkedDcs = compInstance.application.datacollections(
-                     (dc) =>
-                        dc &&
-                        dc.datasource &&
-                        dc.datasource.id == f.settings.linkObject
-                  );
-                  (linkedDcs || []).forEach((linkDc) => {
-                     fields.push({
-                        id: f.id,
-                        name: f.label,
-                        filter: false,
-                        edit: false,
-                        type: "reference",
-                        ref: linkDc.id,
-                        key: false,
-                        show: false
-                     });
-                  });
+            DownloadButton.define("icon", "fa fa-file-word-o");
+            DownloadButton.refresh();
+         },
+
+         onShow: (viewId) => {
+            let tasks = [];
+
+            this.datacollections.forEach((dc) => {
+               if (dc && dc.dataStatus == dc.dataStatusFlag.notInitial) {
+                  // load data when a widget is showing
+                  tasks.push(dc.loadData());
                }
             });
 
-            return fields;
+            // Show loading cursor
+            if (tasks.length > 0) _logic.busy();
+
+            Promise.all(tasks)
+               .catch((err) => console.error(err))
+               .then(() => {
+                  // Hide loading cursor
+                  _logic.ready();
+               });
          },
 
-         getData: (datacollectionId) => {
-            let datacollection = compInstance.application.datacollections(
-               (dcItem) => dcItem.id == datacollectionId
-            )[0];
-            if (!datacollection) return Promise.resolve([]);
+         renderFile: () => {
+            _logic.busy();
 
-            let object = datacollection.datasource;
-            if (!object) return Promise.resolve([]);
+            let reportValues = {};
+            let images = {};
+            let summaries = {}; // { varName: sum number, ..., varName2: number2 }
 
-            return Promise.resolve()
-               .then(
-                  () =>
-                     new Promise((next, bad) => {
-                        if (
-                           datacollection.dataStatus ==
-                           datacollection.dataStatusFlag.notInitial
-                        ) {
-                           datacollection
-                              .loadData()
-                              .catch(bad)
-                              .then(() => next());
-                        } else {
-                           next();
+            Promise.resolve()
+               // Get current cursor
+               .then(() => {
+                  let datacollections = this.datacollections;
+                  let isDcLabelAdded = datacollections.length > 1;
+
+                  datacollections.forEach((dc) => {
+                     if (dc == null) return;
+
+                     let obj = dc.datasource;
+                     if (obj == null) return;
+
+                     let dcValues = [];
+                     let dataList = [];
+
+                     let dcCursor = dc.getCursor();
+
+                     // merge cursor to support dc and tree cursor in the report
+                     if (dcCursor) {
+                        let treeCursor = dc.getCursor(true);
+                        dataList.push(_.merge({}, dcCursor, treeCursor));
+                     } else dataList = _.cloneDeep(dc.getData());
+
+                     // update property names to column labels to match format names in docx file
+                     let mlFields = obj.multilingualFields();
+
+                     let setReportValues = (
+                        baseData,
+                        targetData,
+                        field,
+                        fieldLabels = []
+                     ) => {
+                        let val = null;
+
+                        targetData.id = baseData.id;
+                        targetData[`${field.columnName}_ORIGIN`] =
+                           baseData[field.columnName]; // Keep origin value for compare value with custom index
+
+                        // Translate multilinguage fields
+                        if (mlFields.length) {
+                           let transFields = (mlFields || []).filter(
+                              (fieldName) => baseData[fieldName] != null
+                           );
+                           this.application.translate(
+                              baseData,
+                              baseData,
+                              transFields,
+                              this.languageCode
+                           );
                         }
-                     })
-               )
-               .then(
-                  () =>
-                     new Promise((next, bad) => {
-                        let reportFields = _logic.getReportFields(
-                           datacollection
-                        );
 
-                        let reportData = [];
-                        let rawData = datacollection.getData();
-                        (rawData || []).forEach((row) => {
-                           let reportRow = { id: row.id };
-                           reportRow[`${datacollection.id}.id`] = row.id;
+                        // Pull value
+                        if (field instanceof ABFieldConnect) {
+                           // If field is connected field, then
+                           // {
+                           //		fieldName: {Object} or [Array]
+                           // }
+                           val = baseData[field.columnName];
 
-                           object.fields().forEach((field) => {
-                              let columnName = field.columnName;
-                              let col = `${datacollection.id}.${columnName}`;
+                           if (val && val.forEach) {
+                              val.forEach((v) => {
+                                 if (v == null) return;
 
-                              reportRow[col] = field
-                                 ? field.format(row)
-                                 : row[columnName];
+                                 // format relation data
+                                 if (field.datasourceLink) {
+                                    field.datasourceLink
+                                       .fields((f) => f.key != "connectObject")
+                                       .forEach((f) => {
+                                          v[`${f.columnName}_ORIGIN`] =
+                                             v[f.columnName];
 
-                              // FK value of the connect field
-                              if (field && field.key == "connectObject") {
-                                 if (Array.isArray(row[columnName])) {
-                                    reportRow[`${col}.id`] = row[
-                                       columnName
-                                    ].map(
-                                       (link) =>
-                                          link[field.datasourceLink.PK()] ||
-                                          link.id ||
-                                          link
-                                    );
-                                 } else if (row[columnName]) {
-                                    reportRow[`${col}.id`] =
-                                       row[columnName][
-                                          field.datasourceLink.PK()
-                                       ] ||
-                                       row[columnName].id ||
-                                       row[columnName];
+                                          v[f.columnName] = f.format(v, {
+                                             languageCode: this.languageCode
+                                          });
+                                       });
                                  }
-                              }
 
-                              let rField = reportFields.filter(
-                                 (f) => f.id == columnName
-                              )[0];
-                              if (!rField) return;
-
-                              switch (rField.type) {
-                                 case "text":
-                                 case "reference":
-                                    reportRow[col] = (
-                                       reportRow[col] || ""
-                                    ).toString();
-                                    break;
-                                 case "number":
-                                    reportRow[col] = parseFloat(
-                                       (reportRow[col] || 0)
-                                          .toString()
-                                          .replace(/[^\d.-]/g, "")
-                                    );
-                                    break;
-                                 case "date":
-                                 case "datetime":
-                                    reportRow[col] = row[columnName];
-                                    if (
-                                       reportRow[col] &&
-                                       !(reportRow[col] instanceof Date)
-                                    ) {
-                                       reportRow[col] = new Date(
-                                          row[columnName]
-                                       );
-                                    } else {
-                                       reportRow[col] = null;
-                                    }
-                                    break;
-                              }
+                                 // Keep ABObject to relation data
+                                 if (v && typeof v == "object")
+                                    v._object = field.datasourceLink;
+                              });
+                           }
+                           // TODO
+                           // data[label + '_label'] = field.format(baseData);
+                        } else {
+                           val = field.format(baseData, {
+                              languageCode: this.languageCode
                            });
-                           reportData.push(reportRow);
+                        }
+
+                        // Set value to report with every languages of label
+                        fieldLabels.forEach((label) => {
+                           if (val) {
+                              targetData[label] = val;
+                           } else if (!targetData[label]) {
+                              targetData[label] = "";
+                           }
                         });
 
-                        return next(reportData);
-                     })
-               );
+                        // normalize child items
+                        if (baseData.data && baseData.data.length) {
+                           targetData.data = targetData.data || [];
+                           (baseData.data || []).forEach((childItem, index) => {
+                              // add new data item
+                              if (targetData.data[index] == null)
+                                 targetData.data[index] = {};
+
+                              setReportValues(
+                                 childItem,
+                                 targetData.data[index],
+                                 field,
+                                 fieldLabels
+                              );
+                           });
+                        }
+                     };
+
+                     dataList.forEach((data) => {
+                        let resultData = {};
+
+                        // Keep id of ABObject into .scope of DOCX templater
+                        resultData._object = obj;
+
+                        // For support label of columns every languages
+                        obj.fields().forEach((f) => {
+                           let fieldLabels = [];
+
+                           // Query Objects
+                           if (obj instanceof ABObjectQuery) {
+                              if (typeof f.object.translations == "string")
+                                 f.object.translations = JSON.parse(
+                                    f.object.translations
+                                 );
+
+                              if (typeof f.translations == "string")
+                                 f.translations = JSON.parse(f.translations);
+
+                              (f.object.translations || []).forEach(
+                                 (objTran) => {
+                                    let fieldTran = (
+                                       f.translations || []
+                                    ).filter(
+                                       (fieldTran) =>
+                                          fieldTran.language_code ==
+                                          objTran.language_code
+                                    )[0];
+
+                                    if (!fieldTran) return;
+
+                                    let objectLabel = objTran.label;
+                                    let fieldLabel = fieldTran.label;
+
+                                    // Replace alias with label of object
+                                    fieldLabels.push(
+                                       `${objectLabel}.${fieldLabel}`
+                                    );
+                                 }
+                              );
+                           }
+                           // Normal Objects
+                           else {
+                              if (typeof f.translations == "string")
+                                 f.translations = JSON.parse(f.translations);
+
+                              f.translations.forEach((tran) => {
+                                 fieldLabels.push(tran.label);
+                              });
+                           }
+
+                           setReportValues(data, resultData, f, fieldLabels);
+                        });
+
+                        dcValues.push(resultData);
+                     });
+
+                     // If data sources have more than 1 or the result data more than 1 items, then add label of data source
+                     let datacollectionData =
+                        dcValues.length > 1 ? dcValues : dcValues[0];
+                     if (
+                        isDcLabelAdded ||
+                        (Array.isArray(datacollectionData) &&
+                           datacollectionData.length > 1)
+                     ) {
+                        (dc.translations || []).forEach((tran) => {
+                           reportValues[tran.label] = datacollectionData;
+                        });
+                     } else reportValues = datacollectionData;
+                  });
+
+                  return Promise.resolve();
+               })
+               // Download images
+               .then(() => {
+                  console.log("DOCX data: ", reportValues);
+
+                  let tasks = [];
+
+                  let addDownloadTask = (fieldImage, data = []) => {
+                     data.forEach((d) => {
+                        let imageVal = fieldImage.format(d);
+                        if (imageVal && !images[imageVal]) {
+                           tasks.push(
+                              new Promise((ok, bad) => {
+                                 let imgUrl = `/opsportal/image/${this.application.name}/${imageVal}`;
+
+                                 JSZipUtils.getBinaryContent(imgUrl, function(
+                                    error,
+                                    content
+                                 ) {
+                                    if (error) return bad(error);
+                                    else {
+                                       // store binary of image
+                                       images[imageVal] = content;
+
+                                       ok();
+                                    }
+                                 });
+                              })
+                           );
+                        }
+
+                        // download images of child items
+                        addDownloadTask(fieldImage, d.data || []);
+                     });
+                  };
+
+                  this.datacollections.forEach((dc) => {
+                     if (!dc) return;
+
+                     let obj = dc.datasource;
+                     if (!obj) return;
+
+                     let currCursor = dc.getCursor();
+                     if (currCursor) {
+                        // Current cursor
+                        let treeCursor = dc.getCursor(true);
+                        currCursor = [_.merge({}, currCursor, treeCursor)];
+                     } // List of data
+                     else currCursor = dc.getData();
+
+                     obj.fields((f) => f instanceof ABFieldImage).forEach(
+                        (f) => {
+                           addDownloadTask(f, currCursor);
+                        }
+                     );
+                  });
+
+                  return Promise.all(tasks);
+               })
+               .then(() => {
+                  // Download the template file
+                  return new Promise((next, err) => {
+                     let url = this.downloadUrl();
+
+                     JSZipUtils.getBinaryContent(url, (error, content) => {
+                        if (error) return err(error);
+
+                        next(content);
+                     });
+                  });
+               })
+               .then((content) => {
+                  // Generate Docx file
+                  return new Promise((next, err) => {
+                     let zip = new JSZip(content);
+                     let doc = new Docxtemplater();
+
+                     let imageModule = new ImageModule({
+                        centered: false,
+                        getImage: (tagValue, tagName) => {
+                           // NOTE: .getImage of version 3.0.2 does not support async
+                           //			we can buy newer version to support it
+                           //			https://docxtemplater.com/modules/image/
+
+                           return images[tagValue] || "";
+                        },
+                        getSize: (imgBuffer, tagValue, tagName) => {
+                           let defaultVal = [300, 160];
+
+                           let dc = this.datacollection;
+                           if (!dc) return defaultVal;
+
+                           let obj = dc.datasource;
+                           if (!obj) return defaultVal;
+
+                           // This is a query object
+                           if (tagName.indexOf(".") > -1) {
+                              let tagNames = tagName.split(".");
+
+                              obj = obj.objects(
+                                 (o) => o.label == tagNames[0]
+                              )[0]; // Label of object
+                              if (!obj) return defaultVal;
+
+                              tagName = tagNames[1]; // Field name
+                           }
+
+                           let imageField = obj.fields(
+                              (f) => f.columnName == tagName
+                           )[0];
+                           if (!imageField || !imageField.settings)
+                              return defaultVal;
+
+                           if (
+                              imageField.settings.useWidth &&
+                              imageField.settings.imageWidth
+                           )
+                              defaultVal[0] = imageField.settings.imageWidth;
+
+                           if (
+                              imageField.settings.useHeight &&
+                              imageField.settings.imageHeight
+                           )
+                              defaultVal[1] = imageField.settings.imageHeight;
+
+                           return defaultVal;
+                        }
+                        // getSize: function (imgBuffer, tagValue, tagName) {
+                        // 	if (imgBuffer) {
+                        // 		var maxWidth = 300;
+                        // 		var maxHeight = 160;
+
+                        // 		// Find aspect ratio image dimensions
+                        // 		try {
+                        // 			var image = sizeOf(imgBuffer);
+                        // 			var ratio = Math.min(maxWidth / image.width, maxHeight / image.height);
+
+                        // 			return [image.width * ratio, image.height * ratio];
+                        // 		}
+                        // 		// if invalid image, then should return 0, 0 sizes
+                        // 		catch (err) {
+                        // 			return [0, 0];
+                        // 		}
+
+                        // 	}
+                        // 	else {
+                        // 		return [0, 0];
+                        // 	}
+                        // }
+                     });
+
+                     try {
+                        doc.attachModule(imageModule)
+                           .loadZip(zip)
+                           .setData(reportValues)
+                           .setOptions({
+                              parser: function(tag) {
+                                 return {
+                                    get: function(scope, context) {
+                                       // NOTE: AppBuilder custom filter : no return empty items
+                                       if (tag.indexOf("data|") == 0) {
+                                          let prop = (
+                                             tag.split("|")[1] || ""
+                                          ).trim();
+
+                                          return (scope["data"] || []).filter(
+                                             function(item) {
+                                                return item[prop]
+                                                   ? true
+                                                   : false;
+                                             }
+                                          );
+                                       }
+                                       // Mark number to add to a variable
+                                       else if (tag.indexOf("|$sum?") > -1) {
+                                          let prop = tag.split("|$sum?")[0];
+                                          let varName = tag.split("|$sum?")[1];
+
+                                          let number = scope[prop];
+                                          if (typeof number == "string") {
+                                             number = number.replace(
+                                                /[^\d.]/g, // return only number and dot
+                                                ""
+                                             );
+                                          }
+
+                                          if (summaries[varName] == null)
+                                             summaries[varName] = 0.0;
+
+                                          summaries[varName] += parseFloat(
+                                             number
+                                          );
+
+                                          return scope[prop];
+                                       }
+                                       // Show sum value ^
+                                       else if (tag.indexOf("$sum?") == 0) {
+                                          let varName = tag.replace(
+                                             "$sum?",
+                                             ""
+                                          );
+
+                                          return summaries[varName] || 0;
+                                       }
+                                       // // Sum number of .data (Grouped query)
+                                       // else if (tag.indexOf("$sum|") == 0) {
+                                       //    let prop = (
+                                       //       tag.split("|")[1] || ""
+                                       //    ).trim();
+
+                                       //    let sum = 0;
+                                       //    (scope["data"] || []).forEach(
+                                       //       (childItem) => {
+                                       //          if (!childItem[prop]) return;
+
+                                       //          let number = childItem[prop];
+                                       //          if (typeof number == "string") {
+                                       //             number = number.replace(
+                                       //                /[^\d.]/g, // return only number and dot
+                                       //                ""
+                                       //             );
+                                       //          }
+
+                                       //          try {
+                                       //             sum += parseFloat(
+                                       //                number || 0
+                                       //             );
+                                       //          } catch (e) {}
+                                       //       }
+                                       //    );
+
+                                       //    // Print number with commas
+                                       //    if (sum) {
+                                       //       sum = sum
+                                       //          .toString()
+                                       //          .replace(
+                                       //             /\B(?=(\d{3})+(?!\d))/g,
+                                       //             ","
+                                       //          );
+                                       //    }
+
+                                       //    return sum;
+                                       // }
+                                       // NOTE: AppBuilder custom filter of another data source
+                                       else if (tag.indexOf("$") == 0) {
+                                          let props = tag
+                                             .replace("$", "")
+                                             .split("|");
+                                          let propSource = props[0].trim();
+                                          let propFilter = props[1].trim(); // column name of ABFieldConnect
+
+                                          if (!propSource || !propFilter)
+                                             return "";
+
+                                          // Pull Index field of connect field
+                                          let indexColName;
+                                          let obj = scope._object;
+                                          if (obj) {
+                                             let connectedField = obj.fields(
+                                                (f) =>
+                                                   f.columnName == propFilter
+                                             )[0];
+                                             if (connectedField) {
+                                                let indexField =
+                                                   connectedField.indexField;
+                                                indexColName = indexField
+                                                   ? indexField.columnName
+                                                   : null;
+                                             }
+                                          }
+
+                                          let sourceVals =
+                                             reportValues[propSource];
+                                          if (
+                                             sourceVals &&
+                                             !Array.isArray(sourceVals)
+                                          )
+                                             sourceVals = [sourceVals];
+
+                                          let getVal = (data) => {
+                                             return (
+                                                data[
+                                                   `${indexColName}_ORIGIN`
+                                                ] || // Pull origin data to compare by custom index
+                                                data[indexColName] ||
+                                                data.id ||
+                                                data
+                                             );
+                                          };
+
+                                          return (sourceVals || []).filter(
+                                             function(item) {
+                                                // Pull data of parent to compare
+                                                let comparer =
+                                                   scope[propFilter];
+
+                                                if (Array.isArray(comparer))
+                                                   return (
+                                                      comparer.filter(
+                                                         (c) =>
+                                                            getVal(c) ==
+                                                            getVal(item)
+                                                      ).length > 0
+                                                   );
+                                                else {
+                                                   return (
+                                                      getVal(item) ==
+                                                      getVal(comparer)
+                                                   );
+                                                }
+                                             }
+                                          );
+                                       }
+                                       // ์NOTE : Custom filter
+                                       else if (tag.indexOf("?") > -1) {
+                                          let result = scope;
+                                          let prop = tag.split("?")[0];
+                                          let condition = tag.split("?")[1];
+                                          if (prop && condition) {
+                                             let data = scope[prop];
+                                             if (data) {
+                                                if (!Array.isArray(data))
+                                                   data = [data];
+
+                                                return data.filter((d) =>
+                                                   eval(
+                                                      condition.replace(
+                                                         /\./g,
+                                                         "d."
+                                                      )
+                                                   )
+                                                );
+                                             }
+                                          }
+                                          return result;
+                                       } else if (tag === ".") {
+                                          return scope;
+                                       } else {
+                                          return scope[tag];
+                                       }
+                                    }
+                                 };
+                              }
+                           })
+                           .render(); // render the document
+                     } catch (error) {
+                        return err(error);
+                     }
+
+                     var docxFile = doc.getZip().generate({
+                        type: "blob",
+                        mimeType:
+                           "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                     }); //Output the document using Data-URI
+
+                     next(docxFile);
+                  });
+               })
+               .then((blobFile) => {
+                  // Let user download the output file
+                  return new Promise((next, err) => {
+                     letUserDownload(blobFile, this.filelabel);
+
+                     next();
+                  });
+               })
+               // Final step
+               .then(() => {
+                  _logic.ready();
+               });
          }
       };
 
@@ -772,8 +1107,7 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
          ui: _ui,
          init: _init,
          logic: _logic,
-
-         onShow: baseCom.onShow
+         onShow: _logic.onShow
       };
    }
 };
