@@ -46,8 +46,8 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
          async.each(
             allLanes,
             (myLane, cb) => {
-               let startElementData = this.startElement
-                  ? this.startElement.myState(instance).data
+               let startElementData = this.startElements[0]
+                  ? this.startElements[0].myState(instance).data
                   : null;
 
                myLane

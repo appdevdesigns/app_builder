@@ -228,7 +228,7 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
    }
 
    _getUserListOfStartElement(instance) {
-      let startElement = this.startElement;
+      let startElement = this.startElements[0];
       let objectOfStartElement = this.objectOfStartElement;
 
       if (
