@@ -1624,7 +1624,7 @@ module.exports = class ABClassObject extends ABObjectCore {
          }
       };
 
-      parseCondition(where, query);
+      parseCondition(this.application.cloneDeep(where), query);
 
       // Special Case:  'have_no_relation'
       // 1:1 - Get rows that no relation with
