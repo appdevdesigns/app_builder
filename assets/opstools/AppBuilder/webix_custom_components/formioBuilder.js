@@ -84,6 +84,227 @@ module.exports = class ABCustomFormIOBuilder {
 
       // our internal business logic
       var _logic = {
+         /** @method fieldSchema
+          *
+          * @param field
+          * @param appName
+          * @param prefix
+          */
+         fieldSchema: (field, appName, source = "data", key) => {
+            if (!field && !field.key) return;
+            let fieldKey = field.key;
+            if (key) {
+               fieldKey = key;
+            }
+            switch (field.key) {
+               case "boolean":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "checkbox",
+                     disabled: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
+                  };
+                  break;
+               case "calculate":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "textfield",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true,
+                     inputType: "text",
+                     disabled: true
+                  };
+                  break;
+               case "connectObject":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "textfield",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true,
+                     inputType: "text",
+                     disabled: true,
+                     calculateValue: `value = ${source}['${fieldKey}.format']`
+                  };
+                  break;
+
+               case "date":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "datetime",
+                     disabled: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true,
+                     enableTime: false
+                  };
+                  break;
+               case "datetime":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "datetime",
+                     disabled: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
+                  };
+                  break;
+               case "email":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     disabled: true,
+                     type: "email",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
+                  };
+                  break;
+               case "file":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "htmlelement",
+                     tag: "a",
+                     className: "btn btn-primary btn-block",
+                     content:
+                        "<i class='fa fa-paperclip'></i>  " +
+                        "{{JSON.parse(" +
+                        source +
+                        "['" +
+                        fieldKey +
+                        "']).filename}}",
+                     attrs: [
+                        {
+                           attr: "href",
+                           value:
+                              "/opsportal/file/" +
+                              appName +
+                              "/" +
+                              "{{JSON.parse(" +
+                              source +
+                              "['" +
+                              fieldKey +
+                              "']).uuid}}"
+                        },
+                        {
+                           attr: "target",
+                           value: "_blank"
+                        }
+                     ],
+                     refreshOnChange: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     disabled: true,
+                     input: false
+                  };
+                  break;
+               case "image":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "htmlelement",
+                     tag: "img",
+                     className: "img-thumbnail max100",
+                     content: "",
+                     attrs: [
+                        {
+                           attr: "src",
+                           value:
+                              "/opsportal/image/" +
+                              appName +
+                              "/" +
+                              "{{" +
+                              source +
+                              "['" +
+                              fieldKey +
+                              "']}}"
+                        }
+                     ],
+                     refreshOnChange: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: false
+                  };
+                  break;
+               case "list":
+                  var vals = [];
+                  field.settings.options.forEach((opt) => {
+                     vals.push({
+                        label: opt.text,
+                        value: opt.id
+                     });
+                  });
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "select",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     disabled: true,
+                     input: true,
+                     data: {
+                        values: vals
+                     },
+                     multiple: field.settings.isMultiple
+                  };
+                  break;
+               case "LongText":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "textarea",
+                     disabled: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
+                  };
+                  break;
+               case "number":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     disabled: true,
+                     type: "number",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
+                  };
+                  break;
+               case "TextFormula":
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "textfield",
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true,
+                     inputType: "text",
+                     disabled: true
+                  };
+                  break;
+               default:
+                  return {
+                     abFieldID: field.id,
+                     label: field.label,
+                     type: "textfield",
+                     disabled: true,
+                     key: fieldKey,
+                     _key: fieldKey,
+                     input: true
+                  };
+                  break;
+            }
+         },
+
          /**
           * @method parseDataObjects
           *
@@ -97,269 +318,234 @@ module.exports = class ABCustomFormIOBuilder {
             //     var fields = obj.fields();
             //     console.log(fields);
             fields.forEach((entry) => {
-               if (!entry.field) return;
-               switch (entry.field.key) {
-                  case "boolean":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "checkbox",
-                           disabled: true,
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true
-                        }
-                     };
-                     break;
-                  case "calculate":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "textfield",
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true,
-                           inputType: "text",
-                           disabled: true,
-                           calculateValue:
-                              "value = " +
-                              entry.field.settings.formula
-                                 .replace(/{/g, "data['")
-                                 .replace(/}/g, "']")
-                        }
-                     };
-                     break;
-                  case "connectObject":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "textfield",
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true,
-                           inputType: "text",
-                           disabled: true,
-                           calculateValue: `value = data['${entry.key}.format']`
-                           // ,calculateValue: `value = '${entry.field.settings.textFormula}'`
-                        }
-                     };
-                     break;
+               // check to see if we are given a set of plucked data
+               // check to see if we are not given any field information
+               // if so this is an array of objects that we want to display
+               // in an accrodian.
+               if (!entry.field && entry.set == true) {
+                  let objectFields = entry.object.fields();
+                  let fieldSchemas = [];
+                  let fieldLabels = [];
+                  objectFields.forEach((cof) => {
+                     fieldSchemas.push(
+                        _logic.fieldSchema(
+                           cof,
+                           entry.object.application.name,
+                           "row",
+                           cof.columnName
+                        )
+                     );
+                     fieldLabels.push("{{ row['" + cof.label + "'] }}");
+                  });
 
-                  case "date":
-                     components[entry.key] = {
-                        title: entry.label,
+                  components[entry.key + "_accordion"] = {
+                     title: entry.label + " Accordion",
+                     key: entry.key + "_accordion",
+                     icon: "list",
+                     schema: {
+                        label: entry.label,
+                        customClass: "customList",
+                        disableAddingRemovingRows: true,
+                        templates: {
+                           header: "<h4>" + entry.label + "</h4>",
+                           row:
+                              "<div class='editRow'>" +
+                              fieldLabels.join(" - ") +
+                              "</div>"
+                        },
                         key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "datetime",
-                           disabled: true,
-                           key: entry.key,
-                           _key: entry.key,
-                           input: true,
-                           format:
-                              entry.field.settings.timeFormat == 1
-                                 ? "MMMM d, yyyy"
-                                 : "MMMM d, yyyy h:mm a"
-                        }
-                     };
-                     break;
-                  case "email":
-                     components[entry.key] = {
-                        title: entry.label,
+                        type: "editgrid",
+                        hideLabel: true,
+                        disabled: true,
+                        input: false,
+                        components: fieldSchemas,
+                        path: entry.key
+                     }
+                  };
+               } else if (entry.field && entry.set == true) {
+                  // Check if this is a set of data and if we do have a field
+                  // if so this is an array of values and we need to display
+                  // them in an accordian.
+                  let fieldSchemas = [];
+                  fieldSchemas.push(
+                     _logic.fieldSchema(
+                        entry.field,
+                        entry.object.application.name,
+                        "row",
+                        entry.key
+                     )
+                  );
+
+                  components[entry.key + "_accordion"] = {
+                     title: entry.label + " Accordion",
+                     key: entry.key + "_accordion",
+                     icon: "list",
+                     schema: {
+                        label: entry.label,
+                        customClass: "customList",
+                        disableAddingRemovingRows: true,
+                        templates: {
+                           header: "<h4>" + entry.label + "</h4>",
+                           row: "<div class='editRow'></div>"
+                        },
                         key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           disabled: true,
-                           type: "email",
+                        type: "editgrid",
+                        hideLabel: true,
+                        disabled: true,
+                        input: false,
+                        components: fieldSchemas,
+                        path: entry.key
+                     }
+                  };
+               } else {
+                  if (!entry.field) return;
+                  // all other fields we display as single form components
+                  switch (entry.field.key) {
+                     case "boolean":
+                        components[entry.key] = {
+                           title: entry.label,
                            key: entry.key,
-                           _key: entry.key,
-                           input: true
-                        }
-                     };
-                     break;
-                  case "file":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "htmlelement",
-                           tag: "a",
-                           className: "btn btn-primary btn-block",
-                           content:
-                              "<i class='fa fa-paperclip'></i>  " +
-                              "{{JSON.parse(data['" +
-                              entry.key +
-                              "']).filename}}",
-                           attrs: [
-                              {
-                                 attr: "href",
-                                 value:
-                                    "/opsportal/file/" +
-                                    entry.field.object.application.name +
-                                    "/" +
-                                    "{{JSON.parse(data['" +
-                                    entry.key +
-                                    "']).uuid}}"
-                              },
-                              {
-                                 attr: "target",
-                                 value: "_blank"
-                              }
-                           ],
-                           refreshOnChange: true,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "calculate":
+                        components[entry.key] = {
+                           title: entry.label,
                            key: entry.key,
-                           _key: entry.key,
-                           disabled: true,
-                           input: false
-                        }
-                     };
-                     break;
-                  case "image":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "htmlelement",
-                           tag: "img",
-                           className: "img-thumbnail max100",
-                           content: "",
-                           attrs: [
-                              {
-                                 attr: "src",
-                                 value:
-                                    "/opsportal/image/" +
-                                    entry.field.object.application.name +
-                                    "/" +
-                                    "{{data['" +
-                                    entry.key +
-                                    "']}}"
-                              }
-                           ],
-                           refreshOnChange: true,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "connectObject":
+                        components[entry.key] = {
+                           title: entry.label,
                            key: entry.key,
-                           _key: entry.key,
-                           input: false
-                        }
-                     };
-                     break;
-                  case "list":
-                     var vals = [];
-                     entry.field.settings.options.forEach((opt) => {
-                        vals.push({
-                           label: opt.text,
-                           value: opt.id
-                        });
-                     });
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "select",
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+
+                     case "date":
+                        components[entry.key] = {
+                           title: entry.label,
                            key: entry.key,
-                           _key: entry.key,
-                           disabled: true,
-                           input: true,
-                           data: {
-                              values: vals
-                           },
-                           multiple: entry.field.settings.isMultiple
-                        }
-                     };
-                     break;
-                  case "LongText":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "textarea",
-                           disabled: true,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "datetime":
+                        components[entry.key] = {
+                           title: entry.label,
                            key: entry.key,
-                           _key: entry.key,
-                           input: true
-                        }
-                     };
-                     break;
-                  case "number":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           disabled: true,
-                           type: "number",
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "email":
+                        components[entry.key] = {
+                           title: entry.label,
                            key: entry.key,
-                           _key: entry.key,
-                           input: true
-                        }
-                     };
-                     break;
-                  case "TextFormula":
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "textfield",
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "file":
+                        components[entry.key] = {
+                           title: entry.label,
                            key: entry.key,
-                           _key: entry.key,
-                           input: true,
-                           inputType: "text",
-                           disabled: true,
-                           calculateValue:
-                              "value = '" +
-                              entry.field.settings.textFormula +
-                              "'"
-                        }
-                     };
-                     break;
-                  default:
-                     components[entry.key] = {
-                        title: entry.label,
-                        key: entry.key,
-                        icon: entry.field.icon,
-                        schema: {
-                           abFieldID: entry.field.id,
-                           label: entry.field.label,
-                           type: "textfield",
-                           disabled: true,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "image":
+                        components[entry.key] = {
+                           title: entry.label,
                            key: entry.key,
-                           _key: entry.key,
-                           input: true
-                        }
-                     };
-                     break;
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "list":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "LongText":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "number":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     case "TextFormula":
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                     default:
+                        components[entry.key] = {
+                           title: entry.label,
+                           key: entry.key,
+                           icon: entry.field.icon,
+                           schema: _logic.fieldSchema(
+                              entry.field,
+                              entry.object.application.name
+                           )
+                        };
+                        break;
+                  }
                }
             });
             // });
