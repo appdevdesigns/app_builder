@@ -339,6 +339,10 @@ class ABQL extends ABQLCore {
                   return { id: f.id, value: f.label };
                });
             }
+            options.unshift({
+               id: "_PK",
+               value: "[PK]"
+            });
             // if not set, default .fieldID to the 1st entry in options
             // so we will have a default.  In use, if a user sees the
             // 1st item and continues on, then we will have chosen it.
