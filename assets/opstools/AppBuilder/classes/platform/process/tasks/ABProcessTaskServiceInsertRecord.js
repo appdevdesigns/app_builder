@@ -34,13 +34,13 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
 
       let repeatColumnList = this.objectOfStartElement
          ? this.objectOfStartElement
-              .fields((f) => f.key == "connectObject")
-              .map((f) => {
-                 return {
-                    id: f.id,
-                    value: f.label
-                 };
-              })
+            .fields((f) => f.key == "connectObject")
+            .map((f) => {
+               return {
+                  id: f.id,
+                  value: f.label
+               };
+            })
          : [];
 
       let getFieldOptions = (object) => {
@@ -108,15 +108,13 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             { id: 1, value: "Set by custom value" },
             {
                id: 2,
-               value: `Set by the root data [${
-                  startElemObj ? startElemObj.label : ""
-               }]`
+               value: `Set by the root data [${startElemObj ? startElemObj.label : ""
+                  }]`
             },
             {
                id: 3,
-               value: `Set by previous step data [${
-                  prevElemObj ? prevElemObj.label : ""
-               }]`
+               value: `Set by previous step data [${prevElemObj ? prevElemObj.label : ""
+                  }]`
             },
             { id: 4, value: "Set by formula format" }
          ];
@@ -126,9 +124,8 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
          if (fieldRepeat && fieldRepeat.datasourceLink) {
             setOptions.push({
                id: 5,
-               value: `Set by the instance [${
-                  this.fieldRepeat ? this.fieldRepeat.label : ""
-               }]`
+               value: `Set by the instance [${this.fieldRepeat ? this.fieldRepeat.label : ""
+                  }]`
             });
 
             repeatObjectFields = getFieldOptions(fieldRepeat.datasourceLink);
@@ -140,7 +137,10 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
          });
 
          // Pull query tasks option list
-         let queryTaskOptions = [];
+         let queryTaskOptions = [{
+            id: null,
+            value: "[Select]"
+         }];
          (
             this.process.elements(
                (elem) =>
@@ -158,6 +158,20 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
                });
             });
          });
+         let $selectValueParams = {
+            view: "select",
+            options: queryTaskOptions,
+            on: {
+               onChange: function (newValue, oldValue) {
+                  if (!oldValue && newValue) {
+                     let $layout = this.getParentView();
+                     if ($layout) {
+                        $layout.addView($selectValueParams);
+                     }
+                  }
+               }
+            }
+         };
 
          // field options to the form
          object.fields().forEach((f) => {
@@ -182,7 +196,7 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
                            view: "select",
                            options: setOptions,
                            on: {
-                              onChange: function(newVal, oldVal) {
+                              onChange: function (newVal, oldVal) {
                                  let $parent = this.getParentView();
                                  let $valuePanel = $parent.queryView({
                                     name: "valuePanel"
@@ -216,8 +230,19 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
                               },
                               {
                                  batch: 6,
-                                 view: "select",
-                                 options: queryTaskOptions
+                                 view: "layout",
+                                 cols: [
+                                    {
+                                       view: 'label',
+                                       label: "Or",
+                                       width: 30
+                                    },
+                                    {
+                                       name: "params-panel",
+                                       view: "layout",
+                                       rows: [$selectValueParams]
+                                    }
+                                 ]
                               }
                            ]
                         }
@@ -393,17 +418,24 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             batch: $valuePanel.config.visibleBatch
          });
 
-         if ($valueSelector && $valueSelector.setValue) {
-            if (fValue.set == 6) {
-               let selectedOption = $valueSelector.config.options.filter(
-                  (opt) =>
-                     opt.queryId == (fValue.value || {}).queryId &&
-                     opt.paramName == (fValue.value || {}).paramName
-               )[0];
-               if (selectedOption) $valueSelector.setValue(selectedOption.id);
-            } else
-               $valueSelector.setValue(fValue.value);
+         if (fValue.set == 6) {
+            let $paramsPanel = $valueSelector.queryView({ name: "params-panel" });
+            if ($paramsPanel) {
+               $paramsPanel.reconstruct();
+
+               (fValue.value || []).forEach((val, index) => {
+                  let $valueSelector = $paramsPanel.getChildViews()[index];
+                  let selectedOption = $valueSelector.config.options.filter(
+                     (opt) =>
+                        opt.queryId == (val || {}).queryId &&
+                        opt.paramName == (val || {}).paramName
+                  )[0];
+                  if (selectedOption) $valueSelector.setValue(selectedOption.id);
+               });
+            }
          }
+         else if ($valueSelector && $valueSelector.setValue)
+            $valueSelector.setValue(fValue.value);
       });
    }
 
@@ -425,25 +457,37 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             batch: $valuePanel.config.visibleBatch
          });
 
-         if (
+         if (result[fieldId].set == 6) {
+            let $paramsPanel = $valueSelector.queryView({ name: "params-panel" });
+            if ($paramsPanel) {
+               let $paramSelectors = $paramsPanel.getChildViews();
+               $paramSelectors.forEach(($paramSelect) => {
+                  let selectedId = $paramSelect.getValue();
+                  if (selectedId == null) return;
+
+                  let selectedParam = ($paramSelect.config.options || []).filter(
+                     (opt) => opt.id == selectedId
+                  )[0];
+                  if (selectedParam) {
+                     result[fieldId].value = result[fieldId].value || [];
+                     result[fieldId].value.push({
+                        queryId: selectedParam.queryId,
+                        paramName: selectedParam.paramName
+                     });
+                  }
+               });
+            }
+         }
+         else if (
             $valueSelector &&
             $valueSelector.getValue &&
             $valueSelector.getValue()
          ) {
-            if (result[fieldId].set == 6) {
-               let selectedParam = ($valueSelector.config.options || []).filter(
-                  (opt) => opt.id == $valueSelector.getValue()
-               )[0];
-               if (selectedParam) {
-                  result[fieldId].value = {
-                     queryId: selectedParam.queryId,
-                     paramName: selectedParam.paramName
-                  };
-               }
-            } else {
-               result[fieldId].value = $valueSelector.getValue();
-            }
-         } else result[fieldId].value = null;
+            result[fieldId].value = $valueSelector.getValue();
+         }
+         else {
+            result[fieldId].value = null;
+         }
       });
 
       return result;

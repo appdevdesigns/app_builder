@@ -268,15 +268,19 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                );
                break;
             case "6":
-               item.value = item.value || {};
+               item.value = item.value || [];
+               item.value.forEach((val) => {
+                  if (result[field.columnName] != null || val.queryId == null || val.paramName == null) return;
 
-               if (item.value.queryId == null || item.value.paramName == null) break;
+                  let queryElem = this.process.elements((e) => e.id == val.queryId)[0];
+                  if (!queryElem) return;
+   
+                  // TODO : Multiple and Single data
+                  let processData = queryElem.processData(instance, val.paramName)[0];
+                  if (processData == null) return;
 
-               let queryElem = this.process.elements((e) => e.id == item.value.queryId)[0];
-               if (!queryElem) break;
-
-               // TODO : Multiple and Single data
-               result[field.columnName] = queryElem.processData(instance, item.value.paramName)[0];
+                  result[field.columnName] = processData;
+               });
                break;
          }
       });
