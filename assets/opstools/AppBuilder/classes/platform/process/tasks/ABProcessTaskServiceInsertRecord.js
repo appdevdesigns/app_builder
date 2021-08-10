@@ -134,6 +134,31 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             repeatObjectFields = getFieldOptions(fieldRepeat.datasourceLink);
          }
 
+         setOptions.push({
+            id: 6,
+            value: `Set by the paremeter of a Query task`
+         });
+
+         // Pull query tasks option list
+         let queryTaskOptions = [];
+         (
+            this.process.elements(
+               (elem) =>
+                  elem &&
+                  elem.defaults &&
+                  elem.defaults.key == "TaskServiceQuery"
+            ) || []
+         ).forEach((q) => {
+            let paramNames = q.getValueParameterNames() || [];
+            paramNames.forEach((pName) => {
+               queryTaskOptions.push({
+                  queryId: q.id,
+                  paramName: pName,
+                  value: `${q.label} - ${pName}`
+               });
+            });
+         });
+
          // field options to the form
          object.fields().forEach((f) => {
             $fieldValues.addView({
@@ -188,6 +213,11 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
                                  batch: 5,
                                  view: "select",
                                  options: repeatObjectFields
+                              },
+                              {
+                                 batch: 6,
+                                 view: "select",
+                                 options: queryTaskOptions
                               }
                            ]
                         }
@@ -362,8 +392,18 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
          let $valueSelector = $valuePanel.queryView({
             batch: $valuePanel.config.visibleBatch
          });
-         if ($valueSelector && $valueSelector.setValue)
-            $valueSelector.setValue(fValue.value);
+
+         if ($valueSelector && $valueSelector.setValue) {
+            if (fValue.set == 6) {
+               let selectedOption = $valueSelector.config.options.filter(
+                  (opt) =>
+                     opt.queryId == (fValue.value || {}).queryId &&
+                     opt.paramName == (fValue.value || {}).paramName
+               )[0];
+               if (selectedOption) $valueSelector.setValue(selectedOption.id);
+            } else
+               $valueSelector.setValue(fValue.value);
+         }
       });
    }
 
@@ -384,13 +424,26 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
          let $valueSelector = $valuePanel.queryView({
             batch: $valuePanel.config.visibleBatch
          });
+
          if (
             $valueSelector &&
             $valueSelector.getValue &&
             $valueSelector.getValue()
-         )
-            result[fieldId].value = $valueSelector.getValue();
-         else result[fieldId].value = null;
+         ) {
+            if (result[fieldId].set == 6) {
+               let selectedParam = ($valueSelector.config.options || []).filter(
+                  (opt) => opt.id == $valueSelector.getValue()
+               )[0];
+               if (selectedParam) {
+                  result[fieldId].value = {
+                     queryId: selectedParam.queryId,
+                     paramName: selectedParam.paramName
+                  };
+               }
+            } else {
+               result[fieldId].value = $valueSelector.getValue();
+            }
+         } else result[fieldId].value = null;
       });
 
       return result;

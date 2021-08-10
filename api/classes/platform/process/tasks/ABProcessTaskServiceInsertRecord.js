@@ -267,6 +267,17 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                   rawData
                );
                break;
+            case "6":
+               item.value = item.value || {};
+
+               if (item.value.queryId == null || item.value.paramName == null) break;
+
+               let queryElem = this.process.elements((e) => e.id == item.value.queryId)[0];
+               if (!queryElem) break;
+
+               // TODO : Multiple and Single data
+               result[field.columnName] = queryElem.processData(instance, item.value.paramName)[0];
+               break;
          }
       });
 

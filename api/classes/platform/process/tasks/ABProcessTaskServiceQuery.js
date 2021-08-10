@@ -91,12 +91,24 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
     * @return {mixed} | null
     */
    processData(instance, key) {
-      var data = null;
-      var parts = key.split(".");
-      if (parts[0] && parts[0] == this.id) {
-         let myState = this.myState(instance);
-         data = myState[parts[1]];
+      let myState = this.myState(instance);
+      let data = null;
+
+      if (key) {
+         if (key.indexOf(".") > -1) {
+            let parts = key.split(".");  
+            if (parts[0] && parts[0] == this.id) {
+               data = myState[parts[1]];
+            }
+         }
+         else {
+            data = myState[key];
+         }
       }
+      else {
+         data = myState.data || myState;
+      }
+
       return data;
    }
 };
