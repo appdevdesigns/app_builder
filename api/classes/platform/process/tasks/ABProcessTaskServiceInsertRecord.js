@@ -275,11 +275,21 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                   let queryElem = this.process.elements((e) => e.id == val.queryId)[0];
                   if (!queryElem) return;
    
-                  // TODO : Multiple and Single data
-                  let processData = queryElem.processData(instance, val.paramName)[0];
-                  if (processData == null) return;
+                  let processData = queryElem.processData(instance, val.paramName);
+                  if (processData == null || !processData.length) {
+                     result[field.columnName] = null;
+                     return;
+                  }
 
-                  result[field.columnName] = processData;
+                  // If .field is a connect field who has M:1 or M:N relations, then it will set value with an array
+                  let isMultipleValue = field.key == "connectObject" && field.settings && field.settings.linkType == "many";
+                  if (isMultipleValue) {
+                     result[field.columnName] = processData || [];
+                  }
+                  // If .field supports a single value, then it pull only the first value item.
+                  else {
+                     result[field.columnName] = processData[0] || null;
+                  }
                });
                break;
          }
