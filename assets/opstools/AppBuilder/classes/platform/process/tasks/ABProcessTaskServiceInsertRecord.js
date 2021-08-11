@@ -137,10 +137,7 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
          });
 
          // Pull query tasks option list
-         let queryTaskOptions = [{
-            id: null,
-            value: "[Select]"
-         }];
+         let queryTaskOptions = [];
          (
             this.process.elements(
                (elem) =>
@@ -152,26 +149,13 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             let paramNames = q.getValueParameterNames() || [];
             paramNames.forEach((pName) => {
                queryTaskOptions.push({
+                  id: `${q.id}|${pName}`,
                   queryId: q.id,
                   paramName: pName,
                   value: `${q.label} - ${pName}`
                });
             });
          });
-         let $selectValueParams = {
-            view: "select",
-            options: queryTaskOptions,
-            on: {
-               onChange: function (newValue, oldValue) {
-                  if (!oldValue && newValue) {
-                     let $layout = this.getParentView();
-                     if ($layout) {
-                        $layout.addView($selectValueParams);
-                     }
-                  }
-               }
-            }
-         };
 
          // field options to the form
          object.fields().forEach((f) => {
@@ -230,19 +214,9 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
                               },
                               {
                                  batch: 6,
-                                 view: "layout",
-                                 cols: [
-                                    {
-                                       view: 'label',
-                                       label: "Or",
-                                       width: 30
-                                    },
-                                    {
-                                       name: "params-panel",
-                                       view: "layout",
-                                       rows: [$selectValueParams]
-                                    }
-                                 ]
+                                 view:"multicombo",
+                                 label: "",
+                                 options: queryTaskOptions
                               }
                            ]
                         }
@@ -418,24 +392,17 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             batch: $valuePanel.config.visibleBatch
          });
 
-         if (fValue.set == 6) {
-            let $paramsPanel = $valueSelector.queryView({ name: "params-panel" });
-            if ($paramsPanel) {
-               $paramsPanel.reconstruct();
+         if ($valueSelector && $valueSelector.setValue) {
+            let val = fValue.value;
 
-               (fValue.value || []).forEach((val, index) => {
-                  let $valueSelector = $paramsPanel.getChildViews()[index];
-                  let selectedOption = $valueSelector.config.options.filter(
-                     (opt) =>
-                        opt.queryId == (val || {}).queryId &&
-                        opt.paramName == (val || {}).paramName
-                  )[0];
-                  if (selectedOption) $valueSelector.setValue(selectedOption.id);
+            if (fValue.set == 6) {
+               val = [];
+               (fValue.value || []).forEach((v) => {
+                  val.push(`${v.queryId}|${v.paramName}`);
                });
             }
+            $valueSelector.setValue(val);
          }
-         else if ($valueSelector && $valueSelector.setValue)
-            $valueSelector.setValue(fValue.value);
       });
    }
 
@@ -457,33 +424,26 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             batch: $valuePanel.config.visibleBatch
          });
 
-         if (result[fieldId].set == 6) {
-            let $paramsPanel = $valueSelector.queryView({ name: "params-panel" });
-            if ($paramsPanel) {
-               let $paramSelectors = $paramsPanel.getChildViews();
-               $paramSelectors.forEach(($paramSelect) => {
-                  let selectedId = $paramSelect.getValue();
-                  if (selectedId == null) return;
-
-                  let selectedParam = ($paramSelect.config.options || []).filter(
-                     (opt) => opt.id == selectedId
-                  )[0];
-                  if (selectedParam) {
-                     result[fieldId].value = result[fieldId].value || [];
-                     result[fieldId].value.push({
-                        queryId: selectedParam.queryId,
-                        paramName: selectedParam.paramName
-                     });
-                  }
-               });
-            }
-         }
-         else if (
+         if (
             $valueSelector &&
             $valueSelector.getValue &&
             $valueSelector.getValue()
          ) {
-            result[fieldId].value = $valueSelector.getValue();
+            let val = $valueSelector.getValue();
+            if (result[fieldId].set == 6) {
+               result[fieldId].value = result[fieldId].value || [];
+               let vals = (val || "").split(",") || [];
+               vals.forEach((v) => {
+                  let valData = v.split("|");
+                  result[fieldId].value.push({
+                     queryId: valData[0],
+                     paramName: valData[1]
+                  });
+               });
+            }
+            else {
+               result[fieldId].value = val;
+            }
          }
          else {
             result[fieldId].value = null;
