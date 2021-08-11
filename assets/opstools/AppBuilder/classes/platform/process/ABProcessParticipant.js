@@ -359,10 +359,9 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                              value: obj.fields || [],
                              disabled: obj.useField ? false : true,
                              suggest: (options.fields || [])
-                                .filter((f) => f && f.key == "user")
                                 .map((f) => {
                                    return {
-                                      id: f.id,
+                                      id: f.key,
                                       value: f.label
                                    };
                                 }),

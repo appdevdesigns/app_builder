@@ -1,5 +1,4 @@
 const InsertRecordTaskCore = require("../../../core/process/tasks/ABProcessTaskServiceInsertRecordCore.js");
-const ABProcessTaskServiceQuery = require("./ABProcessTaskServiceQuery.js");
 
 const AB = require("ab-utils");
 const reqAB = AB.reqAB({}, {});
@@ -148,10 +147,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
     * @return {mixed} | null
     */
    processDataPrevious(instance) {
-      let prevElem = (this.process.connectionPreviousTask(this) || []).filter(
-         (t) =>
-            t instanceof InsertRecord || t instanceof ABProcessTaskServiceQuery
-      )[0];
+      let prevElem = (this.process.connectionPreviousTask(this) || []).filter((t) => t instanceof InsertRecord)[0];
       if (!prevElem) return null;
 
       let result = prevElem.processData(instance);
@@ -275,7 +271,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                   let queryElem = this.process.elements((e) => e.id == val.queryId)[0];
                   if (!queryElem) return;
    
-                  let processData = queryElem.processData(instance, val.paramName);
+                  let processData = queryElem.processData(instance, `${queryElem.id}.${val.paramName}`);
                   if (processData == null || !processData.length) {
                      result[field.columnName] = null;
                      return;
