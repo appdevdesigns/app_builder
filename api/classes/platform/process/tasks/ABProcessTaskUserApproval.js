@@ -109,8 +109,12 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
 
                         // Combine user list
                         (this.toUsers.fields || []).forEach((pKey) => {
+                           let userData = jobData.data[pKey] || [];
+                           if (userData && !Array.isArray(userData))
+                              userData = [userData];
+
                            jobData.users = jobData.users.concat(
-                              (jobData.data[pKey] || [])
+                              userData
                                  .filter((u) => u)
                                  .map((u) => u.uuid || u.id || u)
                            );
