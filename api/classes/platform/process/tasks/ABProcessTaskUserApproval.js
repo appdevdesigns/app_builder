@@ -107,15 +107,17 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                            jobData.users.length
                         );
 
-                        // Combine user list 
+                        // Combine user list
                         (this.toUsers.fields || []).forEach((pKey) => {
-                           jobData.users = jobData.users.concat((jobData.data[pKey] || []).filter((u) => u).map((u) => u.uuid || u.id || u));
+                           jobData.users = jobData.users.concat(
+                              (jobData.data[pKey] || [])
+                                 .filter((u) => u)
+                                 .map((u) => u.uuid || u.id || u)
+                           );
                         });
 
                         // Remove empty items
-                        jobData.users = jobData.users.filter(
-                           (uId) => uId
-                        );
+                        jobData.users = jobData.users.filter((uId) => uId);
 
                         // Remove duplicate items
                         jobData.users = _.uniq(

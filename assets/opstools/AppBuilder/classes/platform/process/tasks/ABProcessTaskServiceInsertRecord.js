@@ -34,13 +34,13 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
 
       let repeatColumnList = this.objectOfStartElement
          ? this.objectOfStartElement
-            .fields((f) => f.key == "connectObject")
-            .map((f) => {
-               return {
-                  id: f.id,
-                  value: f.label
-               };
-            })
+              .fields((f) => f.key == "connectObject")
+              .map((f) => {
+                 return {
+                    id: f.id,
+                    value: f.label
+                 };
+              })
          : [];
 
       let getFieldOptions = (object) => {
@@ -108,13 +108,15 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             { id: 1, value: "Set by custom value" },
             {
                id: 2,
-               value: `Set by the root data [${startElemObj ? startElemObj.label : ""
-                  }]`
+               value: `Set by the root data [${
+                  startElemObj ? startElemObj.label : ""
+               }]`
             },
             {
                id: 3,
-               value: `Set by previous step data [${prevElemObj ? prevElemObj.label : ""
-                  }]`
+               value: `Set by previous step data [${
+                  prevElemObj ? prevElemObj.label : ""
+               }]`
             },
             { id: 4, value: "Set by formula format" }
          ];
@@ -124,8 +126,9 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
          if (fieldRepeat && fieldRepeat.datasourceLink) {
             setOptions.push({
                id: 5,
-               value: `Set by the instance [${this.fieldRepeat ? this.fieldRepeat.label : ""
-                  }]`
+               value: `Set by the instance [${
+                  this.fieldRepeat ? this.fieldRepeat.label : ""
+               }]`
             });
 
             repeatObjectFields = getFieldOptions(fieldRepeat.datasourceLink);
@@ -137,24 +140,13 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
          });
 
          // Pull query tasks option list
-         let queryTaskOptions = [];
-         (
-            this.process.elements(
-               (elem) =>
-                  elem &&
-                  elem.defaults &&
-                  elem.defaults.key == "TaskServiceQuery"
-            ) || []
-         ).forEach((q) => {
-            let paramNames = q.getValueParameterNames() || [];
-            paramNames.forEach((pName) => {
-               queryTaskOptions.push({
-                  id: `${q.id}|${pName}`,
-                  queryId: q.id,
-                  paramName: pName,
-                  value: `${q.label} - ${pName}`
-               });
-            });
+         let queryTaskOptions = (
+            this.process.processDataFields(this) || []
+         ).map((item) => {
+            return {
+               id: item.key,
+               value: item.label
+            };
          });
 
          // field options to the form
@@ -180,7 +172,7 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
                            view: "select",
                            options: setOptions,
                            on: {
-                              onChange: function (newVal, oldVal) {
+                              onChange: function(newVal, oldVal) {
                                  let $parent = this.getParentView();
                                  let $valuePanel = $parent.queryView({
                                     name: "valuePanel"
@@ -214,7 +206,7 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
                               },
                               {
                                  batch: 6,
-                                 view:"multicombo",
+                                 view: "multicombo",
                                  label: "",
                                  options: queryTaskOptions
                               }
@@ -393,15 +385,7 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
          });
 
          if ($valueSelector && $valueSelector.setValue) {
-            let val = fValue.value;
-
-            if (fValue.set == 6) {
-               val = [];
-               (fValue.value || []).forEach((v) => {
-                  val.push(`${v.queryId}|${v.paramName}`);
-               });
-            }
-            $valueSelector.setValue(val);
+            $valueSelector.setValue(fValue.value);
          }
       });
    }
@@ -429,23 +413,8 @@ module.exports = class InsertRecordTask extends InsertRecordTaskCore {
             $valueSelector.getValue &&
             $valueSelector.getValue()
          ) {
-            let val = $valueSelector.getValue();
-            if (result[fieldId].set == 6) {
-               result[fieldId].value = result[fieldId].value || [];
-               let vals = (val || "").split(",") || [];
-               vals.forEach((v) => {
-                  let valData = v.split("|");
-                  result[fieldId].value.push({
-                     queryId: valData[0],
-                     paramName: valData[1]
-                  });
-               });
-            }
-            else {
-               result[fieldId].value = val;
-            }
-         }
-         else {
+            result[fieldId].value = $valueSelector.getValue();
+         } else {
             result[fieldId].value = null;
          }
       });

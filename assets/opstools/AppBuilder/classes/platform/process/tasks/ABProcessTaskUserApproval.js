@@ -82,7 +82,9 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
          this.toUsers || {},
          {
             isFieldVisible: true,
-            fields: this.process.processDataFields(this).filter((f) => f.field && f.field instanceof ABFieldUser)
+            fields: this.process
+               .processDataFields(this)
+               .filter((f) => f.field && f.field instanceof ABFieldUser)
          }
       );
 

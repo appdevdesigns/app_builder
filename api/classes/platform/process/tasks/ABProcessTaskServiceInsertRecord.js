@@ -147,7 +147,9 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
     * @return {mixed} | null
     */
    processDataPrevious(instance) {
-      let prevElem = (this.process.connectionPreviousTask(this) || []).filter((t) => t instanceof InsertRecord)[0];
+      let prevElem = (this.process.connectionPreviousTask(this) || []).filter(
+         (t) => t instanceof InsertRecord
+      )[0];
       if (!prevElem) return null;
 
       let result = prevElem.processData(instance);
@@ -264,27 +266,36 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                );
                break;
             case "6":
-               item.value = item.value || [];
-               item.value.forEach((val) => {
-                  if (result[field.columnName] != null || val.queryId == null || val.paramName == null) return;
+               var paramKeys = (item.value || "").split(",");
+               (paramKeys || []).forEach((key) => {
+                  if (key == null) return;
 
-                  let queryElem = this.process.elements((e) => e.id == val.queryId)[0];
-                  if (!queryElem) return;
-   
-                  let processData = queryElem.processData(instance, `${queryElem.id}.${val.paramName}`);
+                  let processData = this.process.processData(this, [
+                     instance,
+                     key
+                  ]);
                   if (processData == null || !processData.length) {
                      result[field.columnName] = null;
                      return;
                   }
 
                   // If .field is a connect field who has M:1 or M:N relations, then it will set value with an array
-                  let isMultipleValue = field.key == "connectObject" && field.settings && field.settings.linkType == "many";
+                  let isMultipleValue =
+                     field.key == "connectObject" &&
+                     field.settings &&
+                     field.settings.linkType == "many";
                   if (isMultipleValue) {
                      result[field.columnName] = processData || [];
                   }
                   // If .field supports a single value, then it pull only the first value item.
-                  else {
-                     result[field.columnName] = processData[0] || null;
+                  else if (
+                     result[field.columnName] == null ||
+                     result[field.columnName] == ""
+                  ) {
+                     result[field.columnName] =
+                        (Array.isArray(processData)
+                           ? processData[0]
+                           : processData) || null;
                   }
                });
                break;
@@ -294,4 +305,3 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
       return result;
    }
 };
-

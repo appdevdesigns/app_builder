@@ -43,10 +43,12 @@ class ABQLRowSave extends ABQLRowSaveCore {
          if (!context.data) {
             // weird!  pass along our context with data == null;
             nextContext.log = "no data set!";
-         }
-         else {
+         } else {
             // NOTE:: If context.data is an array, then save only the first row ?
-            nextContext.data = Array.isArray(context.data) && context.data.length > 0 ? context.data[0] : context.data;
+            nextContext.data =
+               Array.isArray(context.data) && context.data.length > 0
+                  ? context.data[0]
+                  : context.data;
          }
 
          // save the current context.data to our process state:

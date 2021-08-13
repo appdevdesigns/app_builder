@@ -8,8 +8,7 @@
 
 const ABQLSetSaveCore = require("../../core/ql/ABQLSetSaveCore.js");
 
-class ABQLRowSave extends ABQLSetSaveCore {
-}
+class ABQLRowSave extends ABQLSetSaveCore {}
 ABQLRowSave.uiIndentNext = 20;
 
 module.exports = ABQLRowSave;
