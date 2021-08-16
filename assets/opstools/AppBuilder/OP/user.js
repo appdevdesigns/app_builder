@@ -9,11 +9,11 @@ class OPUser {
          tasks.push(
             new Promise((resolve, reject) => {
                Comm.Service.get({ url: "/site/user/data" })
-                  .catch(reject)
                   .then((data) => {
                      this.currentUser = data.user;
                      resolve();
-                  });
+                  })
+                  .catch(reject);
             })
          );
       }
@@ -23,11 +23,11 @@ class OPUser {
          tasks.push(
             new Promise((resolve, reject) => {
                Comm.Service.get({ url: "/app_builder/user/list" })
-                  .catch(reject)
                   .then((data) => {
                      this.userList = data;
                      resolve();
-                  });
+                  })
+                  .catch(reject);
             })
          );
       }
@@ -37,11 +37,11 @@ class OPUser {
          tasks.push(
             new Promise((resolve, reject) => {
                Comm.Service.get({ url: "/app_builder/user/myscopes" })
-                  .catch(reject)
                   .then((data) => {
                      this.scopeList = data;
                      resolve();
-                  });
+                  })
+                  .catch(reject);
             })
          );
       }
