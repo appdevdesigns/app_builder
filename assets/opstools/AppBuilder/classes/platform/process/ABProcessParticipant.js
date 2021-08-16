@@ -19,14 +19,6 @@ let __Users = null;
 // let __alertTimeout = 0;
 function loadUsers() {
    OP.User.init()
-      .catch(function(err) {
-         AD.error.log(
-            "ABProcessParticipantCore: Error loading OP.User.userlist",
-            {
-               error: err
-            }
-         );
-      })
       .then(() => {
          __Users = OP.User.userlist().map((u) => {
             return {
@@ -34,6 +26,14 @@ function loadUsers() {
                value: u.username
             };
          });
+      })
+      .catch(function(err) {
+         AD.error.log(
+            "ABProcessParticipantCore: Error loading OP.User.userlist",
+            {
+               error: err
+            }
+         );
       });
 
    // var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
