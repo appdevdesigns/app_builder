@@ -41,7 +41,7 @@ module.exports = {
       ABUser.find(
          {},
          {
-            select: ["username", "image_id"]
+            select: ["uuid", "username", "image_id"]
          }
       )
          .then(function(result) {

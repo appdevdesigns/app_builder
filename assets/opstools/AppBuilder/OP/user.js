@@ -1,29 +1,59 @@
 import Comm from "./comm/comm";
 
 class OPUser {
-   constructor() {
+   initial() {
+      let tasks = [];
+
       // get current user
       if (this.currentUser == null) {
-         Comm.Service.get({ url: "/site/user/data" }).then((data) => {
-            this.currentUser = data.user;
-         });
+         tasks.push(
+            new Promise((resolve, reject) => {
+               Comm.Service.get({ url: "/site/user/data" })
+                  .then((data) => {
+                     this.currentUser = data.user;
+                     resolve();
+                  })
+                  .catch(reject);
+            })
+         );
       }
 
       // get the user list
       if (this.userList == null) {
-         Comm.Service.get({ url: "/app_builder/user/list" }).then((data) => {
-            this.userList = data;
-         });
+         tasks.push(
+            new Promise((resolve, reject) => {
+               Comm.Service.get({ url: "/app_builder/user/list" })
+                  .then((data) => {
+                     this.userList = data;
+                     resolve();
+                  })
+                  .catch(reject);
+            })
+         );
       }
 
       // get the user's scopes
       if (this.scopeList == null) {
-         Comm.Service.get({ url: "/app_builder/user/myscopes" }).then(
-            (data) => {
-               this.scopeList = data;
-            }
+         tasks.push(
+            new Promise((resolve, reject) => {
+               Comm.Service.get({ url: "/app_builder/user/myscopes" })
+                  .then((data) => {
+                     this.scopeList = data;
+                     resolve();
+                  })
+                  .catch(reject);
+            })
          );
       }
+
+      return Promise.all(tasks).then(() => {
+         this.__isInitial = true;
+         return Promise.resolve();
+      });
+   }
+
+   get isInitial() {
+      return this.__isInitial || false;
    }
 }
 
@@ -33,7 +63,12 @@ export default {
    },
 
    init: function() {
-      if (!this.__user) this.__user = new OPUser();
+      if (!this.__user || !this.__user.isInitial) {
+         this.__user = new OPUser();
+         return this.__user.initial();
+      } else {
+         return Promise.resolve();
+      }
    },
 
    user: function() {
