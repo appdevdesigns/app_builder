@@ -32,7 +32,7 @@ class ABQLRowPluck extends ABQLRowPluckCore {
             // Clean up the data to match the pluck field
             if (context.data) {
                // If the pluck field is the M:N, M:1 connect field, then it should pass an array data
-               if (this.field.key == "connectObject" && this.field.settings.linkType == "many") {
+               if (this.fieldID != "_PK" && this.field.key == "connectObject" && this.field.settings.linkType == "many") {
                   // Convert to an array
                   if (!Array.isArray(context.data)) context.data = [context.data];
                }
