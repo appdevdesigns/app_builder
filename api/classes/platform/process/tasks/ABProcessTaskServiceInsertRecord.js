@@ -285,7 +285,8 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                      field.settings &&
                      field.settings.linkType == "many";
                   if (isMultipleValue) {
-                     result[field.columnName] = processData || [];
+                     result[field.columnName] = result[field.columnName] || [];
+                     result[field.columnName] = result[field.columnName].concat((processData || []).filter(d => d != null));
                   }
                   // If .field supports a single value, then it pull only the first value item.
                   else if (
