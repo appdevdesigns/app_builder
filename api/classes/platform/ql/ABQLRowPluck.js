@@ -28,6 +28,28 @@ class ABQLRowPluck extends ABQLRowPluckCore {
          // change label from "ABQLSetPluck" to "ABQLRowPluck"
          .then((context) => {
             context.label = "ABQLRowPluck";
+
+            // Clean up the data to match the pluck field
+            if (context.data) {
+               // If the pluck field is the M:N, M:1 connect field, then it should pass an array data
+               if (this.field.key == "connectObject" && this.field.settings.linkType == "many") {
+                  // Convert to an array
+                  if (!Array.isArray(context.data)) context.data = [context.data];
+               }
+               // Normal field should pass a single object value
+               else if (Array.isArray(context.data)) {
+                  if (context.data.length > 1) {
+                     context.log = "The data values have more than 1. The field does not support multiple values.";
+                  }
+                  else if (context.data.length == 1) {
+                     context.data = context.data[0];
+                  }
+                  else if (context.data.length < 1) {
+                     context.data = null;
+                  }
+               }
+            }
+
             return context;
          });
 
