@@ -39,7 +39,8 @@ class ABQLRowPluck extends ABQLRowPluckCore {
                // Normal field should pass a single object value
                else if (Array.isArray(context.data)) {
                   if (context.data.length > 1) {
-                     context.log = "The data values have more than 1. The field does not support multiple values.";
+                     this.process.log(`The data values have more than 1. "${this.field.columnName}" does not support multiple values.`);
+                     context.data = context.data[0];
                   }
                   else if (context.data.length == 1) {
                      context.data = context.data[0];
