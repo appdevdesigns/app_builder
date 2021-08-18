@@ -274,8 +274,8 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                      instance,
                      key
                   ]);
-                  if (processData == null || !processData.length) {
-                     result[field.columnName] = null;
+                  if (processData == null) {
+                     result[field.columnName] = result[field.columnName] != null && result[field.columnName] != "" ? result[field.columnName] : null;
                      return;
                   }
 
