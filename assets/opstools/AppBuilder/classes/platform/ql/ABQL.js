@@ -211,7 +211,7 @@ class ABQL extends ABQLCore {
     * @return {obj}
     */
    uiNextRow(id) {
-      var options = this.constructor.NextQLOps.map((op) => {
+      var options = (this.NextQLOps || this.constructor.NextQLOps).map((op) => {
          return { id: op.key, value: op.label };
       });
       options.unshift({ id: 0, value: "choose next operation" });
@@ -240,7 +240,9 @@ class ABQL extends ABQLCore {
                      if (newValue == oldValue) {
                         return;
                      }
-                     var newOP = this.constructor.NextQLOps.find((op) => {
+                     var newOP = (
+                        this.NextQLOps || this.constructor.NextQLOps
+                     ).find((op) => {
                         return op.key == newValue;
                      });
                      if (!newOP) {
@@ -312,6 +314,14 @@ class ABQL extends ABQLCore {
       return uiRow;
    }
 
+   uiNextRowSelectorRefresh(id) {
+      let $select = $$(this.ids.select);
+      if (!$select) return;
+
+      let uiNextRow = this.uiNextRow(id);
+      webix.ui(uiNextRow.cols[1], $select);
+   }
+
    /**
     * @method uiParamUI()
     * return the webix UI definition for the parameter entry of this current
@@ -349,7 +359,7 @@ class ABQL extends ABQLCore {
             if (!this.fieldID && options.length > 0) {
                // act like it was selected:
                this.params[pDef.name] = options[0].id;
-               this.paramChanged(pDef);
+               this.paramChanged(pDef, id);
             }
             paramUI = {
                id: this.ids.objectfields,
@@ -361,7 +371,7 @@ class ABQL extends ABQLCore {
                      // this.params = this.params || {};
                      if (newValue != this.params[pDef.name]) {
                         this.params[pDef.name] = newValue;
-                        this.paramChanged(pDef);
+                        this.paramChanged(pDef, id);
                      }
                   }
                }
@@ -383,7 +393,7 @@ class ABQL extends ABQLCore {
                      this.params = this.params || {};
                      if (newValue != this.params[pDef.name]) {
                         this.params[pDef.name] = newValue;
-                        this.paramChanged(pDef);
+                        this.paramChanged(pDef, id);
                      }
                   }
                }
@@ -649,7 +659,7 @@ class ABQL extends ABQLCore {
                      // this.params = this.params || {};
                      if (newValue != this.params[pDef.name]) {
                         this.params[pDef.name] = newValue;
-                        this.paramChanged(pDef);
+                        this.paramChanged(pDef, id);
                      }
                   }
                }

@@ -25,6 +25,12 @@ module.exports = {
       //     autoIncrement: true
       // },
 
+      uuid: {
+         type: "string",
+         maxLength: 36,
+         unique: true
+      },
+
       // GUID from external authentication service such as CAS
       guid: {
          type: "string",

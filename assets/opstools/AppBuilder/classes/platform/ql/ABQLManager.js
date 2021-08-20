@@ -241,7 +241,7 @@ var ABQLManager = {
 
             var nextRow = parseCurrent(
                rows,
-               currOP.constructor.NextQLOps,
+               currOP.NextQLOps || currOP.constructor.NextQLOps,
                currOP
             );
             currOP.next = nextRow;
