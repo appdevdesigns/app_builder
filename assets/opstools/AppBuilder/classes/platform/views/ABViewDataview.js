@@ -105,32 +105,35 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
 
       com.ui = {
          id: ids.component,
-         body: {
-            id: ids.scrollview,
-            view: "scrollview",
-            scroll: "y",
-            body: {
-               id: ids.dataFlexView,
-               view: "flexlayout",
-               paddingX: 15,
-               paddingY: 19,
-               type: "space",
-               cols: []
-            },
-            on: {
-               onAfterScroll: function() {
-                  let pos = this.getScrollState();
+         rows: [
+            {
+               id: ids.scrollview,
+               view: "scrollview",
+               scroll: "y",
+               body: {
+                  id: ids.dataFlexView,
+                  view: "flexlayout",
+                  paddingX: 15,
+                  paddingY: 19,
+                  type: "space",
+                  cols: []
+               },
+               on: {
+                  onAfterScroll: function() {
+                     let pos = this.getScrollState();
 
-                  com.logic.scroll(pos);
+                     com.logic.scroll(pos);
+                  }
                }
             }
-         }
+         ]
       };
 
       if (this.settings.height) com.ui.height = this.settings.height;
 
       com.init = (options) => {
          var dc = this.datacollection;
+         var dataView = $$(ids.dataFlexView);
          if (!dc) return;
 
          // initial the link page helper
@@ -139,20 +142,42 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
             datacollection: dc
          });
 
-         com.logic.busy();
-
-         this.eventClear();
-
-         this.eventAdd({
-            emitter: dc,
-            eventName: "loadData",
-            listener: () => {
-               // we need to empty out any rows rendered because they were
-               // part of a different set of data.
-               com.emptyView();
-               com.renderData();
-            }
+         if (dc.datacollectionLink && dc.fieldLink) {
+            dc.bind(dataView, dc.datacollectionLink, dc.fieldLink);
+         } else {
+            dc.bind(dataView);
+         }
+         dc.on("initializingData", () => {
+            com.logic.busy();
          });
+         dc.on("initializedData", () => {
+            com.logic.ready();
+         });
+         dc.on("loadData", () => {
+            com.emptyView();
+            com.renderData();
+         });
+         dc.on("update", () => {
+            com.emptyView();
+            com.renderData();
+         });
+         dc.on("delete", () => {
+            com.emptyView();
+            com.renderData();
+         });
+
+         // this.eventClear();
+         //
+         // this.eventAdd({
+         //    emitter: dc,
+         //    eventName: "loadData",
+         //    listener: () => {
+         //       // we need to empty out any rows rendered because they were
+         //       // part of a different set of data.
+         //       com.emptyView();
+         //       com.renderData();
+         //    }
+         // });
       };
 
       com.logic = {
@@ -294,11 +319,17 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
          var records = [];
 
          var dc = this.datacollection;
-         if (!dc) return;
+         if (!dc) {
+            com.logic.ready();
+            return;
+         }
 
          var Layout = $$(ids.dataFlexView) || $$(ids.component);
 
-         if (!Layout || isNaN(Layout.$width)) return;
+         if (!Layout || isNaN(Layout.$width)) {
+            com.logic.ready();
+            return;
+         }
 
          var recordWidth = Math.floor(
             (Layout.$width - 40 - parseInt(this.settings.xCount) * 20) /
@@ -308,7 +339,10 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
          var rows = dc.getData();
 
          // if this amount of data is already parsed just skip the rest.
-         if (Layout.currentLength == rows.length) return;
+         if (Layout.currentLength == rows.length) {
+            com.logic.ready();
+            return;
+         }
 
          Layout.currentLength = rows.length;
 
@@ -320,11 +354,7 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
          let stopPos = rows.length;
 
          if (this._startPos == 0) {
-            if (rows.length < 20) {
-               stopPos = rows.length;
-            } else {
-               stopPos = 20;
-            }
+            stopPos = rows.length;
          } else if (rows.length - this._startPos > 20) {
             stopPos = this._startPos + 20;
          }
