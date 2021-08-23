@@ -9,8 +9,14 @@ const FilterComplexCore = require("../core/FilterComplexCore");
  */
 function _toInternal(cond) {
    if (cond.key) {
-      if (cond.rule && cond.rule.indexOf(cond.key) == -1) {
-         cond.rule = `${cond.key}_${cond.rule}`;
+      if (cond.key != "this_object") {
+         if (cond.rule && cond.rule.indexOf(cond.key) == -1) {
+            cond.rule = `${cond.key}_${cond.rule}`;
+         }
+      } else {
+         if (cond.rule && cond.rule.indexOf("uuid") == -1) {
+            cond.rule = `uuid_${cond.rule}`;
+         }
       }
    }
 
@@ -30,8 +36,14 @@ function _toInternal(cond) {
  */
 function _toExternal(cond) {
    if (cond.key) {
-      if (cond.rule && cond.rule.indexOf(cond.key) > -1) {
-         cond.rule = cond.rule.replace(`${cond.key}_`, "");
+      if (cond.key != "this_object") {
+         if (cond.rule && cond.rule.indexOf(cond.key) > -1) {
+            cond.rule = cond.rule.replace(`${cond.key}_`, "");
+         }
+      } else {
+         if (cond.rule && cond.rule.indexOf("uuid") > -1) {
+            cond.rule = cond.rule.replace(`uuid_`, "");
+         }
       }
    }
 
