@@ -77,7 +77,6 @@ function findDcEntry(_where) {
          entry = findDcEntry(_where.rules[i]);
          if (entry) {
             return entry;
-            break;
          }
       }
       return entry;
