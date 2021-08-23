@@ -53,7 +53,7 @@ class ABQLRowSave extends ABQLRowSaveCore {
 
          // save the current context.data to our process state:
          let value = {};
-         value[this.taskParam] = context.data;
+         value[this.taskParam] = nextContext.data;
          this.task.stateUpdate(instance, value);
 
          return nextContext;
