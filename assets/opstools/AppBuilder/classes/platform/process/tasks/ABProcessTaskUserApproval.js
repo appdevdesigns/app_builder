@@ -2,6 +2,7 @@
 // const ABApplication = require("./ABApplication"); // NOTE: change to require()
 const ABProcessTaskUserApprovalCore = require("../../../core/process/tasks/ABProcessTaskUserApprovalCore.js");
 const ABProcessParticipant = require("../ABProcessParticipant.js");
+const ABFieldUser = require("../../dataFields/ABFieldUser.js");
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -81,9 +82,9 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
          this.toUsers || {},
          {
             isFieldVisible: true,
-            fields: this.objectOfStartElement
-               ? this.objectOfStartElement.fields()
-               : []
+            fields: this.process
+               .processDataFields(this)
+               .filter((f) => f.field && f.field instanceof ABFieldUser)
          }
       );
 

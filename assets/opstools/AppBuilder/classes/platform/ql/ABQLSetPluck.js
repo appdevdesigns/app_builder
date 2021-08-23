@@ -61,7 +61,7 @@ class ABQLSetPluck extends ABQLSetPluckCore {
     */
    paramChanged(pDef) {
       if (pDef.name == "field") {
-         debugger;
+         // debugger;
          this.fieldID = this.params[pDef.name];
          // v2 method:
          // this.field = this.object.fieldByID(this.fieldID);

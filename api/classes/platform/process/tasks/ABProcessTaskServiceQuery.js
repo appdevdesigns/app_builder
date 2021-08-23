@@ -64,9 +64,9 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
             .then((result) => {
                // this resolves when all the operations are finished
                // so we are done!
-               this.stateUpdate(instance, {
-                  data: result ? result.data : null
-               });
+               // this.stateUpdate(instance, {
+               //    data: result ? result.data : null
+               // });
 
                this.log(instance, `${this.name} completed successfully`);
                this.stateCompleted(instance);
