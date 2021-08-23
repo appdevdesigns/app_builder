@@ -99,36 +99,38 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
 
                      // pull user data from the user fields
                      if (parseInt(this.toUsers.useField) == 1) {
-                        this._getUserListOfStartElement(instance)
-                           .then((userList) => {
-                              jobData.users = jobData.users || [];
+                        jobData.users = jobData.users || [];
 
-                              // Copy the array because I don't want to mess up this.toUsers.account
-                              jobData.users = jobData.users.slice(
-                                 0,
-                                 jobData.users.length
-                              );
+                        // Copy the array because I don't want to mess up this.toUsers.account
+                        jobData.users = jobData.users.slice(
+                           0,
+                           jobData.users.length
+                        );
 
-                              // Combine user id from Account & Field options
-                              jobData.users = jobData.users.concat(
-                                 userList.map((u) => u.uuid || u.id)
-                              );
+                        // Combine user list
+                        (this.toUsers.fields || []).forEach((pKey) => {
+                           let userData = jobData.data[pKey] || [];
+                           if (userData && !Array.isArray(userData))
+                              userData = [userData];
 
-                              // Remove empty items
-                              jobData.users = jobData.users.filter(
-                                 (uId) => uId
-                              );
+                           jobData.users = jobData.users.concat(
+                              userData
+                                 .filter((u) => u)
+                                 .map((u) => u.uuid || u.id || u)
+                           );
+                        });
 
-                              // Remove duplicate items
-                              jobData.users = _.uniq(
-                                 jobData.users,
-                                 false,
-                                 (u) => u.toString() // support compare with different types
-                              );
+                        // Remove empty items
+                        jobData.users = jobData.users.filter((uId) => uId);
 
-                              resolve(jobData);
-                           })
-                           .catch(reject);
+                        // Remove duplicate items
+                        jobData.users = _.uniq(
+                           jobData.users,
+                           false,
+                           (u) => u.toString() // support compare with different types
+                        );
+
+                        resolve(jobData);
                      } else {
                         resolve(jobData);
                      }
