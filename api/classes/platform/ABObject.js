@@ -1041,6 +1041,18 @@ module.exports = class ABClassObject extends ABObjectCore {
             .then(
                (isBlocked) =>
                   new Promise((next, err) => {
+                     if (isBlocked) return next(isBlocked);
+
+                     this.processFilterPolicy(where, userData)
+                        .then(() => {
+                           next(isBlocked);
+                        })
+                        .catch(err);
+                  })
+            )
+            .then(
+               (isBlocked) =>
+                  new Promise((next, err) => {
                      // If user is anonymous, then return empty data.
                      if (isBlocked) {
                         query.clearWhere().whereRaw("1 = 0");
@@ -1889,7 +1901,8 @@ module.exports = class ABClassObject extends ABObjectCore {
       const PolicyList = [
          require("../../policies/ABModelConvertSameAsUserConditions"),
          require("../../policies/ABModelConvertQueryConditions"),
-         require("../../policies/ABModelConvertQueryFieldConditions")
+         require("../../policies/ABModelConvertQueryFieldConditions"),
+         require("../../policies/ABModelConvertDataCollectionCondition")
       ];
 
       // run the options.where through our existing policy filters
