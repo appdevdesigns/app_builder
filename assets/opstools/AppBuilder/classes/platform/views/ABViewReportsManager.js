@@ -292,52 +292,6 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                         );
                      });
 
-                     // NOTE: fix format of date column type
-                     let $report = $$(ids.component);
-                     if ($report) {
-                        let $datatable = $report.queryView({
-                           view: "datatable"
-                        });
-                        if ($datatable) {
-                           if (this.__datatableOnViewShow)
-                              $datatable.detachEvent(
-                                 this.__datatableOnViewShow
-                              );
-                           this.__datatableOnViewShow = $datatable.attachEvent(
-                              "onBeforeRender",
-                              () => {
-                                 ($datatable.config.columns || [])
-                                    .filter((c) => c.type == "date")
-                                    .forEach((c) => {
-                                       c.format = (val) => {
-                                          // check valid date
-                                          if (
-                                             val &&
-                                             val.getTime &&
-                                             !isNaN(val.getTime())
-                                          ) {
-                                             // pull ABDateField
-                                             let dateField = reportFields.filter(
-                                                (f) => f.id == c.id
-                                             )[0];
-                                             dateField = dateField
-                                                ? dateField.abField
-                                                : null;
-
-                                             // display date format
-                                             return dateField
-                                                ? dateField.getDateDisplay(val)
-                                                : webix.i18n.dateFormatStr(val);
-                                          } else {
-                                             return "";
-                                          }
-                                       };
-                                    });
-                              }
-                           );
-                        }
-                     }
-
                      return (
                         Promise.resolve()
                            .then(() => Promise.all(pullDataTasks))
@@ -635,6 +589,44 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                   getFieldData(fieldId) {
                      // TODO
                      return webix.promise.resolve([]);
+                  }
+               }
+            ],
+            [
+               reports.views.table,
+               class MyTable extends reports.views.table {
+                  // NOTE: fix format of date column type
+                  GetColumnConfig(a) {
+                     if (a.type === "date") {
+                        return {
+                           id: a.id,
+                           header:
+                              !a.meta.header || a.meta.header === "none"
+                                 ? a.meta.name || a.name
+                                 : [
+                                      a.meta.name || a.name,
+                                      {
+                                         content:
+                                            a.header === "text"
+                                               ? "textFilter"
+                                               : "richSelectFilter"
+                                      }
+                                   ],
+                           type: a.type,
+                           sort: "date",
+                           width: a.width || 200,
+                           format: (val) => {
+                              // check valid date
+                              if (val && val.getTime && !isNaN(val.getTime())) {
+                                 return webix.i18n.dateFormatStr(val);
+                              } else {
+                                 return "";
+                              }
+                           }
+                        };
+                     } else {
+                        return super.GetColumnConfig(a);
+                     }
                   }
                }
             ]
