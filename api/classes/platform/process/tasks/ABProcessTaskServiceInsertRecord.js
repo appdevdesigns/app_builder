@@ -313,7 +313,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                            match,
                            this.process.processData(this, [
                               instance,
-                              processField.id
+                              processField.key
                            ])
                         );
                      }
