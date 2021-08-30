@@ -299,9 +299,22 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                      }
                      // Pull data from a saved parameter in the query task
                      else {
+                        let processField = (
+                           this.process.processDataFields(this) || []
+                        ).filter(
+                           (opt) =>
+                              opt &&
+                              (opt.key == param ||
+                                 opt.value == param ||
+                                 opt.label == param)
+                        )[0];
+
                         formula = formula.replace(
                            match,
-                           this.process.processData(this, [instance, param])
+                           this.process.processData(this, [
+                              instance,
+                              processField.id
+                           ])
                         );
                      }
                   });
