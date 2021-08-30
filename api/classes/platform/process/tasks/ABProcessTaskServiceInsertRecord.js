@@ -309,13 +309,15 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                                  opt.label == param)
                         )[0];
 
-                        formula = formula.replace(
-                           match,
-                           this.process.processData(this, [
-                              instance,
-                              processField.key
-                           ])
-                        );
+                        if (processField) {
+                           formula = formula.replace(
+                              match,
+                              this.process.processData(this, [
+                                 instance,
+                                 processField.key
+                              ])
+                           );
+                        }
                      }
                   });
 
