@@ -244,7 +244,69 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                break;
             case "4": // formula value
                if (item.value) {
-                  let evalValue = eval(item.value);
+                  let formula = item.value || "";
+
+                  // pull [PARAMETER NAME] names
+                  let paramNames = formula.match(/\[(.*?)\]/g) || [];
+                  paramNames.forEach((match) => {
+                     let param = match.replace(/\[/g, "").replace(/\]/g, "");
+
+                     let sourceName = param.split(".")[0];
+                     let fieldName = param.split(".")[1];
+
+                     // Pull data from the start trigger
+                     // or a previous insert process task
+                     if (
+                        fieldName &&
+                        (sourceName == "startData" ||
+                           sourceName == "previousData")
+                     ) {
+                        // Pull an object
+                        let sourceObj =
+                           sourceName == "startData"
+                              ? this.objectOfStartElement
+                              : this.objectOfPrevElement;
+                        if (!sourceObj) return;
+
+                        // Pull a field
+                        let sourceField = sourceObj.fields((f) => {
+                           return (
+                              f.id == fieldName ||
+                              f.columnName == fieldName ||
+                              (f.translations || []).filter(
+                                 (tran) => tran.label == fieldName
+                              ).length
+                           );
+                        })[0];
+                        if (!sourceField) return;
+
+                        // Get value from a field that calculates value on fly
+                        if (sourceField.key == "calculate") {
+                           formula = formula.replace(
+                              match,
+                              sourceName == "startData"
+                                 ? sourceField.format(startData)
+                                 : sourceField.format(previousData)
+                           );
+                        } else {
+                           formula = formula.replace(
+                              match,
+                              sourceName == "startData"
+                                 ? startData[fieldName]
+                                 : previousData[fieldName]
+                           );
+                        }
+                     }
+                     // Pull data from a saved parameter in the query task
+                     else {
+                        formula = formula.replace(
+                           match,
+                           this.process.processData(this, [instance, param])
+                        );
+                     }
+                  });
+
+                  let evalValue = eval(formula);
 
                   if (
                      evalValue.toString &&
@@ -275,7 +337,11 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                      key
                   ]);
                   if (processData == null) {
-                     result[field.columnName] = result[field.columnName] != null && result[field.columnName] != "" ? result[field.columnName] : null;
+                     result[field.columnName] =
+                        result[field.columnName] != null &&
+                        result[field.columnName] != ""
+                           ? result[field.columnName]
+                           : null;
                      return;
                   }
 
@@ -286,7 +352,9 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                      field.settings.linkType == "many";
                   if (isMultipleValue) {
                      result[field.columnName] = result[field.columnName] || [];
-                     result[field.columnName] = result[field.columnName].concat((processData || []).filter(d => d != null));
+                     result[field.columnName] = result[field.columnName].concat(
+                        (processData || []).filter((d) => d != null)
+                     );
                   }
                   // If .field supports a single value, then it pull only the first value item.
                   else if (
