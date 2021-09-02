@@ -219,7 +219,14 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
             if (fieldId == "PK") {
                columnName = object.PK();
             } else {
-               let field = object.fields((f) => f.id == fieldId)[0];
+               let field = object.fields(
+                  (f) =>
+                     f.id == fieldId ||
+                     f.columnName == fieldId ||
+                     (f.translations || []).filter(
+                        (tran) => tran.label == fieldId
+                     ).length
+               )[0];
                if (!field) return null;
 
                columnName = field.columnName;
