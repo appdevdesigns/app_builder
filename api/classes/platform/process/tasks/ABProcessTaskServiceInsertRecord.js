@@ -411,7 +411,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                   ) {
                      result[field.columnName] =
                         (Array.isArray(processData)
-                           ? processData[0]
+                           ? processData.filter((d) => d != null)[0]
                            : processData) || null;
                   }
                });
@@ -422,3 +422,4 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
       return result;
    }
 };
+
