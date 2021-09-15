@@ -32,24 +32,7 @@ function loadUsers() {
             "ABProcessParticipantCore: Error loading OP.User.userlist",
             {
                error: err
-            });
-         })
-         .then(function(list) {
-            list.forEach(function(l) {
-               __Users.push({
-                  id: l.username, // <-- v2 now uses .username  l.uuid || l.id,
-                  value: l.username
-               });
-            });
-         });
-   } else {
-      __alertCount++;
-      if (__alertCount >= 5) {
-         __alertCount = 0;
-
-         console.warn(
-            "opstools.RBAC.SiteUser : not found yet ... trying again",
-            "(NOTE: if the current viewer does not have permission to see RBAC, this will continue to fail."
+            }
          );
       });
 
