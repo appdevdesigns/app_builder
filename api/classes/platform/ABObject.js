@@ -8,7 +8,8 @@ const ABObjectCore = require(path.join(
    "ABObjectCore.js"
 ));
 const Model = require("objection").Model;
-const ABModel = require(path.join(__dirname, "ABModel.js"));
+
+// const ABModel = require(path.join(__dirname, "ABModel.js"));
 
 // const ABGraphScope = require("../../graphModels/ABScope");
 // const ABObjectScope = require("../../systemObjects/scope");
@@ -94,6 +95,15 @@ module.exports = class ABClassObject extends ABObjectCore {
       this._stashIndexes = [];
    }
 
+   applyIndexNormal() {
+      this._indexes = this._stashIndexNormal || [];
+   }
+
+   getStashedIndexNormals() {
+      if (!this._stashIndexNormal) return null;
+      return this._stashIndexNormal;
+   }
+
    /**
     * @method getStashedIndexes()
     * return the array of stashed indexes.
@@ -167,6 +177,11 @@ module.exports = class ABClassObject extends ABObjectCore {
             });
          }
       });
+   }
+
+   stashIndexNormal() {
+      this._stashIndexNormal = this._indexes;
+      this._indexes = [];
    }
 
    ///
@@ -278,11 +293,66 @@ module.exports = class ABClassObject extends ABObjectCore {
                      .catch(reject);
                } else {
                   sails.log.verbose("... already there.");
-                  resolve();
+                  // the Object might already exist,  but we need to make sure any added
+                  // fields are created.
+                  this.migrateCreateFields(/* req,*/ knex)
+                     .then(resolve)
+                     .catch(reject);
                }
             })
             .catch(reject);
       });
+   }
+
+   /**
+    * @method migrateCreateFields()
+    * Step through all our fields and have them perform their .migrateCreate()
+    * actions.  These fields need to be created in a specific order:
+    *    normal Fields
+    *    indexes
+    *    connect Fields
+    *
+    * @param {ABUtil.reqService} req
+    *        the request object for the job driving the migrateCreate().
+    * @param {knex} knex
+    *        the Knex connection.
+    * @return {Promise}
+    */
+   migrateCreateFields(/* req,*/ knex) {
+      var connectFields = this.connectFields();
+      return Promise.resolve()
+         .then(() => {
+            //// NOTE: NOW the table is created
+            //// let's go add our Fields to it:
+            let fieldUpdates = [];
+            let normalFields = this.fields(
+               (f) =>
+                  f &&
+                  !connectFields.find(
+                     (c) => c.id == f.id
+                  ) /* f.key != "connectObject" */
+            );
+            normalFields.forEach((f) => {
+               fieldUpdates.push(this.migrateField(f, /* req,*/ knex));
+            });
+            return Promise.all(fieldUpdates);
+         })
+         .then(() => {
+            // Now Create our indexes
+            let fieldUpdates = [];
+            this.indexes().forEach((idx) => {
+               fieldUpdates.push(this.migrateField(idx, /* req,*/ knex));
+            });
+            return Promise.all(fieldUpdates);
+         })
+         .then(() => {
+            // finally create any connect Fields
+            let fieldUpdates = [];
+            connectFields.forEach((f) => {
+               fieldUpdates.push(this.migrateField(f, /* req,*/ knex));
+            });
+            return Promise.all(fieldUpdates);
+         });
    }
 
    /**
@@ -325,6 +395,30 @@ module.exports = class ABClassObject extends ABObjectCore {
                   .catch(reject);
             })
             .catch(reject);
+      });
+   }
+
+   /**
+    * @method migrateField()
+    * tell a given field to perform it's .migrateCreate() action.
+    * this is part of the .migrateCreate() => .migrateCreateFields() => migrageField()
+    * process.
+    * @param {ABField} f
+    *        the current field we need to perform our migration.
+    * @param {ABUtil.reqService} req
+    *        the request object for the job driving the migrateCreate().
+    * @param {knex} knex
+    *        the Knex connection.
+    * @return {Promise}
+    */
+   migrateField(f, /* req,*/ knex) {
+      return f.migrateCreate(/* req,*/ knex).catch((err) => {
+         // req.notify.developer(err, {
+         //    context: `field[${f.name || f.label}].migrateCreate(): error:`,
+         //    field: f,
+         //    AB: this.AB
+         // });
+         throw err;
       });
    }
 
@@ -947,6 +1041,18 @@ module.exports = class ABClassObject extends ABObjectCore {
             .then(
                (isBlocked) =>
                   new Promise((next, err) => {
+                     if (isBlocked) return next(isBlocked);
+
+                     this.processFilterPolicy(where, userData)
+                        .then(() => {
+                           next(isBlocked);
+                        })
+                        .catch(err);
+                  })
+            )
+            .then(
+               (isBlocked) =>
+                  new Promise((next, err) => {
                      // If user is anonymous, then return empty data.
                      if (isBlocked) {
                         query.clearWhere().whereRaw("1 = 0");
@@ -1331,14 +1437,22 @@ module.exports = class ABClassObject extends ABObjectCore {
                }
 
                // Search string value of FK column
-               else if (
-                  field.key == "connectObject" &&
-                  (condition.rule == "contains" ||
-                     condition.rule == "not_contains" ||
-                     condition.rule == "equals" ||
-                     condition.rule == "not_equal")
-               ) {
-                  this.convertConnectFieldCondition(field, condition);
+               else if (field.key == "connectObject") {
+                  switch (condition.rule) {
+                     case "contains":
+                     case "not_contains":
+                     case "equals":
+                     case "not_equal":
+                        this.convertConnectFieldCondition(field, condition);
+                        break;
+                     case "is_empty":
+                     case "is_not_empty":
+                        this.convertConnectFieldIsEmptyCondition(
+                           field,
+                           condition
+                        );
+                        break;
+                  }
                }
             }
          }
@@ -1416,11 +1530,11 @@ module.exports = class ABClassObject extends ABObjectCore {
          });
          condition.rule = rule;
          // basic case:  simple conversion
-         var operator = conversionHash[condition.rule];
-         var value = condition.value;
+         var operator = conversionHash[condition.rule] || condition.rule;
+         var value = condition.value || "";
 
-         // If a function, then ignore quote. like DATE('05-05-2020')
-         if (!RegExp("^[A-Z]+[(].*[)]$").test(value)) {
+         // If a function string or knex.raw(), then ignore quote. like DATE('05-05-2020')
+         if (!RegExp("^[A-Z]+[(].*[)]$").test(value) && value.sql == null) {
             value = quoteMe(value);
          }
 
@@ -1624,7 +1738,7 @@ module.exports = class ABClassObject extends ABObjectCore {
          }
       };
 
-      parseCondition(where, query);
+      parseCondition(this.application.cloneDeep(where), query);
 
       // Special Case:  'have_no_relation'
       // 1:1 - Get rows that no relation with
@@ -1787,7 +1901,8 @@ module.exports = class ABClassObject extends ABObjectCore {
       const PolicyList = [
          require("../../policies/ABModelConvertSameAsUserConditions"),
          require("../../policies/ABModelConvertQueryConditions"),
-         require("../../policies/ABModelConvertQueryFieldConditions")
+         require("../../policies/ABModelConvertQueryFieldConditions"),
+         require("../../policies/ABModelConvertDataCollectionCondition")
       ];
 
       // run the options.where through our existing policy filters
@@ -2061,6 +2176,52 @@ module.exports = class ABClassObject extends ABObjectCore {
             condition.rule == "contains" || condition.rule == "equals"
                ? "in"
                : "not_in";
+      }
+   }
+
+   convertConnectFieldIsEmptyCondition(field, condition) {
+      let connectType = `${field.settings.linkType}:${field.settings.linkViaType}`;
+      let fieldLink = field.fieldLink;
+      let joinTableName = field.joinTableName(true);
+
+      // One-to-One relation has behaviour same 1:M or M:1
+      // 1:1 isSource == true =>  1:M
+      // 1:1 isSource == false => M:1
+      if (connectType == "one:one") {
+         connectType = field.settings.isSource ? "one:many" : "many:one";
+      }
+
+      switch (connectType) {
+         // 1:M or 1:1 isSource = true
+         case "one:many":
+            condition.key = `${field.dbPrefix()}.\`${field.columnName}\``;
+            break;
+         case "many:one":
+         case "many:many":
+            condition.key = `${field.dbPrefix()}.\`${
+               field.indexField
+                  ? field.indexField.columnName
+                  : field.object.PK()
+            }\``;
+            condition.rule = condition.rule == "is_empty" ? "NOT IN" : "IN";
+
+            // M:1 or 1:1 isSource != true
+            if (connectType == "many:one") {
+               condition.value = ABMigration.connection().raw(
+                  `(SELECT DISTINCT ${fieldLink.dbPrefix()}.\`${
+                     fieldLink.columnName
+                  }\` FROM ${fieldLink.dbPrefix()} WHERE ${fieldLink.dbPrefix()}.\`${
+                     fieldLink.columnName
+                  }\` IS NOT NULL)`
+               );
+            }
+            // M:N
+            else if (connectType == "many:many") {
+               condition.value = ABMigration.connection().raw(
+                  `(SELECT DISTINCT ${joinTableName}.\`${field.object.name}\` FROM ${joinTableName} WHERE ${joinTableName}.\`${field.object.name}\` IS NOT NULL)`
+               );
+            }
+            break;
       }
    }
 

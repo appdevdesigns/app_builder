@@ -1,5 +1,4 @@
 const InsertRecordTaskCore = require("../../../core/process/tasks/ABProcessTaskServiceInsertRecordCore.js");
-const ABProcessTaskServiceQuery = require("./ABProcessTaskServiceQuery.js");
 
 const AB = require("ab-utils");
 const reqAB = AB.reqAB({}, {});
@@ -135,7 +134,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
     * @return {mixed} | null
     */
    processDataStart(instance) {
-      let startElement = this.startElement;
+      let startElement = this.startElements[0];
       if (!startElement) return null;
 
       return startElement.myState(instance).data;
@@ -149,8 +148,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
     */
    processDataPrevious(instance) {
       let prevElem = (this.process.connectionPreviousTask(this) || []).filter(
-         (t) =>
-            t instanceof InsertRecord || t instanceof ABProcessTaskServiceQuery
+         (t) => t instanceof InsertRecord
       )[0];
       if (!prevElem) return null;
 
@@ -267,10 +265,44 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                   rawData
                );
                break;
+            case "6":
+               var paramKeys = (item.value || "").split(",");
+               (paramKeys || []).forEach((key) => {
+                  if (key == null) return;
+
+                  let processData = this.process.processData(this, [
+                     instance,
+                     key
+                  ]);
+                  if (processData == null) {
+                     result[field.columnName] = result[field.columnName] != null && result[field.columnName] != "" ? result[field.columnName] : null;
+                     return;
+                  }
+
+                  // If .field is a connect field who has M:1 or M:N relations, then it will set value with an array
+                  let isMultipleValue =
+                     field.key == "connectObject" &&
+                     field.settings &&
+                     field.settings.linkType == "many";
+                  if (isMultipleValue) {
+                     result[field.columnName] = result[field.columnName] || [];
+                     result[field.columnName] = result[field.columnName].concat((processData || []).filter(d => d != null));
+                  }
+                  // If .field supports a single value, then it pull only the first value item.
+                  else if (
+                     result[field.columnName] == null ||
+                     result[field.columnName] == ""
+                  ) {
+                     result[field.columnName] =
+                        (Array.isArray(processData)
+                           ? processData[0]
+                           : processData) || null;
+                  }
+               });
+               break;
          }
       });
 
       return result;
    }
 };
-

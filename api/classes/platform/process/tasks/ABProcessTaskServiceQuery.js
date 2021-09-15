@@ -64,9 +64,9 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
             .then((result) => {
                // this resolves when all the operations are finished
                // so we are done!
-               this.stateUpdate(instance, {
-                  data: result ? result.data : null
-               });
+               // this.stateUpdate(instance, {
+               //    data: result ? result.data : null
+               // });
 
                this.log(instance, `${this.name} completed successfully`);
                this.stateCompleted(instance);
@@ -91,10 +91,12 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
     * @return {mixed} | null
     */
    processData(instance, key) {
-      let myState = this.myState(instance);
-      let data = myState.data;
-      if (data == null) return null;
-
-      return key ? data[key] : data;
+      var data = null;
+      var parts = key.split(".");
+      if (parts[0] && parts[0] == this.id) {
+         let myState = this.myState(instance);
+         data = myState[parts[1]];
+      }
+      return data;
    }
 };

@@ -9,16 +9,28 @@ var ABProcessParticipantCore = require("../../core/process/ABProcessParticipantC
 
 var ABRole = require("../ABRole.js");
 
+function L(key, altText) {
+   return AD.lang.label.getLabel(key) || altText;
+}
+
 let __Roles = null;
 let __Users = null;
-let __alertCount = 0;
-let __alertTimeout = 0;
+// let __alertCount = 0;
+// let __alertTimeout = 0;
 function loadUsers() {
-   var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
-   if (SiteUser) {
-      SiteUser.findAll()
-         .fail(function(err) {
-            AD.error.log("ABProcessParticipantCore: Error loading SiteUser", {
+   OP.User.init()
+      .then(() => {
+         __Users = OP.User.userlist().map((u) => {
+            return {
+               id: u.uuid || u.id,
+               value: u.username
+            };
+         });
+      })
+      .catch(function(err) {
+         AD.error.log(
+            "ABProcessParticipantCore: Error loading OP.User.userlist",
+            {
                error: err
             });
          })
@@ -39,17 +51,44 @@ function loadUsers() {
             "opstools.RBAC.SiteUser : not found yet ... trying again",
             "(NOTE: if the current viewer does not have permission to see RBAC, this will continue to fail."
          );
-      }
+      });
 
-      __alertTimeout++;
-      if (__alertTimeout < 1000) {
-         setTimeout(loadUsers, 1000);
-      } else {
-         console.error(
-            "ABProcessParticipantCore: opstools.RBAC.SiteUser  not available for current user."
-         );
-      }
-   }
+   // var SiteUser = AD.Model.get("opstools.RBAC.SiteUser");
+   // if (SiteUser) {
+   //    SiteUser.findAll()
+   //       .fail(function(err) {
+   //          AD.error.log("ABProcessParticipantCore: Error loading SiteUser", {
+   //             error: err
+   //          });
+   //       })
+   //       .then(function(list) {
+   //          list.forEach(function(l) {
+   //             __Users.push({
+   //                id: l.uuid || l.id,
+   //                value: l.username
+   //             });
+   //          });
+   //       });
+   // } else {
+   //    __alertCount++;
+   //    if (__alertCount >= 5) {
+   //       __alertCount = 0;
+
+   //       console.warn(
+   //          "opstools.RBAC.SiteUser : not found yet ... trying again",
+   //          "(NOTE: if the current viewer does not have permission to see RBAC, this will continue to fail."
+   //       );
+   //    }
+
+   //    __alertTimeout++;
+   //    if (__alertTimeout < 1000) {
+   //       setTimeout(loadUsers, 1000);
+   //    } else {
+   //       console.error(
+   //          "ABProcessParticipantCore: opstools.RBAC.SiteUser  not available for current user."
+   //       );
+   //    }
+   // }
 }
 
 // #HACK: temporary implementation until we pull Roles into AppBuilder.
@@ -103,40 +142,40 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
     */
    onChange(defElement) {
       /*
-        Sample DefElement:
-            {
-                "labels": [],
-                "children": [],
-                "id": "Participant_185ljkg",
-                "width": 958,
-                "height": 240,
-                "type": "bpmn:Participant",
-                "x": -810,
-                "y": -2010,
-                "order": {
-                    "level": -2
-                },
-               "businessObject": {
-                    "$type": "bpmn:Participant",
-                    "id": "Participant_185ljkg",
-                    "di": {
-                        "$type": "bpmndi:BPMNShape",
-                        "bounds": {
-                            "$type": "dc:Bounds",
-                            "x": -810,
-                            "y": -2010,
-                            "width": 958,
-                            "height": 240
-                        },
-                        "id": "Participant_185ljkg_di",
-                        "isHorizontal": true
-                    },
-                    "processRef": {
-                        "$type": "bpmn:Process",
-                        "id": "Process_0x3sul5"
-                    }
-                }
-         */
+         Sample DefElement:
+             {
+                 "labels": [],
+                 "children": [],
+                 "id": "Participant_185ljkg",
+                 "width": 958,
+                 "height": 240,
+                 "type": "bpmn:Participant",
+                 "x": -810,
+                 "y": -2010,
+                 "order": {
+                     "level": -2
+                 },
+                "businessObject": {
+                     "$type": "bpmn:Participant",
+                     "id": "Participant_185ljkg",
+                     "di": {
+                         "$type": "bpmndi:BPMNShape",
+                         "bounds": {
+                             "$type": "dc:Bounds",
+                             "x": -810,
+                             "y": -2010,
+                             "width": 958,
+                             "height": 240
+                         },
+                         "id": "Participant_185ljkg_di",
+                         "isHorizontal": true
+                     },
+                     "processRef": {
+                         "$type": "bpmn:Process",
+                         "id": "Process_0x3sul5"
+                     }
+                 }
+          */
 
       // from the BPMI modeler we can gather a label for this:
       if (
@@ -181,7 +220,9 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
          role: `${id}_role`,
          useRole: `${id}_useRoles`,
          useAccount: `${id}_useAccounts`,
-         account: `${id}_account`
+         useField: `${id}_useField`,
+         account: `${id}_account`,
+         fields: `${id}_fields`
       };
    }
    /**
@@ -262,7 +303,7 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
     * @param {string} id
     *        the webix $$(id) of the properties panel area.
     */
-   static selectUsersUi(id, obj) {
+   static selectUsersUi(id, obj, options = {}) {
       var ids = ABProcessParticipant.propertyIDs(id);
 
       return {
@@ -325,7 +366,49 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
                         stringResult: false /* returns data as an array of [id] */
                      }
                   ]
-               }
+               },
+               options.isFieldVisible
+                  ? {
+                       cols: [
+                          {
+                             view: "checkbox",
+                             id: ids.useField,
+                             labelRight: L(
+                                "ab.process.participant.isFieldEnable",
+                                "*by Field"
+                             ),
+                             labelWidth: 0,
+                             width: 120,
+                             value: obj.useField ? obj.useField : 0,
+                             click: function(id /*, event */) {
+                                if (this.getValue()) {
+                                   $$(ids.fields).enable();
+                                } else {
+                                   $$(ids.fields).disable();
+                                }
+                             }
+                          },
+                          {
+                             id: ids.fields,
+                             view: "multicombo",
+                             value: obj.fields || [],
+                             disabled: obj.useField ? false : true,
+                             suggest: (options.fields || []).map((f) => {
+                                return {
+                                   id: f.key,
+                                   value: f.label
+                                };
+                             }),
+                             labelAlign: "left",
+                             placeholder: L(
+                                "ab.process.participant.selectFields",
+                                "*Click or type to add user fields ..."
+                             ),
+                             stringResult: false
+                          }
+                       ]
+                    }
+                  : { fillspace: true }
             ]
          }
       };
@@ -433,6 +516,16 @@ module.exports = class ABProcessParticipant extends ABProcessParticipantCore {
          obj.account = $$(ids.account).getValue(/*{ options: true }*/);
       } else {
          obj.account = null;
+      }
+
+      if ($$(ids.useField)) {
+         obj.useField = $$(ids.useField).getValue();
+      }
+
+      if ($$(ids.fields) && obj.useField) {
+         obj.fields = $$(ids.fields).getValue();
+      } else {
+         obj.fields = [];
       }
 
       return obj;

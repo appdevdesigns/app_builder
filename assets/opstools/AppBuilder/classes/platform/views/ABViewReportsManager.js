@@ -1,3 +1,4 @@
+const { isString } = require("lodash");
 const ABViewReportsManagerCore = require("../../core/views/ABViewReportsManagerCore");
 
 function L(key, altText) {
@@ -253,6 +254,7 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                      let pullDataTasks = [];
                      let dcIds = [];
                      let dcData = {};
+                     let reportFields = [];
 
                      // pull data of the base and join DCs
                      dcIds.push(config.data);
@@ -271,6 +273,21 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                                     dcData[dcId] = data || [];
                                     next();
                                  });
+                           })
+                        );
+                     });
+
+                     dcIds.forEach((dcId) => {
+                        let dataCol = compInstance.application.datacollections(
+                           (dc) => dc.id == dcId
+                        )[0];
+                        if (!dataCol) return;
+
+                        reportFields = reportFields.concat(
+                           _logic.getReportFields(dataCol).map((f) => {
+                              // change format of id to match the report widget
+                              f.id = `${dcId}.${f.id}`; // dc_id.field_id
+                              return f;
                            })
                         );
                      });
@@ -390,30 +407,68 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                            .then(
                               () =>
                                  new Promise((next, bad) => {
-                                    let reportFields = [];
+                                    let queryVal = JSON.parse(
+                                       config.query || "{}"
+                                    );
 
-                                    dcIds.forEach((dcId) => {
-                                       let dataCol = compInstance.application.datacollections(
-                                          (dc) => dc.id == dcId
-                                       )[0];
-                                       if (!dataCol) return;
+                                    if (
+                                       queryVal &&
+                                       queryVal.rules &&
+                                       queryVal.rules.length
+                                    ) {
+                                       queryVal.rules.forEach((r) => {
+                                          if (!r || !r.type || !r.condition)
+                                             return;
 
-                                       reportFields = reportFields.concat(
-                                          _logic
-                                             .getReportFields(dataCol)
-                                             .map((f) => {
-                                                // change format of id to match the report widget
-                                                f.id = `${dcId}.${f.id}`; // dc_id.field_id
-                                                return f;
-                                             })
-                                       );
-                                    });
+                                          switch (r.type) {
+                                             case "date":
+                                             case "datetime":
+                                                // Convert string to Date object
+                                                if (r.condition.filter) {
+                                                   if (
+                                                      isString(
+                                                         r.condition.filter
+                                                      )
+                                                   ) {
+                                                      r.condition.filter = new Date(
+                                                         r.condition.filter
+                                                      );
+                                                   }
+
+                                                   if (
+                                                      r.condition.filter
+                                                         .start &&
+                                                      isString(
+                                                         r.condition.filter
+                                                            .start
+                                                      )
+                                                   ) {
+                                                      r.condition.filter.start = new Date(
+                                                         r.condition.filter.start
+                                                      );
+                                                   }
+
+                                                   if (
+                                                      r.condition.filter.end &&
+                                                      isString(
+                                                         r.condition.filter.end
+                                                      )
+                                                   ) {
+                                                      r.condition.filter.end = new Date(
+                                                         r.condition.filter.end
+                                                      );
+                                                   }
+                                                }
+                                                break;
+                                          }
+                                       });
+                                    }
 
                                     // create a new query widget to get the filter function
                                     let filterElem = webix.ui({
                                        view: "query",
                                        fields: reportFields,
-                                       value: JSON.parse(config.query || "{}")
+                                       value: queryVal
                                     });
 
                                     // create a new data collection and apply the query filter
@@ -536,6 +591,44 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                      return webix.promise.resolve([]);
                   }
                }
+            ],
+            [
+               reports.views.table,
+               class MyTable extends reports.views.table {
+                  // NOTE: fix format of date column type
+                  GetColumnConfig(a) {
+                     if (a.type === "date") {
+                        return {
+                           id: a.id,
+                           header:
+                              !a.meta.header || a.meta.header === "none"
+                                 ? a.meta.name || a.name
+                                 : [
+                                      a.meta.name || a.name,
+                                      {
+                                         content:
+                                            a.header === "text"
+                                               ? "textFilter"
+                                               : "richSelectFilter"
+                                      }
+                                   ],
+                           type: a.type,
+                           sort: "date",
+                           width: a.width || 200,
+                           format: (val) => {
+                              // check valid date
+                              if (val && val.getTime && !isNaN(val.getTime())) {
+                                 return webix.i18n.dateFormatStr(val);
+                              } else {
+                                 return "";
+                              }
+                           }
+                        };
+                     } else {
+                        return super.GetColumnConfig(a);
+                     }
+                  }
+               }
             ]
          ])
       };
@@ -570,7 +663,8 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                   options: columnFormat.options,
                   ref: "",
                   key: false,
-                  show: true
+                  show: true,
+                  abField: f
                });
 
                if (f.key == "connectObject" && f.settings.isSource) {
@@ -680,19 +774,22 @@ module.exports = class ABViewReportsManager extends ABViewReportsManagerCore {
                                     break;
                                  case "number":
                                     reportRow[col] = parseFloat(
-                                       reportRow[col] || 0
+                                       (reportRow[col] || 0)
+                                          .toString()
+                                          .replace(/[^\d.-]/g, "")
                                     );
                                     break;
                                  case "date":
                                  case "datetime":
                                     reportRow[col] = row[columnName];
-                                    if (
-                                       reportRow[col] &&
-                                       !(reportRow[col] instanceof Date)
-                                    ) {
-                                       reportRow[col] = new Date(
-                                          row[columnName]
-                                       );
+                                    if (reportRow[col]) {
+                                       if (!(reportRow[col] instanceof Date)) {
+                                          reportRow[col] = new Date(
+                                             moment(row[columnName])
+                                          );
+                                       }
+                                    } else {
+                                       reportRow[col] = "";
                                     }
                                     break;
                               }

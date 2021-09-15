@@ -938,6 +938,12 @@ module.exports = class AB_Work_Datacollection_Workspace_Properties extends ABCom
                query = datacollection.application.queries(
                   (q) => q.id == datasourceID
                )[0];
+
+               // Set settings.datasourceID
+               let dcSettings = datacollection.toObj() || {};
+               dcSettings.settings = dcSettings.settings || {};
+               dcSettings.settings.datasourceID = datasourceID;
+               datacollection.fromValues(dcSettings);
             }
 
             if (object) {

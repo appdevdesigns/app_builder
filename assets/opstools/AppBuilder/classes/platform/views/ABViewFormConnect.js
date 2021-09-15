@@ -38,10 +38,16 @@ function _onShow(App, compId, instance, component) {
       instance.settings.filterConnectedValue &&
       instance.settings.filterConnectedValue.indexOf(":") > -1
    ) {
-      filterValue =
-         instance.parent.viewComponents[
+      Object.keys(instance.parent.viewComponents).forEach((key, index) => {
+         if (
+            instance.parent.viewComponents[key].ui.name ==
             instance.settings.filterConnectedValue.split(":")[0]
-         ].ui.id;
+         ) {
+            filterValue = instance.parent.viewComponents[key];
+         }
+      });
+      // if not found stop
+      if (!filterValue) return;
       filterKey = instance.settings.filterConnectedValue.split(":")[1];
       filterColumn = instance.settings.filterConnectedValue.split(":")[2];
    }
@@ -386,8 +392,8 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
                      // get the component we are referencing so we can display its label
                      let formComponent = view.parent.viewComponents[element.id]; // need to ensure that just looking at parent is okay in all cases
                      filterConnectedOptions.push({
-                        id: element.id + ":" + fieldToCheck, // store the element id because the ui id changes on each load
-                        value: formComponent.ui.name // should be the translated field label
+                        id: formComponent.ui.name + ":" + fieldToCheck, // store the columnName name because the ui id changes on each load
+                        value: formComponent.ui.label // should be the translated field label
                      });
                   }
                }

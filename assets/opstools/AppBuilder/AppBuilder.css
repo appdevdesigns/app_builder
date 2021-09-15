@@ -655,7 +655,7 @@ label {
 	background: rgba(0,0,0,0.4);
 	cursor: pointer;
 }
-.webix_win_body .ab-carousel-fullscreen {
+.webix_carousel.fullscreen .ab-carousel-fullscreen {
    display: none;
 }
 .ab-detail-view .webix_accordionitem {

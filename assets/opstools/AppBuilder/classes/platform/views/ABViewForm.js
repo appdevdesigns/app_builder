@@ -1284,18 +1284,16 @@ module.exports = class ABViewForm extends ABViewFormCore {
     * @return {boolean} isValid
     */
    validateData(formView, object, formVals) {
-      var isValid = true;
+      let isValid = true;
 
       // validate required fields
-      var requiredFields = this.fieldComponents(
-         (fComp) => fComp.settings.required == true
+      let requiredFields = this.fieldComponents(
+         (fComp) =>
+            (fComp.field &&
+               fComp.field() &&
+               fComp.field().settings.required == true) ||
+            fComp.settings.required == true
       ).map((fComp) => fComp.field());
-      requiredFields.forEach((f) => {
-         if (f && !formVals[f.columnName] && formVals[f.columnName] != "0") {
-            formView.markInvalid(f.columnName, "*This is a required field.");
-            isValid = false;
-         }
-      });
 
       // validate data
       var validator;
@@ -1305,6 +1303,38 @@ module.exports = class ABViewForm extends ABViewFormCore {
       }
 
       $$(formView).validate();
+
+      // Display required messages
+      requiredFields.forEach((f) => {
+         if (f && !formVals[f.columnName] && formVals[f.columnName] != "0") {
+            formView.markInvalid(f.columnName, "*This is a required field.");
+            isValid = false;
+
+            // Fix position of invalid message
+            let $forminput = formView.elements[f.columnName];
+            if ($forminput) {
+               // Y position
+               let height = $forminput.$height;
+               if (height < 56) {
+                  $forminput.define("height", 60);
+                  $forminput.resize();
+               }
+
+               // X position
+               let domInvalidMessage = $forminput.$view.getElementsByClassName(
+                  "webix_inp_bottom_label"
+               )[0];
+               if (
+                  domInvalidMessage &&
+                  !domInvalidMessage.style["margin-left"]
+               ) {
+                  domInvalidMessage.style.marginLeft = `${this.settings
+                     .labelWidth ||
+                     ABViewFormPropertyComponentDefaults.labelWidth}px`;
+               }
+            }
+         }
+      });
 
       // if data is invalid
       if (!isValid) {
