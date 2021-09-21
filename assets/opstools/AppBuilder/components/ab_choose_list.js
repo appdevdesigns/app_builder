@@ -270,25 +270,31 @@ module.exports = class ABChooseList extends ABComponent {
             ABApplication.initRoles();
 
             // ABApplication.allApplications()
-            ABApplication.applicationInfo()
-               .then(function(data) {
-                  // make sure our overlay is updated when items are added/removed
-                  // from our data list.
-                  data.attachEvent("onAfterAdd", function(id, index) {
-                     _logic.refreshOverlay();
+            ABApplication.applicationInfo();
+
+            ABApplication.isReady()
+               .then(function() {
+                  return ABApplication.allCurrentApplications().then(function(
+                     data
+                  ) {
+                     // make sure our overlay is updated when items are added/removed
+                     // from our data list.
+                     data.attachEvent("onAfterAdd", function(id, index) {
+                        _logic.refreshOverlay();
+                     });
+
+                     data.attachEvent("onAfterDelete", function(id) {
+                        _logic.refreshOverlay();
+                     });
+
+                     _data.listApplications = data;
+
+                     _data.listApplications.sort("label");
+
+                     _logic.refreshList();
+
+                     _logic.ready();
                   });
-
-                  data.attachEvent("onAfterDelete", function(id) {
-                     _logic.refreshOverlay();
-                  });
-
-                  _data.listApplications = data;
-
-                  _data.listApplications.sort("label");
-
-                  _logic.refreshList();
-
-                  _logic.ready();
                })
                .catch(function(err) {
                   _logic.ready();
