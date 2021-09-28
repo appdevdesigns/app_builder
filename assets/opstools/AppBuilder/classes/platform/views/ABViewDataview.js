@@ -133,7 +133,7 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
 
       com.init = (options) => {
          var dc = this.datacollection;
-         var dataView = $$(ids.dataFlexView);
+         // var dataView = $$(ids.dataFlexView);
          if (!dc) return;
 
          // initial the link page helper
@@ -142,11 +142,13 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
             datacollection: dc
          });
 
-         if (dc.datacollectionLink && dc.fieldLink) {
-            dc.bind(dataView, dc.datacollectionLink, dc.fieldLink);
-         } else {
-            dc.bind(dataView);
-         }
+         // NOTE: 'flexlayout' does not apply webix.AtomDataLoader
+         //
+         // if (dc.datacollectionLink && dc.fieldLink) {
+         //    dc.bind(dataView, dc.datacollectionLink, dc.fieldLink);
+         // } else {
+         //    dc.bind(dataView);
+         // }
          dc.on("initializingData", () => {
             com.logic.busy();
          });
@@ -476,3 +478,4 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
       return this.__linkPageHelper;
    }
 };
+
