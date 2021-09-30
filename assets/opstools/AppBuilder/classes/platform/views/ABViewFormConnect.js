@@ -5,8 +5,10 @@ const ABViewPropertyEditPage = require("./viewProperties/ABViewPropertyEditPage"
 const ABViewFormConnectPropertyComponentDefaults = ABViewFormConnectCore.defaultValues();
 
 const RowFilter = require("../RowFilter");
+const ABPopupSort = require("../../../components/ab_work_object_workspace_popupSortFields");
 
 let FilterComponent = null;
+let SortComponent = null;
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -53,9 +55,9 @@ function _onShow(App, compId, instance, component) {
    }
 
    field.customDisplay(rowData, App, node, {
-      editable: true,
       formView: instance.settings.formView,
       filters: instance.settings.objectWorkspace.filterConditions,
+      sort: instance.settings.objectWorkspace.sortFields,
       filterValue: filterValue,
       filterKey: filterKey,
       filterColumn: filterColumn,
@@ -170,6 +172,12 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
          this.filter_popup.show($view, null, { pos: "top" });
       };
 
+      _logic.showSortPopup = ($button) => {
+         SortComponent.show($button, null, {
+            pos: "top"
+         });
+      };
+
       _logic.onFilterChange = () => {
          let view = _logic.currentEditObject();
          let filterValues = FilterComponent.getValue() || {};
@@ -193,6 +201,11 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
                this.propertyEditorSave(ids, view);
             }, 10);
          }
+      };
+
+      _logic.onSortChange = () => {
+         let view = _logic.currentEditObject();
+         this.propertyEditorSave(ids, view);
       };
 
       // create filter & sort popups
@@ -315,6 +328,40 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
                            view: "combo",
                            name: "filterConnectedValue",
                            options: [] // we will add these in propertyEditorPopulate
+                        }
+                     ]
+                  },
+                  {
+                     height: 30
+                  },
+                  {
+                     rows: [
+                        {
+                           cols: [
+                              {
+                                 view: "label",
+                                 label: L(
+                                    "ab.component.connect.sortData",
+                                    "*Sort Options:"
+                                 ),
+                                 width: App.config.labelWidthLarge
+                              },
+                              {
+                                 view: "button",
+                                 name: "buttonSort",
+                                 css: "webix_primary",
+                                 label: L(
+                                    "ab.component.connect.sort",
+                                    "*Settings"
+                                 ),
+                                 icon: "fa fa-gear",
+                                 type: "icon",
+                                 badge: 0,
+                                 click: function() {
+                                    _logic.showSortPopup(this.$view);
+                                 }
+                              }
+                           ]
                         }
                      ]
                   }
@@ -443,7 +490,8 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
          ids.filterConnectedValue
       ).getValue();
       view.settings.objectWorkspace = {
-         filterConditions: FilterComponent.getValue()
+         filterConditions: FilterComponent.getValue(),
+         sortFields: SortComponent.getValue()
       };
 
       view.settings = this.addPageProperty.getSettings(view);
@@ -469,6 +517,21 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
          $$(ids.buttonFilter).define("badge", null);
          $$(ids.buttonFilter).refresh();
       }
+
+      if (
+         view.settings.objectWorkspace &&
+         view.settings.objectWorkspace.sortFields &&
+         view.settings.objectWorkspace.sortFields.length
+      ) {
+         $$(ids.buttonSort).define(
+            "badge",
+            view.settings.objectWorkspace.sortFields.length || null
+         );
+         $$(ids.buttonSort).refresh();
+      } else {
+         $$(ids.buttonSort).define("badge", null);
+         $$(ids.buttonSort).refresh();
+      }
    }
 
    static initPopupEditors(App, ids, _logic) {
@@ -478,6 +541,11 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
       FilterComponent.init({
          // when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
          onChange: _logic.onFilterChange
+      });
+
+      SortComponent = new ABPopupSort(this.App, `${idBase}_sort`);
+      SortComponent.init({
+         onChange: _logic.onSortChange
       });
 
       this.filter_popup = webix.ui({
@@ -501,15 +569,19 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
       // Populate data to popups
       // FilterComponent.objectLoad(objectCopy);
+      let linkedObj;
       let field = view.field();
       if (field) {
-         let linkedObj = field.datasourceLink;
+         linkedObj = field.datasourceLink;
          if (linkedObj)
             FilterComponent.fieldsLoad(linkedObj.fields(), linkedObj);
       }
 
       FilterComponent.applicationLoad(view.application);
       FilterComponent.setValue(filterConditions);
+
+      if (linkedObj) SortComponent.objectLoad(linkedObj);
+      SortComponent.setValue(view.settings.objectWorkspace.sortFields);
    }
 
    static get addPageProperty() {

@@ -894,7 +894,8 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
 
                   return this.getOptions(
                      combineFilters,
-                     queryOptions.term
+                     queryOptions.term,
+                     options.sort
                   ).then(function(data) {
                      return {
                         results: data
@@ -1065,9 +1066,10 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
     *
     * @return {Promise}
     */
-   getOptions(where, term) {
+   getOptions(where, term, sort) {
       return new Promise((resolve, reject) => {
          where = where || {};
+         sort = sort || [];
 
          if (!where.glue) where.glue = "and";
 
@@ -1135,6 +1137,7 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
          linkedModel
             .findAll({
                where: where,
+               sort: sort,
                populate: false
             })
             .then((result) => {
