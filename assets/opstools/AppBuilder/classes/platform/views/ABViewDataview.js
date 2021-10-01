@@ -133,7 +133,7 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
 
       com.init = (options) => {
          var dc = this.datacollection;
-         // var dataView = $$(ids.dataFlexView);
+         var dataView = $$(ids.dataFlexView);
          if (!dc) return;
 
          // initial the link page helper
@@ -149,6 +149,9 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
          // } else {
          //    dc.bind(dataView);
          // }
+
+         // track all flexlayout component IDs on the data collectino so we can notify them of changes
+         dc.attachFlexlayout(dataView);
          dc.on("initializingData", () => {
             com.logic.busy();
          });
@@ -164,6 +167,10 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
             com.renderData();
          });
          dc.on("delete", () => {
+            com.emptyView();
+            com.renderData();
+         });
+         dc.on("create", () => {
             com.emptyView();
             com.renderData();
          });
@@ -478,4 +485,3 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
       return this.__linkPageHelper;
    }
 };
-
