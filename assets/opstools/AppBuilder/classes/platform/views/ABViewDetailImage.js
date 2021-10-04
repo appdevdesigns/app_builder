@@ -152,10 +152,10 @@ module.exports = class ABViewDetailImage extends ABViewDetailImageCore {
 
                imageTemplate =
                   `<div class="ab-image-data-field">` +
-                  `<div style="float: left; background-size: cover; background-position: center center; background-image:url('${imageUrl}');  width: ${width}; height: ${height};">` +
+                  `<div style="float: left; background-size: cover; background-position: center center; background-image:url('${imageUrl}');  width: ${width}; height: ${height}; position:relative;">` +
+                  `<a href="${imageUrl}" target="_blank" title="" class="fa fa-download ab-image-data-field-download"></a>` +
                   `</div></div>`;
             }
-
             component.logic.setValue(ids.component, imageTemplate);
          }
       };

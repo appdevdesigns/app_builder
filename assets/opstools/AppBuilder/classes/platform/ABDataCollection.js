@@ -209,6 +209,23 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
    ///
    /// Components
    ///
+   /**
+    * @method attachFlexlayout
+    *
+    *
+    * @param {Object} component - a webix flexlayout element instance
+    */
+   attachFlexlayout(component) {
+      var dc = this.__dataCollection;
+
+      // prevent attach many times
+      if (this.__flexComponentIds.indexOf(component.config.id) > -1) {
+         return;
+      } else {
+         // keep component id to an array
+         this.__flexComponentIds.push(component.config.id);
+      }
+   }
 
    /**
     * @method bind
@@ -532,5 +549,3 @@ module.exports = class ABDataCollection extends ABDataCollectionCore {
       return OP.User.scopes();
    }
 };
-
-
