@@ -457,12 +457,17 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
          let object = dv.datasource;
          if (!object) return;
 
-         this.eventAdd({
-            emitter: dv,
-            eventName: "loadData",
-            listener: () => {
-               _logic.onShow();
-            }
+         dv.on("loadData", () => {
+            _logic.onShow();
+         });
+         dv.on("update", () => {
+            dc.reloadData();
+         });
+         dv.on("delete", () => {
+            dc.reloadData();
+         });
+         dv.on("create", () => {
+            dc.reloadData();
          });
 
          // filter helper
