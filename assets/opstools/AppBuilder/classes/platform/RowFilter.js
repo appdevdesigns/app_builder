@@ -1091,7 +1091,7 @@ module.exports = class RowFilter extends RowFilterCore {
                $viewCond
                   .$$(ids.inputValue)
                   .$$(ids.fieldMatch)
-                  .define("options", recordRuleFieldOptions);
+                  .define("options", this.recordRuleFieldOptions);
                $viewCond
                   .$$(ids.inputValue)
                   .$$(ids.fieldMatch)
@@ -1449,4 +1449,3 @@ module.exports = class RowFilter extends RowFilterCore {
       logic.unblockOnChange();
    }
 };
-
