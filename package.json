@@ -43,7 +43,7 @@
     "mysql": "^2.18.1",
     "node-cron": "^3.0.0",
     "node-uuid": "^1.4.8",
-    "objection": "1.1.8",
+    "objection": "2.2.16",
     "prettier": "^1.19.1",
     "qrcode": "^1.4.4",
     "request": "^2.88.2",
