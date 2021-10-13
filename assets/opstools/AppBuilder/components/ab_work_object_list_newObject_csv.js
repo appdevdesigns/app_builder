@@ -5,6 +5,7 @@
  *
  */
 const ABComponent = require("../classes/platform/ABComponent");
+const ABDefinition = require("../classes/platform/ABDefinition");
 
 const ABField = require("../classes/platform/dataFields/ABField");
 const ABFieldBoolean = require("../classes/platform/dataFields/ABFieldBoolean");
@@ -146,62 +147,20 @@ module.exports = class AB_Work_Object_List_NewObject_Csv extends ABComponent {
                   }
                },
                {
-                  id: ids.columnList,
-                  view: "list",
-                  datatype: "json",
-                  multiselect: false,
-                  select: false,
-                  disabled: true,
-                  height: 260,
-                  minHeight: 260,
-                  maxHeight: 260,
-                  type: {
-                     height: 40,
-                     include: function(obj, common) {
-                        return {
-                           view: "checkbox",
-                           width: 30
-                        };
-                     },
-                     columnName: function(obj, common) {
-                        return {
-                           view: "text",
-                           width: 170
-                        };
-                     },
-                     dataType: function(obj, common) {
-                        return {
-                           view: "select",
-                           options: [
-                              {
-                                 id: "string",
-                                 value: ABFieldString.defaults().menuName
-                              },
-                              {
-                                 id: "LongText",
-                                 value: ABFieldLongText.defaults().menuName
-                              },
-                              {
-                                 id: "number",
-                                 value: ABFieldNumber.defaults().menuName
-                              },
-                              {
-                                 id: "date",
-                                 value: ABFieldDate.defaults().menuName
-                              },
-                              {
-                                 id: "boolean",
-                                 value: ABFieldBoolean.defaults().menuName
-                              }
-                           ],
-                           width: 120
-                        };
+                  type: "space",
+                  rows: [
+                     {
+                        view: "scrollview",
+                        height: 260,
+                        minHeight: 260,
+                        maxHeight: 260,
+                        body: {
+                           id: ids.columnList,
+                           disabled: true,
+                           rows: []
+                        }
                      }
-                  },
-                  template:
-                     '<span style="float: left;">{common.include()}</span>' +
-                     '<span style="float: left;">{common.columnName()}</span>' +
-                     '<span style="float: left;">{common.dataType()}</span>'
+                  ]
                },
                {
                   margin: 5,
@@ -295,7 +254,7 @@ module.exports = class AB_Work_Object_List_NewObject_Csv extends ABComponent {
          },
 
          populateColumnList: () => {
-            $$(ids.columnList).clearAll();
+            webix.ui([], $$(ids.columnList));
 
             var firstLine = dataRows[0];
             if (firstLine == null) return;
@@ -320,7 +279,54 @@ module.exports = class AB_Work_Object_List_NewObject_Csv extends ABComponent {
                }
             }
 
-            $$(ids.columnList).parse(columnList);
+            // Add dynamic columns UI
+            let uiColumns = [];
+            columnList.forEach((col) => {
+               uiColumns.push({
+                  height: 40,
+                  cols: [
+                     {
+                        view: "checkbox",
+                        value: col.include,
+                        width: 30
+                     },
+                     {
+                        view: "text",
+                        value: col.columnName,
+                        width: 170
+                     },
+                     {
+                        view: "select",
+                        value: col.dataType,
+                        options: [
+                           {
+                              id: "string",
+                              value: ABFieldString.defaults().menuName
+                           },
+                           {
+                              id: "LongText",
+                              value: ABFieldLongText.defaults().menuName
+                           },
+                           {
+                              id: "number",
+                              value: ABFieldNumber.defaults().menuName
+                           },
+                           {
+                              id: "date",
+                              value: ABFieldDate.defaults().menuName
+                           },
+                           {
+                              id: "boolean",
+                              value: ABFieldBoolean.defaults().menuName
+                           }
+                        ],
+                        width: 120
+                     }
+                  ]
+               });
+            });
+
+            webix.ui(uiColumns, $$(ids.columnList));
          },
 
          import: () => {
@@ -333,8 +339,15 @@ module.exports = class AB_Work_Object_List_NewObject_Csv extends ABComponent {
             }
 
             // Validate required column names
-            var emptyColNames = $$(ids.columnList).data.find((col) => {
-               return col.include && col.columnName.trim().length == 0;
+            let columnViews = $$(ids.columnList).getChildViews();
+            var emptyColNames = columnViews.filter((cView) => {
+               return (
+                  cView.queryView({ view: "checkbox" }).getValue() &&
+                  cView
+                     .queryView({ view: "text" })
+                     .getValue()
+                     .trim().length == 0
+               );
             });
             if (emptyColNames.length > 0) {
                webix.alert({
@@ -348,11 +361,15 @@ module.exports = class AB_Work_Object_List_NewObject_Csv extends ABComponent {
             }
 
             // Validate reserve column names
-            var reservedColNames = $$(ids.columnList).data.find((col) => {
+            var reservedColNames = columnViews.filter((cView) => {
                return (
-                  col.include &&
+                  cView.queryView({ view: "checkbox" }).getValue() &&
                   ABField.reservedNames.indexOf(
-                     col.columnName.trim().toLowerCase()
+                     cView
+                        .queryView({ view: "text" })
+                        .getValue()
+                        .trim()
+                        .toLowerCase()
                   ) > -1
                );
             });
@@ -377,33 +394,6 @@ module.exports = class AB_Work_Object_List_NewObject_Csv extends ABComponent {
                fields: []
             };
 
-            // add new columns to object
-            $$(ids.columnList)
-               .data.find({})
-               .forEach((item, index) => {
-                  if (item.include) {
-                     var newField = {
-                        id: OP.Util.uuid(),
-                        columnName: item.columnName,
-                        label: item.columnName,
-                        key: item.dataType,
-                        settings: {
-                           showIcon: 1,
-                           weight: index
-                        }
-                     };
-
-                     switch (item.dataType) {
-                        case "string":
-                        case "LongText":
-                           newField.settings.supportMultilingual = 0;
-                           break;
-                     }
-
-                     newObjAttr.fields.push(newField);
-                  }
-               });
-
             // now send data back to be added:
             _logic.callbacks.onSave(newObjAttr, (validator, newObj) => {
                if (validator) {
@@ -414,11 +404,54 @@ module.exports = class AB_Work_Object_List_NewObject_Csv extends ABComponent {
                   return Promise.reject("the enter data is invalid");
                }
 
+               // Update JSON to the new ABObject
+               let newObjJson = ABDefinition.allObjects(
+                  (obj) => obj.id == newObj.id
+               )[0];
+               if (newObjJson) {
+                  newObj.fromValues(newObjJson);
+               }
+
+               let subTasks = Promise.resolve();
+
+               // add new columns to object
+               columnViews.forEach((cView, index) => {
+                  let include = cView
+                     .queryView({ view: "checkbox" })
+                     .getValue();
+                  if (!include) return;
+
+                  let columnName = cView.queryView({ view: "text" }).getValue();
+                  let dataType = cView.queryView({ view: "select" }).getValue();
+
+                  let newField = {
+                     id: OP.Util.uuid(),
+                     columnName: columnName,
+                     label: columnName,
+                     key: dataType,
+                     settings: {
+                        showIcon: 1,
+                        weight: index
+                     }
+                  };
+
+                  switch (dataType) {
+                     case "string":
+                     case "LongText":
+                        newField.settings.supportMultilingual = 0;
+                        break;
+                  }
+
+                  let field = newObj.fieldNew(newField);
+                  subTasks = subTasks
+                     .then(() => field.save())
+                     .then(() => field.migrateCreate());
+               });
+
                // add rows to Server
                var objModel = newObj.model();
 
                // Add each records sequentially
-               var subTasks = Promise.resolve();
                dataRows.forEach((data, index) => {
                   subTasks = subTasks.then((x) => {
                      if ($$(ids.headerOnFirstLine).getValue() && index == 0)
@@ -461,7 +494,7 @@ module.exports = class AB_Work_Object_List_NewObject_Csv extends ABComponent {
             $$(ids.form).clear();
             $$(ids.separatedBy).setValue(",");
 
-            $$(ids.columnList).clearAll();
+            webix.ui([], $$(ids.columnList));
             $$(ids.uploadFileList).clearAll();
 
             $$(ids.headerOnFirstLine).disable();
