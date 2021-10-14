@@ -86,10 +86,11 @@ class ABQLSetPluck extends ABQLSetPluckCore {
          // make sure we are working with an Array
          if (Array.isArray(context.data)) {
             if (this.fieldID == "_PK") {
-               var newData = [];
+               let pkName = context.object.primaryColumnName || "uuid";
+               let newData = [];
                context.data.forEach((d) => {
                   if (d) {
-                     newData.push(d[context.object.PK()]);
+                     newData.push(d[pkName]);
                   }
                });
                nextContext.data = newData;
