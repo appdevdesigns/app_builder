@@ -933,6 +933,7 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
     * @return {boolean}   true if an update took place, false if no updates.
     */
    processUpdateObject(options, objectToUpdate) {
+      this._formData = objectToUpdate;
       // return new Promise((resolve, reject) => {
       var isUpdated = false;
 
