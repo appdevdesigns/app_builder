@@ -209,7 +209,7 @@ let getSQL = ({ defCSV, userData, extraWhere }) => {
                            (userData || {}).languageCode || "en";
 
                         select = knex.raw(
-                           'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({transCol}, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({transCol}, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))'
+                           'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(`{transCol}`, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(`{transCol}`, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))'
                               .replace(/{transCol}/g, transCol)
                               .replace(/{languageCode}/g, languageCode)
                               .replace(/{columnName}/g, columnName)
@@ -342,3 +342,4 @@ let ABCsvController = {
 };
 
 module.exports = ABCsvController;
+
