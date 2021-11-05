@@ -200,7 +200,7 @@ let getSQL = ({ defCSV, userData, extraWhere }) => {
                   case "string":
                   case "LongText":
                      if (f.isMultilingual) {
-                        let transCol = (f.object instanceof ABObjectQuery
+                        let transCol = (obj instanceof ABObjectQuery
                            ? "`{prefix}.translations`"
                            : "{prefix}.translations"
                         ).replace("{prefix}", f.dbPrefix().replace(/`/g, ""));
@@ -209,10 +209,10 @@ let getSQL = ({ defCSV, userData, extraWhere }) => {
                            (userData || {}).languageCode || "en";
 
                         select = knex.raw(
-                           'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(`{transCol}`, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(`{transCol}`, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))'
+                           'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT({transCol}, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH({transCol}, "one", "{languageCode}")), 1, 4)), \'$."{columnName}"\'))'
                               .replace(/{transCol}/g, transCol)
                               .replace(/{languageCode}/g, languageCode)
-                              .replace(/{columnName}/g, columnName)
+                              .replace(/{columnName}/g, f.columnName)
                         );
                      } else {
                         select = `IFNULL(\`${columnName}\`, '')`;
@@ -323,7 +323,7 @@ let ABCsvController = {
             sqlStream.on("data", (result) => {
                res.write(
                   `${Object.values(result)
-                     .map((r) => `"${r}"`) // To encode a quote, use "" to support , (comma) in text
+                     .map((r) => `"${r != null ? r : ""}"`) // To encode a quote, use "" to support , (comma) in text
                      .join(",")}\r\n`
                );
             });
@@ -342,4 +342,3 @@ let ABCsvController = {
 };
 
 module.exports = ABCsvController;
-
