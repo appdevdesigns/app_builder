@@ -319,6 +319,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            ] = balance[customBrIndex];
                         }
 
+                        let findArcRules = [];
                         Object.keys(this.fieldsMatch).forEach((fId) => {
                            let fJe = this.jeObject.fields(
                               (f) => f.id == this.fieldsMatch[fId]
@@ -343,6 +344,13 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                               jeArchiveValues[fArc.columnName] =
                                  je[fJe.columnName];
                            }
+
+                           // Add filter rule
+                           findArcRules.push({
+                              key: fArc.id,
+                              rule: "equals",
+                              value: je[fJe.columnName]
+                           });
                         });
 
                         if (Object.keys(jeArchiveValues).length > 1) {
@@ -351,9 +359,37 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                               jeArchiveValues
                            );
 
+                           // check exists JE Archive
                            tasks.push(
                               () =>
                                  new Promise((ok, no) => {
+                                    this.jeArchiveObject
+                                       .modelAPI()
+                                       .findAll({
+                                          where: {
+                                             glue: "and",
+                                             rules: findArcRules
+                                          },
+                                          populate: false
+                                       })
+                                       .then((jeArchives) => {
+                                          let exists =
+                                             jeArchives &&
+                                             jeArchives.length > 0;
+                                          ok(exists);
+                                       })
+                                       .catch(no);
+                                 })
+                           );
+
+                           tasks.push(
+                              (isExists) =>
+                                 new Promise((ok, no) => {
+                                    if (isExists) {
+                                       ok();
+                                       return;
+                                    }
+
                                     this.log(
                                        instance,
                                        "Creating JE Archive ..."
@@ -447,4 +483,3 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
       );
    }
 };
-
