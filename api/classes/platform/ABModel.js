@@ -48,6 +48,12 @@ module.exports = class ABModel extends ABModelCore {
             .insert(values)
             .catch(reject)
             .then((returnVals) => {
+               // when no insert row returns null
+               if (returnVals == null) {
+                  resolve();
+                  return;
+               }
+
                // make sure we get a fully updated value for
                // the return value
                this.findAll({
@@ -736,6 +742,10 @@ module.exports = class ABModel extends ABModelCore {
 
             // make sure a value is properly Quoted:
             function quoteMe(value) {
+               if (value && value.replace) {
+                  // FIX: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '
+                  value = value.replace(/'/g, "''");
+               }
                return "'" + value + "'";
             }
 
