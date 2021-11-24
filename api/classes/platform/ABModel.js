@@ -46,7 +46,6 @@ module.exports = class ABModel extends ABModelCore {
          // update our value
          query
             .insert(values)
-            .catch(reject)
             .then((returnVals) => {
                // when no insert row returns null
                if (returnVals == null) {
@@ -76,7 +75,8 @@ module.exports = class ABModel extends ABModelCore {
                      resolve(rows[0]);
                   })
                   .catch(reject);
-            });
+            })
+            .catch(reject);
       });
    }
 
@@ -210,7 +210,6 @@ module.exports = class ABModel extends ABModelCore {
          query
             .patch(values)
             .where(PK, id)
-            .catch(reject)
             .then((returnVals) => {
                // make sure we get a fully updated value for
                // the return value
@@ -234,7 +233,8 @@ module.exports = class ABModel extends ABModelCore {
                      resolve(rows[0]);
                   })
                   .catch(reject);
-            });
+            })
+            .catch(reject);
       });
    }
 
@@ -836,12 +836,11 @@ module.exports = class ABModel extends ABModelCore {
                   value = quoteMe("%" + condition.value + "%");
                   break;
 
-
                case "is_empty":
                   operator = `IS NULL OR ${columnName} = ""`;
                   value = "";
                   break;
-   
+
                case "is_not_empty":
                   operator = `IS NOT NULL AND ${columnName} <> ""`;
                   value = "";

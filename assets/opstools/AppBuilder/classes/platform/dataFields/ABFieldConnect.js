@@ -990,7 +990,61 @@ module.exports = class ABFieldConnect extends ABFieldConnectCore {
                            placeholder: placeholder
                         });
                         // clear any previous value because it could be invalid
-                        domNode.selectivity.setValue(null);
+                        //domNode.selectivity.setValue(null);
+
+                        if (domNode.selectivity.getValue()) {
+                           // if we are filtering based off another selectivity's value we
+                           // need to do it on fetch each time because the value can change
+                           // copy the filters so we don't add to them every time there is a change
+                           var combineFilters = JSON.parse(
+                              JSON.stringify(options.filters)
+                           );
+                           // only add filters if we pass valid value and key
+                           if (
+                              options.filterValue &&
+                              options.filterKey &&
+                              $$(options.filterValue.ui.id)
+                           ) {
+                              // get the current value of the parent select box
+                              let parentVal = this.getValue(
+                                 $$(options.filterValue.ui.id)
+                              );
+                              if (parentVal) {
+                                 // if there is a value create a new filter rule
+                                 var filter = {
+                                    key: options.filterKey,
+                                    rule: "equals",
+                                    value: parentVal[options.filterColumn]
+                                 };
+                                 combineFilters.rules.push(filter);
+
+                                 this.getOptions(
+                                    combineFilters,
+                                    "",
+                                    options.sort
+                                 ).then(function(data) {
+                                    var valid = false;
+                                    var values = domNode.selectivity.getValue();
+                                    if (typeof values != "array") {
+                                       values = [values];
+                                    }
+                                    var valueLength = values.length;
+                                    var validVals = 0;
+                                    data.forEach((option) => {
+                                       if (values.indexOf(option.id) > -1) {
+                                          validVals++;
+                                          if (validVals == valueLength) {
+                                             valid = true;
+                                          }
+                                       }
+                                    });
+                                    if (!valid) {
+                                       domNode.selectivity.setValue(null);
+                                    }
+                                 });
+                              }
+                           }
+                        }
                      } else {
                         // if there is not a value set make field read only and
                         // set the placeholder text to a read only version
