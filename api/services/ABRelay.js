@@ -640,7 +640,19 @@ module.exports = {
                // sendOne()
                // recursive fn() to send off the responses to the MCC.
                // this should handle timeout errors and resend the missed attempts.
-               var sendOne = (i, cb) => {
+               var sendOne = (i, cb, retry = 0, lastErr = null) => {
+                  if (retry >= 3) {
+                     // Failed too many times:
+                     ADCore.error.log(
+                        "::: I'M STUCK ::: ABRelay:request(): caught unexpected error in response to MCC",
+                        { error: lastErr, request: errorOptions }
+                     );
+
+                     // an error with 1 packet will invalidate the whole response:
+                     cb();
+                     return;
+                  }
+
                   // if we have sent all the packets -> cb()
                   if (i >= encryptedDataPackets.length) {
                      cb();
@@ -678,19 +690,29 @@ module.exports = {
                               );
                            } else {
                               // if this wasn't a ETIMEDOUT error, log it here:
+                              if (returnPacket.data.length > 10) {
+                                 returnPacket.data = `${returnPacket.data.slice(
+                                    0,
+                                    10
+                                 )} ...`;
+                              }
                               ADCore.error.log(
-                                 "::: ABRelay:request(): caught unexpected error in response to MCC",
-                                 { error: err, request: errorOptions }
+                                 `::: ABRelay:request():${retry}: caught unexpected error in response to MCC`,
+                                 {
+                                    error: err,
+                                    request: errorOptions,
+                                    response: returnPacket
+                                 }
                               );
                            }
 
                            // retry this one:
-                           sendOne(i, cb);
+                           sendOne(i, cb, retry + 1, err);
                         });
                   }
                };
 
-               return new Promise((resolve, reject) => {
+               return new Promise((resolve /*, reject */) => {
                   sendOne(0, (err) => {
                      resolve();
                   });
