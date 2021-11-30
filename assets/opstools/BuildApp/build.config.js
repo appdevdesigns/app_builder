@@ -21,7 +21,8 @@ module.exports = {
             "OpsPortal/classes/OpsWebixDataCollection",
             "opstools/BuildApp/OP_Bundle",
             "js/formio/formio.full.min",
-            "js/webix/components/activecontent"
+            "js/webix/components/activecontent",
+            "js/pdftron/webviewer.min"
          ],
          format: "global"
       },
@@ -66,6 +67,11 @@ module.exports = {
             "js/formio/formio.builder.min.css",
             "js/formio/formio.form.min.css"
          ],
+         sideBundle: true
+      },
+      "js/pdftron/webviewer.min": {
+         format: "global",
+         deps: [],
          sideBundle: true
       }
    }
