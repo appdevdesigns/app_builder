@@ -400,8 +400,26 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                      field.settings.linkType == "many";
                   if (isMultipleValue) {
                      result[field.columnName] = result[field.columnName] || [];
+
+                     // Reformat processData to be M:1 connect data value
+                     let data = [];
+                     if (data == null) {
+                        data = [];
+                     } else if (Array.isArray(processData)) {
+                        data = processData.filter((d) => d != null);
+                     } else if (
+                        typeof processData == "string" ||
+                        typeof processData == "number"
+                     ) {
+                        data = {};
+                        data["id"] = processData;
+                        data["uuid"] = processData;
+                     } else {
+                        data = processData;
+                     }
+
                      result[field.columnName] = result[field.columnName].concat(
-                        (processData || []).filter((d) => d != null)
+                        data
                      );
                   }
                   // If .field supports a single value, then it pull only the first value item.

@@ -22,62 +22,113 @@ module.exports = class ABModel extends ABModelCore {
     * @return {Promise} resolved with the result of the find()
     */
    create(values, trx = null) {
-      values = this.object.requestParams(values);
+      let vals = this.object.requestParams(values);
 
-      if (values[this.object.PK()] == null) {
-         values[this.object.PK()] = uuid();
+      if (vals[this.object.PK()] == null) {
+         vals[this.object.PK()] = uuid();
       }
 
-      let validationErrors = this.object.isValidData(values);
+      let validationErrors = this.object.isValidData(vals);
       if (validationErrors.length > 0) {
          return Promise.reject(validationErrors);
       }
 
-      return new Promise((resolve, reject) => {
-         // get a Knex Query Object
-         let query = this.modelKnex().query();
+      const PK = this.object.PK();
 
-         // Used by knex.transaction, the transacting method may be chained to any query and
-         // passed the object you wish to join the query as part of the transaction for.
-         if (trx) query = query.transacting(trx);
+      return (
+         Promise.resolve()
+            // Create a data row
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     // get a Knex Query Object
+                     let query = this.modelKnex().query();
 
-         var PK = this.object.PK();
+                     // Used by knex.transaction, the transacting method may be chained to any query and
+                     // passed the object you wish to join the query as part of the transaction for.
+                     if (trx) query = query.transacting(trx);
 
-         // update our value
-         query
-            .insert(values)
-            .then((returnVals) => {
-               // when no insert row returns null
-               if (returnVals == null) {
-                  resolve();
-                  return;
-               }
+                     query
+                        .insert(vals)
+                        .then((returnVals) => {
+                           // when no insert row returns null
+                           if (returnVals == null) {
+                              next();
+                              return;
+                           }
 
-               // make sure we get a fully updated value for
-               // the return value
-               this.findAll({
-                  where: {
-                     glue: "and",
-                     rules: [
-                        {
-                           key: PK,
-                           rule: "equals",
-                           value: returnVals[PK]
-                        }
-                     ]
-                  },
-                  offset: 0,
-                  limit: 1,
-                  populate: true
-               })
-                  .then((rows) => {
-                     // this returns an [] so pull 1st value:
-                     resolve(rows[0]);
+                           next(returnVals);
+                        })
+                        .catch(bad);
                   })
-                  .catch(reject);
-            })
-            .catch(reject);
-      });
+            )
+            // Update relation values
+            .then(
+               (returnVals) =>
+                  new Promise((next, bad) => {
+                     if (returnVals == null) {
+                        next();
+                        return;
+                     }
+
+                     let tasks = [];
+                     this.object.connectFields(true).forEach((f) => {
+                        if (f.requestRelationParam) {
+                           let relatedVal = f.requestRelationParam(values)[
+                              f.columnName
+                           ];
+                           if (relatedVal != null) {
+                              tasks.push(
+                                 this.relate(
+                                    returnVals[PK],
+                                    f.id,
+                                    relatedVal,
+                                    trx
+                                 )
+                              );
+                           }
+                        }
+                     });
+
+                     Promise.all(tasks)
+                        .then(() => next(returnVals))
+                        .catch(bad);
+                  })
+            )
+            // Return value
+            .then(
+               (returnVals) =>
+                  new Promise((next, bad) => {
+                     if (returnVals == null) {
+                        next();
+                        return;
+                     }
+
+                     // make sure we get a fully updated value for
+                     // the return value
+                     this.findAll({
+                        where: {
+                           glue: "and",
+                           rules: [
+                              {
+                                 key: PK,
+                                 rule: "equals",
+                                 value: returnVals[PK]
+                              }
+                           ]
+                        },
+                        offset: 0,
+                        limit: 1,
+                        populate: true
+                     })
+                        .then((rows) => {
+                           // this returns an [] so pull 1st value:
+                           next(rows[0]);
+                        })
+                        .catch(bad);
+                  })
+            )
+      );
    }
 
    /**
@@ -210,6 +261,7 @@ module.exports = class ABModel extends ABModelCore {
          query
             .patch(values)
             .where(PK, id)
+            .catch(reject)
             .then((returnVals) => {
                // make sure we get a fully updated value for
                // the return value
@@ -233,8 +285,7 @@ module.exports = class ABModel extends ABModelCore {
                      resolve(rows[0]);
                   })
                   .catch(reject);
-            })
-            .catch(reject);
+            });
       });
    }
 
@@ -307,7 +358,7 @@ module.exports = class ABModel extends ABModelCore {
       if (!Array.isArray(value)) value = [value];
       value.forEach((v) => {
          if (typeof v == "object") {
-            var val = v[fieldPK];
+            var val = v[fieldPK] || v["id"] || v;
             if (val) {
                useableValues.push(val);
             }
