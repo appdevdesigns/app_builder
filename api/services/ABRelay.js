@@ -823,14 +823,15 @@ function processRequests(allRequests, done) {
    allRequests.forEach((row) => {
       let jobToken = row.jobToken;
       jobs[jobToken] = jobs[jobToken] || {};
-      jobs[jobToken][row.packet] = row;
+      jobs[jobToken][row.packet || 0] = row;
    });
    var assembledRequests = [];
    for (let jobToken in jobs) {
       let thisJob = jobs[jobToken];
+      let somePacket = Object.values(thisJob)[0];
       let finalData = '';
-      thisJob.totalPackets = thisJob.totalPackets || 1;
-      for (i=0; i<thisJob.totalPackets; i++) {
+      let totalPackets = somePacket.totalPackets || 1;
+      for (i=0; i<totalPackets; i++) {
          if (thisJob[i]) {
             finalData += thisJob[i].data;
          }
@@ -838,9 +839,8 @@ function processRequests(allRequests, done) {
          // together with the whole set.
          else {
             ADCore.error.log("::: ABRelay job missing a packet [" + i + "/" + thisJob.totalPackets + "]");
-            ADCore.error.log("::: ABRelay jobToken [" + jobToken + "]");
-            let appUUID = Object.values(thisJob)[0].appUUID;
-            ADCore.error.log("::: ABRelay appUUID [" + appUUID + "]");
+            ADCore.error.log(":::  - jobToken [" + jobToken + "]");
+            ADCore.error.log(":::  - appUUID [" + somePacket.appUUID + "]");
          }
       }
       assembledRequests.push({
