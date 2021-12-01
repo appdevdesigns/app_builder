@@ -189,6 +189,8 @@ module.exports = {
     * return a javascript obj that represents the data that was encrypted
     * using our AES key.
     * @param {string} data
+    * @param {string} key
+    *    The AES key in hex format
     * @return {obj}
     */
    decrypt: function(data, key) {
@@ -806,6 +808,50 @@ function packIt(data, list) {
  */
 function processRequests(allRequests, done) {
    ////
+   //// Assemble packets into complete requests
+   ////
+   var jobs = {
+   /*
+      <jobToken>: {
+         0: { <packet> },
+         1: { <packet> },
+         ...
+      },
+      ...
+   */
+   };
+   allRequests.forEach((row) => {
+      let jobToken = row.jobToken;
+      jobs[jobToken] = jobs[jobToken] || {};
+      jobs[jobToken][row.packet] = row;
+   });
+   var assembledRequests = [];
+   for (let jobToken in jobs) {
+      let thisJob = jobs[jobToken];
+      let finalData = '';
+      thisJob.totalPackets = thisJob.totalPackets || 1;
+      for (i=0; i<thisJob.totalPackets; i++) {
+         if (thisJob[i]) {
+            finalData += thisJob[i].data;
+         }
+         // This should never happen because the relay will only send packets
+         // together with the whole set.
+         else {
+            ADCore.error.log("::: ABRelay job missing a packet [" + i + "/" + thisJob.totalPackets + "]");
+            ADCore.error.log("::: ABRelay jobToken [" + jobToken + "]");
+            let appUUID = Object.values(thisJob)[0].appUUID;
+            ADCore.error.log("::: ABRelay appUUID [" + appUUID + "]");
+         }
+      }
+      assembledRequests.push({
+         appUUID: thisJob.appUUID,
+         jobToken: jobToken,
+         data: finalData
+      });
+   }
+
+
+   ////
    //// Attempt to throttle the number of requests we process at a time
    ////
 
@@ -850,6 +896,6 @@ function processRequests(allRequests, done) {
 
    // fire off our requests in parallel.
    for (var i = 0; i < numParallel; i++) {
-      processRequestSequential(allRequests, onDone);
+      processRequestSequential(assembledRequests, onDone);
    }
 }
