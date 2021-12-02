@@ -571,6 +571,18 @@ class ABQL extends ABQLCore {
                Updater.objectLoad(this.object);
             }
 
+            // Set processed data key to value options
+            Updater.setExtendedOptions(
+               (this.task.process.processDataFields(this.task) || []).map(
+                  (item) => {
+                     return {
+                        id: item.key,
+                        value: item.label
+                     };
+                  }
+               )
+            );
+
             // NOTE: .setValue() must be called once the RowUpdater is already
             // displayed.  See the end of popUp() below:
             if (this.params && this.params[pDef.name]) {
