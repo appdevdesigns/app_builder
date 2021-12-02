@@ -173,11 +173,11 @@ module.exports = class RowUpdater extends ABComponent {
                               onItemClick: function() {
                                  let $viewItem = this.getParentView().getParentView();
                                  let $viewCond = $viewItem.getChildViews()[0];
-                                 let $processOption = $viewCond.getChildViews()[4];
+                                 let $customOption = $viewCond.getChildViews()[3];
 
                                  _logic.toggleCustomProcessOption(
                                     $viewItem,
-                                    $processOption.isVisible()
+                                    $customOption.isVisible()
                                  );
                               }
                            }
@@ -446,13 +446,13 @@ module.exports = class RowUpdater extends ABComponent {
             this._extendedOptions = options;
          },
 
-         toggleCustomProcessOption: ($viewItem, isProcessOptionVisible) => {
+         toggleCustomProcessOption: ($viewItem, showProcessOption) => {
             let $viewCond = $viewItem.getChildViews()[0];
             let $toggleButton = $viewItem.getChildViews()[1].getChildViews()[1];
             let $customOption = $viewCond.getChildViews()[3];
             let $processOption = $viewCond.getChildViews()[4];
 
-            if (isProcessOptionVisible) {
+            if (showProcessOption) {
                $customOption.hide();
                $processOption.show();
                $toggleButton.setValue("<a>Or custom value</a>");
