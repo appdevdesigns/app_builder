@@ -73,21 +73,17 @@ module.exports = class ABModel extends ABModelCore {
 
                      let tasks = [];
                      this.object.connectFields(true).forEach((f) => {
-                        if (f.requestRelationParam) {
-                           let relatedVal = f.requestRelationParam(values)[
-                              f.columnName
-                           ];
-                           if (relatedVal != null) {
-                              tasks.push(
-                                 this.relate(
-                                    returnVals[PK],
-                                    f.id,
-                                    relatedVal,
-                                    trx
-                                 )
-                              );
-                           }
-                        }
+                        if (f.requestRelationParam == null) return;
+
+                        let relationParams = f.requestRelationParam(values);
+                        if (relationParams == null) return;
+
+                        let relatedVal = relationParams[f.columnName];
+                        if (relatedVal == null) return;
+
+                        tasks.push(
+                           this.relate(returnVals[PK], f.id, relatedVal, trx)
+                        );
                      });
 
                      Promise.all(tasks)
@@ -1232,3 +1228,4 @@ module.exports = class ABModel extends ABModelCore {
       }
    }
 };
+
