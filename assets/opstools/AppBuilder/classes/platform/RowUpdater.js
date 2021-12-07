@@ -164,7 +164,7 @@ module.exports = class RowUpdater extends ABComponent {
                         !this._extendedOptions.length,
                      cols: [
                         {
-                           width: 488
+                           fillspace: true
                         },
                         {
                            view: "label",
@@ -326,6 +326,7 @@ module.exports = class RowUpdater extends ABComponent {
                } else {
                   $form.hide();
                }
+               $form.adjust();
             }
          },
 

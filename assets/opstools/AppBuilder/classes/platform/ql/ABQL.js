@@ -596,10 +596,26 @@ class ABQL extends ABQLCore {
                   id: this.ids.popup,
                   view: "popup",
                   position: "center",
-                  height: 500,
-                  width: 1000,
+                  minWidth: 600,
+                  modal: true,
+                  resize: true,
                   body: {
                      rows: [
+                        {
+                           height: 30,
+                           borderless: true,
+                           cols: [
+                              { fillspace: true },
+                              {
+                                 view: "button",
+                                 value: "X",
+                                 width: 30,
+                                 click: () => {
+                                    $$(this.ids.popup).hide();
+                                 }
+                              }
+                           ]
+                        },
                         Updater.ui,
                         {
                            view: "button",
