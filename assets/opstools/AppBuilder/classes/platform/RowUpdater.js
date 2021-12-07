@@ -167,17 +167,19 @@ module.exports = class RowUpdater extends ABComponent {
                            fillspace: true
                         },
                         {
-                           view: "label",
-                           label: "<a>Or process value</a>",
+                           view: "segmented",
+                           value: "custom",
+                           options: [
+                              { id: "custom", value: "Custom" },
+                              { id: "process", value: "Process" }
+                           ],
                            on: {
-                              onItemClick: function() {
+                              onChange: function(val) {
                                  let $viewItem = this.getParentView().getParentView();
-                                 let $viewCond = $viewItem.getChildViews()[0];
-                                 let $customOption = $viewCond.getChildViews()[3];
 
                                  _logic.toggleCustomProcessOption(
                                     $viewItem,
-                                    $customOption.isVisible()
+                                    val == "process"
                                  );
                               }
                            }
@@ -422,7 +424,9 @@ module.exports = class RowUpdater extends ABComponent {
                let $viewCond = $viewItem.getChildViews()[0];
 
                $viewCond.$$(ids.field).setValue(item.fieldId);
-               _logic.toggleCustomProcessOption($viewItem, item.isProcessValue);
+               let $aa = $viewItem.queryView({ view: "segmented" }, "self");
+               $aa.setValue(item.isProcessValue ? "process" : "custom");
+               // _logic.toggleCustomProcessOption($viewItem, item.isProcessValue);
 
                let $customValueElem = $viewCond.getChildViews()[3];
                let $processValueElem = $viewCond.getChildViews()[4];
@@ -449,18 +453,15 @@ module.exports = class RowUpdater extends ABComponent {
 
          toggleCustomProcessOption: ($viewItem, showProcessOption) => {
             let $viewCond = $viewItem.getChildViews()[0];
-            let $toggleButton = $viewItem.getChildViews()[1].getChildViews()[1];
             let $customOption = $viewCond.getChildViews()[3];
             let $processOption = $viewCond.getChildViews()[4];
 
             if (showProcessOption) {
                $customOption.hide();
                $processOption.show();
-               $toggleButton.setValue("<a>Or custom value</a>");
             } else {
                $customOption.show();
                $processOption.hide();
-               $toggleButton.setValue("<a>Or process value</a>");
             }
          }
       });
