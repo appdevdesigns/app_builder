@@ -829,22 +829,23 @@ function processRequests(allRequests, done) {
    for (let jobToken in jobs) {
       let thisJob = jobs[jobToken];
       let somePacket = Object.values(thisJob)[0];
-      let finalData = '';
       let totalPackets = somePacket.totalPackets || 1;
-      for (i=0; i<totalPackets; i++) {
+      let appUUID = somePacket.appUUID;
+      let finalData = '';
+      for (let i=0; i<totalPackets; i++) {
          if (thisJob[i]) {
             finalData += thisJob[i].data;
          }
          // This should never happen because the relay will only send packets
          // together with the whole set.
          else {
-            ADCore.error.log("::: ABRelay job missing a packet [" + i + "/" + thisJob.totalPackets + "]");
+            ADCore.error.log("::: ABRelay job missing a packet [" + i + " / total " + totalPackets + "]");
             ADCore.error.log(":::  - jobToken [" + jobToken + "]");
-            ADCore.error.log(":::  - appUUID [" + somePacket.appUUID + "]");
+            ADCore.error.log(":::  - appUUID [" + appUUID + "]");
          }
       }
       assembledRequests.push({
-         appUUID: thisJob.appUUID,
+         appUUID: appUUID,
          jobToken: jobToken,
          data: finalData
       });
