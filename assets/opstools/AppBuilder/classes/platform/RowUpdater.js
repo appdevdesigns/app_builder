@@ -125,8 +125,8 @@ module.exports = class RowUpdater extends ABComponent {
                            options: _logic.getFieldList(true),
                            on: {
                               onChange: function(columnId) {
-                                 let $viewCond = this.getParentView();
-                                 _logic.selectField(columnId, $viewCond);
+                                 let $viewItem = this.getParentView();
+                                 _logic.selectField(columnId, $viewItem);
                               }
                            }
                         },
@@ -135,6 +135,29 @@ module.exports = class RowUpdater extends ABComponent {
                            view: "label",
                            width: 40,
                            label: labels.component.to
+                        },
+                        {
+                           view: "segmented",
+                           value: "custom",
+                           height: 40,
+                           maxWidth: 160,
+                           options: [
+                              { id: "custom", value: "Custom" },
+                              { id: "process", value: "Process" }
+                           ],
+                           hidden:
+                              this._extendedOptions == null ||
+                              !this._extendedOptions.length,
+                           on: {
+                              onChange: function(val) {
+                                 let $viewItem = this.getParentView();
+
+                                 _logic.toggleCustomProcessOption(
+                                    $viewItem,
+                                    val == "process"
+                                 );
+                              }
+                           }
                         },
                         // Field value
                         {},
@@ -157,34 +180,6 @@ module.exports = class RowUpdater extends ABComponent {
                            }
                         }
                      ]
-                  },
-                  {
-                     hidden:
-                        this._extendedOptions == null ||
-                        !this._extendedOptions.length,
-                     cols: [
-                        {
-                           fillspace: true
-                        },
-                        {
-                           view: "segmented",
-                           value: "custom",
-                           options: [
-                              { id: "custom", value: "Custom" },
-                              { id: "process", value: "Process" }
-                           ],
-                           on: {
-                              onChange: function(val) {
-                                 let $viewItem = this.getParentView().getParentView();
-
-                                 _logic.toggleCustomProcessOption(
-                                    $viewItem,
-                                    val == "process"
-                                 );
-                              }
-                           }
-                        }
-                     ]
                   }
                ]
             };
@@ -194,7 +189,6 @@ module.exports = class RowUpdater extends ABComponent {
             return {
                view: "button",
                id: ids.addNew,
-               css: "webix_primary",
                icon: "fa fa-plus",
                type: "iconButton",
                label: labels.component.addNew,
@@ -227,7 +221,7 @@ module.exports = class RowUpdater extends ABComponent {
             _logic.toggleForm();
          },
 
-         selectField: (columnId, $viewCond) => {
+         selectField: (columnId, $viewItem) => {
             let field = _Object.fields((col) => col.id == columnId)[0];
             if (!field) {
                console.error(
@@ -281,42 +275,47 @@ module.exports = class RowUpdater extends ABComponent {
                   break;
             }
 
-            let childViews = $viewCond.getChildViews();
+            let childViews = $viewItem.getChildViews();
 
             // Change component to display value
-            $viewCond.removeView(childViews[3]);
-            $viewCond.addView(inputView, 3);
+            $viewItem.removeView(childViews[4]);
+            $viewItem.addView(inputView, 4);
 
             formFieldComponent.init();
 
             // Show custom display of data field
             if (field.customDisplay)
-               field.customDisplay({}, App, childViews[3].$view);
+               field.customDisplay({}, App, childViews[4].$view);
 
             // Add extended value options
-            $viewCond.removeView(childViews[4]);
+            $viewItem.removeView(childViews[5]);
             if (this._extendedOptions && this._extendedOptions.length) {
-               $viewCond.addView(
+               $viewItem.addView(
                   {
                      view: "richselect",
                      options: this._extendedOptions,
                      hidden: true
                   },
-                  4
+                  5
                );
             } else {
-               $viewCond.addView(
+               $viewItem.addView(
                   {
                      hidden: true
                   },
-                  4
+                  5
                );
             }
 
+            this._logic.toggleCustomProcessOption(
+               $viewItem,
+               childViews[3].getValue() == "process"
+            );
+
             // _logic.refreshFieldList();
             // $$(this).adjust();
-            $$($viewCond).adjust();
-            $viewCond.getFormView().adjust();
+            $$($viewItem).adjust();
+            $viewItem.getFormView().adjust();
          },
 
          toggleForm: () => {
@@ -346,20 +345,20 @@ module.exports = class RowUpdater extends ABComponent {
 
             let $form = $$(ids.form);
             if ($form) {
-               $form.getChildViews().forEach(($viewItem) => {
-                  let $viewCond = $viewItem.getChildViews()[0];
+               $form.getChildViews().forEach(($viewContainer) => {
+                  let $viewItem = $viewContainer.getChildViews()[0];
 
                   // Ignore "Add new" button
-                  if (!$viewCond || !$viewCond.$$) return;
+                  if (!$viewItem || !$viewItem.$$) return;
 
-                  let $fieldElem = $viewCond.$$(ids.field);
+                  let $fieldElem = $viewItem.$$(ids.field);
                   if (!$fieldElem) return;
 
                   let fieldId = $fieldElem.getValue();
                   if (!fieldId) return;
 
-                  let $customValueElem = $viewCond.getChildViews()[3];
-                  let $processValueElem = $viewCond.getChildViews()[4];
+                  let $customValueElem = $viewItem.getChildViews()[4];
+                  let $processValueElem = $viewItem.getChildViews()[5];
                   if (!$customValueElem && !$processValueElem) return;
 
                   let fieldInfo = _Object.fields((f) => f.id == fieldId)[0];
@@ -420,16 +419,20 @@ module.exports = class RowUpdater extends ABComponent {
             if (settings.length < 1) return;
 
             settings.forEach((item) => {
-               let $viewItem = $$(_logic.addItem());
-               let $viewCond = $viewItem.getChildViews()[0];
+               let $viewContainer = $$(_logic.addItem());
+               let $viewItem = $viewContainer.getChildViews()[0];
 
-               $viewCond.$$(ids.field).setValue(item.fieldId);
-               let $aa = $viewItem.queryView({ view: "segmented" }, "self");
-               $aa.setValue(item.isProcessValue ? "process" : "custom");
-               // _logic.toggleCustomProcessOption($viewItem, item.isProcessValue);
+               $viewItem.$$(ids.field).setValue(item.fieldId);
+               let $valueTypeButton = $viewItem.queryView(
+                  { view: "segmented" },
+                  "self"
+               );
+               $valueTypeButton.setValue(
+                  item.isProcessValue ? "process" : "custom"
+               );
 
-               let $customValueElem = $viewCond.getChildViews()[3];
-               let $processValueElem = $viewCond.getChildViews()[4];
+               let $customValueElem = $viewItem.getChildViews()[4];
+               let $processValueElem = $viewItem.getChildViews()[5];
                if (!$customValueElem && !$processValueElem) return;
 
                let fieldInfo = _Object.fields((f) => f.id == item.fieldId)[0];
@@ -452,9 +455,8 @@ module.exports = class RowUpdater extends ABComponent {
          },
 
          toggleCustomProcessOption: ($viewItem, showProcessOption) => {
-            let $viewCond = $viewItem.getChildViews()[0];
-            let $customOption = $viewCond.getChildViews()[3];
-            let $processOption = $viewCond.getChildViews()[4];
+            let $customOption = $viewItem.getChildViews()[4];
+            let $processOption = $viewItem.getChildViews()[5];
 
             if (showProcessOption) {
                $customOption.hide();

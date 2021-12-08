@@ -596,7 +596,7 @@ class ABQL extends ABQLCore {
                   id: this.ids.popup,
                   view: "popup",
                   position: "center",
-                  minWidth: 600,
+                  minWidth: 700,
                   modal: true,
                   resize: true,
                   body: {
@@ -620,6 +620,7 @@ class ABQL extends ABQLCore {
                         {
                            view: "button",
                            value: "Save",
+                           css: "webix_primary",
                            click: () => {
                               // this.params = this.params || {};
                               this.params[pDef.name] = Updater.getValue();
