@@ -28,7 +28,29 @@ class ABQL extends ABQLCore {
       }
 
       if (this.objectID) {
-         this.object.exportIDs(ids);
+         if (!this.object) {
+            this.object = this.objectLookup(this.objectID);
+         }
+         if (this.object) {
+            this.object.exportIDs(ids);
+         } else {
+            var id = "";
+            if (this.task) {
+               if (this.task.process) {
+                  id =
+                     "Process[" +
+                     this.task.process.id +
+                     "][" +
+                     this.task.process.label +
+                     "]->";
+               }
+               id += "Task[" + this.task.id + "][" + this.task.label + "]->";
+            }
+            id += "ABQL[" + this.constructor.key + "]";
+            console.error(
+               `!!! ${id}:exportIDs(): could not find object for id[${this.objectID}]`
+            );
+         }
       }
    }
 }
