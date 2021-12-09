@@ -343,13 +343,17 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                         )[0];
 
                         if (processField) {
-                           formula = formula.replace(
-                              match,
-                              this.process.processData(this, [
-                                 instance,
-                                 processField.key
-                              ])
-                           );
+                           let processData = this.process.processData(this, [
+                              instance,
+                              processField.key
+                           ]);
+
+                           if (Array.isArray(processData))
+                              processData = processData.filter(
+                                 (d) => d != null
+                              );
+
+                           formula = formula.replace(match, processData);
                         }
                      }
                   });
