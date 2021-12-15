@@ -63,7 +63,7 @@ module.exports = {
          headers: {
             authorization: sails.config.appbuilder.mcc.accessToken
          },
-         timeout: opt.timeout || 4000, // 4s timeout to wait for a connection to the MCC
+         timeout: opt.timeout || 30000, // 30s timeout to wait for a connection to the MCC
          time: true, // capture timing information during communications process
          resolveWithFullResponse: true,
          json: true // Automatically stringifies the body to JSON
