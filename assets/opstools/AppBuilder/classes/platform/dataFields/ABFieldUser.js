@@ -265,7 +265,7 @@ module.exports = class ABFieldUser extends ABFieldUserCore {
          };
 
          if ((field.settings.editable = 1)) {
-            config.editor = "richselect";
+            config.editor = "combo";
             config.options = field.getUsers();
          }
       }
