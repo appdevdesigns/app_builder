@@ -2534,7 +2534,7 @@ steal(
                      renderPageContainer: function() {
                         var self = this;
 
-                        if (self.rootPage == null) return;
+                        if (self.rootPage == null) return false;
 
                         // Clear UI content
                         var rootDomId = self.getPageDomID(self.rootPage.id);
@@ -2564,6 +2564,8 @@ steal(
 
                         // Render the root page
                         self.renderPage(self.rootPage, true);
+
+                        return true;
                      },
 
                      renderPage: function(page, isRootPage) {
@@ -2746,6 +2748,14 @@ steal(
                         if ($$(pageDomId)) $$(pageDomId).show();
 
                         // Question: should we do a resize() after all the components are rendered?
+
+                        // If webix container does not exists, then re-render the container
+                        if (!$$(self.containerDomID)) {
+                           if (self.renderPageContainer()) {
+                              self.showPage(pageId, viewId);
+                           }
+                           return;
+                        }
 
                         // Change page by batch id
                         var childViews = $$(
@@ -3070,4 +3080,3 @@ steal(
       }); // end System.import
    }
 ); // end steal
-

@@ -63,7 +63,7 @@ module.exports = {
          headers: {
             authorization: sails.config.appbuilder.mcc.accessToken
          },
-         timeout: opt.timeout || 4000, // 4s timeout to wait for a connection to the MCC
+         timeout: opt.timeout || 30000, // 30s timeout to wait for a connection to the MCC
          time: true, // capture timing information during communications process
          resolveWithFullResponse: true,
          json: true // Automatically stringifies the body to JSON
@@ -189,6 +189,8 @@ module.exports = {
     * return a javascript obj that represents the data that was encrypted
     * using our AES key.
     * @param {string} data
+    * @param {string} key
+    *    The AES key in hex format
     * @return {obj}
     */
    decrypt: function(data, key) {
@@ -806,6 +808,51 @@ function packIt(data, list) {
  */
 function processRequests(allRequests, done) {
    ////
+   //// Assemble packets into complete requests
+   ////
+   var jobs = {
+   /*
+      <jobToken>: {
+         0: { <packet> },
+         1: { <packet> },
+         ...
+      },
+      ...
+   */
+   };
+   allRequests.forEach((row) => {
+      let jobToken = row.jobToken;
+      jobs[jobToken] = jobs[jobToken] || {};
+      jobs[jobToken][row.packet || 0] = row;
+   });
+   var assembledRequests = [];
+   for (let jobToken in jobs) {
+      let thisJob = jobs[jobToken];
+      let somePacket = Object.values(thisJob)[0];
+      let totalPackets = somePacket.totalPackets || 1;
+      let appUUID = somePacket.appUUID;
+      let finalData = '';
+      for (let i=0; i<totalPackets; i++) {
+         if (thisJob[i]) {
+            finalData += thisJob[i].data;
+         }
+         // This should never happen because the relay will only send packets
+         // together with the whole set.
+         else {
+            ADCore.error.log("::: ABRelay job missing a packet [" + i + " / total " + totalPackets + "]");
+            ADCore.error.log(":::  - jobToken [" + jobToken + "]");
+            ADCore.error.log(":::  - appUUID [" + appUUID + "]");
+         }
+      }
+      assembledRequests.push({
+         appUUID: appUUID,
+         jobToken: jobToken,
+         data: finalData
+      });
+   }
+
+
+   ////
    //// Attempt to throttle the number of requests we process at a time
    ////
 
@@ -850,6 +897,6 @@ function processRequests(allRequests, done) {
 
    // fire off our requests in parallel.
    for (var i = 0; i < numParallel; i++) {
-      processRequestSequential(allRequests, onDone);
+      processRequestSequential(assembledRequests, onDone);
    }
 }
