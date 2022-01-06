@@ -37,16 +37,11 @@ class ABQL extends ABQLCore {
             var id = "";
             if (this.task) {
                if (this.task.process) {
-                  id =
-                     "Process[" +
-                     this.task.process.id +
-                     "][" +
-                     this.task.process.label +
-                     "]->";
+                  id = `Process[${this.task.process.id}][${this.task.process.label}]->`;
                }
-               id += "Task[" + this.task.id + "][" + this.task.label + "]->";
+               id = `${id}Task[${this.task.id}][${this.task.label}]->`;
             }
-            id += "ABQL[" + this.constructor.key + "]";
+            id = `${id}ABQL[${this.constructor.key}]`;
             console.error(
                `!!! ${id}:exportIDs(): could not find object for id[${this.objectID}]`
             );
