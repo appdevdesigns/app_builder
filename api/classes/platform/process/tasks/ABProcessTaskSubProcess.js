@@ -97,19 +97,34 @@ module.exports = class SubProcess extends SubProcessCore {
 
                return processEngine;
             })
-            .then(
-               (processEngine) =>
-                  new Promise((next) => {
-                     processData.forEach((data, indexData) => {
-                        var value = {};
-                        value.data = data;
-                        this.stateUpdate(instance, value);
+            .then((processEngine) => {
+               let processTasks = [];
 
-                        let doTasks = (subTasks) => {
-                           if (subTasks && subTasks.length) {
+               processData.forEach((data) => {
+                  processTasks.push(
+                     () =>
+                        new Promise((next) => {
+                           var value = {};
+                           value.data = data;
+                           this.stateUpdate(instance, value);
+
+                           let taskElements = [];
+
+                           let doTasks = (subTasks) => {
+                              // No pending tasks, then go to next step
+                              if (!subTasks || subTasks.length < 1) {
+                                 // Reset states of task elements for the next row
+                                 taskElements.forEach((t) => {
+                                    t.reset(instance);
+                                 });
+                                 next();
+                                 return;
+                              }
+
                               let tasks = [];
 
                               subTasks.forEach((t) => {
+                                 taskElements.push(t);
                                  tasks.push(
                                     new Promise((good, bad) => {
                                        t.do(instance, dbTransaction)
@@ -147,20 +162,19 @@ module.exports = class SubProcess extends SubProcessCore {
                                        ).then(() => {});
                                     });
                               });
-                           }
-                           // No pending tasks & done all of processData
-                           // Then go to next step
-                           else if (processData.length == indexData + 1) {
-                              next();
-                           }
-                        };
+                           };
 
-                        processEngine.pendingTasks().then((subTasks) => {
-                           doTasks(subTasks);
-                        });
-                     });
-                  })
-            )
+                           processEngine.pendingTasks().then((subTasks) => {
+                              doTasks(subTasks);
+                           });
+                        })
+                  );
+               });
+
+               return processTasks.reduce((promiseChain, currTask) => {
+                  return promiseChain.then(currTask);
+               }, Promise.resolve([]));
+            })
             // Complete
             .then(
                () =>
