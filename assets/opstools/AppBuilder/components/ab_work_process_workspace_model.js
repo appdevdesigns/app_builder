@@ -302,18 +302,30 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                viewer.on("shape.remove", (event) => {
                   // console.log("shape.remove:", event.element);
                   if (CurrentProcess) {
+                     let isSubTask = false;
+                     let processTask = CurrentProcess;
                      var element = event.element;
+                     if (
+                        element.parent &&
+                        element.parent.type == "bpmn:SubProcess"
+                     ) {
+                        processTask =
+                           CurrentProcess.elementForDiagramID(
+                              element.parent.id
+                           ) || CurrentProcess;
+                        isSubTask = true;
+                     }
 
                      // remove this connection
                      if (
                         element.type == "bpmn:SequenceFlow" ||
                         element.type == "bpmn:MessageFlow"
                      ) {
-                        CurrentProcess.connectionRemove(element);
+                        processTask.connectionRemove(element);
                      } else {
                         // remove this task
                         // if our current process tracks this Element/Task
-                        var currTask = CurrentProcess.elementForDiagramID(
+                        var currTask = processTask.elementForDiagramID(
                            element.id
                         );
                         if (currTask) {
@@ -324,12 +336,24 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                });
                viewer.on("element.changed", (event) => {
                   console.log(`${event.type}:`, event.element);
-                  var element = event.element;
+                  let element = event.element;
 
                   // ignore label updates
                   if (element.type == "label") {
                      return;
                   }
+
+                  let processTask = CurrentProcess;
+                  if (
+                     element.parent &&
+                     element.parent.type == "bpmn:SubProcess"
+                  ) {
+                     processTask =
+                        CurrentProcess.elementForDiagramID(element.parent.id) ||
+                        CurrentProcess;
+                  }
+
+                  if (processTask == null) return;
 
                   // if not sequence flow lines:
                   if (
@@ -339,7 +363,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                      // MessageFlow : seems to happen between tasks between Participants
                   ) {
                      // if our current process already has this Element/Task
-                     var currElement = CurrentProcess.elementForDiagramID(
+                     var currElement = processTask.elementForDiagramID(
                         element.id
                      );
                      if (currElement) {
@@ -387,7 +411,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                               );
                            } else {
                               // create new process task for this
-                              var newElement = CurrentProcess.elementNewForModelDefinition(
+                              var newElement = processTask.elementNewForModelDefinition(
                                  element
                               );
                               if (newElement) {
@@ -410,7 +434,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
                      }
                   } else {
                      // this is a connection update:
-                     CurrentProcess.connectionUpsert(element);
+                     processTask.connectionUpsert(element);
                   }
                });
 
@@ -421,9 +445,24 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
 
                   // only show properties Pane when there is 1 selection
                   if (event.newSelection.length == 1) {
+                     let element = event.newSelection[0];
                      var newObj = CurrentProcess.elementForDiagramID(
-                        event.newSelection[0].id
+                        element.id
                      );
+                     if (
+                        element.parent &&
+                        element.parent.type == "bpmn:SubProcess" &&
+                        newObj == null
+                     ) {
+                        let subProcessTask = CurrentProcess.elementForDiagramID(
+                           element.parent.id
+                        );
+                        if (subProcessTask)
+                           newObj = subProcessTask.elementForDiagramID(
+                              element.id
+                           );
+                     }
+
                      if (newObj) {
                         // make sure previous selection records it's properties
                         if (
@@ -634,4 +673,3 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
       this.clearWorkspace = this._logic.clearWorkspace;
    }
 }
-
