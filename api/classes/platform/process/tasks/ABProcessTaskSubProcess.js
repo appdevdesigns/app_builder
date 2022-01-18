@@ -63,8 +63,18 @@ module.exports = class SubProcess extends SubProcessCore {
             .then(() => {
                let processEngine = new ABProcessEngine(instance, this);
                processEngine.startTask = () => {
-                  let startDiagramID = this.connections()[0].from;
-                  let startElement = this.elementForDiagramID(startDiagramID);
+                  let firstConnection = this.connections()[0];
+                  if (firstConnection == null) return;
+
+                  let startElement = this.elementForDiagramID(
+                     firstConnection.from
+                  );
+                  if (startElement == null) {
+                     startElement = this.elementForDiagramID(
+                        firstConnection.to
+                     );
+                  }
+
                   if (startElement instanceof ABProcessTriggerCore) {
                      startElement.wantToDoSomething = () => false; // Don't need to .do function of the trigger
                   }
