@@ -628,7 +628,7 @@ export default class ABWorkProcessWorkspaceModel extends OP.Component {
             // an immediate timeout should let the other process complete.
 
             setTimeout(() => {
-               var properties = thisObj.diagramProperties();
+               var properties = thisObj.diagramProperties(viewer);
                properties.forEach((prop) => {
                   _logic.updateElementProperties(prop.id, prop.def);
                });

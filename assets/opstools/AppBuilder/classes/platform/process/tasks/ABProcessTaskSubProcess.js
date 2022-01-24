@@ -82,6 +82,28 @@ module.exports = class SubProcess extends SubProcessCore {
    }
 
    /**
+    * @method diagramProperties()
+    * return a set of values for the XML shape definition based upon
+    * the current values of this object.
+    * @return {json}
+    */
+   diagramProperties(bpmnModeler) {
+      let props = super.diagramProperties();
+      props = props || [{}];
+      props[0].def = props[0].def || {};
+
+      if (this.parameterId != null) {
+         props[0].def = props[0].def || {};
+         props[0].def.loopCharacteristics = bpmnModeler
+            .get("moddle")
+            .create("bpmn:MultiInstanceLoopCharacteristics");
+         props[0].def.loopCharacteristics.isSequential = true;
+      }
+
+      return props;
+   }
+
+   /**
     * @method onChange()
     * update the current Task with information that was relevant
     * from the provided BPMN:Element
