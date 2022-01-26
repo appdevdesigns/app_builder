@@ -14,6 +14,8 @@ const AB = require("ab-utils");
 const reqAB = AB.reqAB({}, {});
 reqAB.jobID = "AccountingJEArchive";
 
+const retry = require("../../UtilRetry.js");
+
 module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
    ////
    //// Process Instance Methods
@@ -152,9 +154,8 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
             .then(
                () =>
                   new Promise((next, bad) => {
-                     this.batchObject
-                        .modelAPI()
-                        .findAll({
+                     retry(() =>
+                        this.batchObject.modelAPI().findAll({
                            where: {
                               glue: "and",
                               rules: [
@@ -167,6 +168,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            },
                            populate: false
                         })
+                     )
                         .then((batch) => {
                            this.batch = batch[0];
 
@@ -208,9 +210,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                         populate: true
                      };
 
-                     this.jeObject
-                        .modelAPI()
-                        .findAll(cond)
+                     retry(() => this.jeObject.modelAPI().findAll(cond))
                         .then((journals) => {
                            this.journals = journals || [];
                            next();
@@ -268,9 +268,9 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
 
                         tasks.push(
                            new Promise((ok, no) => {
-                              this.balanceObject
-                                 .modelAPI()
-                                 .findAll(cond)
+                              retry(() =>
+                                 this.balanceObject.modelAPI().findAll(cond)
+                              )
                                  .then((balances) => {
                                     this.balances = this.balances.concat(
                                        balances || []
@@ -285,8 +285,8 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                      });
 
                      Promise.all(tasks)
-                        .catch(bad)
-                        .then(() => next());
+                        .then(() => next())
+                        .catch(bad);
                   })
             )
             // Copy JE to JE Archive
@@ -363,15 +363,15 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            tasks.push(
                               () =>
                                  new Promise((ok, no) => {
-                                    this.jeArchiveObject
-                                       .modelAPI()
-                                       .findAll({
+                                    retry(() =>
+                                       this.jeArchiveObject.modelAPI().findAll({
                                           where: {
                                              glue: "and",
                                              rules: findArcRules
                                           },
                                           populate: false
                                        })
+                                    )
                                        .then((jeArchives) => {
                                           let exists =
                                              jeArchives &&
@@ -399,11 +399,13 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                        JSON.stringify(jeArchiveValues)
                                     );
 
-                                    this.jeArchiveObject
-                                       .modelAPI()
-                                       // .create(jeArchiveValues, trx)
-                                       .create(jeArchiveValues) // NOTE: Ignore MySQL transaction because client needs id of entry.
-                                       .catch(no)
+                                    retry(
+                                       () =>
+                                          this.jeArchiveObject
+                                             .modelAPI()
+                                             // .create(jeArchiveValues, trx)
+                                             .create(jeArchiveValues) // NOTE: Ignore MySQL transaction because client needs id of entry.
+                                    )
                                        .then((newJeArchive) => {
                                           // Broadcast
                                           sails.sockets.broadcast(
@@ -417,7 +419,8 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                           );
 
                                           ok();
-                                       });
+                                       })
+                                       .catch(no);
                                  })
                            );
                         }
@@ -447,13 +450,14 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                      this.log(instance, "Deleting JE ...");
                      this.log(instance, JSON.stringify(jeIds));
 
-                     this.jeObject
-                        .modelAPI()
-                        .modelKnex()
-                        .query(trx)
-                        .delete()
-                        .where("uuid", "IN", jeIds)
-                        .catch(bad)
+                     retry(() =>
+                        this.jeObject
+                           .modelAPI()
+                           .modelKnex()
+                           .query(trx)
+                           .delete()
+                           .where("uuid", "IN", jeIds)
+                     )
                         .then(() => {
                            // Broadcast
                            (jeIds || []).forEach((jeId) => {
@@ -468,7 +472,8 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            });
 
                            next();
-                        });
+                        })
+                        .catch(bad);
                   })
             )
             // finish out the Process Task

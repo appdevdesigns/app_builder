@@ -20,6 +20,7 @@ const AccountingFPYearCloseCore = require(path.join(
 const AB = require("ab-utils");
 const reqAB = AB.reqAB({}, {});
 reqAB.jobID = "AccountingFPYearClose";
+const retry = require("../../UtilRetry.js");
 
 module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
    ////
@@ -98,9 +99,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         populate: true
                      };
 
-                     this.fpYearObject
-                        .modelAPI()
-                        .findAll(cond)
+                     retry(() => this.fpYearObject.modelAPI().findAll(cond))
                         .then((rows) => {
                            this.currentFPYear = rows[0];
                            this.log(instance, "Found FPYearObj");
@@ -168,9 +167,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         populate: true
                      };
 
-                     this.fpMonthObject
-                        .modelAPI()
-                        .findAll(cond)
+                     retry(() => this.fpMonthObject.modelAPI().findAll(cond))
                         .then((rows) => {
                            this.lastFPMonth = rows[0];
                            this.log(instance, "Found the last FP Month");
@@ -226,10 +223,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                      };
 
                      // find id of accounts with Account Number = 3500 or 3991
-                     this.accObject
-                        .modelAPI()
-                        .findAll(cond)
-                        .catch(bad)
+                     retry(() => this.accObject.modelAPI().findAll(cond))
                         .then((rows) => {
                            // { AccuntNumber: AccountRow, ..., AccuntNumberN: AccountRowN }
                            this.accounts = {};
@@ -266,10 +260,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
 
                            this.balances = balances.filter((b) => {
                               // Filter by Account
-                              let fkAccounts = Object.values(
-                                 this.accounts
-                              ).map((acc) =>
-                                 glAccountField.getRelationValue(acc)
+                              let fkAccounts = Object.values(this.accounts).map(
+                                 (acc) => glAccountField.getRelationValue(acc)
                               );
 
                               return (
@@ -282,7 +274,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            this.log(instance, "Found M12 Balances");
 
                            next();
-                        });
+                        })
+                        .catch(bad);
                   })
             )
             // 3. Find the next fiscal year
@@ -337,10 +330,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         populate: true
                      };
 
-                     this.fpYearObject
-                        .modelAPI()
-                        .findAll(cond)
-                        .catch(bad)
+                     retry(() => this.fpYearObject.modelAPI().findAll(cond))
                         .then((rows) => {
                            this.nextFpYear = rows[0];
 
@@ -350,7 +340,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            }
 
                            next();
-                        });
+                        })
+                        .catch(bad);
                   })
             )
             // 3.1 set the next FP Year to Status = Active
@@ -372,14 +363,15 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         fieldFPYearStatus.columnName
                      ] = this.fieldFPYearActive;
 
-                     this.fpYearObject
-                        .modelAPI()
-                        .update(
-                           this.nextFpYear[this.fpYearObject.PK()],
-                           values,
-                           trx
-                        )
-                        .catch(bad)
+                     retry(() =>
+                        this.fpYearObject
+                           .modelAPI()
+                           .update(
+                              this.nextFpYear[this.fpYearObject.PK()],
+                              values,
+                              trx
+                           )
+                     )
                         .then((updatedNextFP) => {
                            // Broadcast the update
                            sails.sockets.broadcast(
@@ -391,7 +383,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                               }
                            );
                            next();
-                        });
+                        })
+                        .catch(bad);
                   })
             )
             // 4. Find first fiscal month in the next fiscal year (M1)
@@ -481,16 +474,14 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         populate: true
                      };
 
-                     this.glObject
-                        .modelAPI()
-                        .findAll(cond)
-                        .catch(bad)
+                     retry(() => this.glObject.modelAPI().findAll(cond))
                         .then((rows) => {
                            this.nextBalances = rows || [];
 
                            this.log(instance, "Found next M1 Balances");
                            next();
-                        });
+                        })
+                        .catch(bad);
                   })
             )
             // 6. Update M1 Balances
@@ -640,10 +631,15 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         if (values) {
                            tasks.push(
                               new Promise((go, fail) => {
-                                 this.glObject
-                                    .modelAPI()
-                                    .update(b[this.glObject.PK()], values, trx)
-                                    .catch(fail)
+                                 retry(() =>
+                                    this.glObject
+                                       .modelAPI()
+                                       .update(
+                                          b[this.glObject.PK()],
+                                          values,
+                                          trx
+                                       )
+                                 )
                                     .then((updatedGL) => {
                                        // Broadcast the update
                                        sails.sockets.broadcast(
@@ -655,7 +651,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                                           }
                                        );
                                        go();
-                                    });
+                                    })
+                                    .catch(fail);
                               })
                            );
                         }

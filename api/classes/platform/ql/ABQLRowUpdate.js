@@ -7,6 +7,7 @@
  */
 
 const ABQLRowUpdateCore = require("../../core/ql/ABQLRowUpdateCore.js");
+const retry = require("../UtilRetry.js");
 
 class ABQLRowUpdate extends ABQLRowUpdateCore {
    // constructor(attributes, prevOP, task, application) {
@@ -125,9 +126,7 @@ class ABQLRowUpdate extends ABQLRowUpdateCore {
             updateParams = context.object.requestParams(updateParams);
 
             // Perform the update.
-            context.object
-               .modelAPI()
-               .update(id, updateParams)
+            retry(() => context.object.modelAPI().update(id, updateParams))
                .then((updatedRow) => {
                   // this returns the fully populated & updated row
                   nextContext.data = updatedRow;

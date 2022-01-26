@@ -7,6 +7,8 @@
  */
 const ABQLFindCore = require("../../core/ql/ABQLFindCore.js");
 
+const retry = require("../UtilRetry.js");
+
 class ABQLFind extends ABQLFindCore {
    // constructor(attributes, prevOP, task, application) {
    //     super(attributes, ParameterDefinitions, prevOP, task, application);
@@ -53,9 +55,11 @@ class ABQLFind extends ABQLFindCore {
                cond = this.params.cond;
             }
             var reducedCondition = this.conditionReduce(cond, instance);
-            context.object
-               .modelAPI()
-               .findAll({ where: reducedCondition, populate: true })
+            retry(() =>
+               context.object
+                  .modelAPI()
+                  .findAll({ where: reducedCondition, populate: true })
+            )
                .then((rows) => {
                   nextContext.data = rows;
                   if (!rows) {

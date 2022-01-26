@@ -19,6 +19,8 @@ const uuid = require("uuid/v4");
 //    "ABProcessParticipant"
 // ));
 
+const retry = require("../../UtilRetry.js");
+
 // const AB = require("ab-utils");
 // const reqAB = AB.reqAB({}, {});
 // reqAB.jobID = "ABProcessTaskServiceAccountingBatchProcessing";
@@ -130,17 +132,16 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
                var accountObject = this.jeAccountField.datasourceLink;
 
-               return accountObject
-                  .modelAPI()
-                  .findAll({ where: {}, populate: true })
-                  .then((list) => {
-                     this.allAccountRecords = list;
-                  });
+               return retry(() =>
+                  accountObject
+                     .modelAPI()
+                     .findAll({ where: {}, populate: true })
+               ).then((list) => {
+                  this.allAccountRecords = list;
+               });
             })
             .then(() => {
-               return this.batchObj
-                  .modelAPI()
-                  .findAll(cond)
+               return retry(() => this.batchObj.modelAPI().findAll(cond))
                   .then((rows) => {
                      if (!rows || rows.length != 1) {
                         var msg = `unable to find Batch data for batchID[${currentBatchID}]`;
@@ -233,13 +234,15 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                updateValue[
                   this.jeStatusField.columnName
                ] = this.fieldJEStatusComplete;
-               this.jeObject
-                  .modelAPI()
-                  .update(
-                     journalEntry[this.jeObject.PK()],
-                     updateValue,
-                     this._dbTransaction
-                  )
+               retry(() =>
+                  this.jeObject
+                     .modelAPI()
+                     .update(
+                        journalEntry[this.jeObject.PK()],
+                        updateValue,
+                        this._dbTransaction
+                     )
+               )
                   .then((updatedJE) => {
                      // Broadcast
                      sails.sockets.broadcast(
@@ -309,9 +312,11 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      });
                   }
                   // try to find existing BalanceRecord matching our balCond
-                  this.brObject
-                     .modelAPI()
-                     .findAll({ where: balCond, populate: true })
+                  retry(() =>
+                     this.brObject
+                        .modelAPI()
+                        .findAll({ where: balCond, populate: true })
+                  )
                      .then((rows) => {
                         balanceRecord = rows[0];
                         done();
@@ -463,10 +468,13 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             } else {
                balValues[this.brRCField.columnName] = null;
             }
-            this.brObject
-               .modelAPI()
-               // .create(balValues, this._dbTransaction)
-               .create(balValues) // NOTE: Ignore MySQL transaction because client needs id of entry.
+            retry(
+               () =>
+                  this.brObject
+                     .modelAPI()
+                     // .create(balValues, this._dbTransaction)
+                     .create(balValues) // NOTE: Ignore MySQL transaction because client needs id of entry.
+            )
                .then((newEntry) => {
                   // Broadcast
                   sails.sockets.broadcast(
@@ -518,12 +526,11 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                },
                populate: true
             };
-            return this.brObject
-               .modelAPI()
-               .findAll(cond)
-               .then((list) => {
+            return retry(() => this.brObject.modelAPI().findAll(cond)).then(
+               (list) => {
                   allBalanceRecords = list;
-               });
+               }
+            );
          })
          .then(() => {
             var allUpdates = [];
@@ -626,11 +633,13 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                balanceRecord = this.brObject.requestParams(balanceRecord);
 
                // now perform the UPDATE
-               allUpdates.push(new Promise((next, bad) => {
-                     this.brObject
-                        .modelAPI()
-                        .update(brID, balanceRecord, this._dbTransaction)
-                        .catch(bad)
+               allUpdates.push(
+                  new Promise((next, bad) => {
+                     retry(() =>
+                        this.brObject
+                           .modelAPI()
+                           .update(brID, balanceRecord, this._dbTransaction)
+                     )
                         .then(() => {
                            // Broadcast
                            sails.sockets.broadcast(
@@ -643,7 +652,8 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                            );
 
                            next();
-                        });
+                        })
+                        .catch(bad);
                   })
                );
             });
@@ -689,5 +699,3 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       return type.toLowerCase();
    }
 };
-
-
