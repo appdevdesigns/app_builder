@@ -431,6 +431,15 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                           ok();
                                        })
                                        .catch((err) => {
+                                          if (
+                                             err
+                                                .toString()
+                                                .indexOf(
+                                                   "ER_SIGNAL_EXCEPTION"
+                                                ) > -1
+                                          ) {
+                                             return ok();
+                                          }
                                           this.onError(this._instance, err);
                                           no(err);
                                        });

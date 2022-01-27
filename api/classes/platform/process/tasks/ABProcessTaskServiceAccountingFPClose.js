@@ -43,6 +43,7 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
       this.accObject = this.application.objects(
          (o) => o.id == this.objectAcc
       )[0];
+      this._instance = instance;
 
       return new Promise((resolve, reject) => {
          var myState = this.myState(instance);
@@ -82,6 +83,7 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                      this.log(instance, rows);
                   })
                   .catch((err) => {
+                     this.onError(this._instance, err);
                      reject(err);
                   });
             })
@@ -155,6 +157,7 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                         next();
                      })
                      .catch((err) => {
+                        this.onError(this._instance, err);
                         fail(err);
                         reject(err);
                      });
@@ -366,7 +369,18 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                                                 );
                                                 return Promise.resolve();
                                              })
-                                             .catch(fail);
+                                             .catch((err) => {
+                                                this.onError(
+                                                   this._instance,
+                                                   err
+                                                );
+                                                // fail(err);
+                                                return Promise.reject(err);
+                                             });
+                                       })
+                                       .catch((err) => {
+                                          this.onError(this._instance, err);
+                                          return Promise.reject(err);
                                        })
                                  );
                               }
@@ -428,7 +442,10 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                                              );
                                              ok();
                                           })
-                                          .catch(bad);
+                                          .catch((err) => {
+                                             this.onError(this._instance, err);
+                                             bad(err);
+                                          });
                                     })
                                  );
                               }
@@ -436,9 +453,12 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                         );
 
                         Promise.all(tasks)
-                           .catch(fail)
                            .then(() => {
                               next();
+                           })
+                           .catch((err) => {
+                              this.onError(this._instance, err);
+                              fail(err);
                            });
                      })
                )
@@ -496,7 +516,10 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                            );
                            next();
                         })
-                        .catch(fail);
+                        .catch((err) => {
+                           this.onError(this._instance, err);
+                           fail(err);
+                        });
                   })
             )
             // Final step
@@ -504,6 +527,10 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                this.log(instance, "I'm done.");
                this.stateCompleted(instance);
                resolve(true);
+            })
+            .catch((err) => {
+               this.onError(this._instance, err);
+               reject(err);
             });
       });
    }

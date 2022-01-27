@@ -37,6 +37,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
     *                            false if task is still waiting
     */
    do(instance, trx) {
+      this._instance = instance;
+
       this.fpYearObject = this.application.objects(
          (o) => o.id == this.objectFPYear
       )[0];
@@ -112,6 +114,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            }
                         })
                         .catch((err) => {
+                           this.onError(this._instance, err);
                            bad(err);
                         });
                   })
@@ -187,6 +190,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            }
                         })
                         .catch((err) => {
+                           this.onError(this._instance, err);
                            bad(err);
                         });
                   })
@@ -275,7 +279,10 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
 
                            next();
                         })
-                        .catch(bad);
+                        .catch((err)=>{
+                           this.onError(this._instance, err);
+                           bad(err);
+                        });
                   })
             )
             // 3. Find the next fiscal year
@@ -341,7 +348,10 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
 
                            next();
                         })
-                        .catch(bad);
+                        .catch((err)=>{
+                           this.onError(this._instance, err);
+                           bad(err);
+                        });
                   })
             )
             // 3.1 set the next FP Year to Status = Active
@@ -384,7 +394,10 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            );
                            next();
                         })
-                        .catch(bad);
+                        .catch((err)=>{
+                           this.onError(this._instance, err);
+                           bad(err);
+                        });
                   })
             )
             // 4. Find first fiscal month in the next fiscal year (M1)
@@ -481,7 +494,10 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            this.log(instance, "Found next M1 Balances");
                            next();
                         })
-                        .catch(bad);
+                        .catch((err)=>{
+                           this.onError(this._instance, err);
+                           bad(err);
+                        });
                   })
             )
             // 6. Update M1 Balances
@@ -652,7 +668,10 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                                        );
                                        go();
                                     })
-                                    .catch(fail);
+                                    .catch((err)=>{
+                                       this.onError(this._instance, err);
+                                       fail(err);
+                                    });
                               })
                            );
                         }
@@ -667,6 +686,10 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                this.stateCompleted(instance);
                return Promise.resolve(true);
             })
+            .catch((err)=>{
+               this.onError(this._instance, err);
+               return Promise.reject(err);
+            });
       );
    }
 };
