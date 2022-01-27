@@ -270,7 +270,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                         };
 
                         tasks.push(
-                           new Promise((ok, no) => {
+                           new Promise((ok /*, no*/) => {
                               retry(() =>
                                  this.balanceObject.modelAPI().findAll(cond)
                               )
@@ -282,7 +282,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                  })
                                  .catch((err) => {
                                     this.onError(this._instance, err);
-                                    ok();
+                                    ok(); // just continue on?
                                  });
                            })
                         );
@@ -409,6 +409,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                        JSON.stringify(jeArchiveValues)
                                     );
 
+                                    var isError = false;
                                     retry(
                                        () =>
                                           this.jeArchiveObject
@@ -416,7 +417,23 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                              // .create(jeArchiveValues, trx)
                                              .create(jeArchiveValues) // NOTE: Ignore MySQL transaction because client needs id of entry.
                                     )
+                                       .catch((err) => {
+                                          if (
+                                             err
+                                                .toString()
+                                                .indexOf(
+                                                   "ER_SIGNAL_EXCEPTION"
+                                                ) > -1
+                                          ) {
+                                             return;
+                                          }
+                                          isError = true;
+                                          this.onError(this._instance, err);
+                                          no(err);
+                                       })
                                        .then((newJeArchive) => {
+                                          if (isError) return;
+
                                           // Broadcast
                                           sails.sockets.broadcast(
                                              this.jeArchiveObject.id,
@@ -429,19 +446,6 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                           );
 
                                           ok();
-                                       })
-                                       .catch((err) => {
-                                          if (
-                                             err
-                                                .toString()
-                                                .indexOf(
-                                                   "ER_SIGNAL_EXCEPTION"
-                                                ) > -1
-                                          ) {
-                                             return ok();
-                                          }
-                                          this.onError(this._instance, err);
-                                          no(err);
                                        });
                                  })
                            );
@@ -509,7 +513,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
             // finish out the Process Task
             .then(
                () =>
-                  new Promise((next, bad) => {
+                  new Promise((next /*, bad */) => {
                      this.stateCompleted(instance);
                      this.log(instance, "JE Archive process successfully");
                      next(true);

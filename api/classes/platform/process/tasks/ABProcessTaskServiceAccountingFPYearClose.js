@@ -279,7 +279,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
 
                            next();
                         })
-                        .catch((err)=>{
+                        .catch((err) => {
                            this.onError(this._instance, err);
                            bad(err);
                         });
@@ -348,7 +348,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
 
                            next();
                         })
-                        .catch((err)=>{
+                        .catch((err) => {
                            this.onError(this._instance, err);
                            bad(err);
                         });
@@ -394,7 +394,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            );
                            next();
                         })
-                        .catch((err)=>{
+                        .catch((err) => {
                            this.onError(this._instance, err);
                            bad(err);
                         });
@@ -494,7 +494,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            this.log(instance, "Found next M1 Balances");
                            next();
                         })
-                        .catch((err)=>{
+                        .catch((err) => {
                            this.onError(this._instance, err);
                            bad(err);
                         });
@@ -668,7 +668,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                                        );
                                        go();
                                     })
-                                    .catch((err)=>{
+                                    .catch((err) => {
                                        this.onError(this._instance, err);
                                        fail(err);
                                     });
@@ -686,10 +686,10 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                this.stateCompleted(instance);
                return Promise.resolve(true);
             })
-            .catch((err)=>{
+            .catch((err) => {
                this.onError(this._instance, err);
                return Promise.reject(err);
-            });
+            })
       );
    }
 };
