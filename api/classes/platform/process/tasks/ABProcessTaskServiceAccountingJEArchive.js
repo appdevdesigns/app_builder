@@ -33,6 +33,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
     */
    do(instance, trx) {
       this._dbTransaction = trx;
+      this._instance = instance;
 
       this.batchObject = this.application.objects(
          (o) => o.id == this.objectBatch
@@ -180,6 +181,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            next();
                         })
                         .catch((err) => {
+                           this.onError(this._instance, err);
                            bad(err);
                         });
                   })
@@ -216,6 +218,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            next();
                         })
                         .catch((err) => {
+                           this.onError(this._instance, err);
                            bad(err);
                         });
                   })
@@ -278,6 +281,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                     ok();
                                  })
                                  .catch((err) => {
+                                    this.onError(this._instance, err);
                                     ok();
                                  });
                            })
@@ -286,7 +290,10 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
 
                      Promise.all(tasks)
                         .then(() => next())
-                        .catch(bad);
+                        .catch((err) => {
+                           this.onError(this._instance, err);
+                           bad(err);
+                        });
                   })
             )
             // Copy JE to JE Archive
@@ -378,7 +385,10 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                              jeArchives.length > 0;
                                           ok(exists);
                                        })
-                                       .catch(no);
+                                       .catch((err) => {
+                                          this.onError(this._instance, err);
+                                          no(err);
+                                       });
                                  })
                            );
 
@@ -420,7 +430,10 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
 
                                           ok();
                                        })
-                                       .catch(no);
+                                       .catch((err) => {
+                                          this.onError(this._instance, err);
+                                          no(err);
+                                       });
                                  })
                            );
                         }
@@ -433,9 +446,14 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                      tasks.push(() => next());
 
                      // create JE archive sequentially
-                     tasks.reduce((promiseChain, currTask) => {
-                        return promiseChain.then(currTask);
-                     }, Promise.resolve([]));
+                     tasks
+                        .reduce((promiseChain, currTask) => {
+                           return promiseChain.then(currTask);
+                        }, Promise.resolve([]))
+                        .catch((err) => {
+                           this.onError(this._instance, err);
+                           bad(err);
+                        });
                   })
             )
             // Remove JEs
@@ -473,7 +491,10 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
 
                            next();
                         })
-                        .catch(bad);
+                        .catch((err) => {
+                           this.onError(this._instance, err);
+                           bad(err);
+                        });
                   })
             )
             // finish out the Process Task
@@ -485,6 +506,9 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                      next(true);
                   })
             )
+            .catch((err) => {
+               this.onError(this._instance, err);
+            })
       );
    }
 };

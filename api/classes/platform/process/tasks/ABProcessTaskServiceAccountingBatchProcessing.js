@@ -41,6 +41,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
     */
    do(instance, trx) {
       this._dbTransaction = trx;
+      this._instance = instance;
 
       // Setup references to the ABObject and Fields that we will use in our
       // operations.
@@ -174,7 +175,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                         instance,
                         `error processing Batch data for batchID[${currentBatchID}]`
                      );
-                     this.log(instance, error.toString());
+                     this.onError(instance, error);
                      reject(error);
                   });
             })
@@ -188,7 +189,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                resolve(true);
             })
             .catch((error) => {
-               this.log(instance, error.toString());
+               this.onError(this._instance, error);
                reject(error);
             });
       });
@@ -256,10 +257,13 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
                      resolve();
                   })
-                  .catch(reject);
+                  .catch((error) => {
+                     this.onError(this._instance, error);
+                     reject(error);
+                  });
             })
             .catch((error) => {
-               console.error(error);
+               this.onError(this._instance, error);
                reject(error);
             });
       });
@@ -322,7 +326,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                         done();
                      })
                      .catch((err) => {
-                        // TODO: need to pass in .instance so we can do a this.log()
+                        this.onError(this._instance, err);
                         done(err);
                      });
                },
@@ -349,7 +353,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                         done();
                      })
                      .catch((err) => {
-                        // TODO: need to pass in .instance so we can do a this.log()
+                        this.onError(this._instance, err);
                         done(err);
                      });
                },
@@ -418,7 +422,10 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                         .then(() => {
                            done();
                         })
-                        .catch(done);
+                        .catch((err) => {
+                           this.onError(this._instance, err);
+                           done(err);
+                        });
                   } else {
                      done();
                   }
@@ -489,7 +496,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                   resolve(newEntry);
                })
                .catch((err) => {
-                  // TODO: need to pass in .instance so we can do a this.log()
+                  this.onError(this._instance, err);
                   reject(err);
                });
          });
@@ -653,12 +660,21 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
                            next();
                         })
-                        .catch(bad);
+                        .catch((error) => {
+                           this.onError(this._instance, error);
+                           bad(error);
+                        });
                   })
                );
             });
 
-            return Promise.all(allUpdates);
+            return Promise.all(allUpdates).catch((err) => {
+               this.onError(this._instance, err);
+            });
+         })
+         .catch((err) => {
+            console.error(err);
+            this.onError(this._instance, err);
          });
    }
 
