@@ -679,6 +679,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
          .catch((err) => {
             console.error(err);
             this.onError(this._instance, err);
+            throw err;
          });
    }
 

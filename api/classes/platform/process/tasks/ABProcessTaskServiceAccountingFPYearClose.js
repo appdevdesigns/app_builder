@@ -94,19 +94,19 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                               {
                                  key: this.fpYearObject.PK(),
                                  rule: "equals",
-                                 value: currentFPYearID
-                              }
-                           ]
+                                 value: currentFPYearID,
+                              },
+                           ],
                         },
-                        populate: true
+                        populate: true,
                      };
 
                      retry(() => this.fpYearObject.modelAPI().findAll(cond))
                         .then((rows) => {
                            this.currentFPYear = rows[0];
-                           this.log(instance, "Found FPYearObj");
 
                            if (this.currentFPYear) {
+                              this.log(instance, "Found FPYearObj");
                               next();
                            } else {
                               this.log(instance, "Not Found FPYearObj");
@@ -114,6 +114,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            }
                         })
                         .catch((err) => {
+                           this.log(instance, "Error finding FP Year Object");
                            this.onError(this._instance, err);
                            bad(err);
                         });
@@ -163,19 +164,19 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                               {
                                  key: this.fpMonthObject.PK(),
                                  rule: "equals",
-                                 value: FPmonths[0][this.fpMonthObject.PK()]
-                              }
-                           ]
+                                 value: FPmonths[0][this.fpMonthObject.PK()],
+                              },
+                           ],
                         },
-                        populate: true
+                        populate: true,
                      };
 
                      retry(() => this.fpMonthObject.modelAPI().findAll(cond))
                         .then((rows) => {
                            this.lastFPMonth = rows[0];
-                           this.log(instance, "Found the last FP Month");
 
                            if (this.lastFPMonth) {
+                              this.log(instance, "Found the last FP Month");
                               next();
                            } else {
                               this.log(
@@ -190,6 +191,10 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            }
                         })
                         .catch((err) => {
+                           this.log(
+                              instance,
+                              "Error Finding last FP Month with balances"
+                           );
                            this.onError(this._instance, err);
                            bad(err);
                         });
@@ -214,16 +219,16 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                               {
                                  key: accNumberField.id,
                                  rule: "equals",
-                                 value: this.valueFundBalances
+                                 value: this.valueFundBalances,
                               },
                               {
                                  key: accNumberField.id,
                                  rule: "equals",
-                                 value: this.valueNetIncome
-                              }
-                           ]
+                                 value: this.valueNetIncome,
+                              },
+                           ],
                         },
-                        populate: false
+                        populate: false,
                      };
 
                      // find id of accounts with Account Number = 3500 or 3991
@@ -233,9 +238,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            this.accounts = {};
                            (rows || []).forEach(
                               (r) =>
-                                 (this.accounts[
-                                    r[accNumberField.columnName]
-                                 ] = r)
+                                 (this.accounts[r[accNumberField.columnName]] =
+                                    r)
                            );
 
                            let fpBalanceField = this.fpMonthObject.fields(
@@ -330,11 +334,11 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                               {
                                  key: fpStartField.id,
                                  rule: "equals",
-                                 value: startDate
-                              }
-                           ]
+                                 value: startDate,
+                              },
+                           ],
                         },
-                        populate: true
+                        populate: true,
                      };
 
                      retry(() => this.fpYearObject.modelAPI().findAll(cond))
@@ -369,9 +373,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                      }
 
                      let values = {};
-                     values[
-                        fieldFPYearStatus.columnName
-                     ] = this.fieldFPYearActive;
+                     values[fieldFPYearStatus.columnName] =
+                        this.fieldFPYearActive;
 
                      retry(() =>
                         this.fpYearObject
@@ -389,7 +392,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                               "ab.datacollection.update",
                               {
                                  objectId: this.fpYearObject.id,
-                                 data: updatedNextFP
+                                 data: updatedNextFP,
                               }
                            );
                            next();
@@ -480,11 +483,11 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                                  rule: "equals",
                                  value: glFPMonthField.getRelationValue(
                                     this.firstFpMonth
-                                 )
-                              }
-                           ]
+                                 ),
+                              },
+                           ],
                         },
-                        populate: true
+                        populate: true,
                      };
 
                      retry(() => this.glObject.modelAPI().findAll(cond))
@@ -495,6 +498,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                            next();
                         })
                         .catch((err) => {
+                           this.log(instance, "Error finding M1 Balances");
                            this.onError(this._instance, err);
                            bad(err);
                         });
@@ -663,7 +667,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                                           "ab.datacollection.update",
                                           {
                                              objectId: this.glObject.id,
-                                             data: updatedGL
+                                             data: updatedGL,
                                           }
                                        );
                                        go();
@@ -677,18 +681,28 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
                         }
                      });
 
-                     Promise.all(tasks).then(() => next());
+                     Promise.all(tasks)
+                        .then(() => next())
+                        .catch((err) => {
+                           this.log(
+                              instance,
+                              "Error Updating GL Object Values"
+                           );
+                           this.onError(instance, err);
+                           bad(err);
+                        });
                   })
             )
             // Final step
             .then(() => {
                this.log(instance, "I'm done.");
                this.stateCompleted(instance);
-               return Promise.resolve(true);
+               return true;
             })
             .catch((err) => {
-               this.onError(this._instance, err);
-               return Promise.reject(err);
+               this.log(instance, "Error FPYearClose");
+               this.onError(instance, err);
+               throw err;
             })
       );
    }

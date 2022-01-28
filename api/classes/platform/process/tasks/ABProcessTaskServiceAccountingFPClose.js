@@ -67,11 +67,11 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                   {
                      key: this.fpObject.PK(),
                      rule: "equals",
-                     value: currentFPID
-                  }
-               ]
+                     value: currentFPID,
+                  },
+               ],
             },
-            populate: true
+            populate: true,
          };
 
          Promise.resolve()
@@ -79,12 +79,16 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                return retry(() => this.fpObject.modelAPI().findAll(cond))
                   .then((rows) => {
                      this.currentFP = rows[0];
-                     this.log(instance, "Found FPObj");
-                     this.log(instance, rows);
+                     if (this.currentFP) {
+                        this.log(instance, "Found FPObj");
+                     } else {
+                        this.log(instance, rows);
+                     }
                   })
                   .catch((err) => {
-                     this.onError(this._instance, err);
-                     reject(err);
+                     this.log(instance, "Error looking up Current FP:");
+                     this.onError(instance, err);
+                     throw err;
                   });
             })
             .then(() =>
@@ -138,28 +142,34 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                               {
                                  key: startField.id,
                                  rule: "equals",
-                                 value: startDate
+                                 value: startDate,
                               },
                               {
                                  key: openField.id,
                                  rule: "equals",
-                                 value: 1
-                              }
-                           ]
+                                 value: 1,
+                              },
+                           ],
                         },
-                        populate: true
+                        populate: true,
                      })
                   )
                      .then((rows) => {
                         this.nextFP = rows[0];
-                        this.log(instance, "Found the next FPObj");
-                        this.log(instance, rows);
+                        if (this.nextFP) {
+                           this.log(instance, "Found the next FPObj");
+                        } else {
+                           this.log(instance, rows);
+                        }
                         next();
                      })
                      .catch((err) => {
+                        this.log(
+                           this._instance,
+                           "Error finding the next FPObj"
+                        );
                         this.onError(this._instance, err);
                         fail(err);
-                        reject(err);
                      });
                }).then(
                   () =>
@@ -256,16 +266,22 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                                                       {
                                                          key: this.glObject.PK(),
                                                          rule: "equals",
-                                                         value:
-                                                            nextGlSegment[
-                                                               this.glObject.PK()
-                                                            ]
-                                                      }
-                                                   ]
+                                                         value: nextGlSegment[
+                                                            this.glObject.PK()
+                                                         ],
+                                                      },
+                                                   ],
                                                 },
-                                                populate: true
+                                                populate: true,
                                              })
-                                          )
+                                          ).catch((err) => {
+                                             this.log(
+                                                this._instance,
+                                                "Error finding Next GL Info"
+                                             );
+                                             this.onError(this._instance, err);
+                                             throw err;
+                                          })
                                        )
                                        .then((nextGlInfo) => {
                                           // array to a object
@@ -345,7 +361,7 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                                              }
                                           }
 
-                                          retry(() =>
+                                          return retry(() =>
                                              this.glObject
                                                 .modelAPI()
                                                 .update(
@@ -362,23 +378,29 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                                                    this.glObject.id,
                                                    "ab.datacollection.update",
                                                    {
-                                                      objectId: this.glObject
-                                                         .id,
-                                                      data: updatedExistsGl
+                                                      objectId:
+                                                         this.glObject.id,
+                                                      data: updatedExistsGl,
                                                    }
                                                 );
-                                                return Promise.resolve();
                                              })
                                              .catch((err) => {
+                                                this.log(
+                                                   this._instance,
+                                                   "Error updating Next GL Segment"
+                                                );
                                                 this.onError(
                                                    this._instance,
                                                    err
                                                 );
-                                                // fail(err);
-                                                return Promise.reject(err);
+                                                throw err;
                                              });
                                        })
                                        .catch((err) => {
+                                          this.log(
+                                             this._instance,
+                                             "Error updating existing balance"
+                                          );
                                           this.onError(this._instance, err);
                                           return Promise.reject(err);
                                        })
@@ -391,11 +413,10 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
 
                                  // link to the next FP
                                  if (fieldGLlink) {
-                                    newGL[
-                                       fieldGLlink.columnName
-                                    ] = fieldGLlink.getRelationValue(
-                                       this.nextFP
-                                    );
+                                    newGL[fieldGLlink.columnName] =
+                                       fieldGLlink.getRelationValue(
+                                          this.nextFP
+                                       );
                                  }
 
                                  // set Starting & Running Balance
@@ -443,6 +464,10 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                                              ok();
                                           })
                                           .catch((err) => {
+                                             this.log(
+                                                this._instance,
+                                                "Error creating new GL Segment"
+                                             );
                                              this.onError(this._instance, err);
                                              bad(err);
                                           });
@@ -457,6 +482,10 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                               next();
                            })
                            .catch((err) => {
+                              this.log(
+                                 this._instance,
+                                 "Error Updating/Creating Balances "
+                              );
                               this.onError(this._instance, err);
                               fail(err);
                            });
@@ -511,7 +540,7 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                               "ab.datacollection.update",
                               {
                                  objectId: this.fpObject.id,
-                                 data: updatedNextFP
+                                 data: updatedNextFP,
                               }
                            );
                            next();
@@ -529,6 +558,7 @@ module.exports = class AccountingFPClose extends AccountingFPCloseCore {
                resolve(true);
             })
             .catch((err) => {
+               this.log(instance, "Error performing FP Close:");
                this.onError(this._instance, err);
                reject(err);
             });

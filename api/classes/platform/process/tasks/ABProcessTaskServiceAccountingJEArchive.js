@@ -163,11 +163,11 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                  {
                                     key: this.batchObject.PK(),
                                     rule: "equals",
-                                    value: currentBatchID
-                                 }
-                              ]
+                                    value: currentBatchID,
+                                 },
+                              ],
                            },
-                           populate: false
+                           populate: false,
                         })
                      )
                         .then((batch) => {
@@ -193,9 +193,8 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                      // get custom index value to search
                      let batchIndexVal = currentBatchID;
                      if (this.jeBatchField.indexField) {
-                        batchIndexVal = this.batch[
-                           this.jeBatchField.indexField.columnName
-                        ];
+                        batchIndexVal =
+                           this.batch[this.jeBatchField.indexField.columnName];
                      }
 
                      let cond = {
@@ -205,11 +204,11 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                               {
                                  key: this.jeBatchField.id,
                                  rule: "equals",
-                                 value: batchIndexVal
-                              }
-                           ]
+                                 value: batchIndexVal,
+                              },
+                           ],
                         },
-                        populate: true
+                        populate: true,
                      };
 
                      retry(() => this.jeObject.modelAPI().findAll(cond))
@@ -231,9 +230,8 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
 
                      if (!this.journals || !this.journals.length) return next();
 
-                     let fiscalMonthId = this.batch[
-                        this.batchFiscalMonthField.columnName
-                     ];
+                     let fiscalMonthId =
+                        this.batch[this.batchFiscalMonthField.columnName];
 
                      let tasks = [];
 
@@ -252,21 +250,21 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                  {
                                     key: this.fieldBrFiscalMonth,
                                     rule: "equals",
-                                    value: fiscalMonthId
+                                    value: fiscalMonthId,
                                  },
                                  {
                                     key: this.fieldBrAccount,
                                     rule: "equals",
-                                    value: je[this.jeAccountField.columnName]
+                                    value: je[this.jeAccountField.columnName],
                                  },
                                  {
                                     key: this.fieldBrRC,
                                     rule: "equals",
-                                    value: je[this.jeRcField.columnName]
-                                 }
-                              ]
+                                    value: je[this.jeRcField.columnName],
+                                 },
+                              ],
                            },
-                           populate: false
+                           populate: false,
                         };
 
                         tasks.push(
@@ -317,8 +315,9 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            let customBrIndex = "uuid";
 
                            if (this.jeArchiveBalanceField.indexField) {
-                              customBrIndex = this.jeArchiveBalanceField
-                                 .indexField.columnName;
+                              customBrIndex =
+                                 this.jeArchiveBalanceField.indexField
+                                    .columnName;
                            }
 
                            jeArchiveValues[
@@ -356,15 +355,16 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            findArcRules.push({
                               key: fArc.id,
                               rule: "equals",
-                              value: je[fJe.columnName]
+                              value: je[fJe.columnName],
                            });
                         });
 
                         if (Object.keys(jeArchiveValues).length > 1) {
                            // call .requestParams to set default values and reformat value properly
-                           jeArchiveValues = this.jeArchiveObject.requestParams(
-                              jeArchiveValues
-                           );
+                           jeArchiveValues =
+                              this.jeArchiveObject.requestParams(
+                                 jeArchiveValues
+                              );
 
                            // check exists JE Archive
                            tasks.push(
@@ -374,9 +374,9 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                        this.jeArchiveObject.modelAPI().findAll({
                                           where: {
                                              glue: "and",
-                                             rules: findArcRules
+                                             rules: findArcRules,
                                           },
-                                          populate: false
+                                          populate: false,
                                        })
                                     )
                                        .then((jeArchives) => {
@@ -386,6 +386,10 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                           ok(exists);
                                        })
                                        .catch((err) => {
+                                          this.log(
+                                             this._instance,
+                                             "Error checking for existing JE Archive"
+                                          );
                                           this.onError(this._instance, err);
                                           no(err);
                                        });
@@ -439,9 +443,9 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                              this.jeArchiveObject.id,
                                              "ab.datacollection.create",
                                              {
-                                                objectId: this.jeArchiveObject
-                                                   .id,
-                                                data: newJeArchive
+                                                objectId:
+                                                   this.jeArchiveObject.id,
+                                                data: newJeArchive,
                                              }
                                           );
 
@@ -497,7 +501,7 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                                  "ab.datacollection.delete",
                                  {
                                     objectId: this.jeObject.id,
-                                    id: jeId
+                                    id: jeId,
                                  }
                               );
                            });
@@ -505,6 +509,10 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            next();
                         })
                         .catch((err) => {
+                           this.log(
+                              this._instance,
+                              "Error deleting JE Objects"
+                           );
                            this.onError(this._instance, err);
                            bad(err);
                         });
@@ -520,7 +528,12 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                   })
             )
             .catch((err) => {
+               this.log(
+                  this._instance,
+                  "JE Archive process exiting due to error:"
+               );
                this.onError(this._instance, err);
+               throw err;
             })
       );
    }
