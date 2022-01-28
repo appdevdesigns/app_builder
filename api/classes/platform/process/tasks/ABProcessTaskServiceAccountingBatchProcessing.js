@@ -176,7 +176,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                         `error processing Batch data for batchID[${currentBatchID}]`
                      );
                      this.onError(instance, error);
-                     reject(error);
+                     throw error;
                   });
             })
             .then(() => {
