@@ -168,7 +168,10 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                         );
                      });
 
-                     return Promise.all(allEntries);
+                     return Promise.all(allEntries).catch((err) => {
+                        this.onError(this._instance, err);
+                        throw err;
+                     });
                   })
                   .catch((error) => {
                      this.log(
@@ -670,6 +673,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
             return Promise.all(allUpdates).catch((err) => {
                this.onError(this._instance, err);
+               throw err;
             });
          })
          .catch((err) => {
