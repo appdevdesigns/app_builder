@@ -1,4 +1,4 @@
-name: Version, Release & Build
+name: PR Merge -- Version, Release & Build
 
 on:
   pull_request:
