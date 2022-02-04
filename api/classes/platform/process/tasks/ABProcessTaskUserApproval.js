@@ -23,6 +23,8 @@ const AB = require("ab-utils");
 const reqAB = AB.reqAB({}, {});
 reqAB.jobID = "ABProcessTaskUserApproval";
 
+const retry = require("../../UtilRetry.js");
+
 module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprovalCore {
    ////
    //// Process Instance Methods
@@ -122,7 +124,7 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                         });
                         allUserFields = allUserFields.filter((uId) => uId);
 
-                        SiteUser.find({ username: allUserFields })
+                        retry(() => SiteUser.find({ username: allUserFields }))
                            .then((listUsers) => {
                               // Remove empty items
                               jobData.users = jobData.users.concat(

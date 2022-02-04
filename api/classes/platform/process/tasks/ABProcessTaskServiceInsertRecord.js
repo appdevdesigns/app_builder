@@ -1,8 +1,9 @@
 const InsertRecordTaskCore = require("../../../core/process/tasks/ABProcessTaskServiceInsertRecordCore.js");
 
-const AB = require("ab-utils");
-const reqAB = AB.reqAB({}, {});
-reqAB.jobID = "InsertRecord";
+// const AB = require("ab-utils");
+// const reqAB = AB.reqAB({}, {});
+// reqAB.jobID = "InsertRecord";
+const retry = require("../../UtilRetry.js");
 
 module.exports = class InsertRecord extends InsertRecordTaskCore {
    ////
@@ -44,9 +45,8 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                pullDataTasks.push(
                   () =>
                      new Promise((next, bad) => {
-                        fieldRepeat.datasourceLink
-                           .modelAPI()
-                           .findAll({
+                        retry(() =>
+                           fieldRepeat.datasourceLink.modelAPI().findAll({
                               where: {
                                  glue: "and",
                                  rules: [
@@ -60,10 +60,11 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
                               },
                               populate: true
                            })
-                           .catch(bad)
+                        )
                            .then((result) => {
                               next(this.getDataValue(instance, result[0]));
-                           });
+                           })
+                           .catch(bad);
                      })
                );
             });
@@ -78,21 +79,23 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
          tasks.push(
             Promise.resolve()
                .then(() => pullTask())
-               .then((val) => this.object.modelAPI().create(val))
+               .then((val) => retry(() => this.object.modelAPI().create(val)))
                .then((record) =>
-                  this.object.modelAPI().findAll({
-                     where: {
-                        glue: "and",
-                        rules: [
-                           {
-                              key: this.object.PK(),
-                              rule: "equals",
-                              value: record[this.object.PK()]
-                           }
-                        ]
-                     },
-                     populate: true
-                  })
+                  retry(() =>
+                     this.object.modelAPI().findAll({
+                        where: {
+                           glue: "and",
+                           rules: [
+                              {
+                                 key: this.object.PK(),
+                                 rule: "equals",
+                                 value: record[this.object.PK()]
+                              }
+                           ]
+                        },
+                        populate: true
+                     })
+                  )
                )
                .then((result) => {
                   results.push(result[0]);
@@ -120,7 +123,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
     * @return {mixed} | null
     */
    processData(instance, key) {
-      let myState = this.myState(instance);
+      let myState = this.myState(instance) || {};
       let data = myState.data;
       if (data == null) return null;
 
@@ -137,7 +140,7 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
       let startElement = this.startElements[0];
       if (!startElement) return null;
 
-      return startElement.myState(instance).data;
+      return (startElement.myState(instance) || {}).data;
    }
 
    /**
@@ -444,4 +447,3 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
       return result;
    }
 };
-
