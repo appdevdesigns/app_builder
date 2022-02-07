@@ -27,7 +27,8 @@ jobs:
               major: ${{ github.event.inputs.type == 'major'}}
               minor: ${{ github.event.inputs.type == 'minor'}}
               patch: ${{ github.event.inputs.type == 'patch'}}
-         - uses: EndBug/add-and-commit@v7
+         - id: commit_version
+           uses: EndBug/add-and-commit@v7
            with:
               branch: master
               message: "Bump package version"
@@ -61,4 +62,4 @@ jobs:
                  digiserve/ab-sails-api:${{ steps.tag.outputs.tag }}
                  digiserve/ab-sails-api:latest
               #  digiserve/ab-sails-api:${{ steps.date.outputs.date }}
-              build-args: AB_GITHUB_COMMIT=${{ github.sha }}
+              build-args: AB_GITHUB_COMMIT=${{ steps.commit_version.outputs.commit_sha }}
