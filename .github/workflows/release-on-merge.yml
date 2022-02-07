@@ -25,7 +25,7 @@ jobs:
       - uses: avakar/tag-and-release@v1
         with:
           tag_name: ${{ steps.bump_version.outputs.new_version }}
-          commit: steps.commit_version.outputs.commit_sha
+          commit: ${{ steps.commit_version.outputs.commit_sha }}
           body: ${{ github.event.pull_request.body }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
