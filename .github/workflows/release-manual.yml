@@ -32,13 +32,15 @@ jobs:
            with:
               branch: master
               message: "Bump package version"
-         - uses: avakar/tag-and-release@v1
+         - uses: rickstaa/action-create-tag@v1
            with:
-              tag_name: ${{ steps.bump_version.outputs.version }}
-              commit: ${{ steps.commit_version.outputs.commit_sha }}
+              tag: ${{ steps.bump_version.outputs.version }}
+              commit_sha: ${{ steps.commit_version.outputs.commit_sha }}
+         - uses: ncipollo/release-action@v1
+           with:
+              tag: ${{ steps.bump_version.outputs.version }}
               body: ${{ github.event.inputs.body }}
-           env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              token: ${{ secrets.GITHUB_TOKEN }}
          - name: Get current date
            id: date
            run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
