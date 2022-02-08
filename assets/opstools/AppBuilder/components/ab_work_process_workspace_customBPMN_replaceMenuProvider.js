@@ -268,6 +268,13 @@ ReplaceMenuProvider.prototype.getEntries = function(element) {
       is(businessObject, "bpmn:StartEvent") &&
       !isEventSubProcess(businessObject.$parent)
    ) {
+      if (
+         businessObject.$parent &&
+         businessObject.$parent.$type == "bpmn:SubProcess"
+      ) {
+         return [];
+      }
+
       entries = filter(ProcessTaskManager.StartEvents(), differentType);
       // entries = ProcessTaskManager.StartEvents();
 
@@ -289,6 +296,13 @@ ReplaceMenuProvider.prototype.getEntries = function(element) {
       is(businessObject, "bpmn:StartEvent") &&
       isEventSubProcess(businessObject.$parent)
    ) {
+      if (
+         businessObject.$parent &&
+         businessObject.$parent.$type == "bpmn:SubProcess"
+      ) {
+         return [];
+      }
+
       entries = filter(replaceOptions.EVENT_SUB_PROCESS_START_EVENT, function(
          entry
       ) {

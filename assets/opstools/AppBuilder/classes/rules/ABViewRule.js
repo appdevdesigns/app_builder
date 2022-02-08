@@ -458,4 +458,3 @@ module.exports = class ABViewRule {
       return currentAction.isPreProcess || false;
    }
 };
-

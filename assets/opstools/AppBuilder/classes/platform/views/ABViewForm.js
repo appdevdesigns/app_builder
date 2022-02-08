@@ -949,6 +949,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
          // _onShow();
       };
 
+      this.timerId = undefined;
+
       var _logic = (this._logic = {
          callbacks: {
             onBeforeSaveData: function() {
@@ -961,83 +963,91 @@ module.exports = class ABViewForm extends ABViewFormCore {
          },
 
          displayData: (rowData) => {
-            var customFields = this.fieldComponents((comp) => {
-               return (
-                  comp instanceof ABViewFormCustom ||
-                  // rich text
-                  (comp instanceof ABViewFormTextbox &&
-                     comp.settings.type == "rich") ||
-                  // JSON filter UI
-                  (comp instanceof ABViewFormJson &&
-                     comp.settings.type == "filter")
-               );
-            });
+            // If setTimeout is already scheduled, no need to do anything
+            if (this.timerId) {
+               return;
+            }
 
-            // Set default values
-            if (rowData == null) {
-               customFields.forEach((f) => {
-                  var field = f.field();
-                  if (!field) return;
-
-                  var comp = this.viewComponents[f.id];
-                  if (comp == null) return;
-
-                  // var colName = field.columnName;
-                  if (this._showed && comp.onShow) comp.onShow();
-
-                  // set value to each components
-                  var defaultRowData = {};
-                  field.defaultValue(defaultRowData);
-                  field.setValue($$(comp.ui.id), defaultRowData);
-
-                  if (comp.logic.refresh) comp.logic.refresh(defaultRowData);
+            this.timerId = setTimeout(() => {
+               var customFields = this.fieldComponents((comp) => {
+                  return (
+                     comp instanceof ABViewFormCustom ||
+                     // rich text
+                     (comp instanceof ABViewFormTextbox &&
+                        comp.settings.type == "rich") ||
+                     // JSON filter UI
+                     (comp instanceof ABViewFormJson &&
+                        comp.settings.type == "filter")
+                  );
                });
-               var normalFields = this.fieldComponents(
-                  (comp) =>
-                     comp instanceof ABViewFormComponent &&
-                     !(comp instanceof ABViewFormCustom)
-               );
-               normalFields.forEach((f) => {
-                  var field = f.field();
-                  if (!field) return;
 
-                  var comp = this.viewComponents[f.id];
-                  if (comp == null) return;
+               // Set default values
+               if (rowData == null) {
+                  customFields.forEach((f) => {
+                     var field = f.field();
+                     if (!field) return;
 
-                  if (f.key != "button") {
-                     var colName = field.columnName;
+                     var comp = this.viewComponents[f.id];
+                     if (comp == null) return;
+
+                     // var colName = field.columnName;
+                     if (this._showed && comp.onShow) comp.onShow();
 
                      // set value to each components
-                     var values = {};
-                     field.defaultValue(values);
+                     var defaultRowData = {};
+                     field.defaultValue(defaultRowData);
+                     field.setValue($$(comp.ui.id), defaultRowData);
 
-                     if ($$(comp.ui.id) && $$(comp.ui.id).setValue)
-                        $$(comp.ui.id).setValue(
-                           values[colName] == null ? "" : values[colName]
-                        );
-                  }
-               });
-            }
+                     if (comp.logic.refresh) comp.logic.refresh(defaultRowData);
+                  });
+                  var normalFields = this.fieldComponents(
+                     (comp) =>
+                        comp instanceof ABViewFormComponent &&
+                        !(comp instanceof ABViewFormCustom)
+                  );
+                  normalFields.forEach((f) => {
+                     var field = f.field();
+                     if (!field) return;
 
-            // Populate value to custom fields
-            else {
-               customFields.forEach((f) => {
-                  var comp = this.viewComponents[f.id];
-                  if (comp == null) return;
+                     var comp = this.viewComponents[f.id];
+                     if (comp == null) return;
 
-                  if (this._showed && comp.onShow) comp.onShow();
+                     if (f.key != "button") {
+                        var colName = field.columnName;
 
-                  // set value to each components
-                  if (f.field()) f.field().setValue($$(comp.ui.id), rowData);
+                        // set value to each components
+                        var values = {};
+                        field.defaultValue(values);
 
-                  if (comp.logic && comp.logic.refresh)
-                     comp.logic.refresh(rowData);
+                        if ($$(comp.ui.id) && $$(comp.ui.id).setValue)
+                           $$(comp.ui.id).setValue(
+                              values[colName] == null ? "" : values[colName]
+                           );
+                     }
+                  });
+               }
 
-                  // use the components setValue if it has one (used for filter UI)
-                  if (comp.logic && comp.logic.setValue)
-                     comp.logic.setValue(rowData[f.field().columnName]);
-               });
-            }
+               // Populate value to custom fields
+               else {
+                  customFields.forEach((f) => {
+                     var comp = this.viewComponents[f.id];
+                     if (comp == null) return;
+
+                     if (this._showed && comp.onShow) comp.onShow();
+
+                     // set value to each components
+                     if (f.field()) f.field().setValue($$(comp.ui.id), rowData);
+
+                     if (comp.logic && comp.logic.refresh)
+                        comp.logic.refresh(rowData);
+
+                     // use the components setValue if it has one (used for filter UI)
+                     if (comp.logic && comp.logic.setValue)
+                        comp.logic.setValue(rowData[f.field().columnName]);
+                  });
+               }
+               this.timerId = undefined;
+            }, 80);
          },
 
          displayParentData: (rowData) => {

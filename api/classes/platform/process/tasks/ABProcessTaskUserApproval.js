@@ -23,6 +23,8 @@ const AB = require("ab-utils");
 const reqAB = AB.reqAB({}, {});
 reqAB.jobID = "ABProcessTaskUserApproval";
 
+const retry = require("../../UtilRetry.js");
+
 module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprovalCore {
    ////
    //// Process Instance Methods
@@ -108,29 +110,37 @@ module.exports = class ABProcessTaskUserApproval extends ABProcessTaskUserApprov
                         );
 
                         // Combine user list
+                        var allUserFields = [];
                         (this.toUsers.fields || []).forEach((pKey) => {
                            let userData = jobData.data[pKey] || [];
                            if (userData && !Array.isArray(userData))
                               userData = [userData];
 
-                           jobData.users = jobData.users.concat(
+                           allUserFields = allUserFields.concat(
                               userData
                                  .filter((u) => u)
                                  .map((u) => u.uuid || u.id || u)
                            );
                         });
+                        allUserFields = allUserFields.filter((uId) => uId);
 
-                        // Remove empty items
-                        jobData.users = jobData.users.filter((uId) => uId);
+                        retry(() => SiteUser.find({ username: allUserFields }))
+                           .then((listUsers) => {
+                              // Remove empty items
+                              jobData.users = jobData.users.concat(
+                                 listUsers.map((u) => u.uuid)
+                              );
 
-                        // Remove duplicate items
-                        jobData.users = _.uniq(
-                           jobData.users,
-                           false,
-                           (u) => u.toString() // support compare with different types
-                        );
+                              // Remove duplicate items
+                              jobData.users = _.uniq(
+                                 jobData.users,
+                                 false,
+                                 (u) => u.toString() // support compare with different types
+                              );
 
-                        resolve(jobData);
+                              resolve(jobData);
+                           })
+                           .catch(reject);
                      } else {
                         resolve(jobData);
                      }

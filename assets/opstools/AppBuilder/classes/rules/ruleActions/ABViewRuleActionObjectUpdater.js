@@ -933,6 +933,7 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
     * @return {boolean}   true if an update took place, false if no updates.
     */
    processUpdateObject(options, objectToUpdate) {
+      this._formData = objectToUpdate;
       // return new Promise((resolve, reject) => {
       var isUpdated = false;
 
@@ -1196,7 +1197,20 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
                      else if (clonedDataCollection.sourceType == "object") {
                         // NOTE: webix documentation issue: .getCursor() is supposed to return
                         // the .id of the item.  However it seems to be returning the {obj}
-                        if (value.id) value = value.id;
+
+                        // we need to use the objects indexField(2) if there is one
+                        // otherwise default to the id
+                        var lookup;
+                        if (field.indexField) {
+                           lookup = field.indexField.columnName;
+                        } else if (field.indexField2) {
+                           lookup = field.indexField2.columnName;
+                        }
+                        if (lookup && value[lookup]) {
+                           value = value[lookup];
+                        } else if (value.id) {
+                           value = value.id;
+                        }
                      }
                   }
 
@@ -1335,4 +1349,3 @@ module.exports = class ABViewRuleActionObjectUpdater extends ABViewRuleAction {
       return settings;
    }
 };
-

@@ -19,6 +19,8 @@ const uuid = require("uuid/v4");
 //    "ABProcessParticipant"
 // ));
 
+const retry = require("../../UtilRetry.js");
+
 // const AB = require("ab-utils");
 // const reqAB = AB.reqAB({}, {});
 // reqAB.jobID = "ABProcessTaskServiceAccountingBatchProcessing";
@@ -39,6 +41,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
     */
    do(instance, trx) {
       this._dbTransaction = trx;
+      this._instance = instance;
 
       // Setup references to the ABObject and Fields that we will use in our
       // operations.
@@ -130,17 +133,16 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
                var accountObject = this.jeAccountField.datasourceLink;
 
-               return accountObject
-                  .modelAPI()
-                  .findAll({ where: {}, populate: true })
-                  .then((list) => {
-                     this.allAccountRecords = list;
-                  });
+               return retry(() =>
+                  accountObject
+                     .modelAPI()
+                     .findAll({ where: {}, populate: true })
+               ).then((list) => {
+                  this.allAccountRecords = list;
+               });
             })
             .then(() => {
-               return this.batchObj
-                  .modelAPI()
-                  .findAll(cond)
+               return retry(() => this.batchObj.modelAPI().findAll(cond))
                   .then((rows) => {
                      if (!rows || rows.length != 1) {
                         var msg = `unable to find Batch data for batchID[${currentBatchID}]`;
@@ -166,15 +168,18 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                         );
                      });
 
-                     return Promise.all(allEntries);
+                     return Promise.all(allEntries).catch((err) => {
+                        this.onError(this._instance, err);
+                        throw err;
+                     });
                   })
                   .catch((error) => {
                      this.log(
                         instance,
                         `error processing Batch data for batchID[${currentBatchID}]`
                      );
-                     this.log(instance, error.toString());
-                     reject(error);
+                     this.onError(instance, error);
+                     throw error;
                   });
             })
             .then(() => {
@@ -187,7 +192,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                resolve(true);
             })
             .catch((error) => {
-               this.log(instance, error.toString());
+               this.onError(this._instance, error);
                reject(error);
             });
       });
@@ -233,13 +238,15 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                updateValue[
                   this.jeStatusField.columnName
                ] = this.fieldJEStatusComplete;
-               this.jeObject
-                  .modelAPI()
-                  .update(
-                     journalEntry[this.jeObject.PK()],
-                     updateValue,
-                     this._dbTransaction
-                  )
+               retry(() =>
+                  this.jeObject
+                     .modelAPI()
+                     .update(
+                        journalEntry[this.jeObject.PK()],
+                        updateValue,
+                        this._dbTransaction
+                     )
+               )
                   .then((updatedJE) => {
                      // Broadcast
                      sails.sockets.broadcast(
@@ -253,10 +260,13 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
 
                      resolve();
                   })
-                  .catch(reject);
+                  .catch((error) => {
+                     this.onError(this._instance, error);
+                     reject(error);
+                  });
             })
             .catch((error) => {
-               console.error(error);
+               this.onError(this._instance, error);
                reject(error);
             });
       });
@@ -309,15 +319,17 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      });
                   }
                   // try to find existing BalanceRecord matching our balCond
-                  this.brObject
-                     .modelAPI()
-                     .findAll({ where: balCond, populate: true })
+                  retry(() =>
+                     this.brObject
+                        .modelAPI()
+                        .findAll({ where: balCond, populate: true })
+                  )
                      .then((rows) => {
                         balanceRecord = rows[0];
                         done();
                      })
                      .catch((err) => {
-                        // TODO: need to pass in .instance so we can do a this.log()
+                        this.onError(this._instance, err);
                         done(err);
                      });
                },
@@ -344,7 +356,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                         done();
                      })
                      .catch((err) => {
-                        // TODO: need to pass in .instance so we can do a this.log()
+                        this.onError(this._instance, err);
                         done(err);
                      });
                },
@@ -413,7 +425,10 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                         .then(() => {
                            done();
                         })
-                        .catch(done);
+                        .catch((err) => {
+                           this.onError(this._instance, err);
+                           done(err);
+                        });
                   } else {
                      done();
                   }
@@ -463,10 +478,13 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
             } else {
                balValues[this.brRCField.columnName] = null;
             }
-            this.brObject
-               .modelAPI()
-               // .create(balValues, this._dbTransaction)
-               .create(balValues) // NOTE: Ignore MySQL transaction because client needs id of entry.
+            retry(
+               () =>
+                  this.brObject
+                     .modelAPI()
+                     // .create(balValues, this._dbTransaction)
+                     .create(balValues) // NOTE: Ignore MySQL transaction because client needs id of entry.
+            )
                .then((newEntry) => {
                   // Broadcast
                   sails.sockets.broadcast(
@@ -481,7 +499,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                   resolve(newEntry);
                })
                .catch((err) => {
-                  // TODO: need to pass in .instance so we can do a this.log()
+                  this.onError(this._instance, err);
                   reject(err);
                });
          });
@@ -518,12 +536,11 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                },
                populate: true
             };
-            return this.brObject
-               .modelAPI()
-               .findAll(cond)
-               .then((list) => {
+            return retry(() => this.brObject.modelAPI().findAll(cond)).then(
+               (list) => {
                   allBalanceRecords = list;
-               });
+               }
+            );
          })
          .then(() => {
             var allUpdates = [];
@@ -626,11 +643,13 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                balanceRecord = this.brObject.requestParams(balanceRecord);
 
                // now perform the UPDATE
-               allUpdates.push(new Promise((next, bad) => {
-                     this.brObject
-                        .modelAPI()
-                        .update(brID, balanceRecord, this._dbTransaction)
-                        .catch(bad)
+               allUpdates.push(
+                  new Promise((next, bad) => {
+                     retry(() =>
+                        this.brObject
+                           .modelAPI()
+                           .update(brID, balanceRecord, this._dbTransaction)
+                     )
                         .then(() => {
                            // Broadcast
                            sails.sockets.broadcast(
@@ -643,12 +662,24 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                            );
 
                            next();
+                        })
+                        .catch((error) => {
+                           this.onError(this._instance, error);
+                           bad(error);
                         });
                   })
                );
             });
 
-            return Promise.all(allUpdates);
+            return Promise.all(allUpdates).catch((err) => {
+               this.onError(this._instance, err);
+               throw err;
+            });
+         })
+         .catch((err) => {
+            console.error(err);
+            this.onError(this._instance, err);
+            throw err;
          });
    }
 
@@ -689,5 +720,3 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
       return type.toLowerCase();
    }
 };
-
-

@@ -36,6 +36,7 @@ var _AllUserRoles = [];
 // an array of {id:, lable:} of the ABRoles the current User has assigned
 
 var dfdReady = null;
+var appInfoReady = false;
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -97,6 +98,10 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
     * @return {Promise}
     */
    static applicationInfo() {
+      if (appInfoReady) return Promise.resolve();
+
+      appInfoReady = true;
+
       return new Promise((resolve, reject) => {
          // NOTE: make sure all ABDefinitions are loaded before
          // pulling our Applications ...
@@ -741,7 +746,11 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
          } else {
             // If the user does not have access to the AppBuilder we do not preload
             // all definitions...so go ahead and get them now if the appDef is null
-            ABDefinition.loadAll().then((defs) => {
+            // ABDefinition.loadAll().then((defs) => {
+
+            // loadAll was being called twice instead lets wait until ABApplication
+            // isReady() and then get the application definition
+            ABApplication.isReady().then(function () {
                appDef = ABDefinition.definition(appID);
                if (appDef) {
                   resolve(new ABApplication(appDef));

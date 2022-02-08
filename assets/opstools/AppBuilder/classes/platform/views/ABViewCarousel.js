@@ -203,6 +203,16 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
                      label: L("ab.component.label.imageField", "*Image Field:"),
                      labelWidth: App.config.labelWidthLarge,
                      options: []
+                  },
+
+                  {
+                     view: "checkbox",
+                     name: "filterByCursor",
+                     labelWidth: 0,
+                     labelRight: L(
+                        "ab.component.carousel.filterByCursor",
+                        "*Filter images by cursor"
+                     )
                   }
                ]
             }
@@ -347,6 +357,7 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
 
       $$(ids.datacollection).setValue(view.settings.dataviewID);
       $$(ids.field).setValue(view.settings.field);
+      $$(ids.filterByCursor).setValue(view.settings.filterByCursor);
 
       $$(ids.width).setValue(view.settings.width);
       $$(ids.height).setValue(view.settings.height);
@@ -371,6 +382,7 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
 
       view.settings.dataviewID = $$(ids.datacollection).getValue();
       view.settings.field = $$(ids.field).getValue();
+      view.settings.filterByCursor = $$(ids.filterByCursor).getValue() || false;
 
       view.settings.width = $$(ids.width).getValue();
       view.settings.height = $$(ids.height).getValue();
@@ -457,13 +469,30 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
          let object = dv.datasource;
          if (!object) return;
 
-         this.eventAdd({
-            emitter: dv,
-            eventName: "loadData",
-            listener: () => {
-               _logic.onShow();
-            }
+         dv.on("loadData", () => {
+            _logic.onShow();
          });
+         dv.on("update", () => {
+            dv.reloadData();
+         });
+         dv.on("delete", () => {
+            dv.reloadData();
+         });
+         dv.on("create", () => {
+            dv.reloadData();
+         });
+         dv.on("initializingData", () => {
+            _logic.busy();
+         });
+         dv.on("initializedData", () => {
+            _logic.ready();
+         });
+
+         if (this.settings.filterByCursor) {
+            dv.on("changeCursor", () => {
+               _logic.onShow();
+            });
+         }
 
          // filter helper
          this.filterHelper.objectLoad(object);
@@ -568,6 +597,18 @@ module.exports = class ABViewCarousel extends ABViewCarouselCore {
             fnFilter = fnFilter || filterUI.getFilter();
 
             let rows = dv.getData(fnFilter);
+
+            // Filter images by cursor
+            if (this.settings.filterByCursor) {
+               let cursor = dv.getCursor();
+               if (cursor) {
+                  rows = rows.filter(
+                     (r) =>
+                        (r[obj.PK()] || r.id || r) ==
+                        (cursor[obj.PK()] || cursor.id || cursor)
+                  );
+               }
+            }
 
             let images = [];
 

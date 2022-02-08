@@ -30,6 +30,10 @@ AD.Control.OpsTool.extend("BuildApp", {
       self.initDOM(function() {
          self.initWebixUI();
       });
+
+      window.onbeforeunload = function() {
+         return true;
+      };
    },
 
    initDOM: function(cb) {

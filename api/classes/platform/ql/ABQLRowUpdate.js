@@ -7,6 +7,7 @@
  */
 
 const ABQLRowUpdateCore = require("../../core/ql/ABQLRowUpdateCore.js");
+const retry = require("../UtilRetry.js");
 
 class ABQLRowUpdate extends ABQLRowUpdateCore {
    // constructor(attributes, prevOP, task, application) {
@@ -88,7 +89,33 @@ class ABQLRowUpdate extends ABQLRowUpdateCore {
                   return;
                }
 
-               updateParams[field.columnName] = value.value;
+               // Set value from process data
+               if (value && value.isProcessValue) {
+                  // get process field
+                  let processField = (
+                     this.task.process.processDataFields(this.task) || []
+                  ).filter(
+                     (opt) =>
+                        opt &&
+                        (opt.key == value.value ||
+                           opt.value == value.value ||
+                           opt.label == value.value)
+                  )[0];
+
+                  // pull/set the process value
+                  if (processField) {
+                     updateParams[
+                        field.columnName
+                     ] = this.task.process.processData(this.task, [
+                        instance,
+                        processField.key
+                     ]);
+                  }
+               }
+               // Set custom value
+               else {
+                  updateParams[field.columnName] = value.value;
+               }
             }
 
             // Find the ID of the current .data row
@@ -99,9 +126,7 @@ class ABQLRowUpdate extends ABQLRowUpdateCore {
             updateParams = context.object.requestParams(updateParams);
 
             // Perform the update.
-            context.object
-               .modelAPI()
-               .update(id, updateParams)
+            retry(() => context.object.modelAPI().update(id, updateParams))
                .then((updatedRow) => {
                   // this returns the fully populated & updated row
                   nextContext.data = updatedRow;

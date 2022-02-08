@@ -43,6 +43,7 @@ pluck("relationships"):
 const _ = require("lodash");
 
 const ABQLSetPluckCore = require("../../core/ql/ABQLSetPluckCore.js");
+const retry = require("../UtilRetry.js");
 
 class ABQLSetPluck extends ABQLSetPluckCore {
    // constructor(attributes, prevOP, task, application) {
@@ -86,10 +87,11 @@ class ABQLSetPluck extends ABQLSetPluckCore {
          // make sure we are working with an Array
          if (Array.isArray(context.data)) {
             if (this.fieldID == "_PK") {
-               var newData = [];
+               let pkName = context.object.primaryColumnName || "uuid";
+               let newData = [];
                context.data.forEach((d) => {
                   if (d) {
-                     newData.push(d[context.object.PK()]);
+                     newData.push(d[pkName]);
                   }
                });
                nextContext.data = newData;
@@ -141,11 +143,10 @@ class ABQLSetPluck extends ABQLSetPluckCore {
                };
 
                return new Promise((resolve, reject) => {
-                  linkObj
-                     .modelAPI()
-                     .findAll({ where: cond, populate: true })
+                  retry(() =>
+                     linkObj.modelAPI().findAll({ where: cond, populate: true })
+                  )
                      .then((rows) => {
-                        
                         // Special Formatting for Form.io fields.
                         // Allow displaying connected data that has been .format()ed
                         // find any connectedObjects
@@ -159,7 +160,7 @@ class ABQLSetPluck extends ABQLSetPluckCore {
                         });
                         // Calculate and TextFormula fields do not have stored
                         // values so we need to run .format() for each instance
-                        var fieldsToFormat = ["calculate","TextFormula"];
+                        var fieldsToFormat = ["calculate", "TextFormula"];
                         var formatFields = linkObj.fields((f) => {
                            return fieldsToFormat.indexOf(f.key) != -1;
                         });

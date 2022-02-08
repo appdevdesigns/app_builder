@@ -142,11 +142,16 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
             datacollection: dc
          });
 
-         if (dc.datacollectionLink && dc.fieldLink) {
-            dc.bind(dataView, dc.datacollectionLink, dc.fieldLink);
-         } else {
-            dc.bind(dataView);
-         }
+         // NOTE: 'flexlayout' does not apply webix.AtomDataLoader
+         //
+         // if (dc.datacollectionLink && dc.fieldLink) {
+         //    dc.bind(dataView, dc.datacollectionLink, dc.fieldLink);
+         // } else {
+         //    dc.bind(dataView);
+         // }
+
+         // track all flexlayout component IDs on the data collectino so we can notify them of changes
+         dc.attachFlexlayout(dataView);
          dc.on("initializingData", () => {
             com.logic.busy();
          });
@@ -162,6 +167,10 @@ module.exports = class ABViewDataview extends ABViewDataviewCore {
             com.renderData();
          });
          dc.on("delete", () => {
+            com.emptyView();
+            com.renderData();
+         });
+         dc.on("create", () => {
             com.emptyView();
             com.renderData();
          });

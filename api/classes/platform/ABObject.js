@@ -1070,7 +1070,8 @@ module.exports = class ABClassObject extends ABObjectCore {
                            var orderField = this.fields(
                               (f) => f.id == o.key
                            )[0];
-                           if (!orderField) return;
+                           if (!orderField || !orderField.fieldIsSortable())
+                              return;
 
                            // if we are ordering by a multilingual field it is stored in translations so we need to search JSON but this is different from filters
                            // because we are going to sort by the users language not the builder's so the view will be sorted differntly depending on which languageCode
