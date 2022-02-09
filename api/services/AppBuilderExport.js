@@ -252,6 +252,23 @@ module.exports = {
             } // if !reimport
          });
 
+         
+         // convert user detail views from detailtext -> detailconnect
+         var userDetailViews = data.definitions.filter(
+            (d) => d.json.key == "detailtext"
+         );
+         // foreach view
+         (userDetailViews || []).forEach((v) => {
+            // get the def for : def.json.settings.fieldId
+            // if that def.json.key == "user" add to our viewToChange
+            var def = data.definitions.find((d) => d.id == v.json.settings.fieldId);
+            if (def && def.json.key == "user") {
+               // update this view to detailconnect
+               v.json.key = "detailconnect";
+            }
+         });
+
+         
          ///
          /// Gather any related files and include in json definitions.
          ///
