@@ -1,4 +1,4 @@
-name: Bump Package Version On Merge
+name: PR Merge -- Version, Release & Build
 
 on:
   pull_request:
@@ -17,13 +17,42 @@ jobs:
         uses: copapow/version-bump-package@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: EndBug/add-and-commit@v7
+      - id: commit_version
+        uses: EndBug/add-and-commit@v7
         with:
           branch: master
           message: 'Bump package version'
-      - uses: avakar/tag-and-release@v1
+      - uses: rickstaa/action-create-tag@v1
         with:
-          tag_name: ${{ steps.bump_version.outputs.new_version }}
+          tag: ${{ steps.bump_version.outputs.new_version }}
+          commit_sha: ${{ steps.commit_version.outputs.commit_sha }}
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.bump_version.outputs.new_version }}
           body: ${{ github.event.pull_request.body }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
+      - name: Get simple tag name
+        id: tag
+        run: echo "::set-output name=tag::$(basename ${{ steps.bump_version.outputs.new_version }})"
+      - name: Check out the ab-production-image repo
+        uses: actions/checkout@v2
+        with:
+          repository: appdevdesigns/ab-production-image
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: |
+            digiserve/ab-sails-api:${{ steps.tag.outputs.tag }}
+            digiserve/ab-sails-api:latest
+          #  digiserve/ab-sails-api:${{ steps.date.outputs.date }}
+          build-args: AB_GITHUB_COMMIT=${{ steps.commit_version.outputs.commit_sha }}
