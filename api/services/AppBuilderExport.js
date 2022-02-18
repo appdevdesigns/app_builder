@@ -270,6 +270,70 @@ module.exports = {
 
          
          ///
+         /// Convert ABObjectQuery definitions that include user fields
+         /// to properly reference SITE_USER object
+         ///
+
+         var hashQueriesWithUserFields = {};
+         // { query.id : { query:{ABObjectQueryDef}, fieldDef:{alias, objectID, fieldID }, field}}
+         var queries = data.definitions
+            .filter((d) => d.type == "query")
+            .map((d) => d.json);
+         (queries || []).forEach((q) => {
+            (q.fields || []).forEach((f) => {
+               var field = data.definitions.find((d) => d.id == f.fieldID);
+               if (field) {
+                  field = field.json;
+                  if (field.key == "user") {
+                     hashQueriesWithUserFields[q.id] = {
+                        query: q,
+                        fieldDef: f,
+                        field
+                     };
+                  }
+               }
+            });
+         });
+
+         function parseJoinByAlias(curr, alias) {
+            if (curr.alias == alias) {
+               return curr;
+            }
+
+            var found = null;
+            (curr.links || []).forEach((l) => {
+               if (!found) {
+                  found = parseJoinByAlias(l, alias);
+               }
+            });
+
+            return found;
+         }
+
+         Object.keys(hashQueriesWithUserFields).forEach((key) => {
+            var entry = hashQueriesWithUserFields[key];
+
+            // add a new join for the current .fieldDef.alias  to the SITE_USER obj
+            var join = parseJoinByAlias(
+               entry.query.joins,
+               entry.fieldDef.alias
+            );
+            if (!join) {
+               console.log(
+                  `Query[${entry.query.name}] could not resolve alias[${entry.fieldDef.alias}] `
+               );
+               return;
+            }
+
+            join.links = join.links || [];
+            join.links.push({
+               alias: uuidv4().split("-")[0],
+               fieldId: entry.field.id,
+               type: "left"
+            });
+         });
+
+         ///
          /// Gather any related files and include in json definitions.
          ///
 
