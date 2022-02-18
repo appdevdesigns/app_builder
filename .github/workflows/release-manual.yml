@@ -1,0 +1,68 @@
+name: Manual -- Version, Release & Build
+
+on:
+   workflow_dispatch:
+      inputs:
+         body:
+            description: "Release Notes"
+            required: false
+            type: string
+         type:
+            description: "Release Type"
+            type: choice
+            required: true
+            default: "minor"
+            options:
+               - major
+               - minor
+               - patch
+jobs:
+   bump-package-version:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: actions/checkout@v2
+         - id: bump_version
+           uses: KageKirin/bump-node-package-version@v0
+           with:
+              major: ${{ github.event.inputs.type == 'major'}}
+              minor: ${{ github.event.inputs.type == 'minor'}}
+              patch: ${{ github.event.inputs.type == 'patch'}}
+         - id: commit_version
+           uses: EndBug/add-and-commit@v7
+           with:
+              branch: master
+              message: "Bump package version"
+         - uses: rickstaa/action-create-tag@v1
+           with:
+              tag: ${{ steps.bump_version.outputs.version }}
+              commit_sha: ${{ steps.commit_version.outputs.commit_sha }}
+         - uses: ncipollo/release-action@v1
+           with:
+              tag: ${{ steps.bump_version.outputs.version }}
+              body: ${{ github.event.inputs.body }}
+              token: ${{ secrets.GITHUB_TOKEN }}
+         - name: Get current date
+           id: date
+           run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
+         - name: Get simple tag name
+           id: tag
+           run: echo "::set-output name=tag::$(basename ${{ steps.bump_version.outputs.version }})"
+         - name: Check out the ab-production-image repo
+           uses: actions/checkout@v2
+           with:
+              repository: appdevdesigns/ab-production-image
+         - name: Log in to Docker Hub
+           uses: docker/login-action@v1
+           with:
+              username: ${{ secrets.DOCKER_USERNAME }}
+              password: ${{ secrets.DOCKER_PASSWORD }}
+         - name: Push to Docker Hub
+           uses: docker/build-push-action@v2
+           with:
+              context: .
+              push: true
+              tags: |
+                 digiserve/ab-sails-api:${{ steps.tag.outputs.tag }}
+                 digiserve/ab-sails-api:latest
+              #  digiserve/ab-sails-api:${{ steps.date.outputs.date }}
+              build-args: AB_GITHUB_COMMIT=${{ steps.commit_version.outputs.commit_sha }}
