@@ -333,10 +333,20 @@ module.exports = class ABViewConditionalContainer extends ABViewConditionalConta
    }
 
    save() {
-      // Because conditional container has always IF and ELSE containers, then it should be include them to call save too
-      let includeSubViews = true;
+      // // Because conditional container has always IF and ELSE containers, then it should be include them to call save too
+      // let includeSubViews = true;
 
-      return super.save(includeSubViews);
+      let tasks = [];
+
+      this.views().forEach((v) => {
+         tasks.push(() => v.save());
+      });
+
+      tasks.push(() => super.save());
+
+      // create JE archive sequentially
+      return tasks.reduce((promiseChain, currTask) => {
+         return promiseChain.then(currTask);
+      }, Promise.resolve([]));
    }
 };
-
