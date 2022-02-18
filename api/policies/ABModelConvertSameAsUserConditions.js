@@ -443,7 +443,10 @@ function processLookup(list, req, cb, data) {
    // }
    if (lookup.cond) {
       lookup.object
-         .queryFind({ where: lookup.cond }, req.user.data)
+         .queryFind(
+            { where: lookup.cond, skipExistingConditions: true },
+            req.user.data
+         )
          .then((rows) => {
             // now pass these back to the next lookup:
             processLookup(list, req, cb, rows);
@@ -480,7 +483,11 @@ function processLookup(list, req, cb, data) {
       };
 
       lookup.obj
-         .queryFind({ where: cond }, req.user.data, true) // just send the user data
+         .queryFind(
+            { where: cond, skipExistingConditions: true },
+            req.user.data,
+            true
+         ) // just send the user data
          .then((items) => {
             // now pass these back to the next lookup:
             processLookup(list, req, cb, items);
