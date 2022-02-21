@@ -426,6 +426,7 @@ class ABQL extends ABQLCore {
             var Filter = new FilterComplex(null, id);
             var hashFieldIDs = this.availableProcessDataFieldsHash();
             if (this.object) {
+               Filter.applicationLoad(this.object.application);
                Filter.fieldsLoad(this.object.fields(), this.object);
                // NOTE: this will create default filters based upon the
                // object fields() and their types
