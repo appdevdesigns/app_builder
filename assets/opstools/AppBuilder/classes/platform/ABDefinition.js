@@ -131,6 +131,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
          }
 
          function requestDefs() {
+            console.log("===> Requesting New Definitions.");
             OP.Comm.Socket.get({
                url: `/app_builder/abdefinitionmodel`
             }).then((allDefinitions) => {
@@ -145,6 +146,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
             url: `/app_builder/definitionhash`
          }).then((response) => {
             if (response.hash == currDefs) {
+               console.log("===> reusing local definitions.");
                // if so, use them
                var defs = webix.storage.local.get("ab-definitions");
                processDefs(defs);
