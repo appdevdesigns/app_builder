@@ -252,7 +252,6 @@ module.exports = {
             } // if !reimport
          });
 
-         
          // convert user detail views from detailtext -> detailconnect
          var userDetailViews = data.definitions.filter(
             (d) => d.json.key == "detailtext"
@@ -261,14 +260,15 @@ module.exports = {
          (userDetailViews || []).forEach((v) => {
             // get the def for : def.json.settings.fieldId
             // if that def.json.key == "user" add to our viewToChange
-            var def = data.definitions.find((d) => d.id == v.json.settings.fieldId);
+            var def = data.definitions.find(
+               (d) => d.id == v.json.settings.fieldId
+            );
             if (def && def.json.key == "user") {
                // update this view to detailconnect
                v.json.key = "detailconnect";
             }
          });
 
-         
          ///
          /// Convert ABObjectQuery definitions that include user fields
          /// to properly reference SITE_USER object
@@ -332,6 +332,37 @@ module.exports = {
                type: "left"
             });
          });
+
+         ///
+         /// Find FieldCustom views that are based up on User fields, and
+         /// translate them into ABViewConnects
+         ///
+
+         try {
+            var customViews = data.definitions
+               .filter((d) => d.type == "view" && d.json.key == "fieldcustom")
+               .map((d) => d.json);
+
+            customViews.forEach((v) => {
+               var field = data.definitions.find(
+                  (d) => d.id == v.settings.fieldId
+               );
+               if (field && field.json.key == "user") {
+                  // change this view into a "connect"
+
+                  v.key = "connect";
+                  v.settings.objectWorkspace = {
+                     filterConditions: {
+                        glue: "and"
+                     }
+                  };
+               }
+            });
+         } catch (e) {
+            console.error("!!!!");
+            console.error("!!!! ERROR Checking FieldCustom:", e);
+            console.error("!!!!");
+         }
 
          ///
          /// Gather any related files and include in json definitions.
