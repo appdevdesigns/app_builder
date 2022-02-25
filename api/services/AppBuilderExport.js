@@ -338,30 +338,36 @@ module.exports = {
          /// translate them into ABViewConnects
          ///
 
-         try {
-            var customViews = data.definitions
-               .filter((d) => d.type == "view" && d.json.key == "fieldcustom")
-               .map((d) => d.json);
+         // Johnny: return this once the Selectivity changes have been
+         // integrated into v2.
+         if (false) {
+            try {
+               var customViews = data.definitions
+                  .filter(
+                     (d) => d.type == "view" && d.json.key == "fieldcustom"
+                  )
+                  .map((d) => d.json);
 
-            customViews.forEach((v) => {
-               var field = data.definitions.find(
-                  (d) => d.id == v.settings.fieldId
-               );
-               if (field && field.json.key == "user") {
-                  // change this view into a "connect"
+               customViews.forEach((v) => {
+                  var field = data.definitions.find(
+                     (d) => d.id == v.settings.fieldId
+                  );
+                  if (field && field.json.key == "user") {
+                     // change this view into a "connect"
 
-                  v.key = "connect";
-                  v.settings.objectWorkspace = {
-                     filterConditions: {
-                        glue: "and"
-                     }
-                  };
-               }
-            });
-         } catch (e) {
-            console.error("!!!!");
-            console.error("!!!! ERROR Checking FieldCustom:", e);
-            console.error("!!!!");
+                     v.key = "connect";
+                     v.settings.objectWorkspace = {
+                        filterConditions: {
+                           glue: "and"
+                        }
+                     };
+                  }
+               });
+            } catch (e) {
+               console.error("!!!!");
+               console.error("!!!! ERROR Checking FieldCustom:", e);
+               console.error("!!!!");
+            }
          }
 
          ///
