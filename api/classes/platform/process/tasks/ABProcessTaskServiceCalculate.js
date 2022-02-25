@@ -23,7 +23,7 @@ module.exports = class CalculateTask extends CalculateTaskCore {
     * @return {mixed} | null
     */
    processData(instance, key) {
-      const parts = key.split(".");
+      const parts = (key || "").split(".");
       if (parts[0] != this.id) return null;
 
       let formula = this.formulaText || "";
