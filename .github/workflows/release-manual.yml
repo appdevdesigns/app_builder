@@ -60,7 +60,7 @@ jobs:
          - name: Push to Docker Hub
            uses: docker/build-push-action@v2
            with:
-              context: ./app_builder/ab-production-image
+              context: ./ab-production-image
               push: true
               tags: |
                  digiserve/ab-sails-api:${{ steps.tag.outputs.tag }}
