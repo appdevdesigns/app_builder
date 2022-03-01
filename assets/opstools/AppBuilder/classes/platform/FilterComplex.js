@@ -427,10 +427,13 @@ module.exports = class FilterComplex extends FilterComplexCore {
       let $valueElem = $selector.queryView({ customEdit: true });
       if (!$valueElem) return;
 
-      let field = this._Fields.filter((f) => f.columnName == columnName)[0];
+      let field = this._Fields.filter(
+         (f) => f.columnName == columnName || f.id == columnName
+      )[0];
       if (!field) return;
 
-      if (rule == "in_query" || rule == "not_in_query") {
+      // if (rule == "in_query" || rule == "not_in_query") {
+      if (rule.indexOf("in_query") > -1 || rule.indexOf("not_in_query") > -1) {
          this.uiInQueryValue($valueElem, field);
       } else if (
          rule == "in_data_collection" ||

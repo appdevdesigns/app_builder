@@ -31,6 +31,7 @@ module.exports = class SubProcess extends SubProcessCore {
          instance,
          this.parameterId
       ]);
+
       if (processData == null) {
          this.stateCompleted(instance);
          return Promise.resolve();
@@ -85,14 +86,23 @@ module.exports = class SubProcess extends SubProcessCore {
                let bpmnProcess =
                   instance.jsonDefinition["bpmn2:definitions"]["bpmn2:process"];
                let bpmnSubProcess;
-               for (let key in bpmnProcess) {
-                  if (bpmnProcess[key]["_attributes"] == null || bpmnSubProcess)
-                     continue;
 
-                  if (bpmnProcess[key]["_attributes"].id == this.diagramID) {
-                     bpmnSubProcess = bpmnProcess[key];
-                  }
+               for (let key in bpmnProcess) {
+                  if (bpmnProcess[key] == null || bpmnSubProcess) continue;
+
+                  let bpmnAttrs = bpmnProcess[key];
+                  if (!Array.isArray(bpmnAttrs)) bpmnAttrs = [bpmnAttrs];
+
+                  bpmnAttrs.forEach((bpmnA) => {
+                     if (
+                        bpmnA["_attributes"] &&
+                        bpmnA["_attributes"].id == this.diagramID
+                     ) {
+                        bpmnSubProcess = bpmnA;
+                     }
+                  });
                }
+
                processEngine.setHashDiagramObjects(bpmnSubProcess);
 
                return processEngine;

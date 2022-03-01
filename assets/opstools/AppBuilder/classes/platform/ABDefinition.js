@@ -103,21 +103,59 @@ module.exports = class ABDefinition extends ABDefinitionCore {
     *
     * load all the Definitions for The current AppBuilder:
     *
+    * Feb 24, 2022: Johnny - Attempt to fix performance issues
+    * NOTE: we will check to see if our local copy of our definitions are
+    * out of date with the servers /definitionhash.
+    * If not, we simply return our local copy.
+    * Otherwise, we reload the definitions from the server.
+    *
     * @return {array}
     */
    static loadAll() {
-      // AppBuilder and LiveView both call this so lets only call it once.
-      if (Object.keys(__AllDefinitions).length > 0) {
-         return __AllDefinitions;
-      }
+      return new Promise((resolve, reject) => {
+         // AppBuilder and LiveView both call this so lets only call it once.
+         if (Object.keys(__AllDefinitions).length > 0) {
+            resolve(__AllDefinitions);
+            return;
+         }
 
-      return OP.Comm.Socket.get({
-         url: `/app_builder/abdefinitionmodel`
-      }).then((allDefinitions) => {
-         (allDefinitions || []).forEach((def) => {
-            __AllDefinitions[def.id] = def;
+         function processDefs(allDefinitions) {
+            // if we don't slow this down then ABApplication.isReady() has issues
+            // getting the dfdReady._resolve() set in time for it to be used.
+            setTimeout(() => {
+               (allDefinitions || []).forEach((def) => {
+                  __AllDefinitions[def.id] = def;
+               });
+               resolve(allDefinitions);
+            }, 5);
+         }
+
+         function requestDefs() {
+            console.log("===> Requesting New Definitions.");
+            OP.Comm.Socket.get({
+               url: `/app_builder/abdefinitionmodel`
+            }).then((allDefinitions) => {
+               webix.storage.local.put("ab-definitions", allDefinitions);
+               processDefs(allDefinitions);
+            });
+         }
+
+         // check to see if our local definitions are up to date:
+         var currDefs = webix.storage.local.get("ab-definition-hash");
+         OP.Comm.Socket.get({
+            url: `/app_builder/definitionhash`
+         }).then((response) => {
+            if (response.hash == currDefs) {
+               console.log("===> reusing local definitions.");
+               // if so, use them
+               var defs = webix.storage.local.get("ab-definitions");
+               processDefs(defs);
+            } else {
+               // otherwise, request a new batch
+               webix.storage.local.put("ab-definition-hash", response.hash);
+               requestDefs();
+            }
          });
-         return allDefinitions;
       });
    }
 
@@ -164,13 +202,13 @@ module.exports = class ABDefinition extends ABDefinitionCore {
 
    fromValues(attributes) {
       /*
-		{
-			id: uuid(),
-			name: 'name',
-			type: 'xxxxx',
-			json: "{json}"
-		}
-		*/
+      {
+         id: uuid(),
+         name: 'name',
+         type: 'xxxxx',
+         json: "{json}"
+      }
+      */
 
       super.fromValues(attributes);
    }
@@ -211,12 +249,9 @@ module.exports = class ABDefinition extends ABDefinitionCore {
 
    /**
     * @method save()
-    *
     * persist this instance of ABObject with it's parent ABApplication
-    *
-    *
     * @return {Promise}
-    *						.resolve( {this} )
+    *         .resolve( {this} )
     */
    save() {
       if (this.id) {

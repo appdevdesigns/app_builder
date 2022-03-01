@@ -6,6 +6,10 @@
  */
 
 module.exports = {
+   /* Definition Hash */
+   "get /app_builder/definitionhash":
+      "app_builder/ABDefinitionModelController.hash",
+
    /* Object tracking */
    "get /app_builder/object/:objectId/track":
       "app_builder/ABTrackController.find",
