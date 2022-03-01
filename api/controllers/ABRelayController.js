@@ -9,6 +9,126 @@ var async = require("async");
 var _ = require("lodash");
 
 module.exports = {
+
+   // GET: /mobile/account
+   // Page for user's mobile account
+   userAccountPage: function(req, res) {
+      const PWA_BASE_URL = sails.config.appbuilder.pwaURL || "https://example.com";
+
+      let siteUserGUID = req.user.data.guid; // from the policy
+      let username = req.user.data.username;
+      let userUUID = null;
+      let registrationToken = null;
+      let publicKey = null;
+      let qrCodeImage = null;
+
+      async.series(
+         [
+            /*
+            // Load user account info
+            (next) => {
+               ABRelayUser.findOne({ siteuser_guid: siteUserGUID })
+               .then((user) => {
+                  if (!user) {
+                     var err = new Error();
+                     err.code = "E_NOACCOUNT";
+                     next(err);
+                  }
+                  else {
+                     userUUID = user.user;
+                     registrationToken = user.registrationToken;
+                     next();
+                  }
+               })
+               .catch(next);
+            },
+            */
+
+            // Initialize account and generate new registration token
+            (next) => {
+               ABRelayUser.initializeUser(siteUserGUID)
+               .then(() => {
+                  return ABRelayUser.findOne({ siteuser_guid: siteUserGUID });
+               })
+               .then((user) => {
+                  userUUID = user.user;
+                  registrationToken = user.registrationToken;
+                  publicKey = user.rsa_public_key;
+                  next();
+               })
+               .catch(next);
+            },
+
+            // Register the account with the MCC relay
+            // Post the new token
+            (next) => {
+               // No need to wait for this to complete. Go to next now.
+               setTimeout(next, 1);
+
+               ABRelay.post({
+                  url: "/mcc/user",
+                  data: {
+                     user: userUUID,
+                     tokenHash: ABRelayUser.hash(registrationToken),
+                     rsa: publicKey
+                  },
+                  timeout: 8000
+               })
+               .catch((err) => {
+                  ADCore.error.log(
+                     "Error posting registration token to MCC",
+                     err
+                  );
+               });
+            },
+
+            // Generate QR code image
+            (next) => {
+               ABMobile.getQRCodeImage(PWA_BASE_URL + "#JRR=" + registrationToken)
+               .then((image) => {
+                  qrCodeImage = image;
+                  next();
+               })
+               .catch(next);
+            }
+
+         ],
+         (err) => {
+            if (err && err.code == "E_NOACCOUNT") {
+               res.view(
+                  "app_builder/mobile/no-account" // .ejs
+               );
+            }
+            else if (err) {
+               ADCore.error.log("Error on mobile account page", err);
+               res.serverError();
+            }
+            else {
+               res.set({
+                  "Cache-Control": "max-age=0, no-cache;"
+               });
+               res.view(
+                  "app_builder/mobile/account", // .ejs
+                  {
+                     layout: false,
+                     title: "Mobile Account",
+                     siteUserGUID: siteUserGUID,
+                     username: username,
+                     qrCodeImage: qrCodeImage,
+                  }
+               );
+            }
+         }
+      )
+
+   },
+
+   // GET: /mobile/admin
+   // Page for administering mobile accounts
+   accountAdminPage: function(req, res) {
+
+   },
+
    // GET: /app_builder/relay/users
    // return a list of user accounts that are currently
    // setup in ABRelayUser:
@@ -140,7 +260,7 @@ module.exports = {
                         var entry = {
                            user: l.user,
                            rsa: l.rsa_public_key,
-                           authToken: l.publicAuthToken
+                           tokenHash: ABRelayUser.hash(l.registrationToken)
                         };
                         restUsers.push(entry);
                      });
