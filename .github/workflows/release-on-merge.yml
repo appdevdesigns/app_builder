@@ -41,6 +41,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: appdevdesigns/ab-production-image
+          path: ab-production-image
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
         with:
@@ -49,7 +50,7 @@ jobs:
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          context: .
+          context: ./ab-production-image
           push: true
           tags: |
             digiserve/ab-sails-api:${{ steps.tag.outputs.tag }}
