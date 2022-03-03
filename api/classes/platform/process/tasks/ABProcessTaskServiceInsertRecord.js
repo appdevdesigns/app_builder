@@ -123,8 +123,10 @@ module.exports = class InsertRecord extends InsertRecordTaskCore {
     * @return {mixed} | null
     */
    processData(instance, key) {
-      const parts = (key || "").split(".");
-      if (parts[0] != this.id) return null;
+      if (key) {
+         const parts = (key || "").split(".");
+         if (parts[0] != this.id) return null;
+      }
 
       let myState = this.myState(instance) || {};
       let data = myState.data;
