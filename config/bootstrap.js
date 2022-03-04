@@ -1030,7 +1030,7 @@ function triggerProcessTimer(next) {
    if (typeof ABProcessTimer != "undefined") {
       ABProcessTimer.startAll();
    } else {
-      console.error("!!! ABProcessTimer is not defined !!!");
+      console.error(new Error("!!! ABProcessTimer is not defined !!!"));
    }
    next();
 }
