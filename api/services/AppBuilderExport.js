@@ -334,41 +334,69 @@ module.exports = {
          });
 
          ///
-         /// Find FieldCustom views that are based up on User fields, and
-         /// translate them into ABViewConnects
+         /// Find Views that need to be updated due to the removal of Selectivity.
          ///
 
          // Johnny: return this once the Selectivity changes have been
          // integrated into v2.
-         if (false) {
-            try {
-               var customViews = data.definitions
-                  .filter(
-                     (d) => d.type == "view" && d.json.key == "fieldcustom"
-                  )
-                  .map((d) => d.json);
+         // if (false) {
+         try {
+            let customViews = data.definitions
+               .filter((d) => d.type == "view" && d.json.key == "fieldcustom")
+               .map((d) => d.json);
 
-               customViews.forEach((v) => {
-                  var field = data.definitions.find(
-                     (d) => d.id == v.settings.fieldId
-                  );
-                  if (field && field.json.key == "user") {
-                     // change this view into a "connect"
+            customViews.forEach((v) => {
+               let field = data.definitions.find(
+                  (d) => d.id == v.settings.fieldId
+               );
 
-                     v.key = "connect";
-                     v.settings.objectWorkspace = {
-                        filterConditions: {
-                           glue: "and"
-                        }
-                     };
-                  }
-               });
-            } catch (e) {
-               console.error("!!!!");
-               console.error("!!!! ERROR Checking FieldCustom:", e);
-               console.error("!!!!");
-            }
+               // if USER field -> Change View to a "connect" view
+               if (field && field.json.key == "user") {
+                  // change this view into a "connect"
+
+                  v.key = "connect";
+                  v.settings.objectWorkspace = {
+                     filterConditions: {
+                        glue: "and"
+                     }
+                  };
+               }
+
+               // if LIST (multiple) -> Change View to a "selectmultiple"
+               if (
+                  field &&
+                  field.json.key == "list" &&
+                  field.json.settings.isMultiple == 1
+               ) {
+                  v.key = "selectmultiple";
+               }
+            });
+
+            // for all detailcustom views
+            let detailCustomViews = data.definitions
+               .filter((d) => d.type == "view" && d.json.key == "detailcustom")
+               .map((d) => d.json);
+
+            detailCustomViews.forEach((v) => {
+               let field = data.definitions.find(
+                  (d) => d.id == v.settings.fieldId
+               );
+
+               // if LIST (multiple) -> Change View to a "detailtext"
+               if (
+                  field &&
+                  field.json.key == "list" &&
+                  field.json.settings.isMultiple == 1
+               ) {
+                  v.key = "detailtext";
+               }
+            });
+         } catch (e) {
+            console.error("!!!!");
+            console.error("!!!! ERROR Checking FieldCustom:", e);
+            console.error("!!!!");
          }
+         // } // if (false)
 
          ///
          /// Gather any related files and include in json definitions.
