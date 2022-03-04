@@ -95,7 +95,9 @@ module.exports = class ABProcessTaskServiceQuery extends ABProcessTaskServiceQue
       var parts = key.split(".");
       if (parts[0] && parts[0] == this.id) {
          let myState = this.myState(instance);
-         data = myState[parts[1]];
+         if (myState) {
+            data = myState[parts[1]];
+         }
       }
       return data;
    }

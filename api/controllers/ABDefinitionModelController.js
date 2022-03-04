@@ -10,12 +10,32 @@ const actionUtil = require("../../../../node_modules/sails/lib/hooks/blueprints/
 const destroyUtil = require("../../../../node_modules/sails/lib/hooks/blueprints/actions/destroy");
 const updateUtil = require("../../../../node_modules/sails/lib/hooks/blueprints/actions/update");
 
+var currHash = null;
+// {string}
+// the current hash representing the current state of the ABDefinitions.
+// Each .create(), .update(), .delete() will change the state of the Defs.
+
+function hashCode() {
+   currHash = Date.now() + "";
+}
+
 module.exports = {
    _config: {
       model: "abdefinitionmodel", // all lowercase model name
       actions: false,
       shortcuts: false,
       rest: true
+   },
+
+   hash: (req, res) => {
+      if (!currHash) {
+         hashCode();
+      }
+      res.AD.success({ hash: currHash });
+   },
+
+   hashClear: () => {
+      currHash = null;
    },
 
    create: (req, res) => {
@@ -49,6 +69,8 @@ module.exports = {
 
             // Send JSONP-friendly response if it's supported
             res.created(newInstance);
+
+            hashCode();
          })
          .catch((err) => res.negotiate(err));
    },
@@ -60,6 +82,8 @@ module.exports = {
          let pk = actionUtil.requirePk(req),
             data = actionUtil.parseValues(req),
             username = (req.user.data || {}).username;
+
+         hashCode();
 
          ABDefinitionLogger.add({
             user: username,
@@ -90,6 +114,7 @@ module.exports = {
          .then(
             (def) =>
                new Promise((next, bad) => {
+                  hashCode();
                   ABDefinitionLogger.add({
                      user: (req.user.data || {}).username,
                      type: "delete",
