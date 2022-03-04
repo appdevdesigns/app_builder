@@ -130,12 +130,19 @@ module.exports = class ABDefinition extends ABDefinitionCore {
             }, 5);
          }
 
-         function requestDefs() {
+         function requestDefs(hash) {
             console.log("===> Requesting New Definitions.");
             OP.Comm.Socket.get({
                url: `/app_builder/abdefinitionmodel`
             }).then((allDefinitions) => {
-               webix.storage.local.put("ab-definitions", allDefinitions);
+               try {
+                  webix.storage.local.put("ab-definitions", allDefinitions);
+                  webix.storage.local.put("ab-definition-hash", hash);
+               } catch (err) {
+                  console.error("unable to cache definitions");
+                  console.error(err);
+               }
+
                processDefs(allDefinitions);
             });
          }
@@ -152,8 +159,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
                processDefs(defs);
             } else {
                // otherwise, request a new batch
-               webix.storage.local.put("ab-definition-hash", response.hash);
-               requestDefs();
+               requestDefs(response.hash);
             }
          });
       });
