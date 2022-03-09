@@ -117,8 +117,14 @@ module.exports = class SubProcess extends SubProcessCore {
                   processTasks.push(
                      () =>
                         new Promise((next) => {
+                           this.log(
+                              instance,
+                              `SubProcess run data id: ${data.uuid || data.id}`
+                           );
+
                            var value = {};
                            value.data = data;
+
                            this.stateUpdate(instance, value);
 
                            let taskElements = [];
