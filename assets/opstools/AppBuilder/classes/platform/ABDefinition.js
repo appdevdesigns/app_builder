@@ -139,8 +139,32 @@ module.exports = class ABDefinition extends ABDefinitionCore {
                   webix.storage.local.put("ab-definitions", allDefinitions);
                   webix.storage.local.put("ab-definition-hash", hash);
                } catch (err) {
-                  console.error("unable to cache definitions");
-                  console.error(err);
+                  console.warn("unable to cache definitions");
+                  let strErr = (err.toString() || "").toLowerCase();
+                  if (strErr.indexOf("quota") > -1) {
+                     try {
+                        var strData = JSON.stringify(allDefinitions);
+                        let len = strData.length;
+                        let unit = "bytes";
+                        ["KB", "MB", "GB"].forEach((u) => {
+                           if (len > 1024) {
+                              len = len / 1024;
+                              unit = u;
+                           }
+                        });
+                        console.warn(
+                           "Quota Exceeded: incoming definition data takes " +
+                              Math.round(len) +
+                              unit
+                        );
+                     } catch (errr) {
+                        console.warn(
+                           "Quota Exceeded: incoming definition data takes up too much space"
+                        );
+                     }
+                  } else {
+                     console.error(err);
+                  }
                }
 
                processDefs(allDefinitions);
