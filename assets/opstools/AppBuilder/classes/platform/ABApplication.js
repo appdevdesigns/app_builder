@@ -109,7 +109,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
             .then((allDefinitions) => {
                let apps = [];
                // debugger;
-               let appDefs = allDefinitions.filter((def) => {
+               let appDefs = (allDefinitions || []).filter((def) => {
                   return def.type == "application";
                });
 
@@ -750,7 +750,7 @@ module.exports = window.ABApplication = class ABApplication extends ABApplicatio
 
             // loadAll was being called twice instead lets wait until ABApplication
             // isReady() and then get the application definition
-            ABApplication.isReady().then(function () {
+            ABApplication.isReady().then(function() {
                appDef = ABDefinition.definition(appID);
                if (appDef) {
                   resolve(new ABApplication(appDef));

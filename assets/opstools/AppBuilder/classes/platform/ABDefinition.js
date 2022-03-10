@@ -130,12 +130,43 @@ module.exports = class ABDefinition extends ABDefinitionCore {
             }, 5);
          }
 
-         function requestDefs() {
+         function requestDefs(hash) {
             console.log("===> Requesting New Definitions.");
             OP.Comm.Socket.get({
                url: `/app_builder/abdefinitionmodel`
             }).then((allDefinitions) => {
-               webix.storage.local.put("ab-definitions", allDefinitions);
+               try {
+                  webix.storage.local.put("ab-definitions", allDefinitions);
+                  webix.storage.local.put("ab-definition-hash", hash);
+               } catch (err) {
+                  console.warn("unable to cache definitions");
+                  let strErr = (err.toString() || "").toLowerCase();
+                  if (strErr.indexOf("quota") > -1) {
+                     try {
+                        var strData = JSON.stringify(allDefinitions);
+                        let len = strData.length;
+                        let unit = "bytes";
+                        ["KB", "MB", "GB"].forEach((u) => {
+                           if (len > 1024) {
+                              len = len / 1024;
+                              unit = u;
+                           }
+                        });
+                        console.warn(
+                           "Quota Exceeded: incoming definition data takes " +
+                              Math.round(len) +
+                              unit
+                        );
+                     } catch (errr) {
+                        console.warn(
+                           "Quota Exceeded: incoming definition data takes up too much space"
+                        );
+                     }
+                  } else {
+                     console.error(err);
+                  }
+               }
+
                processDefs(allDefinitions);
             });
          }
@@ -152,8 +183,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
                processDefs(defs);
             } else {
                // otherwise, request a new batch
-               webix.storage.local.put("ab-definition-hash", response.hash);
-               requestDefs();
+               requestDefs(response.hash);
             }
          });
       });

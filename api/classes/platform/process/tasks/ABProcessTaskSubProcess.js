@@ -64,21 +64,24 @@ module.exports = class SubProcess extends SubProcessCore {
             .then(() => {
                let processEngine = new ABProcessEngine(instance, this);
                processEngine.startTask = () => {
-                  let firstConnection = this.connections()[0];
-                  if (firstConnection == null) return;
+                  let startElement;
 
-                  let startElement = this.elementForDiagramID(
-                     firstConnection.from
-                  );
-                  if (startElement == null) {
-                     startElement = this.elementForDiagramID(
-                        firstConnection.to
-                     );
-                  }
+                  this.connections().forEach((connection) => {
+                     if (
+                        startElement != null || // found the start element already
+                        connection == null
+                     )
+                        return;
 
-                  if (startElement instanceof ABProcessTriggerCore) {
-                     startElement.wantToDoSomething = () => false; // Don't need to .do function of the trigger
-                  }
+                     startElement = this.elementForDiagramID(connection.from);
+                     if (startElement == null) {
+                        startElement = this.elementForDiagramID(connection.to);
+                     }
+
+                     if (startElement instanceof ABProcessTriggerCore) {
+                        startElement.wantToDoSomething = () => false; // Don't need to .do function of the trigger
+                     }
+                  });
 
                   return startElement;
                };
@@ -114,8 +117,14 @@ module.exports = class SubProcess extends SubProcessCore {
                   processTasks.push(
                      () =>
                         new Promise((next) => {
+                           this.log(
+                              instance,
+                              `SubProcess run data id: ${data.uuid || data.id}`
+                           );
+
                            var value = {};
                            value.data = data;
+
                            this.stateUpdate(instance, value);
 
                            let taskElements = [];
