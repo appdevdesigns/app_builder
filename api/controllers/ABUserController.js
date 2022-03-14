@@ -79,6 +79,14 @@ module.exports = {
                (f) => (f.settings || {}).linkObject == ROLE_OBJECT_ID
             )[0];
 
+            if (!connectedField) {
+               var err = new Error(
+                  "Improper ScopeModel definition.  Can't find link to ROLE!"
+               );
+               // console.error(err);
+               return Promise.reject(err);
+            }
+
             return ScopeModel.queryFind(
                {
                   where: {
@@ -98,7 +106,10 @@ module.exports = {
          .then((scopes) => {
             res.AD.success(scopes || []);
          })
-         .catch(res.AD.error);
+         .catch((err) => {
+            console.error(err);
+            res.AD.error(err);
+         });
    }
 };
 

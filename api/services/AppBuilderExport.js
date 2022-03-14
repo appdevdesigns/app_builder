@@ -129,6 +129,7 @@ module.exports = {
                console.log(
                   "::: IMPORT : importing initial definitions (Application, Fields, objects)"
                );
+               sails.controllers["app_builder/abdefinitionmodel"].hashClear();
                var allSaves = [];
                (data.definitions || [])
                   .filter(

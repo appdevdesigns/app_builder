@@ -501,9 +501,7 @@ function addSDCObjectLifecycleBeforeCreate(next) {
                if (!emailRows || emailRows.length == 0) {
                   bailError(
                      "E_NOTFOUND",
-                     `Provided email was not found. [${
-                        createParams["New Coach Email"]
-                     }]`
+                     `Provided email was not found. [${createParams["New Coach Email"]}]`
                   );
                   return;
                }
@@ -1029,6 +1027,10 @@ function initialSystemObjects(next) {
 }
 
 function triggerProcessTimer(next) {
-   ABProcessTimer.startAll();
+   if (typeof ABProcessTimer != "undefined") {
+      ABProcessTimer.startAll();
+   } else {
+      console.error(new Error("!!! ABProcessTimer is not defined !!!"));
+   }
    next();
 }

@@ -30,6 +30,12 @@ AD.Control.OpsTool.extend("BuildApp", {
       self.initDOM(function() {
          self.initWebixUI();
       });
+
+      // Disable Back button of Web Browser
+      history.pushState(null, null, location.href);
+      window.onpopstate = function() {
+         history.go(1);
+      };
    },
 
    initDOM: function(cb) {
