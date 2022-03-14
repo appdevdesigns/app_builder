@@ -24,26 +24,6 @@ module.exports = {
 
       async.series(
          [
-            /*
-            // Load user account info
-            (next) => {
-               ABRelayUser.findOne({ siteuser_guid: siteUserGUID })
-               .then((user) => {
-                  if (!user) {
-                     var err = new Error();
-                     err.code = "E_NOACCOUNT";
-                     next(err);
-                  }
-                  else {
-                     userUUID = user.user;
-                     registrationToken = user.registrationToken;
-                     next();
-                  }
-               })
-               .catch(next);
-            },
-            */
-
             // Initialize account and generate new registration token
             (next) => {
                ABRelayUser.initializeUser(siteUserGUID)
@@ -94,12 +74,7 @@ module.exports = {
 
          ],
          (err) => {
-            if (err && err.code == "E_NOACCOUNT") {
-               res.view(
-                  "app_builder/mobile/no-account" // .ejs
-               );
-            }
-            else if (err) {
+            if (err) {
                ADCore.error.log("Error on mobile account page", err);
                res.serverError();
             }

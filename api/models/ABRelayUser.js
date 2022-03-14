@@ -171,7 +171,7 @@ module.exports = {
     *    The AppBuilder site_user.guid value of this user.
     * @param {object} options
     * @param {boolean} [options.overwriteKeys]
-    *    Generate new encryption keys if the account already exists.
+    *    Overwrite with new encryption keys if the account already exists.
     *    Default is false.
     * @return {Promise}
     */
@@ -189,8 +189,25 @@ module.exports = {
 
          async.series(
             [
+               // Make sure the userGUID is valid
                (next) => {
-                  // Check if the account already exists
+                  ABRelayUser.query(
+                     `
+                        SELECT id 
+                        FROM site_user
+                        WHERE siteuser_guid = ?
+                     `,
+                     [userGUID],
+                     (err, list) => {
+                        if (err) next(err);
+                        else if (!list || !list[0]) next(new Error("Invalid userGUID"));
+                        else next();
+                     }
+                  );
+               },
+
+               (next) => {
+                  // Check if the relay account already exists
                   ABRelayUser.query(
                      `
                         SELECT user
