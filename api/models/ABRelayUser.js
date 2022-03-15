@@ -195,7 +195,7 @@ module.exports = {
                      `
                         SELECT id 
                         FROM site_user
-                        WHERE siteuser_guid = ?
+                        WHERE guid = ?
                      `,
                      [userGUID],
                      (err, list) => {
