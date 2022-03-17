@@ -2,6 +2,7 @@
 // const ABApplication = require("./ABApplication"); // NOTE: change to require()
 const ABProcessTaskEmailCore = require("../../../core/process/tasks/ABProcessTaskEmailCore.js");
 const ABProcessParticipant = require("../ABProcessParticipant.js");
+const ABFieldUser = require("../../dataFields/ABFieldUser.js");
 
 function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
@@ -79,9 +80,9 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
          this.toUsers || {},
          {
             isFieldVisible: true,
-            fields: this.objectOfStartElement
-               ? this.objectOfStartElement.fields()
-               : []
+            fields: this.process
+               .processDataFields(this)
+               .filter((f) => f.field && f.field instanceof ABFieldUser)
          }
       );
       var fromUserUI = ABProcessParticipant.selectUsersUi(
@@ -89,9 +90,9 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
          this.fromUsers || {},
          {
             isFieldVisible: true,
-            fields: this.objectOfStartElement
-               ? this.objectOfStartElement.fields()
-               : []
+            fields: this.process
+               .processDataFields(this)
+               .filter((f) => f.field && f.field instanceof ABFieldUser)
          }
       );
 
