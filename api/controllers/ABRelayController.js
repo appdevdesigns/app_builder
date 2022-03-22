@@ -13,14 +13,13 @@ module.exports = {
    // GET: /mobile/account
    // Page for user's mobile account
    userAccountPage: function(req, res) {
-      const PWA_BASE_URL = sails.config.appbuilder.pwaURL || "https://example.com";
-
       let siteUserGUID = req.user.data.guid; // from the policy
       let username = req.user.data.username;
       let userUUID = null;
       let registrationToken = null;
       let publicKey = null;
       let qrCodeImage = null;
+      let deepLink = null;
 
       async.series(
          [
@@ -64,7 +63,8 @@ module.exports = {
 
             // Generate QR code image
             (next) => {
-               ABMobile.getQRCodeImage(PWA_BASE_URL + "#JRR=" + registrationToken)
+               deepLink = ABMobile.getQRCodeData({ token: registrationToken });
+               ABMobile.getQRCodeImage(deepLink)
                .then((image) => {
                   qrCodeImage = image;
                   next();
@@ -90,6 +90,7 @@ module.exports = {
                      siteUserGUID: siteUserGUID,
                      username: username,
                      qrCodeImage: qrCodeImage,
+                     deepLink: deepLink,
                   }
                );
             }
