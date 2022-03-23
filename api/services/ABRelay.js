@@ -117,11 +117,17 @@ module.exports = {
          url = sails.config.appbuilder.baseURL + url;
       }
 
+      // Authorization header format: "relay@@@<mcc token>@@@<relayUser UUID>"
+      var authHeader = "relay@@@" 
+         + sails.config.appbuilder.mcc.accessToken 
+         + "@@@" 
+         + relayUser.user;
+
       var options = {
          method: method,
          uri: url,
          headers: {
-            authorization: relayUser.publicAuthToken
+            authorization: authHeader
          },
          json: true // Automatically stringifies the body to JSON
       };
