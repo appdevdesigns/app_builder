@@ -21,6 +21,16 @@ module.exports = {
       let qrCodeImage = null;
       let deepLink = null;
 
+      try {
+         if (!sails.config.appbuilder.mcc.enabled) {
+            throw new Error("MCC relay server is not enabled");
+         }
+      } catch(err) {
+         // Feature is either disabled or the config is not correct.
+         ADCore.error.log("Error on mobile account page", err);
+         return res.notFound();
+      }
+
       async.series(
          [
             // Initialize account and generate new registration token
