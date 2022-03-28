@@ -33,15 +33,20 @@
         #mobile-account .instructions {
 
         }
+        #mobile-account pre {
+            font-size: .7em;
+        }
     </style>
 
     <div id="mobile-account">
         <h2><%= username %></h2>
 
         <div class="instructions">
-            Use your phone's camera app to scan this QR code, and it will open
-            a webpage to the conneXted mobile app. You only need to scan the
-            code for the first time.
+            <%- labels['instructions-1'] || 
+                `Use your phone's camera app to scan this QR code, and it will open
+                a webpage to the conneXted mobile app. You only need to scan the
+                code for the first time.`
+             %>
         </div>
 
         <img class="qr-code" src="<%- qrCodeImage %>" />
@@ -50,15 +55,17 @@
         <pre><%- deepLink %></pre>
 
         <div class="instructions">
-            This code can only be used once. It will expire after 7 days. If you
-            need a new code, reload this page.
+            <%- labels['instructions-2'] || 
+                `This code can only be used once. It will expire after 7 days. If you
+                need a new code, reload this page.`
+            %>
         </div>
 
         <button class="btn btn-primary" id="reload" type="button">
-            Reload
+            <%- labels['reload'] || "Reload" %>
         </button>
         <button class="btn btn-primary" id="send-email" type="button">
-            Send Email
+            <%- labels['send-email'] || "Send Email" %>
         </button>
     </div>
 
@@ -71,7 +78,7 @@
         let emailButton = document.getElementById('send-email');
         emailButton.addEventListener('click', (ev) => {
             emailButton.disabled = true;
-            emailButton.innerHTML = "Sending...";
+            emailButton.innerHTML = "<%- labels['sending'] || 'Sending...'' %>";
             fetch(new Request(
                 '/app_builder/QR/sendEmail',
                 {
@@ -84,11 +91,11 @@
                 }
             ))
             .then((res) => {
-                emailButton.innerHTML = "Sent!";
+                emailButton.innerHTML = "<%- labels['sent'] || 'Sent!' %>";
             })
             .catch((err) => {
                 console.error(err);
-                emailButton.innerHTML = "Could not send"
+                emailButton.innerHTML = "<%- labels['could-not-send'] || 'Could not send' %>";
                 alert(err.message || err);
             });
         });

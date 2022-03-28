@@ -20,6 +20,23 @@ module.exports = {
       let publicKey = null;
       let qrCodeImage = null;
       let deepLink = null;
+      let language = req.user.data.languageCode;
+      let labels = {
+      /*
+         "instructions-1": `Use your phone's camera app to scan this QR code, 
+                            and it will open a webpage to the conneXted mobile 
+                            app. You only need to scan the code for the first 
+                            time.`,
+         "instructions-2": `This code can only be used once. It will expire 
+                            after 7 days. If you need a new code, reload this 
+                            page.`,
+         "reload": "Reload",
+         "send-email": "Send Email",
+         "sending": "Sending...",
+         "sent": "Sent",
+         "could-not-send": "Could not send"
+      */
+      };
 
       try {
          if (!sails.config.appbuilder.mcc.enabled) {
@@ -33,6 +50,16 @@ module.exports = {
 
       async.series(
          [
+            // Load page labels
+            (next) => {
+               SiteMultilingualLabel.getLabels("/mobile/account", language)
+                  .then((data) => {
+                     labels = data;
+                     next();
+                  })
+                  .catch(next);
+            },
+
             // Initialize account and generate new registration token
             (next) => {
                ABRelayUser.initializeUser(siteUserGUID)
@@ -101,6 +128,7 @@ module.exports = {
                      username: username,
                      qrCodeImage: qrCodeImage,
                      deepLink: deepLink,
+                     labels: labels
                   }
                );
             }
