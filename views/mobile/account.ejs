@@ -78,7 +78,7 @@
         let emailButton = document.getElementById('send-email');
         emailButton.addEventListener('click', (ev) => {
             emailButton.disabled = true;
-            emailButton.innerHTML = "<%- labels['sending'] || 'Sending...'' %>";
+            emailButton.innerHTML = "<%- labels['sending'] || 'Sending...' %>";
             fetch(new Request(
                 '/app_builder/QR/sendEmail',
                 {
