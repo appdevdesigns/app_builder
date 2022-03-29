@@ -175,6 +175,10 @@ module.exports = {
    // Email
    "post /app_builder/email": "app_builder/ABEmailController.send",
 
+   /* Mobile Account Management pages */
+   "get /mobile/account": "app_builder/ABRelayController.userAccountPage",
+   "get /mobile/admin": "app_builder/ABRelayController.accountAdminPage",
+   
    /* Relay Settings */
 
    "get /app_builder/relay/users": "app_builder/ABRelayController.users",

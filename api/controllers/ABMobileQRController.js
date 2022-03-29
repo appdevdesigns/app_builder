@@ -132,17 +132,22 @@ module.exports = {
 
    // POST: /app_builder/QR/sendEmail
    // send a QR code to a specified Site User
-   // @param {string} user       the SiteUser.guid
+   // @param {string} user       one or more SiteUser.guid
    // @param {string} mobileApp  id of the Mobile App
    // @param {string} email      the email address to send to.
    sendEmail: function(req, res) {
       var allUsers = req.param("user") || "--";
       var appID = req.param("mobileApp") || "--";
-      // var email = req.param('email') || '--';
-      var username = req.param("username") || "--";
+      var email = "--"; 
+      var triggerID = "appbuilder.mobileinvite.SDC.id"; // EmailNotifications trigger
 
       // in case > 1 user was provided
       allUsers = allUsers.split(",");
+
+      // if only 1 user, then allow email address override
+      if (allUsers.length == 1) {
+         email = req.param("email") || email;
+      }
 
       var connextImgID = "connexted-png";
       var connextedBase64 =
@@ -152,25 +157,25 @@ module.exports = {
          "base64"
       );
 
-      async.each(
+      async.eachSeries(
          allUsers,
          (user, cb) => {
-            var email = "--";
-            var QRAppUser = null;
-            var MobileApp = null;
-
-            var UserPublicToken = null;
-
-            // variables used in Email Sent:
-            var triggerID = null; // EmailNotifications trigger ID for the QR Code Email;
-            var deepLink = null; // base deeplink url
-            var apkURL = null; // url to access the android version of the mobile app
+            var username = "--";
+            var registrationToken = null;
+            var deepLink = null; // url to the PWA app
             var cidQR = "qr-code-key"; // unique key to point to QR image in attachment
             var attachments = [];
 
+            // Not really used
+            /*
+            var QRAppUser = null;
+            var MobileApp = null;
+            var apkURL = null; // url to access the android version of the mobile app
+            */
+
             async.series(
                [
-                  // verify Email
+                  // verify email address
                   // if no email is provided, then lookup SiteUser's email:
                   (next) => {
                      // if they provided an email, move along
@@ -199,6 +204,7 @@ module.exports = {
                   //// NOTE: in usage, we don't use the QRToken in ABQRAppUser
                   //// we might remove these next 2 steps in the future:
 
+                  /*
                   // find entry for ABQRAppUser
                   (next) => {
                      ABQRAppUser.find({
@@ -264,13 +270,14 @@ module.exports = {
                      // })
                      // .catch(next);
                   },
+                  */
 
-                  // Get the User's Public Auth Token:
+                  // Get the User's registration token
                   (next) => {
-                     ABMobile.publicAuthTokenForUser(user)
+                     ABMobile.registrationTokenForUser(user)
                         .then((token) => {
                            if (token) {
-                              UserPublicToken = token;
+                              registrationToken = token;
                               next();
                               return;
                            }
@@ -282,38 +289,20 @@ module.exports = {
                            next(error);
                         })
                         .catch(next);
-
-                     // ABRelayUser.findOne({siteuser_guid: user})
-                     // .then((ru)=>{
-                     //     if (ru) {
-                     //         UserPublicToken = ru.publicAuthToken;
-                     //         next();
-                     //         return;
-                     //     }
-
-                     //     // this is an error:
-                     //     var error = new Error('Requested User not setup for Relay.');
-                     //     next(error);
-                     // })
-                     // .catch(next);
                   },
 
                   // package together our Email Data
                   (next) => {
-                     triggerID = MobileApp.emailInviteTrigger(); // EmailNotifications trigger ID for the QR Code Email;
-                     deepLink = sails.config.appbuilder.deeplink; // base deeplink url
-                     apkURL = MobileApp.urlAPK(); // url to access the android version of the mobile app
+                     // triggerID = MobileApp.emailInviteTrigger(); // EmailNotifications trigger ID for the QR Code Email;
+                     // apkURL = MobileApp.urlAPK(); // url to access the android version of the mobile app
                      cidQR = "qr-code-key"; // QR image attachment data
                      attachments = [];
 
                      // package the data for our QR Code
                      var QRData = ABMobile.getQRCodeData({
-                        UserPublicToken: UserPublicToken,
-                        codePushKeys: MobileApp.codePushKeys()
+                        token: registrationToken,
                      });
-
-                     // deepLink needs to include this data for the MobileApp
-                     deepLink += "?settings=" + encodeURIComponent(QRData);
+                     deepLink = QRData;
 
                      // now convert to a Base64 image
                      ABMobile.getQRCodeBase64(QRData)
@@ -329,25 +318,6 @@ module.exports = {
                            next();
                         })
                         .catch(next);
-
-                     // QRCode.toDataURL(QRData, (err, image) => {
-                     //     if (err) next(err);
-                     //     else {
-
-                     //         base64QR = image.substring(22);
-                     //         var qrcodeBuffer = Buffer.from(base64QR, 'base64');
-
-                     //         // add attachment
-                     //         attachments.push({
-                     //             filename: 'qrcode.png',
-                     //             content: qrcodeBuffer,
-                     //             contents: qrcodeBuffer, // old version syntax
-                     //             cid: cidQR
-                     //         });
-
-                     //         next();
-                     //     }
-                     // });
                   },
 
                   // now build Email info and send to user
@@ -364,7 +334,6 @@ module.exports = {
                         EmailNotifications.trigger(triggerID, {
                            to: [email],
                            variables: {
-                              apkURL: apkURL, // url to android apk file
                               cidQR: cidQR, // CID for the QR code attachment
                               connextImgID: connextImgID,
                               deepLink: deepLink,
@@ -372,8 +341,8 @@ module.exports = {
                            },
                            attachments: attachments
                         })
-                           .done((html) => {
-                              next(); // res.send(html || 'OK');
+                           .done(() => {
+                              next();
                            })
                            .fail((err) => {
                               // pass a generic error back to the Client:
@@ -408,22 +377,26 @@ module.exports = {
 
    // POST: /app_builder/QR/adminQRCode
    // send a QR code to a specified Site User
+   // This doesn't send an email. It just sends the QR code image
+   // data to the browser.
+   //
    // @param {string} user       the SiteUser.guid
    // @param {string} mobileApp  id of the Mobile App
    adminQRCode: function(req, res) {
-      // console.log('!!! adminQRCode:');
-
       var user = req.param("user") || "--";
+      var registrationToken = null;
+      var qrCode = null;
+
+      // Not really used
+      /*
       var appID = req.param("mobileApp") || "--";
       var version = req.param("version") || "--";
-
       var MobileApp = null;
-      var UserPublicToken = null;
-
-      var qrcodeBuffer = null; // final data
+      */
 
       async.series(
          [
+            /*
             // Get the MobileApp object
             (next) => {
                ABMobile.app(appID)
@@ -440,13 +413,14 @@ module.exports = {
                   })
                   .catch(next);
             },
+            */
 
-            // Get the User's Public Auth Token:
+            // Get the User's Token
             (next) => {
-               ABMobile.publicAuthTokenForUser(user)
+               ABMobile.registrationTokenForUser(user)
                   .then((token) => {
                      if (token) {
-                        UserPublicToken = token;
+                        registrationToken = token;
                         next();
                         return;
                      }
@@ -464,14 +438,13 @@ module.exports = {
             (next) => {
                // package the data for our QR Code
                var QRData = ABMobile.getQRCodeData({
-                  UserPublicToken: UserPublicToken,
-                  codePushKeys: MobileApp.codePushKeys(version)
+                  token: registrationToken,
                });
 
                // now convert to a Base64 image
                ABMobile.getQRCodeImage(QRData)
                   .then((image) => {
-                     qrcodeBuffer = image;
+                     qrCode = image;
                      next();
                   })
                   .catch(next);
@@ -481,34 +454,34 @@ module.exports = {
             if (err) {
                res.AD.error(err, err.httpResponseCode || 400);
             } else {
-               // testing: simulate a remote call delay
-               // setTimeout(()=>{
-               res.AD.success({ image: qrcodeBuffer });
-               // }, 5000);
+               res.AD.success({ image: qrCode });
             }
          }
       );
    },
 
    // GET: /app_builder/qr/user-qr-code
-   // send a QR code to a specified Site User
-   // @param {string} user       the SiteUser.guid
+   // send a QR code to the current Site User
+   // This doesn't actually send an email. It just displays some HTML to the
+   // browser.
+   //
    // @param {string} mobileApp  id of the Mobile App
    userQRCode: function(req, res) {
-      // console.log('!!! adminQRCode:');
-      // TODO we need to find out who the user is not allow them to tell us
-      var user = null;
+      var siteUserGUID = req.user.data.guid; // from the policy
+      var deepLink = null;
+      var registrationToken = null;
+      var qrCode = null;
+
+      // These are not really used
+      /*
       var appID = req.param("mobileApp") || "--";
       var version = req.param("version") || "--";
-      var deepLink = null;
-
       var MobileApp = null;
-      var UserPublicToken = null;
-
-      var qrcodeBuffer = null; // final data
+      */
 
       async.series(
          [
+            /*
             // Get the MobileApp object
             (next) => {
                ABMobile.app(appID)
@@ -532,13 +505,14 @@ module.exports = {
                user = req.user.username();
                next();
             },
+            */
 
-            // Get the User's Public Auth Token:
+            // Get the user's token
             (next) => {
-               ABMobile.publicAuthTokenForUser(user)
+               ABMobile.registrationTokenForUser(siteUserGUID)
                   .then((token) => {
                      if (token) {
-                        UserPublicToken = token;
+                        registrationToken = token;
                         next();
                         return;
                      }
@@ -552,22 +526,16 @@ module.exports = {
                   .catch(next);
             },
 
-            // package together our Email Data
+            // package the data
             (next) => {
-               // package the data for our QR Code
-               var QRData = ABMobile.getQRCodeData({
-                  UserPublicToken: UserPublicToken,
-                  codePushKeys: MobileApp.codePushKeys(version)
+               deepLink = ABMobile.getQRCodeData({
+                  token: registrationToken
                });
 
-               deepLink = sails.config.appbuilder.deeplink; // base deeplink url
-               // deepLink needs to include this data for the MobileApp
-               deepLink += "?settings=" + encodeURIComponent(QRData);
-
                // now convert to a Base64 image
-               ABMobile.getQRCodeImage(QRData)
+               ABMobile.getQRCodeImage(deepLink)
                   .then((image) => {
-                     qrcodeBuffer = image;
+                     qrCode = image;
                      next();
                   })
                   .catch(next);
@@ -579,10 +547,10 @@ module.exports = {
             } else {
                var body =
                   "<div style='width: 500px; margin: 100px auto; text-align: center; font-family: helvetica, sans-serif; font-size: 14px; font-weight: bold;'><div style='width: 280px; height: 280px; margin: 0 auto 20px; background-size: cover; background-image:url(" +
-                  qrcodeBuffer +
+                  qrCode +
                   ");'></div><br/><a href='" +
                   deepLink +
-                  "'>Tap this link if you are on your phone and have ConneXted installed.</a></div>";
+                  "'>Tap this link if you are on your phone.</a></div>";
 
                res.end(body);
             }
