@@ -13,17 +13,53 @@ module.exports = {
    // GET: /mobile/account
    // Page for user's mobile account
    userAccountPage: function(req, res) {
-      const PWA_BASE_URL = sails.config.appbuilder.pwaURL || "https://example.com";
-
       let siteUserGUID = req.user.data.guid; // from the policy
       let username = req.user.data.username;
       let userUUID = null;
       let registrationToken = null;
       let publicKey = null;
       let qrCodeImage = null;
+      let deepLink = null;
+      let language = req.user.data.languageCode;
+      let labels = {
+      /*
+         "instructions-1": `Use your phone's camera app to scan this QR code, 
+                            and it will open a webpage to the conneXted mobile 
+                            app. You only need to scan the code for the first 
+                            time.`,
+         "instructions-2": `This code can only be used once. It will expire 
+                            after 7 days. If you need a new code, reload this 
+                            page.`,
+         "reload": "Reload",
+         "send-email": "Send Email",
+         "sending": "Sending...",
+         "sent": "Sent",
+         "could-not-send": "Could not send"
+      */
+      };
+
+      try {
+         if (!sails.config.appbuilder.mcc.enabled) {
+            throw new Error("MCC relay server is not enabled");
+         }
+      } catch(err) {
+         // Feature is either disabled or the config is not correct.
+         ADCore.error.log("Error on mobile account page", err);
+         return res.notFound();
+      }
 
       async.series(
          [
+            // Load page labels
+            (next) => {
+               SiteMultilingualLabel.getLabels("/mobile/account", language)
+                  .then((data) => {
+                     labels = data;
+                     next();
+                  })
+                  .catch(next);
+            },
+
             // Initialize account and generate new registration token
             (next) => {
                ABRelayUser.initializeUser(siteUserGUID)
@@ -64,7 +100,8 @@ module.exports = {
 
             // Generate QR code image
             (next) => {
-               ABMobile.getQRCodeImage(PWA_BASE_URL + "#JRR=" + registrationToken)
+               deepLink = ABMobile.getQRCodeData({ token: registrationToken });
+               ABMobile.getQRCodeImage(deepLink)
                .then((image) => {
                   qrCodeImage = image;
                   next();
@@ -90,6 +127,8 @@ module.exports = {
                      siteUserGUID: siteUserGUID,
                      username: username,
                      qrCodeImage: qrCodeImage,
+                     deepLink: deepLink,
+                     labels: labels
                   }
                );
             }
