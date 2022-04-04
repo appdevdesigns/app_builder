@@ -70,7 +70,9 @@ module.exports = {
             }
             */
          },
-         errors: []
+         errors: [],
+         siteObjectConnections: {}
+         /* SiteObject.id : [ importField.id, importField.id, ... ] */
       };
       var Application = null;
 
@@ -88,16 +90,40 @@ module.exports = {
          }
 
          // gathering all the Definition, IDs:
-         var ids = [];
-         Application.exportIDs(ids);
+         var exportData = {
+            settings: {
+               includeSystemObjects: Application.isAdminApp
+               // {bool}
+            },
+            ids: [],
+            siteObjectConnections: {
+               // SiteUser.id : [ ABField.ID, ],
+               // SiteRole.id : [ ABField.ID,, ]
+            },
+            roles: {
+               /* Role.id : Role.id */
+            }
+         };
+         Application.exportData(exportData);
 
-         // make sure there aren't any null values in our list
-         ids.forEach((id) => {
+         // make sure there aren't any null values in our data
+         exportData.ids.forEach((id) => {
             if (id) {
                // NOTE: go directly to the Model to get the full ABDefinition entry:
                data.definitions.push(ABDefinitionModel.objForID(id));
             }
          });
+
+         data.siteObjectConnections = {};
+         (Object.keys(exportData.siteObjectConnections) || []).forEach((k) => {
+            data.siteObjectConnections[k] = (
+               exportData.siteObjectConnections[k] || []
+            ).filter((f) => f);
+         });
+
+         let SOC = data.siteObjectConnections;
+         // {hash} { SiteObject.id : [ {importedField}.id, ...]}
+         // just a shortcut variable.
 
          ///
          /// Transition Code:
@@ -109,50 +135,61 @@ module.exports = {
          );
 
          const SITE_USER_OBJECT_ID = "228e3d91-5e42-49ec-b37c-59323ae433a1";
-         let SiteUser = data.definitions.find(
-            (f) => f.id == SITE_USER_OBJECT_ID
-         );
-         if (!SiteUser) {
-            SiteUser = ABDefinitionModel.objForID(SITE_USER_OBJECT_ID);
+         // let SiteUser = Application.objects(
+         //    (o) => o.id == SITE_USER_OBJECT_ID
+         // )[0];
 
-            if (userFields.length > 0) {
-               // we need to add SITEUSER defs to our output:
-               var ObjSiteUser = Application.objects(
-                  (o) => o.id == SITE_USER_OBJECT_ID
-               )[0];
-               if (!ObjSiteUser) {
-                  return reject(
-                     new Error("Unable to find live SiteUser Object by ID")
-                  );
-               }
+         // if (!SiteUser) {
+         //    return reject(
+         //       new Error("Unable to find live SiteUser Object by ID")
+         //    );
+         // }
 
-               // add to our ids:
-               ObjSiteUser.exportIDs(ids);
-               ids = _.uniq(ids);
+         // if (!SiteUser) {
+         //    SiteUser = ABDefinitionModel.objForID(SITE_USER_OBJECT_ID);
 
-               // Rebuild data.definitions
-               data.definitions = [];
-               ids.forEach((id) => {
-                  if (id) {
-                     // NOTE: go directly to the Model to get the full ABDefinition entry:
-                     data.definitions.push(ABDefinitionModel.objForID(id));
-                  }
-               });
+         //    if (userFields.length > 0) {
+         //       // we need to add SITEUSER defs to our output:
+         //       var ObjSiteUser = Application.objects(
+         //          (o) => o.id == SITE_USER_OBJECT_ID
+         //       )[0];
+         //       if (!ObjSiteUser) {
+         //          return reject(
+         //             new Error("Unable to find live SiteUser Object by ID")
+         //          );
+         //       }
 
-               // NOTE: must pull userFields & SiteUser from data.definitions
-               userFields = data.definitions.filter(
-                  (d) => d.type == "field" && d.json.key == "user"
-               );
+         //       // // add to our ids:
+         //       // ObjSiteUser.exportIDs(ids);
+         //       // ids = _.uniq(ids);
 
-               SiteUser = data.definitions.find(
-                  (f) => f.id == SITE_USER_OBJECT_ID
-               );
-            }
-         }
+         //       // // Rebuild data.definitions
+         //       // data.definitions = [];
+         //       // ids.forEach((id) => {
+         //       //    if (id) {
+         //       //       // NOTE: go directly to the Model to get the full ABDefinition entry:
+         //       //       data.definitions.push(ABDefinitionModel.objForID(id));
+         //       //    }
+         //       // });
+
+         //       // NOTE: must pull userFields & SiteUser from data.definitions
+         //       userFields = data.definitions.filter(
+         //          (d) => d.type == "field" && d.json.key == "user"
+         //       );
+
+         //       SiteUser = data.definitions.find(
+         //          (f) => f.id == SITE_USER_OBJECT_ID
+         //       );
+         //    }
+         // }
 
          var USERNAME_FIELD_ID = "5760560b-c078-47ca-98bf-e18ac492a561";
 
          console.log(`converting ${userFields.length} user fields.`);
+
+         if (userFields.length > 0) {
+            SOC[SITE_USER_OBJECT_ID] = SOC[SITE_USER_OBJECT_ID] || [];
+         }
 
          (userFields || []).forEach((fDef) => {
             var field = fDef.json;
@@ -174,7 +211,7 @@ module.exports = {
 
                   // Convert the Old User field definitions to the new ConnectObject
                   // format:
-                  field.settings.linkObject = SiteUser.id;
+                  field.settings.linkObject = SITE_USER_OBJECT_ID;
                   field.settings.isCustomFK = 1;
                   field.settings.isSource = 1;
 
@@ -193,6 +230,7 @@ module.exports = {
 
                   // now new ConnectObject Field on SiteUser:
                   var linkF = {
+                     id: uuidLinkF,
                      type: "field",
                      key: "connectObject",
                      icon: "external-link",
@@ -220,11 +258,10 @@ module.exports = {
                               "." +
                               field.translations[0].label
                         }
-                     ],
-                     id: uuidLinkF
+                     ]
                   };
 
-                  SiteUser.json.fieldIDs.push(linkF.id);
+                  SOC[SITE_USER_OBJECT_ID].push(linkF.id);
 
                   // Bundle the LinkField json into a proper Defintiion:
                   var defLinkF = {
@@ -246,8 +283,8 @@ module.exports = {
                   data.definitions.push(prevExport);
                }
                // and make sure our SiteUser.fieldIDs include the .id
-               if (SiteUser.json.fieldIDs.indexOf(prevExport.id) == -1) {
-                  SiteUser.json.fieldIDs.push(prevExport.id);
+               if (SOC[SITE_USER_OBJECT_ID].indexOf(prevExport.id) == -1) {
+                  SOC[SITE_USER_OBJECT_ID].push(prevExport.id);
                }
             } // if !reimport
          });
@@ -336,10 +373,6 @@ module.exports = {
          ///
          /// Find Views that need to be updated due to the removal of Selectivity.
          ///
-
-         // Johnny: return this once the Selectivity changes have been
-         // integrated into v2.
-         // if (false) {
          try {
             let customViews = data.definitions
                .filter((d) => d.type == "view" && d.json.key == "fieldcustom")
@@ -396,7 +429,6 @@ module.exports = {
             console.error("!!!! ERROR Checking FieldCustom:", e);
             console.error("!!!!");
          }
-         // } // if (false)
 
          ///
          /// Gather any related files and include in json definitions.
@@ -404,6 +436,50 @@ module.exports = {
 
          async.series(
             [
+               // Pull out our Roles
+               (done) => {
+                  var roleIDs = Object.keys(exportData.roles || {});
+                  if (roleIDs.length == 0) {
+                     done();
+                     return;
+                  }
+                  const objRole = ABSystemObject.getObjectRole();
+                  const PK = objRole.PK();
+                  objRole
+                     .modelAPI()
+                     .findAll({
+                        where: {
+                           glue: "and",
+                           rules: [
+                              {
+                                 key: PK,
+                                 rule: "in",
+                                 value: roleIDs
+                              }
+                           ]
+                        },
+                        populate: true
+                     })
+                     .then((list) => {
+                        // clean up our entries to not try to include
+                        // current User data and redundant __relation fields
+                        (list || []).forEach((role) => {
+                           delete role.id;
+                           role.users = [];
+                           delete role.scopes__relation;
+                           (role.scopes || []).forEach((s) => {
+                              delete s.id;
+                              s.createdBy = null;
+                           });
+                        });
+                        data.roles = list;
+                        done();
+                     })
+                     .catch((err) => {
+                        done(err);
+                     });
+               },
+
                // start with the ABFieldImage.defaultImage references:
                // ABFieldImage
                (done) => {

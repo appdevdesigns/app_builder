@@ -49,6 +49,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
                );
 
                resolve(result);
+               return null;
             })
             .catch(reject);
       });
@@ -82,6 +83,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
                );
 
                resolve();
+               return null;
             })
             .catch(reject);
       });
@@ -126,6 +128,7 @@ module.exports = class ABDefinition extends ABDefinitionCore {
                );
 
                resolve();
+               return null;
             })
             .catch(reject);
       });

@@ -36,15 +36,46 @@ module.exports = class ABClassQuery extends ABObjectQueryCore {
     * @param {array} ids
     *        the array of ids to store any relevant .ids into.
     */
-   exportIDs(ids) {
-      // make sure we don't get into an infinite loop:
-      if (ids.indexOf(this.id) > -1) return;
-      ids.push(this.id);
+   // exportIDs(ids) {
+   //    console.error("DEPRECIATED!!! WHO IS CALLING THIS?");
 
-      // include my fields:
-      this.objects().forEach((o) => {
-         o.exportIDs(ids);
-      });
+   //    // make sure we don't get into an infinite loop:
+   //    if (ids.indexOf(this.id) > -1) return;
+   //    ids.push(this.id);
+
+   //    // include my fields:
+   //    this.objects().forEach((o) => {
+   //       o.exportIDs(ids);
+   //    });
+   // }
+
+   /**
+    * @method exportData()
+    * export the relevant data from this object necessary for the operation of
+    * it's associated application.
+    * @param {hash} data
+    *        The incoming data structure to add the relevant export data.
+    *        .ids {array} the ABDefinition.id of the definitions to export.
+    *        .siteObjectConnections {hash} { Obj.id : [ ABField.id] }
+    *                A hash of Field.ids for each System Object that need to
+    *                reference these importedFields
+    *        .roles {hash}  {Role.id: RoleDef }
+    *                A Definition of a role related to this Application
+    *        .scope {hash} {Scope.id: ScopeDef }
+    *               A Definition of a scope related to this Application.
+    *               (usually from one of the Roles being included)
+    */
+   exportData(data) {
+      if (!this.isSystemObject || data.settings.includeSystemObjects) {
+         // make sure we don't get into an infinite loop:
+         if (data.ids.indexOf(this.id) > -1) return;
+         data.ids.push(this.id);
+
+         // include my fields:
+         this.objects().forEach((o) => {
+            o.exportData(data);
+         });
+      }
    }
 
    /**

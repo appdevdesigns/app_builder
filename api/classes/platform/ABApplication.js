@@ -136,37 +136,127 @@ module.exports = class ABClassApplication extends ABApplicationCore {
     * @param {array} ids
     *         the array of ids to insert any relevant .ids into
     */
-   exportIDs(ids) {
-      // make sure we don't get into an infinite loop:
-      if (ids.indexOf(this.id) > -1) return;
+   // exportIDs(ids) {
+   //    // make sure we don't get into an infinite loop:
+   //    if (ids.indexOf(this.id) > -1) return;
 
-      ids.push(this.id);
+   //    ids.push(this.id);
+
+   //    // start with Objects:
+   //    this.objectsIncluded().forEach((o) => {
+   //       o.exportIDs(ids);
+   //    });
+
+   //    // Queries
+   //    this.queriesIncluded().forEach((q) => {
+   //       q.exportIDs(ids);
+   //    });
+
+   //    // Datacollections
+   //    // NOTE: currently the server doesn't make instances of DataCollections
+   //    // so we manually parse the related info here:
+   //    this.datacollectionIDs.forEach((dID) => {
+   //       if (ids.indexOf(dID) > -1) return;
+
+   //       var def = this.definitionForID(dID);
+   //       if (def) {
+   //          ids.push(dID);
+   //          if (def.settings.datasourceID) {
+   //             var object = this.objects((o) => {
+   //                return o.id == def.settings.datasourceID;
+   //             })[0];
+   //             if (object) {
+   //                object.exportIDs(ids);
+   //             }
+   //          }
+   //       }
+   //    });
+
+   //    // Processes
+   //    this.processes().forEach((p) => {
+   //       p.exportIDs(ids);
+   //    });
+
+   //    // Pages
+   //    // NOTE: currently the server doesn't make instances of ABViews
+   //    // so we manually parse the object data here:
+   //    var parseView = (view) => {
+   //       if (ids.indexOf(view.id) > -1) return;
+   //       ids.push(view.id);
+   //       (view.pageIDs || []).forEach((pid) => {
+   //          var pdef = this.definitionForID(pid);
+   //          if (pdef) {
+   //             parseView(pdef);
+   //          }
+   //       });
+
+   //       (view.viewIDs || []).forEach((vid) => {
+   //          var vdef = this.definitionForID(vid);
+   //          if (vdef) {
+   //             parseView(vdef);
+   //          }
+   //       });
+   //    };
+
+   //    var pageIDs = this._pages.map((p) => p.id);
+   //    (pageIDs || []).forEach((pid) => {
+   //       var pdef = this.definitionForID(pid);
+   //       if (pdef) {
+   //          parseView(pdef);
+   //       }
+   //    });
+
+   //    // return only unique entries:
+   //    ids = _.uniq(ids);
+   // }
+
+   /**
+    * @method exportData()
+    * export the relevant data from this object necessary for the operation of
+    * it's associated application.
+    * @param {hash} data
+    *        The incoming data structure to add the relevant export data.
+    *        .ids {array} the ABDefinition.id of the definitions to export.
+    *        .siteObjectConnections {hash} { Obj.id : [ ABField.id] }
+    *                A hash of Field.ids for each System Object that need to
+    *                reference these importedFields
+    *        .roles {hash}  {Role.id: RoleDef }
+    *                A Definition of a role related to this Application
+    *        .scope {hash} {Scope.id: ScopeDef }
+    *               A Definition of a scope related to this Application.
+    *               (usually from one of the Roles being included)
+    */
+   exportData(data) {
+      // make sure we don't get into an infinite loop:
+      if (data.ids.indexOf(this.id) > -1) return;
+
+      data.ids.push(this.id);
 
       // start with Objects:
       this.objectsIncluded().forEach((o) => {
-         o.exportIDs(ids);
+         o.exportData(data);
       });
 
       // Queries
       this.queriesIncluded().forEach((q) => {
-         q.exportIDs(ids);
+         q.exportData(data);
       });
 
       // Datacollections
       // NOTE: currently the server doesn't make instances of DataCollections
       // so we manually parse the related info here:
       this.datacollectionIDs.forEach((dID) => {
-         if (ids.indexOf(dID) > -1) return;
+         if (data.ids.indexOf(dID) > -1) return;
 
          var def = this.definitionForID(dID);
          if (def) {
-            ids.push(dID);
+            data.ids.push(dID);
             if (def.settings.datasourceID) {
                var object = this.objects((o) => {
                   return o.id == def.settings.datasourceID;
                })[0];
                if (object) {
-                  object.exportIDs(ids);
+                  object.exportData(data);
                }
             }
          }
@@ -174,15 +264,15 @@ module.exports = class ABClassApplication extends ABApplicationCore {
 
       // Processes
       this.processes().forEach((p) => {
-         p.exportIDs(ids);
+         p.exportData(data);
       });
 
       // Pages
       // NOTE: currently the server doesn't make instances of ABViews
       // so we manually parse the object data here:
       var parseView = (view) => {
-         if (ids.indexOf(view.id) > -1) return;
-         ids.push(view.id);
+         if (data.ids.indexOf(view.id) > -1) return;
+         data.ids.push(view.id);
          (view.pageIDs || []).forEach((pid) => {
             var pdef = this.definitionForID(pid);
             if (pdef) {
@@ -206,8 +296,28 @@ module.exports = class ABClassApplication extends ABApplicationCore {
          }
       });
 
+      //
+      // Add Roles:
+      //
+      if (!this.isAccessManaged) {
+         (this.roleAccess || []).forEach((rid) => {
+            data.roles[rid] = rid;
+         });
+      } else {
+         if (this.accessManagers.useRole) {
+            (this.accessManagers.role || []).forEach((rid) => {
+               data.roles[rid] = rid;
+            });
+         }
+      }
+      if (this.isTranslationManaged && this.translationManagers.useRole) {
+         (this.translationManagers.role || []).forEach((rid) => {
+            data.roles[rid] = rid;
+         });
+      }
+
       // return only unique entries:
-      ids = _.uniq(ids);
+      data.ids = _.uniq(data.ids);
    }
 
    ///
