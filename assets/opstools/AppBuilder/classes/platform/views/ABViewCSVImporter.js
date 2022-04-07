@@ -3,10 +3,10 @@ const ABViewCSVImporterCore = require("../../core/views/ABViewCSVImporterCore");
 const CSVImporter = require("../CSVImporter");
 const ABRecordRule = require("../../rules/ABViewRuleListFormRecordRules");
 
+const FilterComplex = require("../FilterComplex");
+const ABObjectQuery = require("../ABObjectQuery");
+
 const ABViewCSVImporterPropertyComponentDefaults = ABViewCSVImporterCore.defaultValues();
-
-var FilterComplex = require("../FilterComplex");
-
 let PopupRecordRule = null;
 
 function L(key, altText) {
@@ -247,7 +247,10 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
       super.propertyEditorPopulate(App, ids, view);
 
       // Pull data views to options
-      let dcOptions = view.propertyDatacollections();
+      let dcOptions = view.propertyDatacollections(
+         (dc) =>
+            dc && dc.datasource && !(dc.datasource instanceof ABObjectQuery)
+      );
 
       let $DcSelector = $$(ids.datacollection);
       $DcSelector.define("options", dcOptions);
