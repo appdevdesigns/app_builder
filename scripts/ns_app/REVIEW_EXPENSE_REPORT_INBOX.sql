@@ -75,8 +75,7 @@ BEGIN
                 THEN
                     -- Remove the process INBOX
                     DELETE FROM `site`.`process_userform`
-                    WHERE USER_FORM_ID IS NOT NULL
-                    AND `uuid` = USER_FORM_ID;
+                    WHERE `uuid` = USER_FORM_ID;
                 END IF;
             END IF;
 
