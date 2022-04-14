@@ -32,7 +32,7 @@
   "dependencies": {
     "ab-utils": "github:Hiro-Nakamura/ab-utils#90d7ede",
     "ad-utils": "github:appdevdesigns/ad-utils",
-    "async": "^1.5.2",
+    "async": "^3.2.2",
     "bpmn-js": "^5.1.2",
     "cote": "^0.21.1",
     "crypto": "^1.0.1",
