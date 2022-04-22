@@ -60,6 +60,7 @@ module.exports = class ABProcessGatewayExclusive extends ABProcessGatewayExclusi
          var connectedElement = this.process.elementForDiagramID(conn.to);
 
          var DF = new RowFilter(App, `${id}_${conn.id}_filter`);
+         DF.init({ showObjectName: true });
          DF.applicationLoad(this.application);
          DF.fieldsLoad(abFields);
          this.__dfLookup[conn.id] = DF;

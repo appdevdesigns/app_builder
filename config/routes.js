@@ -244,10 +244,13 @@ module.exports = {
 
    /* CSV Export */
    "GET /app_builder/application/:appID/page/:pageID/view/:viewID/csv":
-      "app_builder/ABCsvController.exportCsv"
+      "app_builder/ABCsvController.exportCsv",
+
+
+   /* Custom Widigets */
+   "GET /template/localIncomeExpense": "app_builder/LocalIncomeExpense.getData",
 
    /*
-
   '/': {
     view: 'user/signup'
   },
