@@ -19,7 +19,7 @@ module.exports = {
    getData: function(req, res) {
 
       // get our passed params
-      console.log("params -------------->", req);
+      //console.log("params -------------->", req);
       let rc = req.query.rc ? req.query.rc : undefined;
       let fyper = req.query.fyper ? req.query.fyper : undefined;
       // get the users preferred language
@@ -33,7 +33,7 @@ module.exports = {
          languageCode = req.query.languageCode;
       }
 
-      console.log("language ------->", languageCode);
+      //console.log("language ------->", languageCode);
 
       // Our data object
       let data = {
@@ -175,7 +175,7 @@ module.exports = {
 
       let myRCs = ABSystemObject.getApplication().queries((o) => o.id == "241a977c-7748-420d-9dcb-eff53e66a43f")[0];
 
-      console.log("myRCs ----------------->", myRCs);
+      //console.log("myRCs ----------------->", myRCs);
 
       myRCs.queryFind({
          where: {
@@ -184,7 +184,7 @@ module.exports = {
          }
       }, req.user.data)
       .then(rcs => {
-         console.log("My Team RCs ---------------->", rcs);
+         //console.log("My Team RCs ---------------->", rcs);
 
          let rcOptions = [];
          rcs.forEach((rc) => {
@@ -218,7 +218,7 @@ module.exports = {
             limit: 12 
          })
          .then(records => {
-            console.log("Fiscal Month Records ------------------>", records);
+            //console.log("Fiscal Month Records ------------------>", records);
             let fiscalMonthsArray = records;
             data.fyper = fyper || fiscalMonthsArray[0]["FY Per"];
             let fyperOptions = [];
@@ -248,7 +248,7 @@ module.exports = {
             }
             data.fyperstart = startYear + "/07";
 
-            console.log("Fiscal Month picked from query param -->", data.fyper);
+            //console.log("Fiscal Month picked from query param -->", data.fyper);
             let balanceObj = ABSystemObject.getApplication().objects((o) => o.id == "bb9aaf02-3265-4b8c-9d9a-c0b447c2d804")[0];
 
             balanceObj.modelAPI().findAll({ 
@@ -271,7 +271,7 @@ module.exports = {
             })
             .then(records => {
 
-               console.log(records);
+               //console.log(records);
 
                data.categories.forEach((cat) => {
                   let catSum = 0;
