@@ -22,6 +22,11 @@ jobs:
         with:
           branch: master
           message: 'Bump package version'
+      # Hotfix 'fatal: not in a git directory' see https://github.com/rickstaa/action-create-tag/issues/10
+      - name: "Change perms on GITHUB_WORKSPACE"
+        run: |
+          sudo chown -R root:root $GITHUB_WORKSPACE
+          sudo chmod -R 0777 $GITHUB_WORKSPACE
       - uses: rickstaa/action-create-tag@v1
         with:
           tag: ${{ steps.bump_version.outputs.new_version }}
