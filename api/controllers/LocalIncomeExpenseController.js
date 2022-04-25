@@ -194,6 +194,11 @@ module.exports = {
          data.rcOptions = rcOptions.sort(function (a, b) {
             return a.toLowerCase().localeCompare(b.toLowerCase());
          });
+	      
+         if (!rc) {
+            rc = data.rcOptions[0];
+            data.rc = rc;
+         }
       
          let fiscalMonthObj = ABSystemObject.getApplication().objects((o) => o.id == "1d63c6ac-011a-4ffd-ae15-97e5e43f2b3f")[0];
 
