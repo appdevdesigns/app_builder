@@ -167,7 +167,7 @@ module.exports = {
       function categorySum(category, balances) {
          const filtered = balances.filter(bal => accountInCategory(bal['COA Num'], category));
          if (filtered.length > 0 ) {
-            return filtered.map(i=>i['Running Balance']).reduce((a,b)=>(((100*a)+(100*b))/100));
+            return filtered.map(i=>i['Running Balance']).reduce((a,b)=>(((1000*a)+(1000*b))/1000));
          } else {
             return 0;
          }
