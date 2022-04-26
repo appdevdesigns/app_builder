@@ -2,7 +2,7 @@ DROP PROCEDURE IF EXISTS `BALANCE_PROCESS`;
 
 DELIMITER $$
 CREATE PROCEDURE `BALANCE_PROCESS` (
-    IN BATCH_ID varchar(255)
+    IN BATCH_UUID varchar(255)
 )
 BEGIN
     DECLARE ACCOUNT_Assets varchar(255) DEFAULT "1585806356532";
@@ -10,13 +10,15 @@ BEGIN
     DECLARE ACCOUNT_Liabilities varchar(255) DEFAULT "1585806356570";
     DECLARE ACCOUNT_Equity varchar(255) DEFAULT "1585806356643";
     DECLARE ACCOUNT_Income varchar(255) DEFAULT "1590392412833";
+    DECLARE BATCH_INDEX int;
     DECLARE FY_PERIOD varchar(255);
 
     -- Get FY Period
-    SET FY_PERIOD = (SELECT `Post Period`
-                    FROM `AB_AccountingApp_Batch`
-                    WHERE `Batch Index` = BATCH_ID
-                    LIMIT 1);
+    SELECT `Post Period`, `Batch Index`
+    INTO FY_PERIOD, BATCH_INDEX
+    FROM `AB_AccountingApp_Batch`
+    WHERE `uuid` = BATCH_UUID
+    LIMIT 1;
 
     -- UPSERT new GLSegment (NOT 3991)
     INSERT INTO `AB_AccountingApp_GLSegment`
@@ -62,12 +64,12 @@ BEGIN
             `AB_AccountingApp_GLSegment` GL
                 ON JE.`Account` = GL.`COA Num`
                 AND JE.`RC Code` = GL.`RC Code`
+                AND GL.`COA Num` != 3991
                 AND GL.`FY Period` = FY_PERIOD
         WHERE
-            JE.`Batch Index` = BATCH_ID
-                AND GL.`COA Num` != 3991
-                AND JE.`Account` IS NOT NULL
-                AND JE.`RC Code` IS NOT NULL
+            JE.`Batch Index` = BATCH_INDEX
+            AND JE.`Account` IS NOT NULL
+            AND JE.`RC Code` IS NOT NULL
         GROUP BY JE.`Account` , JE.`RC Code`
     ) r
     ON DUPLICATE KEY UPDATE
