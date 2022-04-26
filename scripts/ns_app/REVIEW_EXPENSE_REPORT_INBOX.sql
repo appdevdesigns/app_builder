@@ -76,6 +76,14 @@ BEGIN
                     -- Remove the process INBOX
                     DELETE FROM `site`.`process_userform`
                     WHERE `uuid` = USER_FORM_ID;
+
+                    -- Remove the process INBOX
+                    DELETE FROM `site`.`User_UserForm`
+                    WHERE `UserForm` = USER_FORM_ID;
+
+                    -- Remove the process INBOX
+                    DELETE FROM `site`.`Role_UserForm`
+                    WHERE `UserForm` = USER_FORM_ID;
                 END IF;
             END IF;
 
