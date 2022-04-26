@@ -19,21 +19,21 @@ module.exports = {
    getData: function(req, res) {
 
       // get our passed params
-      //console.log("params -------------->", req);
+      console.log("params -------------->", req);
       let rc = req.query.rc ? req.query.rc : undefined;
       let fyper = req.query.fyper ? req.query.fyper : undefined;
       // get the users preferred language
-      let languageCode = (req.user.languageCode) ? req.user.languageCode : "en";
-
-      if (languageCode == "zh-hans") {
-         languageCode = "zh";
-      }
+      let languageCode = (req.user.data.languageCode) ? req.user.data.languageCode : "en";
 
       if (req.query.languageCode) {
          languageCode = req.query.languageCode;
       }
 
-      //console.log("language ------->", languageCode);
+      if (languageCode == "zh-hans") {
+         languageCode = "zh";
+      }
+
+      console.log("language ------->", languageCode);
 
       // Our data object
       let data = {
