@@ -27,7 +27,7 @@ BEGIN
         `created_at`, `updated_at`)
     SELECT * FROM
     (
-        SELECT 
+        SELECT DISTINCT
             IFNULL(GL.`uuid`, UUID()),
             FY_PERIOD,
             JE.`Account`,
@@ -69,7 +69,7 @@ BEGIN
         WHERE
             JE.`Batch Index` = BATCH_INDEX
             AND JE.`Account` IS NOT NULL
-            AND JE.`RC Code` IS NOT NULL
+            -- AND JE.`RC Code` IS NOT NULL
         GROUP BY JE.`Account` , JE.`RC Code`
     ) r
     ON DUPLICATE KEY UPDATE
@@ -85,7 +85,7 @@ BEGIN
         `created_at`, `updated_at`)
     SELECT * FROM
     (
-        SELECT 
+        SELECT DISTINCT
             IFNULL(GL3991.`uuid`, UUID()),
             FY_PERIOD,
             3991,

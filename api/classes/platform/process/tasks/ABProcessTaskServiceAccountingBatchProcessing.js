@@ -11,6 +11,7 @@ const AccountingBatchProcessingCore = require(path.join(
 ));
 
 const async = require("async");
+const fs = require("fs");
 const uuid = require("uuid/v4");
 
 // const ABProcessParticipant = require(path.join(
@@ -26,12 +27,38 @@ const retry = require("../../UtilRetry.js");
 // reqAB.jobID = "ABProcessTaskServiceAccountingBatchProcessing";
 
 module.exports = class AccountingBatchProcessing extends AccountingBatchProcessingCore {
+   constructor(values, object, application) {
+      super(values, object, application);
+
+      this.createSP();
+   }
+
    ////
    //// Process Instance Methods
    ////
 
    /**
-    * do()
+    * @method createSP
+    * this method creates the MySQL store procedure that use to process in .do function
+    */
+   createSP() {
+      return Promise.resolve()
+         .then(() => new Promise((next, bad) => {
+            const scriptFilePath = __dirname + "/scripts/ns_app/BALANCE_PROCESS.sql";
+            fs.readFile(scriptFilePath, 'utf8', function (err, data) {
+               if (err) bad(err);
+               else next(data);
+            });
+
+         }))
+         .then((spStatement) => {
+            const knex = ABMigration.connection();
+            return knex.schema.raw(spStatement);
+         });
+   }
+
+   /**
+    * @method do()
     * this method actually performs the action for this task.
     * @param {obj} instance  the instance data of the running process
     * @param {Knex.Transaction?} trx - [optional]
@@ -93,6 +120,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                   }
 
                   this.batchEntry = rows[0];
+                  next();
                })
                .catch(bad);
          }))
