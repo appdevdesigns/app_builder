@@ -13,14 +13,14 @@ BEGIN
     DECLARE BATCH_INDEX int;
     DECLARE FY_PERIOD varchar(255);
 
-    -- Get FY Period
+    /* Get FY Period & Batch Index */
     SELECT `Post Period`, `Batch Index`
     INTO FY_PERIOD, BATCH_INDEX
     FROM `AB_AccountingApp_Batch`
     WHERE `uuid` = BATCH_UUID
     LIMIT 1;
 
-    -- UPSERT new GLSegment (NOT 3991)
+    /* UPSERT new GLSegment (NOT 3991) */
     INSERT INTO `AB_AccountingApp_GLSegment`
         (`uuid`, `FY Period`, `COA Num`, `RC Code`, 
         `Starting Balance`, `Credit`, `Debit`, `Running Balance`,
@@ -35,21 +35,21 @@ BEGIN
             IFNULL(`Starting Balance`, 0),
             SUM(IFNULL(JE.`Credit`, 0)) `Credit`,
             SUM(IFNULL(JE.`Debit`, 0)) `Debit`,
-            -- Calculate RUNNING BALANCE
+            /* Calculate RUNNING BALANCE */
             IFNULL((
                 SELECT (CASE 
-                    -- Account Number 3991, Liabilities, Equity, Income
+                    /* Account Number 3991, Liabilities, Equity, Income */
                     WHEN AC.`Acct Num` = 3991
                     OR AC.`Category` = ACCOUNT_Liabilities 
                     OR AC.`Category` = ACCOUNT_Equity
                     OR AC.`Category` = ACCOUNT_Income
-                        -- startingBalance - totalDebit + totalCredit;
+                    /* startingBalance - totalDebit + totalCredit */
                     THEN IFNULL(GL.`Starting Balance`, 0) - SUM(IFNULL(JE.`Debit`, 0)) + SUM(IFNULL(JE.`Credit`, 0))
 
-                    -- Assets, Expenses
+                    /* Assets, Expenses */
                     WHEN AC.`Category` = ACCOUNT_Assets
                     OR AC.`Category` = ACCOUNT_Expenses
-                        -- startingBalance + totalDebit - totalCredit
+                    /* startingBalance + totalDebit - totalCredit */
                     THEN IFNULL(GL.`Starting Balance`, 0) + SUM(IFNULL(JE.`Debit`, 0)) - SUM(IFNULL(JE.`Credit`, 0))
                     END)
                 FROM `AB_AccountingApp_Account` AC
@@ -69,7 +69,7 @@ BEGIN
         WHERE
             JE.`Batch Index` = BATCH_INDEX
             AND JE.`Account` IS NOT NULL
-            -- AND JE.`RC Code` IS NOT NULL
+            /* AND JE.`RC Code` IS NOT NULL */
         GROUP BY JE.`Account` , JE.`RC Code`
     ) r
     ON DUPLICATE KEY UPDATE
@@ -78,7 +78,7 @@ BEGIN
     `Running Balance` = r.`Running Balance`,
     `updated_at` = NOW();
 
-    -- UPDATE GLSegment (Account 3991)
+    /* UPDATE GLSegment (Account 3991) */
     INSERT INTO `AB_AccountingApp_GLSegment`
         (`uuid`, `FY Period`, `COA Num`, `RC Code`, 
         `Starting Balance`, `Credit`, `Debit`, `Running Balance`,
@@ -106,12 +106,12 @@ BEGIN
         WHERE
             GL.`FY Period` = FY_PERIOD
             AND (
-                GL.`COA Num` LIKE '4%' OR
-                GL.`COA Num` LIKE '5%' OR
-                GL.`COA Num` LIKE '6%' OR
-                GL.`COA Num` LIKE '7%' OR
-                GL.`COA Num` LIKE '8%' OR
-                GL.`COA Num` LIKE '9%'
+                GL.`COA Num` LIKE "4%" OR
+                GL.`COA Num` LIKE "5%" OR
+                GL.`COA Num` LIKE "6%" OR
+                GL.`COA Num` LIKE "7%" OR
+                GL.`COA Num` LIKE "8%" OR
+                GL.`COA Num` LIKE "9%"
             )
         GROUP BY GL.`FY Period`, GL.`RC Code`
     ) r
