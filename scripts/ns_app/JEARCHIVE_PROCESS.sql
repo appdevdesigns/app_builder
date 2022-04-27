@@ -16,9 +16,11 @@ BEGIN
     LIMIT 1;
 
     /* Pull data from JE and Balance */
-    CREATE TEMPORARY TABLE JE_ARCHIVE
-    SELECT 
-        JE.`uuid`,
+    DROP TEMPORARY TABLE `JE_ARCHIVE`;
+
+    CREATE TEMPORARY TABLE `JE_ARCHIVE`
+    SELECT DISTINCT
+        IFNULL(JE.`uuid`, NULL) `uuid`,
         GL.`Balndx` `Bal ID`,
         JE.`Batch Index`,
         JE.`Date`,
@@ -35,13 +37,21 @@ BEGIN
     AND GL.`FY Period` = FY_PERIOD;
 
     /* Create to JEArchive */
-    INSERT INTO `AB_AccountingApp_JEArchive`
-    SELECT `Bal ID`, `Batch Index`, `Date`, `Debit`, `Credit`, `Ref Number`, `Description`, `Project`
-    FROM JE_ARCHIVE;
+    INSERT INTO `AB_AccountingApp_JEArchive` 
+        (`uuid`, `created_at`,
+        `Bal ID`, `Batch Index`, `Date`, `Debit`, `Credit`, `Ref Number`, `Description`, `Project`)
+    SELECT DISTINCT 
+        UUID(), NOW(),
+        `Bal ID`, `Batch Index`, `Date`, `Debit`, `Credit`, `Ref Number`, `Description`, `Project`
+    FROM `JE_ARCHIVE`;
 
     /* Remove JE data */
     DELETE FROM `AB_AccountingApp_JEArchive`
-    WHERE `uuid` IN (SELECT `uuid` FROM JE_ARCHIVE);
+    WHERE `uuid` IN (
+        SELECT `uuid`
+        FROM `JE_ARCHIVE`
+        WHERE `uuid` IS NOT NULL
+    );
 
 END$$
 DELIMITER ;
