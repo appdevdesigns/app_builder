@@ -120,7 +120,8 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                () =>
                   new Promise((next, bad) => {
                      const knex = ABMigration.connection();
-                     knex.raw(`CALL \`BALANCE_PROCESS\`("${currentBatchID}");`)
+                     knex
+                        .raw(`CALL \`BALANCE_PROCESS\`("${currentBatchID}");`)
                         .then(() => {
                            next();
                         })
@@ -143,7 +144,7 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                      ];
                      let journalEntries =
                         this.batchEntry[
-                        this.batchEntriesField.relationName()
+                           this.batchEntriesField.relationName()
                         ] || [];
                      let accountIDs = _.uniq(
                         journalEntries
