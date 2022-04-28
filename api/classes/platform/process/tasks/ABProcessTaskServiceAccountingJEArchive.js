@@ -160,8 +160,11 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                () =>
                   new Promise((next, bad) => {
                      const knex = ABMigration.connection();
-                     knex
-                        .raw(`CALL \`JEARCHIVE_PROCESS\`("${currentBatchID}");`)
+                     retry(() =>
+                        knex.raw(
+                           `CALL \`JEARCHIVE_PROCESS\`("${currentBatchID}");`
+                        )
+                     )
                         .then((result) => {
                            const responseVals = result[0];
                            const resultVals = responseVals[0];

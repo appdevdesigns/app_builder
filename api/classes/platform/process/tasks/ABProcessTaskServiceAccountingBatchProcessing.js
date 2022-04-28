@@ -120,8 +120,11 @@ module.exports = class AccountingBatchProcessing extends AccountingBatchProcessi
                () =>
                   new Promise((next, bad) => {
                      const knex = ABMigration.connection();
-                     knex
-                        .raw(`CALL \`BALANCE_PROCESS\`("${currentBatchID}");`)
+                     retry(() =>
+                        knex.raw(
+                           `CALL \`BALANCE_PROCESS\`("${currentBatchID}");`
+                        )
+                     )
                         .then(() => {
                            next();
                         })
