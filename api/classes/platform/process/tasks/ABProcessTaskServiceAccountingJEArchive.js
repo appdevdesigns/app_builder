@@ -162,11 +162,47 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                      const knex = ABMigration.connection();
                      knex
                         .raw(`CALL \`JEARCHIVE_PROCESS\`("${currentBatchID}");`)
-                        .then(() => {
+                        .then((result) => {
+                           const responseVals = result[0];
+                           const resultVals = responseVals[0];
+
+                           this.newJEArchIds = resultVals.map(
+                              (item) => item[this.jeArchiveObject.PK()]
+                           );
                            next();
                         })
                         .catch((error) => {
                            bad(error);
+                        });
+                  })
+            )
+            // Pull JE Archives
+            .then(
+               () =>
+                  new Promise((next, bad) => {
+                     retry(() =>
+                        this.jeArchiveObject.modelAPI().findAll({
+                           where: {
+                              glue: "and",
+                              rules: [
+                                 {
+                                    key: this.jeArchiveObject.PK(),
+                                    rule: "in",
+                                    value: this.newJEArchIds
+                                 }
+                              ]
+                           },
+                           populate: true
+                        })
+                     )
+                        .then((jeArchives) => {
+                           this.jeArchives = jeArchives || [];
+                           next();
+                        })
+                        .catch((err) => {
+                           this.log(this._instance, "Error pull JE Archive");
+                           this.onError(this._instance, err);
+                           bad(err);
                         });
                   })
             )
@@ -181,6 +217,17 @@ module.exports = class AccountingFPYearClose extends AccountingJEArchiveCore {
                            {
                               objectId: this.jeObject.id,
                               id: je.uuid || je.id
+                           }
+                        );
+                     });
+
+                     (this.jeArchives || []).forEach((jeArch) => {
+                        sails.sockets.broadcast(
+                           this.jeArchiveObject.id,
+                           "ab.datacollection.create",
+                           {
+                              objectId: this.jeArchiveObject.id,
+                              data: jeArch
                            }
                         );
                      });

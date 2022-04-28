@@ -16,11 +16,12 @@ BEGIN
     LIMIT 1;
 
     /* Pull data from JE and Balance */
-    DROP TEMPORARY TABLE `JE_ARCHIVE`;
+    DROP TEMPORARY TABLE IF EXISTS JE_ARCHIVE;
 
-    CREATE TEMPORARY TABLE `JE_ARCHIVE`
+    CREATE TEMPORARY TABLE JE_ARCHIVE
     SELECT DISTINCT
-        IFNULL(JE.`uuid`, NULL) `uuid`,
+        IFNULL(JE.`uuid`, NULL) `JE PK`,
+        UUID() `JEArchive PK`,
         GL.`Balndx` `Bal ID`,
         JE.`Batch Index`,
         JE.`Date`,
@@ -41,17 +42,21 @@ BEGIN
         (`uuid`, `created_at`,
         `Bal ID`, `Batch Index`, `Date`, `Debit`, `Credit`, `Ref Number`, `Description`, `Project`)
     SELECT DISTINCT 
-        UUID(), NOW(),
+        `JEArchive PK`, NOW(),
         `Bal ID`, `Batch Index`, `Date`, `Debit`, `Credit`, `Ref Number`, `Description`, `Project`
-    FROM `JE_ARCHIVE`;
+    FROM JE_ARCHIVE;
 
     /* Remove JE data */
-    DELETE FROM `AB_AccountingApp_JEArchive`
+    DELETE FROM `AB_AccountingApp_JournalEntry`
     WHERE `uuid` IN (
-        SELECT `uuid`
-        FROM `JE_ARCHIVE`
-        WHERE `uuid` IS NOT NULL
+        SELECT `JE PK`
+        FROM JE_ARCHIVE
+        WHERE `JE PK` IS NOT NULL
     );
+
+    /* Return  */
+    SELECT DISTINCT `JEArchive PK`
+    FROM JE_ARCHIVE;
 
 END$$
 DELIMITER ;
