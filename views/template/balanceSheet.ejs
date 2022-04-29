@@ -17,11 +17,68 @@
     <div>
         <table width="100%">
             <!-- Header -->
-            <tr class="header">
+            <tr class="sub">
                 <td><b>Balance Sheet</b></td>
+                <td align="right">Credit</td>
+                <td align="right">Debit</td>
+                <td></td>
+            </tr>
+            <!-- Assets -->
+            <tr>
+                <td><b>Assets</b></td>
                 <td></td>
                 <td></td>
                 <td></td>
             </tr>
+            <% for(var i=0; i < (assets || []).length; i++) { %>
+                <tr>
+                    <td align="left">
+                        <%= assets[i].Title %> 
+                    </td>
+                    <td align="right">
+                        <%= assets[i].Credit %>
+                    </td>
+                    <td align="right">
+                        <%= assets[i].Debit %>
+                    </td>
+                    <td></td>
+                </tr>
+                <% } %>
+
+                    <tr class="total">
+                        <td>Total</td>
+                        <td align="right"><%= (assets || []).reduce((creditSum, item) => (creditSum || 0) + (item.Credit || 0), 0) %></td>
+                        <td align="right"><%= (assets || []).reduce((debitSum, item) => (debitSum || 0) + (item.Debit || 0), 0) %></td>
+                        <td></td>
+                    </tr>
+
+
+                    <!-- Liabilities -->
+                    <tr>
+                        <td><b>Liabilities</b></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <% for(var i=0; i < (liabilities || []).length; i++) { %>
+                        <tr>
+                            <td align="left">
+                                <%= liabilities[i].Title %> 
+                            </td>
+                            <td align="right">
+                                <%= liabilities[i].Credit %>
+                            </td>
+                            <td align="right">
+                                <%= liabilities[i].Debit %>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <% } %>
+                            <tr class="total">
+                                <td>Total</td>
+                                <td align="right"><%= (liabilities || []).reduce((creditSum, item) => (creditSum || 0) + (item.Credit || 0), 0) %></td>
+                                <td align="right"><%= (liabilities || []).reduce((debitSum, item) => (debitSum || 0) + (item.Debit || 0), 0) %></td>
+                                <td></td>
+                            </tr>
         </table>
     </div>

@@ -4,12 +4,22 @@ const OBJECT_IDS = {
    BALANCE: "bb9aaf02-3265-4b8c-9d9a-c0b447c2d804"
 };
 
+const ACCOUNT_CATEGORIES = {
+   Assets: "1585806356532",
+   Liabilities: "1585806356570",
+   Equity: "1585806356643",
+   Expenses: "1585806356789",
+   Income: "1590392412833"
+};
+
 module.exports = {
    // GET: /template/balanceSheet
    getData: function(req, res) {
       let viewData = {
          fyPeriod: req.query.month,
-         fyOptions: []
+         fyOptions: [],
+         assets: [],
+         liabilities: []
       };
 
       Promise.resolve()
@@ -49,12 +59,7 @@ module.exports = {
                         limit: 12
                      })
                      .then((list) => {
-                        viewData.fyOptions = list.map((item) => {
-                           return {
-                              id: item.uuid,
-                              value: item["FY Per"]
-                           };
-                        });
+                        viewData.fyOptions = list.map((item) => item["FY Per"]);
                         next();
                      })
                      .catch(err);
@@ -68,8 +73,10 @@ module.exports = {
                      (o) => o.id == OBJECT_IDS.BALANCE
                   )[0];
 
+                  viewData.assets = [];
+                  viewData.liabilities = [];
+
                   if (objBalance == null || viewData.fyPeriod == null) {
-                     viewData.balance = {};
                      next();
                      return;
                   }
@@ -81,7 +88,7 @@ module.exports = {
                            glue: "and",
                            rules: [
                               {
-                                 key: "FY Period",
+                                 key: "549ab4ac-f436-461d-9777-505d6dc1d4f7",
                                  rule: "equals",
                                  value: viewData.fyPeriod
                               }
@@ -90,12 +97,37 @@ module.exports = {
                         populate: true
                      })
                      .then((list) => {
-                        console.log("Praise the Lord: ", list[0]);
+                        (list || []).forEach((bl) => {
+                           if (
+                              bl == null ||
+                              bl.COANum__relation == null ||
+                              bl.COANum__relation.Category == null
+                           )
+                              return;
+
+                           const toDisplay = (item) => {
+                              return {
+                                 Title: item.COANum__relation["Acct Num"],
+                                 Credit: item.Credit,
+                                 Debit: item.Debit
+                              };
+                           };
+
+                           switch (bl.COANum__relation.Category.toString()) {
+                              case ACCOUNT_CATEGORIES.Assets:
+                                 viewData.assets.push(toDisplay(bl));
+                                 break;
+                              case ACCOUNT_CATEGORIES.Liabilities:
+                                 viewData.liabilities.push(toDisplay(bl));
+                                 break;
+                           }
+                        });
+
+                        // Fund Balance
+
                         next();
                      })
                      .catch(err);
-
-                  next();
                })
          )
          // Render UI
