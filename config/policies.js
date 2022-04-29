@@ -41,4 +41,8 @@ module.exports = {
    "app_builder/localIncomeExpense": {
       getData: findStack
    },
+
+   "app_builder/ABReportBalanceController": {
+      getData: findStack
+   }
 };

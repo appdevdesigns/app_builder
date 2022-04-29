@@ -250,6 +250,8 @@ module.exports = {
    /* Custom Widigets */
    "GET /template/localIncomeExpense": "app_builder/LocalIncomeExpense.getData",
 
+   "GET /template/balanceSheet": "app_builder/ABReportBalanceController.getData"
+
    /*
   '/': {
     view: 'user/signup'

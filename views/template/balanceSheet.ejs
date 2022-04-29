@@ -1,0 +1,27 @@
+<%- include _stylesheets -%>
+    <center>
+        <h2>
+            <span style="font-weight: normal;">
+                FY Period
+            </span>
+            <select style="font-size: 24px; color: gray; border: 1px solid #CCC;" id="fySelect"
+                onchange="location.href = '/template/balanceSheet?month='+this.value;">
+                <% for(var i=0; i < fyOptions.length; i++) { %>
+                    <option <% if (fyPeriod==fyOptions[i]) { %> selected <% } %> value="<%= fyOptions[i] %>"><%=
+                                    fyOptions[i] %>
+                    </option>
+                    <% } %>
+            </select>
+        </h2>
+    </center>
+    <div>
+        <table width="100%">
+            <!-- Header -->
+            <tr class="header">
+                <td><b>Balance Sheet</b></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
