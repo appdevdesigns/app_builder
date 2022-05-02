@@ -1,4 +1,31 @@
 <%- include _stylesheets -%>
+    <style>
+        body {
+            overflow: auto;
+        }
+
+        tr.header {
+            font-weight: bold;
+        }
+
+        tr.tertiary-total,
+        tr.tertiary-total:hover {
+            background: #949494;
+            color: white;
+        }
+
+        tr.secondary-total,
+        tr.secondary-total:hover {
+            background: #6a6a6a;
+            color: white;
+        }
+
+        tr.total {
+            background: #2a2a2a;
+            color: white;
+        }
+    </style>
+
     <center>
         <h2>
             <span style="font-weight: normal;">
@@ -17,68 +44,22 @@
     <div>
         <table width="100%">
             <!-- Header -->
-            <tr class="sub">
-                <td><b>Balance Sheet</b></td>
-                <td align="right">Credit</td>
-                <td align="right">Debit</td>
-                <td></td>
+            <tr class="sub header">
+                <td>Balance Sheet</td>
+                <td align="right"></td>
             </tr>
-            <!-- Assets -->
-            <tr>
-                <td><b>Assets</b></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <% for(var i=0; i < (assets || []).length; i++) { %>
-                <tr>
-                    <td align="left">
-                        <%= assets[i].Title %> 
+            <!-- Data -->
+            <% for(var i=0; i < items.length; i++) { %>
+                <tr class="<%= items[i].type || '' %>">
+                    <td>
+                        <%= items[i].title || "" %>
                     </td>
-                    <td align="right">
-                        <%= assets[i].Credit %>
-                    </td>
-                    <td align="right">
-                        <%= assets[i].Debit %>
-                    </td>
-                    <td></td>
+                    <% if (items[i].value !=null) { %>
+                        <td align="right"><%= typeof items[i].value=="function" ? items[i].value(items) : items[i].value %></td>
+                        <% } else { %>
+                            <td></td>
+                            <% } %>
                 </tr>
                 <% } %>
-
-                    <tr class="total">
-                        <td>Total</td>
-                        <td align="right"><%= (assets || []).reduce((creditSum, item) => (creditSum || 0) + (item.Credit || 0), 0) %></td>
-                        <td align="right"><%= (assets || []).reduce((debitSum, item) => (debitSum || 0) + (item.Debit || 0), 0) %></td>
-                        <td></td>
-                    </tr>
-
-
-                    <!-- Liabilities -->
-                    <tr>
-                        <td><b>Liabilities</b></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <% for(var i=0; i < (liabilities || []).length; i++) { %>
-                        <tr>
-                            <td align="left">
-                                <%= liabilities[i].Title %> 
-                            </td>
-                            <td align="right">
-                                <%= liabilities[i].Credit %>
-                            </td>
-                            <td align="right">
-                                <%= liabilities[i].Debit %>
-                            </td>
-                            <td></td>
-                        </tr>
-                        <% } %>
-                            <tr class="total">
-                                <td>Total</td>
-                                <td align="right"><%= (liabilities || []).reduce((creditSum, item) => (creditSum || 0) + (item.Credit || 0), 0) %></td>
-                                <td align="right"><%= (liabilities || []).reduce((debitSum, item) => (debitSum || 0) + (item.Debit || 0), 0) %></td>
-                                <td></td>
-                            </tr>
         </table>
     </div>
