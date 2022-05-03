@@ -4,6 +4,12 @@
             overflow: auto;
         }
 
+        select.selector {
+            font-size: 24px;
+            color: gray;
+            border: 1px solid #CCC;
+        }
+
         tr.header {
             font-weight: bold;
         }
@@ -26,13 +32,31 @@
         }
     </style>
 
+    <script type="text/javascript">
+        function refresh() {
+            let rcVal = document.getElementById("rcSelect").value;
+            let fyVal = document.getElementById("fySelect").value;
+            window.location.href = `/template/balanceSheet?rc=${rcVal}&month=${fyVal}`;
+        }
+    </script>
+
     <center>
         <h2>
             <span style="font-weight: normal;">
-                FY Period
+                RC: 
             </span>
-            <select style="font-size: 24px; color: gray; border: 1px solid #CCC;" id="fySelect"
-                onchange="location.href = '/template/balanceSheet?month='+this.value;">
+            <select class="selector" id="rcSelect"
+                onchange="refresh()">
+                <% for(var i=0; i < rcOptions.length; i++) { %>
+                    <option <% if (rc==rcOptions[i]) { %> selected <% } %> value="<%= rcOptions[i] %>"><%= rcOptions[i]
+                                    %>
+                    </option>
+                    <% } %>
+            </select>
+            <span style="font-weight: normal;">
+                FY Period: 
+            </span>
+            <select class="selector" id="fySelect" onchange="refresh()">
                 <% for(var i=0; i < fyOptions.length; i++) { %>
                     <option <% if (fyPeriod==fyOptions[i]) { %> selected <% } %> value="<%= fyOptions[i] %>"><%=
                                     fyOptions[i] %>
@@ -55,7 +79,9 @@
                         <%= items[i].title || "" %>
                     </td>
                     <% if (items[i].value !=null) { %>
-                        <td align="right"><%= typeof items[i].value=="function" ? items[i].value(items) : items[i].value %></td>
+                        <td align="right">
+                            <%= typeof items[i].value=="function" ? items[i].value(items) : items[i].value %>
+                        </td>
                         <% } else { %>
                             <td></td>
                             <% } %>
