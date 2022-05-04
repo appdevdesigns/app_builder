@@ -33,6 +33,8 @@
     </style>
 
     <script type="text/javascript">
+        document.title = "<%= title[languageCode] %>";
+
         function refresh() {
             let rcVal = document.getElementById("rcSelect").value;
             let fyVal = document.getElementById("fySelect").value;
@@ -41,12 +43,14 @@
     </script>
 
     <center>
+        <h1>
+            <%= title[languageCode] %>
+        </h1>
         <h2>
             <span style="font-weight: normal;">
-                RC: 
+                RC:
             </span>
-            <select class="selector" id="rcSelect"
-                onchange="refresh()">
+            <select class="selector" id="rcSelect" onchange="refresh()">
                 <% for(var i=0; i < rcOptions.length; i++) { %>
                     <option <% if (rc==rcOptions[i]) { %> selected <% } %> value="<%= rcOptions[i] %>"><%= rcOptions[i]
                                     %>
@@ -54,7 +58,7 @@
                     <% } %>
             </select>
             <span style="font-weight: normal;">
-                FY Period: 
+                FY Period:
             </span>
             <select class="selector" id="fySelect" onchange="refresh()">
                 <% for(var i=0; i < fyOptions.length; i++) { %>

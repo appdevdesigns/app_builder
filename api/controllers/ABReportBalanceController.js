@@ -23,8 +23,13 @@ const ITEM_TYPES = {
    TotalTertiary: "tertiary-total"
 };
 
-function GetViewData(rc, fyMonth) {
+function GetViewData(languageCode, rc, fyMonth) {
    return {
+      languageCode: languageCode,
+      title: {
+         en: "Balance Sheet",
+         zh: ""
+      },
       rc: rc,
       rcOptions: [],
       fyPeriod: fyMonth,
@@ -202,6 +207,8 @@ function GetRC(userData) {
                a.toLowerCase().localeCompare(b.toLowerCase())
             );
 
+            rcOptions.unshift("");
+
             next(rcOptions);
          })
          .catch(bad);
@@ -261,8 +268,7 @@ function GetBalances(rc, fyPeriod) {
       rules: []
    };
 
-   // TODO
-   if (rc && false) {
+   if (rc) {
       cond.rules.push({
          key: "RC Code",
          rule: "equals",
@@ -295,7 +301,14 @@ function GetBalances(rc, fyPeriod) {
 module.exports = {
    // GET: /template/balanceSheet
    getData: (req, res) => {
-      let viewData = GetViewData(req.query.rc, req.query.month);
+      let languageCode =
+         req.user.data.languageCode || req.query.languageCode || "en";
+
+      if (languageCode == "zh-hans") {
+         languageCode = "zh";
+      }
+
+      let viewData = GetViewData(languageCode, req.query.rc, req.query.month);
 
       Promise.resolve()
          // Pull RC
