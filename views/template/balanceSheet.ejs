@@ -84,7 +84,7 @@
                     </td>
                     <% if (items[i].value !=null) { %>
                         <td align="right">
-                            <%= typeof items[i].value=="function" ? items[i].value(items) : items[i].value %>
+                            <%= fnValueFormat(typeof items[i].value=="function" ? items[i].value(items) : items[i].value) %>
                         </td>
                         <% } else { %>
                             <td></td>

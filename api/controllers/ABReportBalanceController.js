@@ -25,6 +25,7 @@ const ITEM_TYPES = {
 
 function GetViewData(languageCode, rc, fyMonth) {
    return {
+      fnValueFormat: valueFormat,
       languageCode: languageCode,
       title: {
          en: "Balance Sheet",
@@ -296,6 +297,12 @@ function GetBalances(rc, fyPeriod) {
          })
          .catch(bad);
    });
+}
+
+function valueFormat(number) {
+   if (number == null) return;
+
+   return number.toLocaleString("en-US", { minimumFractionDigits: 2 });
 }
 
 module.exports = {
