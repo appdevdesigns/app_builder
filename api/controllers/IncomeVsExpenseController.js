@@ -151,18 +151,6 @@ module.exports = {
          return match;
       }
 
-      // Calculate Net Income Values
-      const incomeTotals = calculateGroupSums(4, 5);
-      const expenseTotals = calculateGroupSums(6, 7, 8, 9);
-      const netTotals = [];
-      incomeTotals.forEach((val, i) => {
-         netTotals.push(100 * val - (100 * expenseTotals[i]) / 100);
-      });
-      const balSheetTotal = balances
-         .filter((bal) => bal["COA Num"].toString() == "3991")
-         .map((i) => i["Running Balance"])
-         .reduce((a, b) => 100 * a + (100 * b) / 100, 0);
-
       // Our data object
       let data = {
          mccs,
@@ -365,6 +353,18 @@ module.exports = {
                .then((records) => {
                   console.log("records ----->", records);
                   balances = records;
+
+                  // Calculate Net Income Values
+                  const incomeTotals = calculateGroupSums(4, 5);
+                  const expenseTotals = calculateGroupSums(6, 7, 8, 9);
+                  const netTotals = [];
+                  incomeTotals.forEach((val, i) => {
+                     netTotals.push(100 * val - (100 * expenseTotals[i]) / 100);
+                  });
+                  const balSheetTotal = balances
+                     .filter((bal) => bal["COA Num"].toString() == "3991")
+                     .map((i) => i["Running Balance"])
+                     .reduce((a, b) => 100 * a + (100 * b) / 100, 0);
 
                   res.view(
                      "app_builder/template/incomeVsExpense", // .ejs
