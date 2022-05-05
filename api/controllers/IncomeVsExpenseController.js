@@ -160,7 +160,7 @@ module.exports = {
          .reduce((a, b) => a + b, 0);
 
       // Our data object
-      const data = {
+      let data = {
          mccs,
          netTotals,
          numberOfColumns: mccs.length + 2,
@@ -260,7 +260,7 @@ module.exports = {
             req.user.data
          )
          .then((rcs) => {
-            //console.log("My Team RCs ---------------->", rcs);
+            console.log("My Team RCs ---------------->", rcs);
 
             let rcOptions = [];
             rcs.forEach((rc) => {
