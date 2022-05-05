@@ -43,48 +43,48 @@ module.exports = {
       let balances = [];
       //    {
       //       mcc_code: "01",
-      //       account: 3991,
-      //       runningBalance: 8110
+      //       COA Num: 3991,
+      //       Running Balance: 8110
       //    },
       //    {
       //       mcc_code: "01",
-      //       account: 4111,
-      //       runningBalance: 1230
+      //       COA Num: 4111,
+      //       Running Balance: 1230
       //    },
       //    {
       //       mcc_code: "02",
-      //       account: 4111,
-      //       runningBalance: 5020
+      //       COA Num: 4111,
+      //       Running Balance: 5020
       //    },
       //    {
       //       mcc_code: "03",
-      //       account: 4111,
-      //       runningBalance: 130
+      //       COA Num: 4111,
+      //       Running Balance: 130
       //    },
       //    {
       //       mcc_code: "02",
-      //       account: 4222,
-      //       runningBalance: 1000
+      //       COA Num: 4222,
+      //       Running Balance: 1000
       //    },
       //    {
       //       mcc_code: "03",
-      //       account: 4221,
-      //       runningBalance: 500
+      //       COA Num: 4221,
+      //       Running Balance: 500
       //    },
       //    {
       //       mcc_code: "01",
-      //       account: 5111,
-      //       runningBalance: 230
+      //       COA Num: 5111,
+      //       Running Balance: 230
       //    },
       //    {
       //       mcc_code: "02",
-      //       account: 5211,
-      //       runningBalance: 420
+      //       COA Num: 5211,
+      //       Running Balance: 420
       //    },
       //    {
       //       mcc_code: "02",
-      //       account: 7211,
-      //       runningBalance: 420
+      //       COA Num: 7211,
+      //       Running Balance: 420
       //    }
       // ];
 
@@ -113,13 +113,13 @@ module.exports = {
                .filter((bal) => {
                   let inGroup = false;
                   groups.forEach((group) => {
-                     if (accountInCategory(bal.account, group)) {
+                     if (accountInCategory(bal["COA Num"], group)) {
                         inGroup = true;
                      }
                   });
-                  return inGroup && bal.mcc_code == dept.code;
+                  return inGroup && bal["RC Code"].substring(0, 2) == dept.code;
                })
-               .map((i) => i["runningBalance"])
+               .map((i) => i["Running Balance"])
                .reduce((a, b) => a + b, 0);
             sums.push(sum);
          });
@@ -155,8 +155,8 @@ module.exports = {
          netTotals.push(val - expenseTotals[i]);
       });
       const balSheetTotal = balances
-         .filter((bal) => bal.account == "3991")
-         .map((i) => i["runningBalance"])
+         .filter((bal) => bal["COA Num"] == "3991")
+         .map((i) => i["Running Balance"])
          .reduce((a, b) => a + b, 0);
 
       // Our data object
