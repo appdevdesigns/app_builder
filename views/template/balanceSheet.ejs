@@ -36,9 +36,10 @@
         document.title = "<%= title[languageCode] %>";
 
         function refresh() {
-            let rcVal = document.getElementById("rcSelect").value;
+            // let rcVal = document.getElementById("rcSelect").value;
             let fyVal = document.getElementById("fySelect").value;
-            window.location.href = `/template/balanceSheet?rc=${rcVal}&month=${fyVal}`;
+            // window.location.href = `/template/balanceSheet?rc=${rcVal}&month=${fyVal}`;
+            window.location.href = `/template/balanceSheet?month=${fyVal}`;
         }
     </script>
 
@@ -47,7 +48,7 @@
             <%= title[languageCode] %>
         </h1>
         <h2>
-            <span style="font-weight: normal;">
+            <!-- <span style="font-weight: normal;">
                 RC:
             </span>
             <select class="selector" id="rcSelect" onchange="refresh()">
@@ -56,7 +57,7 @@
                                     %>
                     </option>
                     <% } %>
-            </select>
+            </select> -->
             <span style="font-weight: normal;">
                 FY Period:
             </span>
