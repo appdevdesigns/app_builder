@@ -109,6 +109,8 @@ module.exports = {
       function calculateGroupSums(...groups) {
          console.log("groups ----->", groups);
          const sums = [];
+         console.log("mccs ----->", mccs);
+         console.log("balances ------>", balances);
          mccs.forEach((dept) => {
             const sum = balances
                .filter((bal) => {
