@@ -368,7 +368,7 @@ module.exports = {
                      .map((i) => i["Running Balance"])
                      .reduce((a, b) => 100 * a + (100 * b) / 100, 0);
 
-                  console.log("data ------>", data);
+                  console.log("data ------>", data.stringify());
 
                   res.view(
                      "app_builder/template/incomeVsExpense", // .ejs
