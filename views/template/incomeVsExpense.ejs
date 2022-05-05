@@ -1,105 +1,101 @@
 <style>
-  body {
-    -webkit-appearance: none;
-    -webkit-font-smoothing: antialiased;
-    background-color: #fff;
-    border: 0 solid #dadee0;
-    color: #475466;
-    cursor: default;
-    font-family: Roboto,sans-serif;
-    font-size: 14px;
-    font-weight: 400;
-    letter-spacing: .2px;
-    overflow: hidden;
-    white-space: normal;
-  }
-  table {
-    border-collapse: collapse;
-  }
-  tr:hover {
-    background: rgba(0,0,0,0.05);
-  }
-  th {
-    border-bottom: 2px solid gray;
-    font-size: 18px;
-  }
-  td {
-    border-bottom: 1px solid lightgray;
-  }
-  td, th {
-    padding: 5px 10px;
-  }
-  tr.total {
-    background: #333;
-    color: white;
-  }
-  tr.sub-total {
-    background: #4a4a4a;
-    color: white;
-  }
-  tr.sub {
-    background: lightgray;
-  }
-  h1 {
-    font-size: 32px;
-    margin: 10px;
-  }
-  h2 {
-    font-size: 24px;
-    margin: 10px;
-  }
+   body {
+      -webkit-appearance: none;
+      -webkit-font-smoothing: antialiased;
+      background-color: #fff;
+      border: 0 solid #dadee0;
+      color: #475466;
+      cursor: default;
+      font-family: Roboto,sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: .2px;
+      overflow: hidden;
+      white-space: normal;
+   }
+   table {
+      border-collapse: collapse;
+   }
+   tr:hover {
+      background: rgba(0,0,0,0.05);
+   }
+   th {
+      border-bottom: 2px solid gray;
+      font-size: 18px;
+   }
+   td {
+      border-bottom: 1px solid lightgray;
+   }
+   td, th {
+      padding: 5px 10px;
+   }
+   tr.total {
+      background: #333;
+      color: white;
+   }
+   tr.sub-total {
+      background: #4a4a4a;
+      color: white;
+   }
+   tr.sub {
+      background: lightgray;
+   }
+   h1 {
+      font-size: 32px;
+      margin: 10px;
+   }
+   h2 {
+      font-size: 24px;
+      margin: 10px;
+   }
 </style>
 
 <h1>Income and Expense Report</h1>
 
-<div id="welcome-message">
-  <script id="my-template" type="text/x-handlebars-template">
-    <table>
-      <tr>
-        <th/>
-        <% mccs.forEach((department)=>{ %>
-          <th><%= department.label %></th>
-        <% }) %>
-        <th>Total</th>
-      </tr>
-      <% accountGroups.forEach((group)=>{ %>
-        <% if (group.subGroups){ %>
-        <tr class="sub">
-          <td><b><%= group.label %></b></td>
-          <% for(let i=1; i< numberOfColumns; i++) { %>
-            <td/>
-          <% } %>
-        </tr>
-        <% group.subGroups.forEach((subGroup)=>{ %>
-          <tr>
-          <td><%= subGroup.accounts %> <%= subGroup.label %></td>
-          <% subGroup.sums.forEach((sum)=>{ %>
-            <td><%= sum %></td>
-          <% }) %>
-        </tr>
-        <% }) %>
-        <% } %>
-        <tr class="sub-total">
-          <td>TOTAL <%= group.label %></td>
-          <% group.sums.forEach((sum)=>{ %>
-            <td><%= sum %></td>
-          <% }) %>
-        </tr>
+<table>
+   <tr>
+      <th/>
+      <% mccs.forEach((department)=>{ %>
+         <th><%= department.label %></th>
       <% }) %>
-        <tr><td/><tr>
-        <tr class="total">
-          <td>NET INCOME (LOSS)</td>
-          <% netTotals.forEach(amount=>{ %>
-            <td><%= amount %></td>
-          <% }) %>
-        </tr>
-        <tr>
-          <td>Net Income (loss) from Balance Sheet</td>
-          <% for(let i=2; i< numberOfColumns; i++) { %>
-            <td/>
-          <% } %>
-          <td><%= balSheetTotal %></td>
-        </tr>
-    </table>
-  </script>
-</div>
+      <th>Total</th>
+   </tr>
+   <% accountGroups.forEach((group)=>{ %>
+      <% if (group.subGroups){ %>
+         <tr class="sub">
+            <td><b><%= group.label %></b></td>
+            <% for(let i=1; i< numberOfColumns; i++) { %>
+               <td/>
+            <% } %>
+         </tr>
+         <% group.subGroups.forEach((subGroup)=>{ %>
+            <tr>
+               <td><%= subGroup.accounts %> <%= subGroup.label %></td>
+               <% subGroup.sums.forEach((sum)=>{ %>
+                  <td><%= sum %></td>
+               <% }) %>
+            </tr>
+         <% }) %>
+      <% } %>
+      <tr class="sub-total">
+         <td>TOTAL <%= group.label %></td>
+         <% group.sums.forEach((sum)=>{ %>
+            <td><%= sum %></td>
+         <% }) %>
+      </tr>
+   <% }) %>
+   <tr><td/><tr>
+   <tr class="total">
+      <td>NET INCOME (LOSS)</td>
+      <% netTotals.forEach(amount=>{ %>
+         <td><%= amount %></td>
+      <% }) %>
+   </tr>
+   <tr>
+      <td>Net Income (loss) from Balance Sheet</td>
+      <% for(let i=2; i< numberOfColumns; i++) { %>
+         <td/>
+      <% } %>
+      <td><%= balSheetTotal %></td>
+   </tr>
+</table>
