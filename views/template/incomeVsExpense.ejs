@@ -55,7 +55,7 @@
    <span style="color: lightgray; font-weight: normal;">
       <%= fyperstart %>-
    </span>
-   <select style="font-size: 24px; color: lightgray; border: 1px solid #CCC;" onchange="location.href = '/template/localIncomeExpense?rc=<%= rc %>&fyper='+this.value;">
+   <select style="font-size: 24px; color: lightgray; border: 1px solid #CCC;" onchange="location.href = '/template/localIncomeExpense?fyper='+this.value;">
       <% for(var i=0; i < fyperOptions.length; i++) { %>
          <option <% if (fyperOptions[i].selected) { %> selected <% } %> value="<%= fyperOptions[i].id %>"><%= fyperOptions[i].label %></option>
       <% } %>
