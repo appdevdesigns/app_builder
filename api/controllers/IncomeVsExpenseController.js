@@ -1,5 +1,5 @@
 /**
- * localIncomeExpense 
+ * localIncomeExpense
  *
  *
  */
@@ -17,141 +17,101 @@ module.exports = {
    // GET: /template/localIncomeExpense
    // get the local and expense income and calculate the sums
    getData: function(req, res) {
+      /**
+      /* @const balances
+      /* aka GL Segments. Should be filtered by the fiscal period the report is based on.
+      /* mcc_code: balance link to rc, rc link to mcc, mcc has a code. The rc code should
+      /*     should start with mcc code.
+    */
+      const balances = [
+         {
+            mcc_code: "01",
+            account: 3991,
+            runningBalance: 8110
+         },
+         {
+            mcc_code: "01",
+            account: 4111,
+            runningBalance: 1230
+         },
+         {
+            mcc_code: "02",
+            account: 4111,
+            runningBalance: 5020
+         },
+         {
+            mcc_code: "03",
+            account: 4111,
+            runningBalance: 130
+         },
+         {
+            mcc_code: "02",
+            account: 4222,
+            runningBalance: 1000
+         },
+         {
+            mcc_code: "03",
+            account: 4221,
+            runningBalance: 500
+         },
+         {
+            mcc_code: "01",
+            account: 5111,
+            runningBalance: 230
+         },
+         {
+            mcc_code: "02",
+            account: 5211,
+            runningBalance: 420
+         },
+         {
+            mcc_code: "02",
+            account: 7211,
+            runningBalance: 420
+         }
+      ];
 
-      // get our passed params
-      //console.log("params -------------->", req);
-      let rc = req.query.rc ? req.query.rc : undefined;
-      let fyper = req.query.fyper ? req.query.fyper : undefined;
-      // get the users preferred language
-      let languageCode = (req.user.data.languageCode) ? req.user.data.languageCode : "en";
+      /**
+     /* @const mccs
+     /* Can read from the MCC object
+     */
+      const mccs = [
+         { code: "01", label: "Staff" },
+         { code: "02", label: "SLM" },
+         { code: "03", label: "Digital Strategies" },
+         { code: "04", label: "LeaderImpact" },
+         { code: "05", label: "GCM" }
+      ];
 
-      if (req.query.languageCode) {
-         languageCode = req.query.languageCode;
+      function calculateGroupSums(...groups) {
+         const sums = [];
+         mccs.forEach((dept) => {
+            const sum = balances
+               .filter((bal) => {
+                  let inGroup = false;
+                  groups.forEach((group) => {
+                     if (accountInCategory(bal.account, group)) {
+                        inGroup = true;
+                     }
+                  });
+                  return inGroup && bal.mcc_code == dept.code;
+               })
+               .map((i) => i["runningBalance"])
+               .reduce((a, b) => a + b, 0);
+            sums.push(sum);
+         });
+         const totalSum = sums.reduce((a, b) => a + b, 0);
+         sums.push(totalSum);
+         return sums;
       }
 
-      if (languageCode == "zh-hans") {
-         languageCode = "zh";
-      }
-
-      //console.log("language ------->", languageCode);
-
-      // Our data object
-      let data = {
-         title: {
-            en: "Local Income vs Expense",
-            zh: "本地收入VS 支出"
-         },
-         rc: rc,
-         languageCode: languageCode,
-         total: {
-            en: "Total",
-            zh: "总额"
-         },
-         category: {
-            en: "Category",
-            zh: "类别"
-         },
-         categories: [
-            { 
-               parent: 4111, 
-               type: "Local Income",
-               translation: {
-                  en: "Local Income ",
-                  zh: "本地收入"
-               }, 
-               sub: [
-                  {
-                     id:41113,
-                     translation: {
-                        en: "General Contribution Local From Ch",
-                        zh: "本地收到给事工的捐款-从国内收到"
-                     }
-                  },
-                  {
-                     id:41114,
-                     translation: {
-                        en: "General Contribution Local From Oversea",
-                        zh: "本地收到给事工的捐款-收到海外的汇款"
-                     }
-                  }
-               ]
-            },
-            { 
-               parent: 7, 
-               type: "Expenses", 
-               translation: {
-                  en: "Expenses ",
-                  zh: "支出"
-               }, 
-               sub: [
-                  {
-                     id:71,
-                     translation: {
-                        en: "Personnel expenses",
-                        zh: "工资/福利"
-                     }
-                  },
-                  {
-                     id:72,
-                     translation: {
-                        en: "Conferences and meetings",
-                        zh: "大会和会议费用"
-                     }
-                  },
-                  {
-                     id:75,
-                     translation: {
-                        en: "Travel and transportation",
-                        zh: "差旅费"
-                     }
-                  },
-                  {
-                     id:81,
-                     translation: {
-                        en: "Supplies and non-capitalized equipment",
-                        zh: "设备及维修保养"
-                     }
-                  },
-                  {
-                     id:82,
-                     translation: {
-                        en: "Communications",
-                        zh: "电话和通信"
-                     }
-                  },
-                  {
-                     id:84,
-                     translation: {
-                        en: "Professional services",
-                        zh: "专业费用"
-                     }
-                  },
-                  {
-                     id:86,
-                     translation: {
-                        en: "Capital expenses",
-                        zh: "固定资产支出"
-                     }
-                  },
-                  {
-                     id:87,
-                     translation: {
-                        en: "Facilities",
-                        zh: "设施费用"
-                     }
-                  },
-                  {
-                     id:89,
-                     translation: {
-                        en: "Other expenses",
-                        zh: "其他费用"
-                     }
-                  },
-               ]
-            }
-         ]
-      };
-
+      /**
+     /* Check whether an a category. The first digits of the account should match the category.
+     /* @function accountInCategory
+     /* @param {int} account 4-5 digit
+     /* @param {int} category 3-4 digits
+     /* @return {bool}
+     */
       function accountInCategory(account, category) {
          const accountDigits = account.toString().split("");
          const categoryDigits = category.toString().split("");
@@ -162,143 +122,117 @@ module.exports = {
             }
          });
          return match;
-      } 
-
-      function categorySum(category, balances) {
-         const filtered = balances.filter(bal => accountInCategory(bal['COA Num'], category));
-         if (filtered.length > 0 ) {
-            return filtered.map(i=>i['Running Balance']).reduce((a,b)=>(((100*a)+(100*b))/100));
-         } else {
-            return 0;
-         }
       }
 
-      let myRCs = ABSystemObject.getApplication().queries((o) => o.id == "241a977c-7748-420d-9dcb-eff53e66a43f")[0];
-
-      //console.log("myRCs ----------------->", myRCs);
-
-      myRCs.queryFind({
-         where: {
-            glue: "and",
-            rules: []
-         }
-      }, req.user.data)
-      .then(rcs => {
-         //console.log("My Team RCs ---------------->", rcs);
-
-         let rcOptions = [];
-         rcs.forEach((rc) => {
-            rcOptions.push(rc['BASE_OBJECT.RC Name']);
-         });
-
-         data.rcOptions = rcOptions.sort(function (a, b) {
-            return a.toLowerCase().localeCompare(b.toLowerCase());
-         });
-	      
-         if (!rc) {
-            rc = data.rcOptions[0];
-            data.rc = rc;
-         }
-      
-         let fiscalMonthObj = ABSystemObject.getApplication().objects((o) => o.id == "1d63c6ac-011a-4ffd-ae15-97e5e43f2b3f")[0];
-
-         fiscalMonthObj.modelAPI().findAll({ 
-            where:{
-               glue: "and",
-               rules: [
-                  {
-                     key: "Status",
-                     rule: "equals",
-                     value: "1592549786113",
-                  },
-               ],
-            }, 
-            populate:false,
-            sort: [
-               { 
-                  key:"49d6fabe-46b1-4306-be61-1b27764c3b1a", 
-                  dir:"DESC" 
-               }
-            ],
-            limit: 12 
-         })
-         .then(records => {
-            //console.log("Fiscal Month Records ------------------>", records);
-            let fiscalMonthsArray = records;
-            data.fyper = fyper || fiscalMonthsArray[0]["FY Per"];
-            let fyperOptions = [];
-            let i = 0;
-            let currIndex = 0;
-            fiscalMonthsArray.forEach((fp) => {
-               var dateObj = new Date(fp["End"]);
-               var month = dateObj.getUTCMonth() + 1; //months from 1-12
-               var year = dateObj.getUTCFullYear();
-               var prettyDate = year + "/" + (month > 9 ? month : "0"+month);
-               var option = {id:fp["FY Per"], label:prettyDate};
-               if (fyper == fp["FY Per"]) {
-                  option.selected = true;
-                  currIndex = i;
-               }
-               fyperOptions.push(option);
-               i++;
-            });
-            data.fyperOptions = fyperOptions;
-            var dateObj = new Date(fiscalMonthsArray[currIndex]["End"]);
-            var month = dateObj.getUTCMonth() + 1; //months from 1-12
-            var year = dateObj.getUTCFullYear();
-            data.fyperend = year + "/" + (month > 9 ? month : "0"+month);
-            let startYear = year;
-            if (month < 7) {
-               startYear = year - 1;
-            }
-            data.fyperstart = startYear + "/07";
-
-            //console.log("Fiscal Month picked from query param -->", data.fyper);
-            let balanceObj = ABSystemObject.getApplication().objects((o) => o.id == "bb9aaf02-3265-4b8c-9d9a-c0b447c2d804")[0];
-
-            balanceObj.modelAPI().findAll({ 
-               where:{
-                  glue: "and",
-                  rules: [
-                     {
-                        key: "RC Code",
-                        rule: "equals",
-                        value: rc,
-                     },
-                     {
-                        key: "FY Period",
-                        rule: "equals",
-                        value: data.fyper,
-                     },
-                  ],
-               }, 
-               populate:false
-            })
-            .then(records => {
-
-               //console.log(records);
-
-               data.categories.forEach((cat) => {
-                  let catSum = 0;
-                  cat.sub.forEach((sub) => {
-	             sub.sum = categorySum(sub.id, records);
-	             catSum = (((100*sub.sum) + (100*catSum)) / 100);
-                  });
-                  cat.sum = catSum;
-               }); 
-
-               data.localPercentage = Math.floor(data.categories[0].sum/data.categories[1].sum*100);
-
-               res.view(
-                  "app_builder/template/localIncomeExpense", // .ejs
-	          data
-               );
-      
-            });
-         });
+      // Calculate Net Income Values
+      const incomeTotals = calculateGroupSums(4, 5);
+      const expenseTotals = calculateGroupSums(6, 7, 8, 9);
+      const netTotals = [];
+      incomeTotals.forEach((val, i) => {
+         netTotals.push(val - expenseTotals[i]);
       });
+      const balSheetTotal = balances
+         .filter((bal) => bal.account == "3991")
+         .map((i) => i["runningBalance"])
+         .reduce((a, b) => a + b, 0);
 
+      // Our data object
+      const data = {
+         mccs,
+         netTotals,
+         numberOfColumns: mccs.length + 2,
+         balSheetTotal,
+         accountGroups: [
+            {
+               label: "Local Income",
+               sums: calculateGroupSums(4),
+               subGroups: [
+                  {
+                     label: "41 contributions for staff",
+                     sums: calculateGroupSums(41)
+                  },
+                  {
+                     label: "42 contributions for staff",
+                     sums: calculateGroupSums(42)
+                  }
+               ]
+            },
+            {
+               label: "Income from AAA",
+               sums: calculateGroupSums(5),
+               subGroups: [
+                  {
+                     label: "contributions for staff",
+                     sums: calculateGroupSums(51)
+                  },
+                  {
+                     label: "contributions for staff",
+                     sums: calculateGroupSums(52)
+                  }
+               ]
+            },
+            {
+               label: "Income Received",
+               sums: calculateGroupSums(4, 5)
+            },
+            {
+               label: "Income transfers to AAA",
+               sums: calculateGroupSums(6),
+               subGroups: [
+                  {
+                     label: "contributions for staff",
+                     sums: calculateGroupSums(61)
+                  },
+                  {
+                     label: "contributions for staff",
+                     sums: calculateGroupSums(62)
+                  }
+               ]
+            },
+            {
+               label: "Expenses",
+               sums: calculateGroupSums(7, 8),
+               subGroups: [
+                  {
+                     label: "contributions for staff",
+                     sums: calculateGroupSums(71)
+                  },
+                  {
+                     label: "contributions for staff",
+                     sums: calculateGroupSums(81)
+                  }
+               ]
+            },
+            {
+               label: "Internal Transfers",
+               sums: calculateGroupSums(9),
+               subGroups: [
+                  {
+                     label: "contributions for staff",
+                     sums: calculateGroupSums(91)
+                  },
+                  {
+                     label: "contributions for staff",
+                     sums: calculateGroupSums(92)
+                  }
+               ]
+            }
+         ]
+      };
 
+      // Get the template source
+      // const source = $("#my-template").html();
+
+      // Compile the template into a Handlebars function
+      // const template = ejs.render(source, data);
+
+      // Pass our data object to the compiled Handlebars function
+      // Insert back into the page
+      // $("#welcome-message").html(template);
+
+      res.view(
+         "app_builder/template/incomeVsExpense", // .ejs
+         data
+      );
    }
-
 };
