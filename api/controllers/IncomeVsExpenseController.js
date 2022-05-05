@@ -379,7 +379,7 @@ module.exports = {
                         );
 
                         res.view(
-                           "app_builder/template/localIncomeExpense", // .ejs
+                           "app_builder/template/incomeVsExpense", // .ejs
                            data
                         );
                      });
@@ -395,10 +395,5 @@ module.exports = {
       // Pass our data object to the compiled Handlebars function
       // Insert back into the page
       // $("#welcome-message").html(template);
-
-      res.view(
-         "app_builder/template/incomeVsExpense", // .ejs
-         data
-      );
    }
 };
