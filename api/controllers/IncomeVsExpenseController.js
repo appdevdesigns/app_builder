@@ -362,19 +362,6 @@ module.exports = {
                   console.log("records ----->", records);
                   balances = records;
 
-                  data.categories.forEach((cat) => {
-                     let catSum = 0;
-                     cat.sub.forEach((sub) => {
-                        sub.sum = categorySum(sub.id, records);
-                        catSum = (100 * sub.sum + 100 * catSum) / 100;
-                     });
-                     cat.sum = catSum;
-                  });
-
-                  data.localPercentage = Math.floor(
-                     (data.categories[0].sum / data.categories[1].sum) * 100
-                  );
-
                   res.view(
                      "app_builder/template/incomeVsExpense", // .ejs
                      data
