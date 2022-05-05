@@ -243,148 +243,145 @@ module.exports = {
          ]
       };
 
-      let myRCs = ABSystemObject.getApplication().queries(
-         (o) => o.id == "241a977c-7748-420d-9dcb-eff53e66a43f"
-      )[0];
+      // let myRCs = ABSystemObject.getApplication().queries(
+      //    (o) => o.id == "241a977c-7748-420d-9dcb-eff53e66a43f"
+      // )[0];
 
       //console.log("myRCs ----------------->", myRCs);
 
-      myRCs
-         .queryFind(
-            {
-               where: {
-                  glue: "and",
-                  rules: []
-               }
+      // myRCs
+      //    .queryFind(
+      //       {
+      //          where: {
+      //             glue: "and",
+      //             rules: []
+      //          }
+      //       },
+      //       req.user.data
+      //    )
+      //    .then((rcs) => {
+      //       console.log("My Team RCs ---------------->", rcs);
+      //
+      //       let rcOptions = [];
+      //       rcs.forEach((rc) => {
+      //          rcOptions.push(rc["BASE_OBJECT.RC Name"]);
+      //       });
+      //
+      //       data.rcOptions = rcOptions.sort(function(a, b) {
+      //          return a.toLowerCase().localeCompare(b.toLowerCase());
+      //       });
+      //
+      //       if (!rc) {
+      //          rc = data.rcOptions[0];
+      //          data.rc = rc;
+      //       }
+
+      let fiscalMonthObj = ABSystemObject.getApplication().objects(
+         (o) => o.id == "1d63c6ac-011a-4ffd-ae15-97e5e43f2b3f"
+      )[0];
+
+      fiscalMonthObj
+         .modelAPI()
+         .findAll({
+            where: {
+               glue: "and",
+               rules: [
+                  {
+                     key: "Status",
+                     rule: "equals",
+                     value: "1592549786113"
+                  }
+               ]
             },
-            req.user.data
-         )
-         .then((rcs) => {
-            console.log("My Team RCs ---------------->", rcs);
-
-            let rcOptions = [];
-            rcs.forEach((rc) => {
-               rcOptions.push(rc["BASE_OBJECT.RC Name"]);
+            populate: false,
+            sort: [
+               {
+                  key: "49d6fabe-46b1-4306-be61-1b27764c3b1a",
+                  dir: "DESC"
+               }
+            ],
+            limit: 12
+         })
+         .then((records) => {
+            //console.log("Fiscal Month Records ------------------>", records);
+            let fiscalMonthsArray = records;
+            data.fyper = fyper || fiscalMonthsArray[0]["FY Per"];
+            let fyperOptions = [];
+            let i = 0;
+            let currIndex = 0;
+            fiscalMonthsArray.forEach((fp) => {
+               var dateObj = new Date(fp["End"]);
+               var month = dateObj.getUTCMonth() + 1; //months from 1-12
+               var year = dateObj.getUTCFullYear();
+               var prettyDate = year + "/" + (month > 9 ? month : "0" + month);
+               var option = { id: fp["FY Per"], label: prettyDate };
+               if (fyper == fp["FY Per"]) {
+                  option.selected = true;
+                  currIndex = i;
+               }
+               fyperOptions.push(option);
+               i++;
             });
-
-            data.rcOptions = rcOptions.sort(function(a, b) {
-               return a.toLowerCase().localeCompare(b.toLowerCase());
-            });
-
-            if (!rc) {
-               rc = data.rcOptions[0];
-               data.rc = rc;
+            data.fyperOptions = fyperOptions;
+            var dateObj = new Date(fiscalMonthsArray[currIndex]["End"]);
+            var month = dateObj.getUTCMonth() + 1; //months from 1-12
+            var year = dateObj.getUTCFullYear();
+            data.fyperend = year + "/" + (month > 9 ? month : "0" + month);
+            let startYear = year;
+            if (month < 7) {
+               startYear = year - 1;
             }
+            data.fyperstart = startYear + "/07";
 
-            let fiscalMonthObj = ABSystemObject.getApplication().objects(
-               (o) => o.id == "1d63c6ac-011a-4ffd-ae15-97e5e43f2b3f"
+            //console.log("Fiscal Month picked from query param -->", data.fyper);
+            let balanceObj = ABSystemObject.getApplication().objects(
+               (o) => o.id == "bb9aaf02-3265-4b8c-9d9a-c0b447c2d804"
             )[0];
 
-            fiscalMonthObj
+            balanceObj
                .modelAPI()
                .findAll({
                   where: {
                      glue: "and",
                      rules: [
+                        // {
+                        //    key: "RC Code",
+                        //    rule: "equals",
+                        //    value: rc
+                        // },
                         {
-                           key: "Status",
+                           key: "FY Period",
                            rule: "equals",
-                           value: "1592549786113"
+                           value: data.fyper
                         }
                      ]
                   },
-                  populate: false,
-                  sort: [
-                     {
-                        key: "49d6fabe-46b1-4306-be61-1b27764c3b1a",
-                        dir: "DESC"
-                     }
-                  ],
-                  limit: 12
+                  populate: false
                })
                .then((records) => {
-                  //console.log("Fiscal Month Records ------------------>", records);
-                  let fiscalMonthsArray = records;
-                  data.fyper = fyper || fiscalMonthsArray[0]["FY Per"];
-                  let fyperOptions = [];
-                  let i = 0;
-                  let currIndex = 0;
-                  fiscalMonthsArray.forEach((fp) => {
-                     var dateObj = new Date(fp["End"]);
-                     var month = dateObj.getUTCMonth() + 1; //months from 1-12
-                     var year = dateObj.getUTCFullYear();
-                     var prettyDate =
-                        year + "/" + (month > 9 ? month : "0" + month);
-                     var option = { id: fp["FY Per"], label: prettyDate };
-                     if (fyper == fp["FY Per"]) {
-                        option.selected = true;
-                        currIndex = i;
-                     }
-                     fyperOptions.push(option);
-                     i++;
-                  });
-                  data.fyperOptions = fyperOptions;
-                  var dateObj = new Date(fiscalMonthsArray[currIndex]["End"]);
-                  var month = dateObj.getUTCMonth() + 1; //months from 1-12
-                  var year = dateObj.getUTCFullYear();
-                  data.fyperend =
-                     year + "/" + (month > 9 ? month : "0" + month);
-                  let startYear = year;
-                  if (month < 7) {
-                     startYear = year - 1;
-                  }
-                  data.fyperstart = startYear + "/07";
+                  console.log("records ----->", records);
+                  balances = records;
 
-                  //console.log("Fiscal Month picked from query param -->", data.fyper);
-                  let balanceObj = ABSystemObject.getApplication().objects(
-                     (o) => o.id == "bb9aaf02-3265-4b8c-9d9a-c0b447c2d804"
-                  )[0];
-
-                  balanceObj
-                     .modelAPI()
-                     .findAll({
-                        where: {
-                           glue: "and",
-                           rules: [
-                              {
-                                 key: "RC Code",
-                                 rule: "equals",
-                                 value: rc
-                              },
-                              {
-                                 key: "FY Period",
-                                 rule: "equals",
-                                 value: data.fyper
-                              }
-                           ]
-                        },
-                        populate: false
-                     })
-                     .then((records) => {
-                        console.log("records ----->", records);
-                        balances = records;
-
-                        data.categories.forEach((cat) => {
-                           let catSum = 0;
-                           cat.sub.forEach((sub) => {
-                              sub.sum = categorySum(sub.id, records);
-                              catSum = (100 * sub.sum + 100 * catSum) / 100;
-                           });
-                           cat.sum = catSum;
-                        });
-
-                        data.localPercentage = Math.floor(
-                           (data.categories[0].sum / data.categories[1].sum) *
-                              100
-                        );
-
-                        res.view(
-                           "app_builder/template/incomeVsExpense", // .ejs
-                           data
-                        );
+                  data.categories.forEach((cat) => {
+                     let catSum = 0;
+                     cat.sub.forEach((sub) => {
+                        sub.sum = categorySum(sub.id, records);
+                        catSum = (100 * sub.sum + 100 * catSum) / 100;
                      });
+                     cat.sum = catSum;
+                  });
+
+                  data.localPercentage = Math.floor(
+                     (data.categories[0].sum / data.categories[1].sum) * 100
+                  );
+
+                  res.view(
+                     "app_builder/template/incomeVsExpense", // .ejs
+                     data
+                  );
                });
          });
+      // });
 
       // Get the template source
       // const source = $("#my-template").html();
