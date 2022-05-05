@@ -51,6 +51,22 @@
 </style>
 
 <h1>Income and Expense Report</h1>
+<h2>
+   <select style="font-size: 24px; color: gray; border: 1px solid #CCC;" id="rcSelect" onchange="location.href = '/template/localIncomeExpense?rc='+this.value;">
+      <% for(var i=0; i < rcOptions.length; i++) { %>
+         <option <% if (rc == rcOptions[i]) { %> selected <% } %> value="<%= rcOptions[i] %>"><%= rcOptions[i] %></option>
+      <% } %>
+   </select>
+   <span style="color: lightgray; font-weight: normal;">
+      <%= fyperstart %>-
+   </span>
+   <select style="font-size: 24px; color: lightgray; border: 1px solid #CCC;" onchange="location.href = '/template/localIncomeExpense?rc=<%= rc %>&fyper='+this.value;">
+      <% for(var i=0; i < fyperOptions.length; i++) { %>
+         <option <% if (fyperOptions[i].selected) { %> selected <% } %> value="<%= fyperOptions[i].id %>"><%= fyperOptions[i].label %></option>
+      <% } %>
+   </select>
+</h2>
+
 
 <table>
    <tr>
