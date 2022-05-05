@@ -315,21 +315,25 @@ module.exports = {
          languageCode = "zh";
       }
 
-      let viewData = GetViewData(languageCode, req.query.rc, req.query.month);
+      let viewData = GetViewData(
+         languageCode,
+         req.query.rc || null,
+         req.query.month
+      );
 
       Promise.resolve()
          // Pull RC
-         .then(
-            () =>
-               new Promise((next, err) => {
-                  GetRC(req.user.data)
-                     .then((list) => {
-                        viewData.rcOptions = list;
-                        next();
-                     })
-                     .catch(err);
-               })
-         )
+         // .then(
+         //    () =>
+         //       new Promise((next, err) => {
+         //          GetRC(req.user.data)
+         //             .then((list) => {
+         //                viewData.rcOptions = list;
+         //                next();
+         //             })
+         //             .catch(err);
+         //       })
+         // )
          // Pull FY month list
          .then(
             () =>
