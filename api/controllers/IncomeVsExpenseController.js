@@ -154,9 +154,9 @@ module.exports = {
       // Our data object
       let data = {
          mccs,
-         netTotals,
+         // netTotals,
          numberOfColumns: mccs.length + 2,
-         balSheetTotal,
+         // balSheetTotal,
          accountGroups: [
             {
                label: "Local Income",
@@ -355,13 +355,15 @@ module.exports = {
                   balances = records;
 
                   // Calculate Net Income Values
-                  const incomeTotals = calculateGroupSums(4, 5);
-                  const expenseTotals = calculateGroupSums(6, 7, 8, 9);
-                  const netTotals = [];
+                  let incomeTotals = calculateGroupSums(4, 5);
+                  let expenseTotals = calculateGroupSums(6, 7, 8, 9);
+                  data.netTotals = [];
                   incomeTotals.forEach((val, i) => {
-                     netTotals.push(100 * val - (100 * expenseTotals[i]) / 100);
+                     data.netTotals.push(
+                        100 * val - (100 * expenseTotals[i]) / 100
+                     );
                   });
-                  const balSheetTotal = balances
+                  data.balSheetTotal = balances
                      .filter((bal) => bal["COA Num"].toString() == "3991")
                      .map((i) => i["Running Balance"])
                      .reduce((a, b) => 100 * a + (100 * b) / 100, 0);
