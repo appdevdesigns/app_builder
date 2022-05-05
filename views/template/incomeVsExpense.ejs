@@ -52,11 +52,6 @@
 
 <h1>Income and Expense Report</h1>
 <h2>
-   <select style="font-size: 24px; color: gray; border: 1px solid #CCC;" id="rcSelect" onchange="location.href = '/template/localIncomeExpense?rc='+this.value;">
-      <% for(var i=0; i < rcOptions.length; i++) { %>
-         <option <% if (rc == rcOptions[i]) { %> selected <% } %> value="<%= rcOptions[i] %>"><%= rcOptions[i] %></option>
-      <% } %>
-   </select>
    <span style="color: lightgray; font-weight: normal;">
       <%= fyperstart %>-
    </span>
