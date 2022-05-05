@@ -155,7 +155,7 @@ module.exports = {
          netTotals.push(val - expenseTotals[i]);
       });
       const balSheetTotal = balances
-         .filter((bal) => bal["COA Num"] == "3991")
+         .filter((bal) => bal["COA Num"].toString() == "3991")
          .map((i) => i["Running Balance"])
          .reduce((a, b) => a + b, 0);
 
