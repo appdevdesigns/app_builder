@@ -362,7 +362,7 @@ module.exports = {
                   data.netTotals = [];
                   incomeTotals.forEach((val, i) => {
                      data.netTotals.push(
-                        100 * val - (100 * expenseTotals[i]) / 100
+                        (100 * val - 100 * expenseTotals[i]) / 100
                      );
                   });
                   data.balSheetTotal = balances
