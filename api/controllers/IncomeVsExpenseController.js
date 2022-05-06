@@ -124,10 +124,10 @@ module.exports = {
                   return inGroup && bal["RC Code"].substring(0, 2) == dept.code;
                })
                .map((i) => i["Running Balance"])
-               .reduce((a, b) => (100 * a + 100 * b) / 100);
+               .reduce((a, b) => (100 * a + 100 * b) / 100, 0);
             sums.push(sum);
          });
-         const totalSum = sums.reduce((a, b) => (100 * a + 100 * b) / 100);
+         const totalSum = sums.reduce((a, b) => (100 * a + 100 * b) / 100, 0);
          sums.push(totalSum);
          return sums;
       }
@@ -363,7 +363,7 @@ module.exports = {
                   data.balSheetTotal = balances
                      .filter((bal) => bal["COA Num"].toString() == "3991")
                      .map((i) => i["Running Balance"])
-                     .reduce((a, b) => (100 * a + 100 * b) / 100);
+                     .reduce((a, b) => (100 * a + 100 * b) / 100, 0);
 
                   console.log("data ------>", data);
 
