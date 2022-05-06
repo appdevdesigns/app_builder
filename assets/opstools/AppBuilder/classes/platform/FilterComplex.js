@@ -310,10 +310,13 @@ module.exports = class FilterComplex extends FilterComplexCore {
    isValid(rowData) {
       let helper = () => true;
 
-      if ($$(this.ids.querybuilder))
-         helper = $$(this.ids.querybuilder).getFilterHelper();
-
-      return helper(rowData);
+      let $query = $$(this.ids.querybuilder);
+      if ($query) {
+         helper = $query.getFilterFunction();
+         return helper(rowData);
+      } else {
+         return super.isValid(rowData);
+      }
    }
 
    setValue(settings) {

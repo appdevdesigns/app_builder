@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title><%= title %></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+</head>
+
+<body>
+    <style>
+        #mobile-account {
+            text-align: center;
+            max-width:  800px;
+            margin:  2em auto;
+            padding:  0 2em;
+        }
+        #mobile-account img.qr-code {
+            display: block;
+            width: 300px;
+            height: 300px;
+            margin: 1em auto;
+            border: 2px solid black;
+            border-radius:  8px;
+            box-shadow:  3px 3px 5px 0px grey;
+        }
+        #mobile-account button {
+            display: block;
+            margin: 1em auto;
+            min-width: 8em;
+        }
+        #mobile-account .instructions {
+
+        }
+        #mobile-account pre {
+            font-size: .7em;
+        }
+    </style>
+
+    <div id="mobile-account">
+        <h2><%= username %></h2>
+
+        <div class="instructions">
+            <%- labels['instructions-1'] || 
+                `Use your phone's camera app to scan this QR code, and it will open
+                a webpage to the conneXted mobile app. You only need to scan the
+                code for the first time.`
+             %>
+        </div>
+
+        <img class="qr-code" src="<%- qrCodeImage %>" />
+
+        <!-- FOR TESTING ONLY -->
+        <pre><%- deepLink %></pre>
+
+        <div class="instructions">
+            <%- labels['instructions-2'] || 
+                `This code can only be used once. It will expire after 7 days. If you
+                need a new code, reload this page.`
+            %>
+        </div>
+
+        <button class="btn btn-primary" id="reload" type="button">
+            <%- labels['reload'] || "Reload" %>
+        </button>
+        <button class="btn btn-primary" id="send-email" type="button">
+            <%- labels['send-email'] || "Send Email" %>
+        </button>
+    </div>
+
+    <script>
+        document.getElementById('reload').addEventListener('click', (ev) => {
+            location.search = ''; // remove querystring params
+            location.reload();
+        });
+
+        let emailButton = document.getElementById('send-email');
+        emailButton.addEventListener('click', (ev) => {
+            emailButton.disabled = true;
+            emailButton.innerHTML = "<%- labels['sending'] || 'Sending...' %>";
+            fetch(new Request(
+                '/app_builder/QR/sendEmail',
+                {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/javascript',
+                        'X-CSRF-Token': '<%= _csrf %>'
+                    },
+                    body: '{ "user": "<%- siteUserGUID %>" }'
+                }
+            ))
+            .then((res) => {
+                emailButton.innerHTML = "<%- labels['sent'] || 'Sent!' %>";
+            })
+            .catch((err) => {
+                console.error(err);
+                emailButton.innerHTML = "<%- labels['could-not-send'] || 'Could not send' %>";
+                alert(err.message || err);
+            });
+        });
+    </script>
+
+</body>
+</html>

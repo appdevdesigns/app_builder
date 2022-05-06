@@ -9,6 +9,140 @@ var async = require("async");
 var _ = require("lodash");
 
 module.exports = {
+
+   // GET: /mobile/account
+   // Page for user's mobile account
+   userAccountPage: function(req, res) {
+      let siteUserGUID = req.user.data.guid; // from the policy
+      let username = req.user.data.username;
+      let userUUID = null;
+      let registrationToken = null;
+      let publicKey = null;
+      let qrCodeImage = null;
+      let deepLink = null;
+      let language = req.user.data.languageCode;
+      let labels = {
+      /*
+         "instructions-1": `Use your phone's camera app to scan this QR code, 
+                            and it will open a webpage to the conneXted mobile 
+                            app. You only need to scan the code for the first 
+                            time.`,
+         "instructions-2": `This code can only be used once. It will expire 
+                            after 7 days. If you need a new code, reload this 
+                            page.`,
+         "reload": "Reload",
+         "send-email": "Send Email",
+         "sending": "Sending...",
+         "sent": "Sent",
+         "could-not-send": "Could not send"
+      */
+      };
+
+      try {
+         if (!sails.config.appbuilder.mcc.enabled) {
+            throw new Error("MCC relay server is not enabled");
+         }
+      } catch(err) {
+         // Feature is either disabled or the config is not correct.
+         ADCore.error.log("Error on mobile account page", err);
+         return res.notFound();
+      }
+
+      async.series(
+         [
+            // Load page labels
+            (next) => {
+               SiteMultilingualLabel.getLabels("/mobile/account", language)
+                  .then((data) => {
+                     labels = data;
+                     next();
+                  })
+                  .catch(next);
+            },
+
+            // Initialize account and generate new registration token
+            (next) => {
+               ABRelayUser.initializeUser(siteUserGUID)
+               .then(() => {
+                  return ABRelayUser.findOne({ siteuser_guid: siteUserGUID });
+               })
+               .then((user) => {
+                  userUUID = user.user;
+                  registrationToken = user.registrationToken;
+                  publicKey = user.rsa_public_key;
+                  next();
+               })
+               .catch(next);
+            },
+
+            // Register the account with the MCC relay
+            // Post the new token
+            (next) => {
+               // No need to wait for this to complete. Go to next now.
+               setTimeout(next, 1);
+
+               ABRelay.post({
+                  url: "/mcc/user",
+                  data: {
+                     user: userUUID,
+                     tokenHash: ABRelayUser.hash(registrationToken),
+                     rsa: publicKey
+                  },
+                  timeout: 8000
+               })
+               .catch((err) => {
+                  ADCore.error.log(
+                     "Error posting registration token to MCC",
+                     err
+                  );
+               });
+            },
+
+            // Generate QR code image
+            (next) => {
+               deepLink = ABMobile.getQRCodeData({ token: registrationToken });
+               ABMobile.getQRCodeImage(deepLink)
+               .then((image) => {
+                  qrCodeImage = image;
+                  next();
+               })
+               .catch(next);
+            }
+
+         ],
+         (err) => {
+            if (err) {
+               ADCore.error.log("Error on mobile account page", err);
+               res.serverError();
+            }
+            else {
+               res.set({
+                  "Cache-Control": "max-age=0, no-cache;"
+               });
+               res.view(
+                  "app_builder/mobile/account", // .ejs
+                  {
+                     layout: false,
+                     title: "Mobile Account",
+                     siteUserGUID: siteUserGUID,
+                     username: username,
+                     qrCodeImage: qrCodeImage,
+                     deepLink: deepLink,
+                     labels: labels
+                  }
+               );
+            }
+         }
+      )
+
+   },
+
+   // GET: /mobile/admin
+   // Page for administering mobile accounts
+   accountAdminPage: function(req, res) {
+
+   },
+
    // GET: /app_builder/relay/users
    // return a list of user accounts that are currently
    // setup in ABRelayUser:
@@ -140,7 +274,7 @@ module.exports = {
                         var entry = {
                            user: l.user,
                            rsa: l.rsa_public_key,
-                           authToken: l.publicAuthToken
+                           tokenHash: ABRelayUser.hash(l.registrationToken)
                         };
                         restUsers.push(entry);
                      });

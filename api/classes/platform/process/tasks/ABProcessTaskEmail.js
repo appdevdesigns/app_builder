@@ -21,6 +21,8 @@ const ABProcessParticipant = require(path.join(
    "ABProcessParticipant"
 ));
 
+const retry = require("../../UtilRetry.js");
+
 const AB = require("ab-utils");
 const reqAB = AB.reqAB({}, {});
 reqAB.jobID = "ABProcessTaskEmail";
@@ -144,18 +146,117 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
             case 1:
                // specify a role/user account
 
-               // the logic for the users is handled in the
-               // ABProcessParticipant object.  So let's create a new
-               // object with our config values, and ask it for it's user
-               var tempLane = new ABProcessParticipant(
-                  select,
-                  this.process,
-                  this.application
-               );
-               this.laneUserEmails(tempLane, instance)
+               // separate root object fields and process task fields
+               var rootFields = [];
+               var processFields = [];
+               this.toUsers.fields.forEach((f) => {
+                  if (f.indexOf(".") == -1) {
+                     rootFields.push(f);
+                  } else {
+                     processFields.push(f);
+                  }
+               });
+
+               var getUsersPromise = [];
+
+               // pull user data from the user fields
+               if (processFields.length) {
+                  var jobData = {
+                     name: this.name,
+                     process: instance.id,
+                     definition: this.process.id
+                  };
+
+                  var processData = {};
+                  var listDataFields = this.process.processDataFields(this);
+                  listDataFields.forEach((entry) => {
+                     processData[entry.key] = this.process.processData(this, [
+                        instance,
+                        entry.key
+                     ]);
+
+                     if (
+                        entry &&
+                        entry.field &&
+                        entry.field.key == "connectObject"
+                     ) {
+                        processData[
+                           `${entry.key}.format`
+                        ] = this.process.processData(this, [
+                           instance,
+                           `${entry.key}.format`
+                        ]);
+                     }
+                  });
+                  jobData.data = processData;
+
+                  jobData.users = jobData.users || [];
+
+                  // Copy the array because I don't want to mess up this.toUsers.account
+                  jobData.users = jobData.users.slice(0, jobData.users.length);
+
+                  // Combine user list
+                  var allUserFields = [];
+                  (processFields || []).forEach((pKey) => {
+                     let userData = jobData.data[pKey] || [];
+                     if (userData && !Array.isArray(userData))
+                        userData = [userData];
+
+                     allUserFields = allUserFields.concat(
+                        userData
+                           .filter((u) => u)
+                           .map((u) => u.uuid || u.id || u)
+                     );
+                  });
+                  allUserFields = allUserFields.filter((uId) => uId);
+
+                  getUsersPromise.push(
+                     new Promise((resolve, reject) => {
+                        retry(() => SiteUser.find({ username: allUserFields }))
+                           .then((listUsers) => {
+                              // Remove empty items
+                              jobData.email = listUsers.map((u) => u.email);
+
+                              // Remove duplicate items
+                              jobData.email = _.uniq(
+                                 jobData.email,
+                                 false,
+                                 (u) => u.toString() // support compare with different types
+                              );
+
+                              resolve(jobData.email);
+                           })
+                           .catch(reject);
+                     })
+                  );
+               }
+               if (rootFields.length) {
+                  // the logic for the users is handled in the
+                  // ABProcessParticipant object.  So let's create a new
+                  // object with our config values, and ask it for it's user
+                  var tempLane = new ABProcessParticipant(
+                     select,
+                     this.process,
+                     this.application
+                  );
+                  getUsersPromise.push(
+                     new Promise((resolve, reject) => {
+                        this.laneUserEmails(tempLane, instance)
+                           .then((emails) => {
+                              resolve(emails);
+                           })
+                           .catch(reject);
+                     })
+                  );
+               }
+               Promise.all(getUsersPromise)
                   .then((emails) => {
+                     var allEmails = [];
+                     emails.forEach((set) => {
+                        allEmails = allEmails.concat(set);
+                     });
                      var data = {};
-                     data[field] = emails;
+                     data[field] = _.uniq(allEmails);
                      this.stateUpdate(instance, data);
                      resolve();
                   })

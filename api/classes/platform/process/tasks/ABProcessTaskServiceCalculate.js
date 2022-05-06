@@ -40,13 +40,22 @@ module.exports = class CalculateTask extends CalculateTaskCore {
 
          formula = formula.replace(
             new RegExp(`{${item.label}}`, "g"),
-            processedData == null ? 0 : processedData
+            processedData == null || processedData == "" ? 0 : processedData
          );
       });
 
-      // Allow only Number, Operators (+ - * /)
-      formula = formula.replace(/[^\d+\-*/().]*/g, "");
+      // Allow only Number, Operators (+ - * / |)
+      formula = formula.replace(/[^\d+\-*/|().]*/g, "");
 
-      return eval(formula);
+      let result;
+      try {
+         result = eval(formula);
+      } catch (err) {
+         const error = new Error(
+            `${formula} : Formula is invalid: ${err.toString()}`
+         );
+         this.onError(instance, error);
+      }
+      return result;
    }
 };

@@ -83,6 +83,15 @@ let getSQL = ({ defCSV, userData, extraWhere }) => {
    };
    let sort;
 
+   if (
+      obj instanceof ABObjectQuery &&
+      obj.where &&
+      obj.where.rules &&
+      obj.where.rules.length
+   ) {
+      where.rules.push(obj.where);
+   }
+
    if (dc.settings) {
       if (
          dc.settings.objectWorkspace &&

@@ -1,0 +1,55 @@
+<%- include _stylesheets -%>
+
+<% if(typeof error == "undefined") { %>
+<center>
+   <h1><%= title[languageCode] %></h1>
+   <h2>
+      <select style="font-size: 24px; color: gray; border: 1px solid #CCC;" id="rcSelect" onchange="location.href = '/template/localIncomeExpense?rc='+this.value;">
+         <% for(var i=0; i < rcOptions.length; i++) { %>
+            <option <% if (rc == rcOptions[i]) { %> selected <% } %> value="<%= rcOptions[i] %>"><%= rcOptions[i] %></option>
+         <% } %>
+      </select>
+      <span style="color: lightgray; font-weight: normal;">
+         <%= fyperstart %>-
+      </span>
+      <select style="font-size: 24px; color: lightgray; border: 1px solid #CCC;" onchange="location.href = '/template/localIncomeExpense?rc=<%= rc %>&fyper='+this.value;">
+         <% for(var i=0; i < fyperOptions.length; i++) { %>
+            <option <% if (fyperOptions[i].selected) { %> selected <% } %> value="<%= fyperOptions[i].id %>"><%= fyperOptions[i].label %></option>
+         <% } %>
+      </select>
+   </h2>
+</center>
+<div>
+    <table width="100%">
+      <!-- table header -->
+      <!-- table body -->
+      <% for(var i=0; i < categories.length; i++) { %>
+      <tr class="sub">
+        <td colspan=2 align="left"><strong><%= categories[i].translation[languageCode] %><%= category[languageCode] %></strong></td>
+      </tr>
+      <% for(var x=0; x < categories[i].sub.length; x++) { %>
+      <tr>
+         <td align="left"><%= categories[i].sub[x].translation[languageCode] %> <span style="opacity: 0.4">(<%= categories[i].sub[x].id %><% if(categories[i].type == "Expenses") { %>00-99<% } %>)</span></td>
+         <td align="right"><%= categories[i].sub[x].sum %></td>
+      </tr>
+       <% } %>
+      <tr class="total">
+        <td align="left"><strong><%= categories[i].translation[languageCode] %><%= total[languageCode] %></strong></td>
+        <td align="right"><strong><%= categories[i].sum %></strong></td>
+      </tr>
+      <% if(categories[i].type == "Local Income") { %>
+      <tr>
+        <td colspan=2>&nbsp;</td>
+      </tr>
+       <% } %>
+       <% } %>
+    <table>
+    <div style="text-align: center; <% if(localPercentage < 50) { %>background: red; color: white; text-shadow:  0 1px 1px rgba(0,0,0,0.4);<% } %> padding: 20px;">
+       <h1 style="padding-bottom: 5px; margin: 0; font-size: 38px;"><%= localPercentage %>%</h1>
+       <h5 style="margin: 0;"><%= categories[0].translation[languageCode] %> / <%= categories[1].translation[languageCode] %></h5>
+    </div>
+</div>  
+<% } else if (typeof error == "string") { %>
+<%= error %>
+<% } %>
+

@@ -36,5 +36,13 @@ module.exports = {
    "app_builder/ABEventController": {
       receiveRegistrationConfirmationResponse: true, // event confirmation response
       receiveFeeConfirmationResponse: true // event fee confirmation response
+   },
+
+   "app_builder/localIncomeExpense": {
+      getData: findStack
+   },
+
+   "app_builder/ABReportBalanceController": {
+      getData: findStack
    }
 };

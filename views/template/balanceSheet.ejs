@@ -1,0 +1,95 @@
+<%- include _stylesheets -%>
+    <style>
+        body {
+            overflow: auto;
+        }
+
+        select.selector {
+            font-size: 24px;
+            color: gray;
+            border: 1px solid #CCC;
+        }
+
+        tr.header {
+            font-weight: bold;
+        }
+
+        tr.tertiary-total,
+        tr.tertiary-total:hover {
+            background: #949494;
+            color: white;
+        }
+
+        tr.secondary-total,
+        tr.secondary-total:hover {
+            background: #6a6a6a;
+            color: white;
+        }
+
+        tr.total {
+            background: #2a2a2a;
+            color: white;
+        }
+    </style>
+
+    <script type="text/javascript">
+        document.title = "<%= title[languageCode] %>";
+
+        function refresh() {
+            let rcVal = document.getElementById("rcSelect").value;
+            let fyVal = document.getElementById("fySelect").value;
+            window.location.href = `/template/balanceSheet?rc=${rcVal}&month=${fyVal}`;
+        }
+    </script>
+
+    <center>
+        <h1>
+            <%= title[languageCode] %>
+        </h1>
+        <h2>
+            <span style="font-weight: normal;">
+                RC:
+            </span>
+            <select class="selector" id="rcSelect" onchange="refresh()">
+                <% for(var i=0; i < rcOptions.length; i++) { %>
+                    <option <% if (rc==rcOptions[i]) { %> selected <% } %> value="<%= rcOptions[i] %>"><%= rcOptions[i]
+                                    %>
+                    </option>
+                    <% } %>
+            </select>
+            <span style="font-weight: normal;">
+                FY Period:
+            </span>
+            <select class="selector" id="fySelect" onchange="refresh()">
+                <% for(var i=0; i < fyOptions.length; i++) { %>
+                    <option <% if (fyPeriod==fyOptions[i]) { %> selected <% } %> value="<%= fyOptions[i] %>"><%=
+                                    fyOptions[i] %>
+                    </option>
+                    <% } %>
+            </select>
+        </h2>
+    </center>
+    <div>
+        <table width="100%">
+            <!-- Header -->
+            <tr class="sub header">
+                <td>Balance Sheet</td>
+                <td align="right"></td>
+            </tr>
+            <!-- Data -->
+            <% for(var i=0; i < items.length; i++) { %>
+                <tr class="<%= items[i].type || '' %>">
+                    <td>
+                        <%= items[i].title || "" %>
+                    </td>
+                    <% if (items[i].value !=null) { %>
+                        <td align="right">
+                            <%= typeof items[i].value=="function" ? items[i].value(items) : items[i].value %>
+                        </td>
+                        <% } else { %>
+                            <td></td>
+                            <% } %>
+                </tr>
+                <% } %>
+        </table>
+    </div>

@@ -175,6 +175,10 @@ module.exports = {
    // Email
    "post /app_builder/email": "app_builder/ABEmailController.send",
 
+   /* Mobile Account Management pages */
+   "get /mobile/account": "app_builder/ABRelayController.userAccountPage",
+   "get /mobile/admin": "app_builder/ABRelayController.accountAdminPage",
+   
    /* Relay Settings */
 
    "get /app_builder/relay/users": "app_builder/ABRelayController.users",
@@ -240,10 +244,15 @@ module.exports = {
 
    /* CSV Export */
    "GET /app_builder/application/:appID/page/:pageID/view/:viewID/csv":
-      "app_builder/ABCsvController.exportCsv"
+      "app_builder/ABCsvController.exportCsv",
+
+
+   /* Custom Widigets */
+   "GET /template/localIncomeExpense": "app_builder/LocalIncomeExpense.getData",
+
+   "GET /template/balanceSheet": "app_builder/ABReportBalanceController.getData"
 
    /*
-
   '/': {
     view: 'user/signup'
   },

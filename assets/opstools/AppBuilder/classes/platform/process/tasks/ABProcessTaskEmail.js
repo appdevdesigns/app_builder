@@ -74,14 +74,24 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
    propertiesShow(id) {
       var ids = this.propertyIDs(id);
 
+      var getFields = () => {
+         var rootObjectFields = this.objectOfStartElement
+            ? this.objectOfStartElement.fields()
+            : [];
+
+         var processFields = this.process
+            .processDataFields(this)
+            .filter((f) => f.field);
+
+         return rootObjectFields.concat(processFields);
+      };
+
       var toUserUI = ABProcessParticipant.selectUsersUi(
          id + "_to_",
          this.toUsers || {},
          {
             isFieldVisible: true,
-            fields: this.objectOfStartElement
-               ? this.objectOfStartElement.fields()
-               : []
+            fields: getFields()
          }
       );
       var fromUserUI = ABProcessParticipant.selectUsersUi(
@@ -89,9 +99,7 @@ module.exports = class ABProcessTaskEmail extends ABProcessTaskEmailCore {
          this.fromUsers || {},
          {
             isFieldVisible: true,
-            fields: this.objectOfStartElement
-               ? this.objectOfStartElement.fields()
-               : []
+            fields: getFields()
          }
       );
 

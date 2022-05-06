@@ -33,53 +33,36 @@ module.exports = {
 
    /**
     * getQRCodeData
-    * return a string with encoded JSON data for our mobile apps to use in
-    * their initializations.
+    * return the string to be embedded as a QR code
     * @param {obj} options
-    *              options.UserPublicToken  {string} the public auth token
-    *                          the user.  Found in {ABRelayUser}.
-    * @return {string}  or {null} if invalid data provided.
+    *              options.token  {string} the registration token of the user.  
+    *                             Found in {ABRelayUser}.
+    * @return {string}
     */
    getQRCodeData: function(options) {
-      var UserPublicToken = options.UserPublicToken;
-      var codePushKeys = options.codePushKeys;
-
       var error;
 
-      if (!UserPublicToken) {
-         if (!error) {
-            error = new Error("Missing parameters to ABMobile.getQRCodeImage");
-            error.code = "EMISSINGPARAMS";
-            error.details = [];
-         }
-         error.details.push("options.UserPublicToken");
-      }
-
-      if (!codePushKeys) {
-         if (!error) {
-            error = new Error("Missing parameters to ABMobile.getQRCodeImage");
-            error.code = "EMISSINGPARAMS";
-            error.details = [];
-         }
-         error.details.push("options.codePushKeys");
-      }
-
-      if (error) {
+      if (!options.token) {
+         error = new Error("Missing parameters to ABMobile.getQRCodeImage");
+         error.code = "EMISSINGPARAMS";
+         error.details = ["options.token"];
          ADCore.error.log("ABMobile:getQRCodeData:Missing Data", {
             error: error
          });
-         // throw error;
-         return null;
       }
 
-      var QRData = JSON.stringify({
-         userInfo: {
-            auth_token: UserPublicToken,
-            updateKeys: codePushKeys
-         }
-      });
+      if (!sails.config.appbuilder.pwaURL) {
+         error = new Error("appbuilder.pwaURL not set in config/local.js");
+         error.code = "EMISSINGCONFIG";
+         ADCore.error.log("appbuilder.pwaURL not set in config/local.js", {
+            error: error
+         });
+      }
 
-      return QRData;
+      if (error) return "";
+      else {
+         return sails.config.appbuilder.pwaURL + "#JRR=" + options.token;
+      }
    },
 
    /**
@@ -115,24 +98,21 @@ module.exports = {
    },
 
    /**
-    * publicAuthTokenForUser
-    * return the public auth token for the provided User
+    * registrationTokenForUser
+    * generate and return a new registration token for the provided User
     * @param {string} userGUID  the user's GUID (siteuser.guid)
-    * @return {Promise}  resolved with {string} publicAuthToken
+    * @return {Promise}  resolved with {string} registrationToken
     *                    or {undefined} if not found.
     */
-   publicAuthTokenForUser: function(userGUID) {
-      return new Promise((resolve, reject) => {
-         ABRelayUser.findOne({ siteuser_guid: userGUID })
-            .then((ru) => {
-               if (ru) {
-                  resolve(ru.publicAuthToken);
-                  return;
-               }
-
-               resolve();
-            })
-            .catch(reject);
-      });
+   registrationTokenForUser: function(userGUID) {
+      return ABRelayUser.initializeUser(userGUID)
+         .then(() => {
+            return ABRelayUser.findOne({ siteuser_guid: userGUID });
+         })
+         .then((ru) => {
+            if (ru) {
+               return ru.registrationToken;
+            }
+         });
    }
 };

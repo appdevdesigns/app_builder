@@ -43,7 +43,7 @@ module.exports = {
             // https://github.com/tgriesser/knex/issues/1027
             pool: {
                min: 2,
-               max: 20,
+               max: 30,
                acquireTimeoutMillis:
                   sails.config.connections[name].acquireTimeout || 90000
             }

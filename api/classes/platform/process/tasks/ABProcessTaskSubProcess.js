@@ -117,8 +117,14 @@ module.exports = class SubProcess extends SubProcessCore {
                   processTasks.push(
                      () =>
                         new Promise((next) => {
+                           this.log(
+                              instance,
+                              `SubProcess run data id: ${data.uuid || data.id}`
+                           );
+
                            var value = {};
                            value.data = data;
+
                            this.stateUpdate(instance, value);
 
                            let taskElements = [];
@@ -197,5 +203,23 @@ module.exports = class SubProcess extends SubProcessCore {
                   })
             )
       );
+   }
+
+   /**
+    * @method exportIDs()
+    * export any relevant .ids for the necessary operation of this application.
+    * @param {array} ids
+    *        the array of ids to store our relevant .ids into.
+    */
+   exportIDs(ids) {
+      // make sure we don't get into an infinite loop:
+      if (ids.indexOf(this.id) > -1) return;
+
+      ids.push(this.id);
+
+      // store our elements:
+      this.elements().forEach((e) => {
+         e.exportIDs(ids);
+      });
    }
 };

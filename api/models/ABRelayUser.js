@@ -61,6 +61,7 @@ var async = require("async");
 var _ = require("lodash");
 var child_process = require("child_process");
 var uuid = require("uuid/v4");
+var crypto = require("crypto");
 
 module.exports = {
    tableName: "appbuilder_relay_user",
@@ -96,14 +97,14 @@ module.exports = {
       // user: a uuid that is sent to the mobile client.
       // each data packet sent from the client will reference this uuid
       user: {
-         type: "mediumtext"
+         type: "string",
+         maxLength: 40
       },
 
-      // publicAuthToken: a uuid that is sent to the mobile client.
-      // to be allowed to connect to the public server, the client must use this auth token
-      // in it's communications.
-      publicAuthToken: {
-         type: "mediumtext"
+      // unique random string to be embedded in a URL that the user will use to activate their mobile app
+      registrationToken: {
+         type: "string",
+         maxLength: 100
       },
 
       // initial rsa key
@@ -149,27 +150,92 @@ module.exports = {
    //// Model class methods
    ////
 
+    // Return an sha2 hash in base64 encoding.
+    hash: function(plaintext) {
+        let hasher = crypto.createHash('sha256');
+        hasher.update(plaintext);
+        return hasher.digest('base64');
+    },
+    
    /**
-    * Generate relay account & encryption keys for the given user.
+    * Generate relay account registration token & encryption keys for the 
+    * given user.
     *
     * This is a slow process.
-    * If an entry for the user already exists, it will be replaced.
+    * 
+    * If the account already exists, encryption keys will not be overwritten
+    * unless requested in the options. The registration token will always be
+    * overwritten.
     *
-    * @param {integer} renID
+    * @param {integer} userGUID
+    *    The AppBuilder site_user.guid value of this user.
+    * @param {object} options
+    * @param {boolean} [options.overwriteKeys]
+    *    Overwrite with new encryption keys if the account already exists.
+    *    Default is false.
     * @return {Promise}
     */
-   initializeUser: function(userGUID) {
+   initializeUser: function(userGUID, options = {}) {
       return new Promise((resolve, reject) => {
          if (!userGUID) {
             reject(new Error("Invalid userGUID"));
             return;
          }
 
+         var relayAccountExists = false;
+         var siteUserGUID = userGUID; // appbuilder user GUID
+         var userUUID; // relay user UUID
          var privateKey, publicKey;
 
          async.series(
             [
+               // Make sure the userGUID is valid
                (next) => {
+                  ABRelayUser.query(
+                     `
+                        SELECT id 
+                        FROM site_user
+                        WHERE guid = ?
+                     `,
+                     [userGUID],
+                     (err, list) => {
+                        if (err) next(err);
+                        else if (!list || !list[0]) next(new Error("Invalid userGUID"));
+                        else next();
+                     }
+                  );
+               },
+
+               (next) => {
+                  // Check if the relay account already exists
+                  ABRelayUser.query(
+                     `
+                        SELECT user
+                        FROM appbuilder_relay_user
+                        WHERE siteuser_guid = ?
+                     `,
+                     [siteUserGUID],
+                     (err, list) => {
+                        if (err) next(err);
+                        else if (list && list[0]) {
+                           // Relay account exists
+                           relayAccountExists = true;
+                           userUUID = list[0].user;
+                           next();
+                        }
+                        else {
+                           // Relay account does not exist yet
+                           next();
+                        }
+                     }
+                  );
+               },
+
+               (next) => {
+                  if (relayAccountExists && !options.overwriteKeys) {
+                     return next();
+                  }
+
                   // Generate private key
                   child_process.exec("openssl genrsa 2048", (err, stdout) => {
                      if (err) next(err);
@@ -181,6 +247,10 @@ module.exports = {
                },
 
                (next) => {
+                  if (relayAccountExists && !options.overwriteKeys) {
+                     return next();
+                  }
+
                   // Generate public key
                   var proc = child_process.exec(
                      "openssl rsa -outform PEM -pubout",
@@ -197,20 +267,62 @@ module.exports = {
                },
 
                (next) => {
-                  // Save to database
+                  if (relayAccountExists) {
+                     return next();
+                  }
+
+                  // Create new DB entry if needed.
+                  userUUID = uuid();
+                  ABRelayUser.query(
+                    `
+                        INSERT INTO appbuilder_relay_user
+                        SET
+                           siteuser_guid = ?,
+                           user = ?
+                    `,
+                     [siteUserGUID, userUUID],
+                     (err) => {
+                        if (err) next(err);
+                        else next();
+                     }
+                  );
+                },
+
+                (next) => {
+                  // Add new registration token
                   ABRelayUser.query(
                      `
-                        
-                        REPLACE INTO appbuilder_relay_user
+                        UPDATE appbuilder_relay_user
                         SET
-                            siteuser_guid = ?,
-                            user = ?,
-                            publicAuthToken = SHA2(CONCAT(RAND(), UUID()), 224),
-                            rsa_private_key = ?,
-                            rsa_public_key = ?
+                           registrationToken = SHA2(CONCAT(RAND(), UUID()), 224)
+                        WHERE
+                           siteuser_guid = ?
+                     `,
+                     [siteUserGUID],
+                     (err) => {
+                        if (err) next(err);
+                        else next();
+                     }
+                  );
+               },
+
+               (next) => {
+                  // Save encryption keys if needed
+                  if (!privateKey || !publicKey) {
+                     return next();
+                  }
+
+                  ABRelayUser.query(
+                     `
+                        UPDATE appbuilder_relay_user
+                        SET
+                           rsa_private_key = ?,
+                           rsa_public_key = ?
+                        WHERE
+                           siteuser_guid = ?
                         
                     `,
-                     [userGUID, uuid(), privateKey, publicKey],
+                     [privateKey, publicKey, siteUserGUID],
                      (err) => {
                         if (err) next(err);
                         else next();
@@ -317,21 +429,6 @@ module.exports = {
                      }
                   );
 
-                  /*
-                    var tasks = [];
-                    diff.forEach((renID) => {
-                        tasks.push(this.initializeUser(renID));
-                    });
-                    
-                    Promise.all(tasks)
-                    .then(() => {
-                        sails.log('Done');
-                        next();
-                    })
-                    .catch((err) => {
-                        next(err);
-                    });
-                    */
                }
             ],
             (err) => {
