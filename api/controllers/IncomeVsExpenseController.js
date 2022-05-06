@@ -151,90 +151,6 @@ module.exports = {
          return match;
       }
 
-      // Our data object
-      let data = {
-         mccs,
-         // netTotals,
-         numberOfColumns: mccs.length + 2,
-         // balSheetTotal,
-         accountGroups: [
-            {
-               label: "Local Income",
-               sums: calculateGroupSums(4),
-               subGroups: [
-                  {
-                     label: "41 contributions for staff",
-                     sums: calculateGroupSums(41)
-                  },
-                  {
-                     label: "42 contributions for staff",
-                     sums: calculateGroupSums(42)
-                  }
-               ]
-            },
-            {
-               label: "Income from AAA",
-               sums: calculateGroupSums(5),
-               subGroups: [
-                  {
-                     label: "contributions for staff",
-                     sums: calculateGroupSums(51)
-                  },
-                  {
-                     label: "contributions for staff",
-                     sums: calculateGroupSums(52)
-                  }
-               ]
-            },
-            {
-               label: "Income Received",
-               sums: calculateGroupSums(4, 5)
-            },
-            {
-               label: "Income transfers to AAA",
-               sums: calculateGroupSums(6),
-               subGroups: [
-                  {
-                     label: "contributions for staff",
-                     sums: calculateGroupSums(61)
-                  },
-                  {
-                     label: "contributions for staff",
-                     sums: calculateGroupSums(62)
-                  }
-               ]
-            },
-            {
-               label: "Expenses",
-               sums: calculateGroupSums(7, 8),
-               subGroups: [
-                  {
-                     label: "contributions for staff",
-                     sums: calculateGroupSums(71)
-                  },
-                  {
-                     label: "contributions for staff",
-                     sums: calculateGroupSums(81)
-                  }
-               ]
-            },
-            {
-               label: "Internal Transfers",
-               sums: calculateGroupSums(9),
-               subGroups: [
-                  {
-                     label: "contributions for staff",
-                     sums: calculateGroupSums(91)
-                  },
-                  {
-                     label: "contributions for staff",
-                     sums: calculateGroupSums(92)
-                  }
-               ]
-            }
-         ]
-      };
-
       // let myRCs = ABSystemObject.getApplication().queries(
       //    (o) => o.id == "241a977c-7748-420d-9dcb-eff53e66a43f"
       // )[0];
@@ -353,6 +269,90 @@ module.exports = {
                .then((records) => {
                   console.log("records ----->", records);
                   balances = records;
+
+                  // Our data object
+                  let data = {
+                     mccs,
+                     // netTotals,
+                     numberOfColumns: mccs.length + 2,
+                     // balSheetTotal,
+                     accountGroups: [
+                        {
+                           label: "Local Income",
+                           sums: calculateGroupSums(4),
+                           subGroups: [
+                              {
+                                 label: "41 contributions for staff",
+                                 sums: calculateGroupSums(41)
+                              },
+                              {
+                                 label: "42 contributions for staff",
+                                 sums: calculateGroupSums(42)
+                              }
+                           ]
+                        },
+                        {
+                           label: "Income from AAA",
+                           sums: calculateGroupSums(5),
+                           subGroups: [
+                              {
+                                 label: "contributions for staff",
+                                 sums: calculateGroupSums(51)
+                              },
+                              {
+                                 label: "contributions for staff",
+                                 sums: calculateGroupSums(52)
+                              }
+                           ]
+                        },
+                        {
+                           label: "Income Received",
+                           sums: calculateGroupSums(4, 5)
+                        },
+                        {
+                           label: "Income transfers to AAA",
+                           sums: calculateGroupSums(6),
+                           subGroups: [
+                              {
+                                 label: "contributions for staff",
+                                 sums: calculateGroupSums(61)
+                              },
+                              {
+                                 label: "contributions for staff",
+                                 sums: calculateGroupSums(62)
+                              }
+                           ]
+                        },
+                        {
+                           label: "Expenses",
+                           sums: calculateGroupSums(7, 8),
+                           subGroups: [
+                              {
+                                 label: "contributions for staff",
+                                 sums: calculateGroupSums(71)
+                              },
+                              {
+                                 label: "contributions for staff",
+                                 sums: calculateGroupSums(81)
+                              }
+                           ]
+                        },
+                        {
+                           label: "Internal Transfers",
+                           sums: calculateGroupSums(9),
+                           subGroups: [
+                              {
+                                 label: "contributions for staff",
+                                 sums: calculateGroupSums(91)
+                              },
+                              {
+                                 label: "contributions for staff",
+                                 sums: calculateGroupSums(92)
+                              }
+                           ]
+                        }
+                     ]
+                  };
 
                   // Calculate Net Income Values
                   let incomeTotals = calculateGroupSums(4, 5);
