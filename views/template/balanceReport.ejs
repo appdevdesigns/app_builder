@@ -9,39 +9,23 @@
             color: gray;
             border: 1px solid #CCC;
         }
-
-        tr.tertiary-total,
-        tr.tertiary-total:hover {
-            background: #949494;
-            color: white;
-        }
-
-        tr.secondary-total,
-        tr.secondary-total:hover {
-            background: #6a6a6a;
-            color: white;
-        }
-
-        tr.total {
-            background: #2a2a2a;
-            color: white;
-        }
     </style>
-
     <script type="text/javascript">
-        document.title = "<%= title[languageCode] %>";
-
         function refresh() {
+            let rcVal = document.getElementById("rcType").value || "team";
             let fyVal = document.getElementById("fySelect").value;
-            window.location.href = `/template/balanceSheet?month=${fyVal}`;
+            window.location.href = `/template/balanceReport?rc=${rcVal}&month=${fyVal}`;
         }
     </script>
-
     <center>
-        <h1>
-            <%= title[languageCode] %>
-        </h1>
         <h2>
+            <span style="font-weight: normal;">
+                RC:
+            </span>
+            <select class="selector" id="rcType" onchange="refresh()">
+                <option value="team" <% if (rcType=="team") { %> selected <% } %>>My Team</option>
+                <option value="qx" <% if (rcType=="qx") { %> selected <% } %>>My QX</option>
+            </select>
             <span style="font-weight: normal;">
                 FY Period:
             </span>
@@ -58,8 +42,12 @@
         <table width="100%">
             <!-- Header -->
             <tr class="sub header">
-                <td>Balance Sheet</td>
+                <td>Responsibility Centre Balances</td>
                 <td align="right"></td>
+            </tr>
+            <tr class="header">
+                <td>Responsibility Centre</td>
+                <td align="right">Balance</td>
             </tr>
             <!-- Data -->
             <% for(var i=0; i < items.length; i++) { %>
@@ -69,7 +57,8 @@
                     </td>
                     <% if (items[i].value !=null) { %>
                         <td align="right">
-                            <%= fnValueFormat(typeof items[i].value=="function" ? items[i].value(items) : items[i].value) %>
+                            <%= fnValueFormat(typeof items[i].value=="function" ? items[i].value(items) :
+                                items[i].value) %>
                         </td>
                         <% } else { %>
                             <td></td>

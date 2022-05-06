@@ -1,11 +1,14 @@
 const OBJECT_IDS = {
    FY_MONTH: "1d63c6ac-011a-4ffd-ae15-97e5e43f2b3f",
    ACCOUNT: "c1a3642d-3863-4eb7-ac98-3dd18de3e683",
-   BALANCE: "bb9aaf02-3265-4b8c-9d9a-c0b447c2d804"
+   BALANCE: "bb9aaf02-3265-4b8c-9d9a-c0b447c2d804",
 };
 
 const QUERY_IDS = {
-   RC: "241a977c-7748-420d-9dcb-eff53e66a43f"
+   MyTeamRC: "241a977c-7748-420d-9dcb-eff53e66a43f",
+   MyQXRC: "2e3e423b-fcec-4221-9a9c-7a670fbba65e",
+   scopeFilterQXCenter: "ee0c1ac3-7391-4dd5-8d2e-83da121db100",
+   scopeFilterTeam: "b60dc145-62b7-4ada-a617-632d9f5c3249"
 };
 
 const ACCOUNT_CATEGORIES = {
@@ -23,7 +26,17 @@ const ITEM_TYPES = {
    TotalTertiary: "tertiary-total"
 };
 
-function GetViewData(languageCode, rc, fyMonth) {
+function GetLanguageCode(req) {
+   let languageCode =
+      req.user.data.languageCode || req.query.languageCode || "en";
+
+   if (languageCode == "zh-hans") {
+      languageCode = "zh";
+   }
+   return languageCode;
+}
+
+function GetViewDataBalanceSheet(languageCode, rc, fyMonth) {
    return {
       fnValueFormat: valueFormat,
       languageCode: languageCode,
@@ -183,9 +196,20 @@ function GetViewData(languageCode, rc, fyMonth) {
    };
 }
 
-function GetRC(userData) {
+function GetViewDataBalanceReport(languageCode, rc, fyMonth) {
+   return {
+      fnValueFormat: valueFormat,
+      languageCode: languageCode,
+      rcType: rc,
+      fyPeriod: fyMonth,
+      fyOptions: [],
+      items: []
+   };
+}
+
+function GetRC(userData, queryId, cond = {}) {
    const queryRC = ABSystemObject.getApplication().queries(
-      (o) => o.id == QUERY_IDS.RC
+      (o) => o.id == queryId
    )[0];
 
    if (queryRC == null) return Promise.resolve([]);
@@ -194,23 +218,18 @@ function GetRC(userData) {
       queryRC
          .queryFind(
             {
-               where: {
-                  glue: "and",
-                  rules: []
-               }
+               where: cond
             },
             userData
          )
          .then((list) => {
-            let rcOptions = (list || []).map((rc) => rc["BASE_OBJECT.RC Name"]);
+            let rcNames = (list || []).map((rc) => rc["BASE_OBJECT.RC Name"]);
 
-            rcOptions = rcOptions.sort((a, b) =>
+            rcNames = rcNames.sort((a, b) =>
                a.toLowerCase().localeCompare(b.toLowerCase())
             );
 
-            rcOptions.unshift("");
-
-            next(rcOptions);
+            next(rcNames);
          })
          .catch(bad);
    });
@@ -255,7 +274,7 @@ function GetFYMonths() {
    });
 }
 
-function GetBalances(rc, fyPeriod) {
+function GetBalances(rc, fyPeriod, extraRules = []) {
    const objBalance = ABSystemObject.getApplication().objects(
       (o) => o.id == OBJECT_IDS.BALANCE
    )[0];
@@ -285,6 +304,12 @@ function GetBalances(rc, fyPeriod) {
       });
    }
 
+   (extraRules || []).forEach((r) => {
+      if (!r) return;
+
+      cond.rules.push(r);
+   });
+
    return new Promise((next, bad) => {
       objBalance
          .modelAPI()
@@ -307,33 +332,16 @@ function valueFormat(number) {
 
 module.exports = {
    // GET: /template/balanceSheet
-   getData: (req, res) => {
-      let languageCode =
-         req.user.data.languageCode || req.query.languageCode || "en";
+   balanceSheet: (req, res) => {
+      let languageCode = GetLanguageCode(req);
 
-      if (languageCode == "zh-hans") {
-         languageCode = "zh";
-      }
-
-      let viewData = GetViewData(
+      let viewData = GetViewDataBalanceSheet(
          languageCode,
          req.query.rc || null,
          req.query.month
       );
 
       Promise.resolve()
-         // Pull RC
-         // .then(
-         //    () =>
-         //       new Promise((next, err) => {
-         //          GetRC(req.user.data)
-         //             .then((list) => {
-         //                viewData.rcOptions = list;
-         //                next();
-         //             })
-         //             .catch(err);
-         //       })
-         // )
          // Pull FY month list
          .then(
             () =>
@@ -350,7 +358,10 @@ module.exports = {
          .then(
             () =>
                new Promise((next, err) => {
-                  GetBalances(viewData.rc, viewData.fyPeriod)
+                  GetBalances(
+                     viewData.rc,
+                     viewData.fyPeriod || viewData.fyOptions[0]
+                  )
                      .then((list) => {
                         (list || []).forEach((bl) => {
                            if (
@@ -396,6 +407,112 @@ module.exports = {
          .then(() => {
             res.view(
                "app_builder/template/balanceSheet", // .ejs
+               viewData
+            );
+         });
+   },
+
+   // GET: /template/balanceReport
+   balanceReport: (req, res) => {
+      let languageCode = GetLanguageCode(req);
+
+      let viewData = GetViewDataBalanceReport(
+         languageCode,
+         req.query.rc,
+         req.query.month
+      );
+
+      /**
+       * {
+       *    rcName1: sum of balances,
+       *    rcName2: sum of balances,
+       *    ...
+       * }
+       */
+      let rcHash = {};
+
+      Promise.resolve()
+         // Pull FY month list
+         .then(
+            () =>
+               new Promise((next, err) => {
+                  GetFYMonths()
+                     .then((list) => {
+                        viewData.fyOptions = list;
+                        next();
+                     })
+                     .catch(err);
+               })
+         )
+         // Check QX Role of the user
+         .then(
+            () =>
+               new Promise((next, err) => {
+                  GetRC(
+                     req.user.data,
+                     viewData.rcType == "qx"
+                        ? QUERY_IDS.MyQXRC
+                        : QUERY_IDS.MyTeamRC
+                  )
+                     .then((list) => {
+                        next(list || []);
+                     })
+                     .catch(err);
+               })
+         )
+         // Pull Balance
+         .then(
+            (RCs) =>
+               new Promise((next, err) => {
+                  let rules = [
+                     {
+                        key: "RC Code",
+                        rule: "in",
+                        value: RCs
+                     },
+                     {
+                        key: "COA Num",
+                        rule: "in",
+                        value: [3991, 3500]
+                     }
+                  ];
+
+                  GetBalances(
+                     null,
+                     viewData.fyPeriod || viewData.fyOptions[0],
+                     rules
+                  )
+                     .then((list) => {
+                        next(list);
+                     })
+                     .catch(err);
+               })
+         )
+         // Render UI
+         .then((balances) => {
+            // Calculate Sum
+            (balances || []).forEach((gl) => {
+               rcHash[gl["RC Code"]] =
+                  rcHash[gl["RC Code"]] == null ? 0 : rcHash[gl["RC Code"]];
+
+               rcHash[gl["RC Code"]] += gl["Running Balance"] || 0;
+            });
+
+            // Convert to View Data
+            Object.keys(rcHash).forEach((rcCode) => {
+               viewData.items.push({
+                  title: rcCode,
+                  value: rcHash[rcCode]
+               });
+            });
+
+            // Sort
+            viewData.items = viewData.items.sort((a, b) =>
+               a.title.toLowerCase().localeCompare(b.title.toLowerCase())
+            );
+
+            res.view(
+               "app_builder/template/balanceReport", // .ejs
                viewData
             );
          });
