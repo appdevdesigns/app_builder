@@ -354,6 +354,11 @@ module.exports = {
                   // Calculate Net Income Values
                   let incomeTotals = calculateGroupSums(4, 5);
                   let expenseTotals = calculateGroupSums(6, 7, 8, 9);
+                  console.log(
+                     "expenseTotals ------------------>",
+                     expenseTotals
+                  );
+                  console.log("incomeTotals ------------------>", incomeTotals);
                   data.netTotals = [];
                   incomeTotals.forEach((val, i) => {
                      data.netTotals.push(
