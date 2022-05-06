@@ -158,10 +158,46 @@ module.exports = class ABClassObject extends ABObjectCore {
          if (data.ids.indexOf(this.id) > -1) return;
          data.ids.push(this.id);
 
-         // include my fields:
-         this.fields(null, true).forEach((f) => {
-            f.exportData(data);
-         });
+         // special Temp case:
+         if (this.name == "USER") {
+
+            let objIDs = [
+            "42658374-ed94-49af-90a4-05c048b6f041",
+            "d84cd351-d96c-490f-9afb-2a0b880ca0ec",
+            "273dfc1f-7ba4-41c1-9265-02993c3f8d3a",
+            "228e3d91-5e42-49ec-b37c-59323ae433a1",
+            "c33692f3-26b7-4af3-a02e-139fb519296d",
+            "af10e37c-9b3a-4dc6-a52a-85d52320b659",
+            "090cde9f-71ba-4597-bdb2-79b84816e86e",
+            "2ba85be0-78db-4eda-ba43-c2c4e3831849",
+            "d36ae4c8-edef-48d8-bd9c-79a0edcaa067",
+            "4a9d89c9-f4eb-41af-91e4-909eff389f3e",
+            "08826ac7-4b33-4745-a3d7-f7831ca4ff59"
+          ];
+
+
+            // only export fields connected to our Site Objects:
+                     // include my fields:
+            this.fields(null, true).forEach((f) => {
+               if (f.key != "connectObject"){
+                  f.exportData(data);
+                  return;
+               }
+
+               // only export connections that connect to one of these object:
+               if (objIDs.indexOf(f.datasourceLink.id) > -1) {
+                  f.exportData(data);
+               }
+               
+            });
+
+         } else {
+            // include my fields:
+            this.fields(null, true).forEach((f) => {
+               f.exportData(data);
+            });
+         }
+         
 
          this.indexes().forEach((i) => {
             i.exportData(data);
