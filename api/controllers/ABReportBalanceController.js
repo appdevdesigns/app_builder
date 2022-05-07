@@ -1,7 +1,7 @@
 const OBJECT_IDS = {
    FY_MONTH: "1d63c6ac-011a-4ffd-ae15-97e5e43f2b3f",
    ACCOUNT: "c1a3642d-3863-4eb7-ac98-3dd18de3e683",
-   BALANCE: "bb9aaf02-3265-4b8c-9d9a-c0b447c2d804",
+   BALANCE: "bb9aaf02-3265-4b8c-9d9a-c0b447c2d804"
 };
 
 const QUERY_IDS = {
@@ -198,6 +198,10 @@ function GetViewDataBalanceSheet(languageCode, rc, fyMonth) {
 
 function GetViewDataBalanceReport(languageCode, rc, fyMonth) {
    return {
+      title: {
+         en: "RC Balances",
+         zh: ""
+      },
       fnValueFormat: valueFormat,
       languageCode: languageCode,
       rcType: rc,
