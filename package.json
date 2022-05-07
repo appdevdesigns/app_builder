@@ -1,6 +1,6 @@
 {
   "name": "app_builder",
-  "version": "1.16.11",
+  "version": "1.16.12",
   "description": "The app builder project",
   "main": "module.js",
   "directories": {
