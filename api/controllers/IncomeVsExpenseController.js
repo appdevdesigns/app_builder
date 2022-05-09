@@ -108,26 +108,26 @@ module.exports = {
 
       function calculateGroupSums(...groups) {
          console.log("groups ----->", groups);
-         const sums = [];
+         let sums = [];
          console.log("mccs ----->", mccs);
          console.log("balances ------>", balances);
          mccs.forEach((dept) => {
-            const sum = balances
-               .filter((bal) => {
-                  let inGroup = false;
-                  groups.forEach((group) => {
-                     if (accountInCategory(bal["COA Num"], group)) {
-                        inGroup = true;
-                     }
-                  });
-                  console.log("inGroup", inGroup);
-                  return inGroup && bal["RC Code"].substring(0, 2) == dept.code;
-               })
-               .map((i) => i["Running Balance"])
-               .reduce((a, b) => (100 * a + 100 * b) / 100, 0);
+            let sum = 0;
+            balances.forEach((bal) => {
+               let inGroup = false;
+               groups.forEach((group) => {
+                  if (accountInCategory(bal["COA Num"], group)) {
+                     inGroup = true;
+                  }
+               });
+               console.log("inGroup", inGroup);
+               if (inGroup && bal["RC Code"].substring(0, 2) == dept.code) {
+                  sum = (100 * bal["Running Balance"] + 100 * sum) / 100;
+               }
+            });
             sums.push(sum);
          });
-         const totalSum = sums.reduce((a, b) => (100 * a + 100 * b) / 100, 0);
+         let totalSum = sums.reduce((a, b) => (100 * a + 100 * b) / 100, 0);
          sums.push(totalSum);
          return sums;
       }
