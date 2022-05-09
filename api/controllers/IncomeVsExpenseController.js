@@ -111,22 +111,26 @@ module.exports = {
          let sums = [];
          console.log("mccs ----->", mccs);
          console.log("balances ------>", balances);
-         mccs.forEach((dept) => {
+         for (let m = 0; m < mccs.length; m++) {
             let sum = 0;
-            balances.forEach((bal) => {
+            for (let b = 0; b < balances.length; b++) {
                let inGroup = false;
-               groups.forEach((group) => {
-                  if (accountInCategory(bal["COA Num"], group)) {
+               for (let g = 0; g < groups.length; g++) {
+                  if (accountInCategory(balances[b]["COA Num"], groups[g])) {
                      inGroup = true;
                   }
-               });
-               console.log("inGroup", inGroup);
-               if (inGroup && bal["RC Code"].substring(0, 2) == dept.code) {
-                  sum = (100 * bal["Running Balance"] + 100 * sum) / 100;
                }
-            });
+               console.log("inGroup", inGroup);
+               if (
+                  inGroup &&
+                  balances[b]["RC Code"].substring(0, 2) == mccs[m].code
+               ) {
+                  sum =
+                     (100 * balances[b]["Running Balance"] + 100 * sum) / 100;
+               }
+            }
             sums.push(sum);
-         });
+         }
          let totalSum = sums.reduce((a, b) => (100 * a + 100 * b) / 100, 0);
          sums.push(totalSum);
          return sums;
