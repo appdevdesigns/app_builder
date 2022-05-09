@@ -280,26 +280,34 @@ module.exports = {
                         sums: calculateGroupSums(4),
                         subGroups: [
                            {
-                              label: "41 contributions for staff",
+                              label: "Contributions for staff",
                               sums: calculateGroupSums(41)
                            },
                            {
-                              label: "42 contributions for staff",
-                              sums: calculateGroupSums(42)
+                              label: "Product sales",
+                              sums: calculateGroupSums(43)
+                           },
+                           {
+                              label: "Program Income",
+                              sums: calculateGroupSums(44)
+                           },
+                           {
+                              label: "Other Income",
+                              sums: calculateGroupSums(49)
                            }
                         ]
                      },
                      {
-                        label: "Income from AAA",
+                        label: "Income from CCC",
                         sums: calculateGroupSums(5),
                         subGroups: [
                            {
-                              label: "contributions for staff",
+                              label: "Contributions from other CCC",
                               sums: calculateGroupSums(51)
                            },
                            {
-                              label: "contributions for staff",
-                              sums: calculateGroupSums(52)
+                              label: "Subsidy funding from other CCC",
+                              sums: calculateGroupSums(56)
                            }
                         ]
                      },
@@ -308,16 +316,16 @@ module.exports = {
                         sums: calculateGroupSums(4, 5)
                      },
                      {
-                        label: "Income transfers to AAA",
+                        label: "Income transfer to CCC",
                         sums: calculateGroupSums(6),
                         subGroups: [
                            {
-                              label: "contributions for staff",
+                              label: "Contributions to other CCC",
                               sums: calculateGroupSums(61)
                            },
                            {
-                              label: "contributions for staff",
-                              sums: calculateGroupSums(62)
+                              label: "Subsidy funding to other CCC",
+                              sums: calculateGroupSums(66)
                            }
                         ]
                      },
@@ -326,12 +334,40 @@ module.exports = {
                         sums: calculateGroupSums(7, 8),
                         subGroups: [
                            {
-                              label: "contributions for staff",
+                              label: "Personnel expenses",
                               sums: calculateGroupSums(71)
                            },
                            {
-                              label: "contributions for staff",
+                              label: "Conferences and meetings",
+                              sums: calculateGroupSums(72)
+                           },
+                           {
+                              label: "Travel and transportation",
+                              sums: calculateGroupSums(75)
+                           },
+                           {
+                              label: "Supplies and non-capitalized equipment",
                               sums: calculateGroupSums(81)
+                           },
+                           {
+                              label: "Communications",
+                              sums: calculateGroupSums(82)
+                           },
+                           {
+                              label: "Professional services",
+                              sums: calculateGroupSums(84)
+                           },
+                           {
+                              label: "Capital expenses",
+                              sums: calculateGroupSums(86)
+                           },
+                           {
+                              label: "Facilities",
+                              sums: calculateGroupSums(87)
+                           },
+                           {
+                              label: "Other expenses",
+                              sums: calculateGroupSums(89)
                            }
                         ]
                      },
@@ -340,12 +376,12 @@ module.exports = {
                         sums: calculateGroupSums(9),
                         subGroups: [
                            {
-                              label: "contributions for staff",
+                              label: "Internal income transfers",
                               sums: calculateGroupSums(91)
                            },
                            {
-                              label: "contributions for staff",
-                              sums: calculateGroupSums(92)
+                              label: "Internal expense transfers",
+                              sums: calculateGroupSums(95)
                            }
                         ]
                      }
