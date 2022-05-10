@@ -41,52 +41,6 @@ module.exports = {
       /* should start with mcc code.
     */
       let balances = [];
-      //    {
-      //       mcc_code: "01",
-      //       COA Num: 3991,
-      //       Running Balance: 8110
-      //    },
-      //    {
-      //       mcc_code: "01",
-      //       COA Num: 4111,
-      //       Running Balance: 1230
-      //    },
-      //    {
-      //       mcc_code: "02",
-      //       COA Num: 4111,
-      //       Running Balance: 5020
-      //    },
-      //    {
-      //       mcc_code: "03",
-      //       COA Num: 4111,
-      //       Running Balance: 130
-      //    },
-      //    {
-      //       mcc_code: "02",
-      //       COA Num: 4222,
-      //       Running Balance: 1000
-      //    },
-      //    {
-      //       mcc_code: "03",
-      //       COA Num: 4221,
-      //       Running Balance: 500
-      //    },
-      //    {
-      //       mcc_code: "01",
-      //       COA Num: 5111,
-      //       Running Balance: 230
-      //    },
-      //    {
-      //       mcc_code: "02",
-      //       COA Num: 5211,
-      //       Running Balance: 420
-      //    },
-      //    {
-      //       mcc_code: "02",
-      //       COA Num: 7211,
-      //       Running Balance: 420
-      //    }
-      // ];
 
       /**
      /* @const mccs
@@ -107,6 +61,8 @@ module.exports = {
       ];
 
       function calculateGroupSums(...groups) {
+         var t1 = new Date();
+
          // console.log("groups ----->", groups);
          let sums = [];
          // console.log("mccs ----->", mccs);
@@ -139,6 +95,10 @@ module.exports = {
             totalSum = (100 * sums[s] + 100 * totalSum) / 100;
          }
          sums.push(totalSum);
+         var t2 = new Date();
+         var dif = (t2.getTime() - t1.getTime()) / 1000;
+         console.log("groups ----->", groups);
+         console.log("Time to run calculations: ", dif);
          return sums;
       }
 
@@ -160,39 +120,6 @@ module.exports = {
          });
          return match;
       }
-
-      // let myRCs = ABSystemObject.getApplication().queries(
-      //    (o) => o.id == "241a977c-7748-420d-9dcb-eff53e66a43f"
-      // )[0];
-
-      //console.log("myRCs ----------------->", myRCs);
-
-      // myRCs
-      //    .queryFind(
-      //       {
-      //          where: {
-      //             glue: "and",
-      //             rules: []
-      //          }
-      //       },
-      //       req.user.data
-      //    )
-      //    .then((rcs) => {
-      //       console.log("My Team RCs ---------------->", rcs);
-      //
-      //       let rcOptions = [];
-      //       rcs.forEach((rc) => {
-      //          rcOptions.push(rc["BASE_OBJECT.RC Name"]);
-      //       });
-      //
-      //       data.rcOptions = rcOptions.sort(function(a, b) {
-      //          return a.toLowerCase().localeCompare(b.toLowerCase());
-      //       });
-      //
-      //       if (!rc) {
-      //          rc = data.rcOptions[0];
-      //          data.rc = rc;
-      //       }
 
       let data = {};
 
