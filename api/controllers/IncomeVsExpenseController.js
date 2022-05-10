@@ -403,15 +403,24 @@ module.exports = {
                   );
                   console.log("incomeTotals ------------------>", incomeTotals);
                   data.netTotals = [];
-                  incomeTotals.forEach((val, i) => {
+                  for (let i = 0; i < incomeTotals.length; i++) {
                      data.netTotals.push(
-                        (100 * val - 100 * expenseTotals[i]) / 100
+                        (100 * incomeTotals[i] - 100 * expenseTotals[i]) / 100
                      );
-                  });
-                  data.balSheetTotal = balances
-                     .filter((bal) => bal["COA Num"].toString() == "3991")
-                     .map((i) => i["Running Balance"])
-                     .reduce((a, b) => (100 * a + 100 * b) / 100, 0);
+                  }
+                  let balSheetTotal = 0;
+                  for (let b = 0; b < balances.length; b++) {
+                     if (
+                        balances[b]["COA Num"] &&
+                        balances[b]["COA Num"].toString() == "3991"
+                     ) {
+                        balSheetTotal =
+                           (100 * balances[b]["Running Balance"] +
+                              100 * balSheetTotal) /
+                           100;
+                     }
+                  }
+                  data.balSheetTotal = balSheetTotal;
 
                   console.log("data ------>", data);
 
