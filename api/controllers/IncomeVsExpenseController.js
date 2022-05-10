@@ -134,8 +134,11 @@ module.exports = {
             }
             sums.push(sum);
          }
-         // let totalSum = sums.reduce((a, b) => (100 * a + 100 * b) / 100, 0);
-         // sums.push(totalSum);
+         let totalSum = 0;
+         for (let s = 0; s < sums.length; s++) {
+            totalSum = (100 * sums[s] + 100 * totalSum) / 100;
+         }
+         sums.push(totalSum);
          return sums;
       }
 
