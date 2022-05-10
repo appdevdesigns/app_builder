@@ -107,10 +107,10 @@ module.exports = {
       ];
 
       function calculateGroupSums(...groups) {
-         console.log("groups ----->", groups);
+         // console.log("groups ----->", groups);
          let sums = [];
-         console.log("mccs ----->", mccs);
-         console.log("balances ------>", balances);
+         // console.log("mccs ----->", mccs);
+         // console.log("balances ------>", balances);
          for (let m = 0; m < mccs.length; m++) {
             let sum = 0;
             for (let b = 0; b < balances.length; b++) {
@@ -123,7 +123,7 @@ module.exports = {
                      inGroup = true;
                   }
                }
-               console.log("inGroup", inGroup);
+               // console.log("inGroup", inGroup);
                if (
                   inGroup &&
                   balances[b]["RC Code"].substring(0, 2) == mccs[m].code
@@ -279,7 +279,7 @@ module.exports = {
                   populate: false
                })
                .then((records) => {
-                  console.log("records ----->", records);
+                  // console.log("records ----->", records);
                   balances = records;
 
                   data.mccs = mccs;
@@ -400,11 +400,11 @@ module.exports = {
                   // Calculate Net Income Values
                   let incomeTotals = calculateGroupSums(4, 5);
                   let expenseTotals = calculateGroupSums(6, 7, 8, 9);
-                  console.log(
-                     "expenseTotals ------------------>",
-                     expenseTotals
-                  );
-                  console.log("incomeTotals ------------------>", incomeTotals);
+                  // console.log(
+                  //    "expenseTotals ------------------>",
+                  //    expenseTotals
+                  // );
+                  // console.log("incomeTotals ------------------>", incomeTotals);
                   data.netTotals = [];
                   for (let i = 0; i < incomeTotals.length; i++) {
                      data.netTotals.push(
@@ -425,7 +425,7 @@ module.exports = {
                   }
                   data.balSheetTotal = balSheetTotal;
 
-                  console.log("data ------>", data);
+                  // console.log("data ------>", data);
 
                   res.view(
                      "app_builder/template/incomeVsExpense", // .ejs
