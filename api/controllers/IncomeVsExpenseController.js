@@ -82,6 +82,8 @@ module.exports = {
                // console.log("inGroup", inGroup);
                if (
                   inGroup &&
+                  balances[b]["Running Balance"] &&
+                  balances[b]["RC Code"] &&
                   balances[b]["RC Code"].substring(0, 2) == mccs[m].code
                ) {
                   sum =
@@ -206,7 +208,7 @@ module.exports = {
                   populate: false
                })
                .then((records) => {
-                  // console.log("records ----->", records);
+                  console.log("records ----->", records);
                   balances = records;
 
                   data.mccs = mccs;
@@ -332,12 +334,13 @@ module.exports = {
                   //    expenseTotals
                   // );
                   // console.log("incomeTotals ------------------>", incomeTotals);
-                  data.netTotals = [];
+                  let netTotals = [];
                   for (let i = 0; i < incomeTotals.length; i++) {
-                     data.netTotals.push(
-                        (100 * incomeTotals[i] - 100 * expenseTotals[i]) / 100
-                     );
+                     let val =
+                        (100 * incomeTotals[i] - 100 * expenseTotals[i]) / 100;
+                     netTotals.push(val);
                   }
+                  data.netTotals = netTotals;
                   let balSheetTotal = 0;
                   for (let b = 0; b < balances.length; b++) {
                      if (
