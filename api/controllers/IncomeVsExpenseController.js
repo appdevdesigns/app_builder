@@ -116,7 +116,10 @@ module.exports = {
             for (let b = 0; b < balances.length; b++) {
                let inGroup = false;
                for (let g = 0; g < groups.length; g++) {
-                  if (accountInCategory(balances[b]["COA Num"], groups[g])) {
+                  if (
+                     balances[b]["COA Num"] &&
+                     accountInCategory(balances[b]["COA Num"], groups[g])
+                  ) {
                      inGroup = true;
                   }
                }
@@ -131,8 +134,8 @@ module.exports = {
             }
             sums.push(sum);
          }
-         let totalSum = sums.reduce((a, b) => (100 * a + 100 * b) / 100, 0);
-         sums.push(totalSum);
+         // let totalSum = sums.reduce((a, b) => (100 * a + 100 * b) / 100, 0);
+         // sums.push(totalSum);
          return sums;
       }
 
