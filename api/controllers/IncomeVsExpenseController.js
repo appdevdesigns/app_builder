@@ -71,12 +71,20 @@ module.exports = {
             let sum = 0;
             for (let b = 0; b < balances.length; b++) {
                let inGroup = false;
+               let isExpense = false;
                for (let g = 0; g < groups.length; g++) {
                   if (
                      balances[b]["COA Num"] &&
                      accountInCategory(balances[b]["COA Num"], groups[g])
                   ) {
                      inGroup = true;
+                  }
+                  // check if item is expense so we can subtract from sum later
+                  if (
+                     balances[b]["COA Num"] &&
+                     accountInCategory(balances[b]["COA Num"], 95)
+                  ) {
+                     isExpense = true;
                   }
                }
                // console.log("inGroup", inGroup);
@@ -86,8 +94,15 @@ module.exports = {
                   balances[b]["RC Code"] &&
                   balances[b]["RC Code"].substring(0, 2) == mccs[m].code
                ) {
-                  sum =
-                     (100 * balances[b]["Running Balance"] + 100 * sum) / 100;
+                  if (isExpense) {
+                     sum =
+                        (100 * sum - 100 * balances[b]["Running Balance"]) /
+                        100;
+                  } else {
+                     sum =
+                        (100 * sum + 100 * balances[b]["Running Balance"]) /
+                        100;
+                  }
                }
             }
             sums.push(sum);
