@@ -81,7 +81,7 @@
             <tr>
                <td><%= subGroup.label %></td>
                <% subGroup.sums.forEach((sum)=>{ %>
-                  <td><% sum.toFixed(2) %></td>
+                  <td><%= sum.toFixed(2) %></td>
                <% }) %>
             </tr>
          <% }) %>
@@ -89,7 +89,7 @@
       <tr class="sub-total">
          <td>TOTAL <%= group.label %></td>
          <% group.sums.forEach((sum)=>{ %>
-            <td><% sum.toFixed(2) %></td>
+            <td><%= sum.toFixed(2) %></td>
          <% }) %>
       </tr>
    <% }) %>
@@ -97,7 +97,7 @@
    <tr class="total">
       <td>NET INCOME (LOSS)</td>
       <% netTotals.forEach(amount=>{ %>
-         <td><% amount.toFixed(2) %></td>
+         <td><%= amount.toFixed(2) %></td>
       <% }) %>
    </tr>
    <tr>
@@ -105,6 +105,6 @@
       <% for(let i=2; i< numberOfColumns; i++) { %>
          <td/>
       <% } %>
-      <td><% balSheetTotal.toFixed(2) %></td>
+      <td><%= balSheetTotal.toFixed(2) %></td>
    </tr>
 </table>
