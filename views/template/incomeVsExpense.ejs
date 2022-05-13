@@ -68,21 +68,21 @@
    <tr>
       <th/>
       <% mccs.forEach((department)=>{ %>
-         <th><%= department.label %></th>
+         <th><%= department.label[languageCode] %></th>
       <% }) %>
-      <th>Total</th>
+      <th><%= total %></th>
    </tr>
    <% accountGroups.forEach((group)=>{ %>
       <% if (group.subGroups){ %>
          <tr class="sub">
-            <td><b><%= group.label %></b></td>
+            <td><b><%= group.label[languageCode] %></b></td>
             <% for(let i=1; i< numberOfColumns; i++) { %>
                <td/>
             <% } %>
          </tr>
          <% group.subGroups.forEach((subGroup)=>{ %>
             <tr>
-               <td><%= subGroup.label %></td>
+               <td><%= subGroup.label[languageCode] %></td>
                <% subGroup.sums.forEach((sum)=>{ %>
                   <td class="decimal"><%= sum.toFixed(2) %></td>
                <% }) %>
@@ -90,7 +90,7 @@
          <% }) %>
       <% } %>
       <tr class="sub-total">
-         <td>TOTAL <%= group.label %></td>
+         <td><%= group.label[languageCode] %></td>
          <% group.sums.forEach((sum)=>{ %>
             <td class="decimal"><%= sum.toFixed(2) %></td>
          <% }) %>
@@ -98,13 +98,13 @@
    <% }) %>
    <tr><td/><tr>
    <tr class="total">
-      <td>NET INCOME (LOSS)</td>
+      <td><%= netIncomeLoss[languageCode] %></td>
       <% netTotals.forEach(amount=>{ %>
          <td class="decimal"><%= amount.toFixed(2) %></td>
       <% }) %>
    </tr>
    <tr>
-      <td>Net Income (loss) from Balance Sheet</td>
+      <td><%= netIncomeLossBalance[languageCode] %></td>
       <% for(let i=2; i< numberOfColumns; i++) { %>
          <td/>
       <% } %>

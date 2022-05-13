@@ -19,7 +19,6 @@ module.exports = {
    getData: function(req, res) {
       // get our passed params
       //console.log("params -------------->", req);
-      let rc = req.query.rc ? req.query.rc : undefined;
       let fyper = req.query.fyper ? req.query.fyper : undefined;
       // get the users preferred language
       let languageCode = req.user.data.languageCode
@@ -230,111 +229,235 @@ module.exports = {
                   data.numberOfColumns = mccs.length + 2;
                   data.accountGroups = [
                      {
-                        label: "Local Income",
+                        label: {
+                           en: "Local Income",
+                           zh: "本地收入"
+                        },
+                        total: {
+                           en: "Total Local Income",
+                           zh: "本地总收入"
+                        },
+                        account: "4000",
                         sums: calculateGroupSums(4),
                         subGroups: [
                            {
-                              label: "Contributions for staff",
+                              label: {
+                                 en: "Local Income",
+                                 zh: "本地收入"
+                              },
+                              account: "4100",
                               sums: calculateGroupSums(41)
                            },
                            {
-                              label: "Product sales",
+                              label: {
+                                 en: "Product sales",
+                                 zh: "产品销售"
+                              },
+                              account: "4300",
                               sums: calculateGroupSums(43)
                            },
                            {
-                              label: "Program Income",
+                              label: {
+                                 en: "Program Income",
+                                 zh: "会议和项目收入"
+                              },
+                              account: "4400",
                               sums: calculateGroupSums(44)
                            },
                            {
-                              label: "Other Income",
+                              label: {
+                                 en: "Other Income",
+                                 zh: "其他收入"
+                              },
+                              account: "4900",
                               sums: calculateGroupSums(49)
                            }
                         ]
                      },
                      {
-                        label: "Income from CCC",
+                        label: {
+                           en: "Income from CCC",
+                           zh: "来自3C的收入"
+                        },
+                        total: {
+                           en: "Total Income from CCC",
+                           zh: "来自3C的总收入"
+                        },
+                        account: "5000",
                         sums: calculateGroupSums(5),
                         subGroups: [
                            {
-                              label: "Contributions from other CCC",
+                              label: {
+                                 en: "Contributions from other CCC",
+                                 zh: "通过其他CCC收到的捐款"
+                              },
+                              account: "5100",
                               sums: calculateGroupSums(51)
                            },
                            {
-                              label: "Subsidy funding from other CCC",
+                              label: {
+                                 en: "Subsidy funding from other CCC",
+                                 zh: "来自其他CCC的补贴和拨款"
+                              },
+                              account: "5600",
                               sums: calculateGroupSums(56)
                            }
                         ]
                      },
                      {
-                        label: "Income Received",
+                        label: {
+                           en: "",
+                           zh: ""
+                        },
+                        total: {
+                           en: "Total Income Received",
+                           zh: "来自3C的总收入"
+                        },
+                        account: "4000 & 5000",
                         sums: calculateGroupSums(4, 5)
                      },
                      {
-                        label: "Income transfer to CCC",
+                        label: {
+                           en: "Income transfer to CCC",
+                           zh: "转给其他3C的支出"
+                        },
+                        total: {
+                           en: "Total Income transfer to CCC",
+                           zh: "转给其他3C的总支出"
+                        },
+                        account: "6000",
                         sums: calculateGroupSums(6),
                         subGroups: [
                            {
-                              label: "Contributions to other CCC",
+                              label: {
+                                 en: "Contributions to other CCC",
+                                 zh: "给其他CCC的捐款转出"
+                              },
+                              account: "6100",
                               sums: calculateGroupSums(61)
                            },
                            {
-                              label: "Subsidy funding to other CCC",
+                              label: {
+                                 en: "Subsidy funding to other CCC",
+                                 zh: "给其他CCC的补贴拨款转出"
+                              },
+                              account: "6600",
                               sums: calculateGroupSums(66)
                            }
                         ]
                      },
                      {
-                        label: "Expenses",
+                        label: {
+                           en: "Expenses",
+                           zh: "支出费用"
+                        },
+                        total: {
+                           en: "Total Expenes",
+                           zh: "总支出费用"
+                        },
+                        account: "7000 & 8000",
                         sums: calculateGroupSums(7, 8),
                         subGroups: [
                            {
-                              label: "Personnel expenses",
+                              label: {
+                                 en: "Personnel expenses",
+                                 zh: "工资和员工福利"
+                              },
+                              account: "7100",
                               sums: calculateGroupSums(71)
                            },
                            {
-                              label: "Conferences and meetings",
+                              label: {
+                                 en: "Conferences and meetings",
+                                 zh: "大会和会议费用"
+                              },
+                              account: "7200",
                               sums: calculateGroupSums(72)
                            },
                            {
-                              label: "Travel and transportation",
+                              label: {
+                                 en: "Travel and transportation",
+                                 zh: "差旅费"
+                              },
+                              account: "7500",
                               sums: calculateGroupSums(75)
                            },
                            {
-                              label: "Supplies and non-capitalized equipment",
+                              label: {
+                                 en: "Supplies and non-capitalized equipment",
+                                 zh: "用品和设备以及设备维修和保养"
+                              },
+                              account: "8100",
                               sums: calculateGroupSums(81)
                            },
                            {
-                              label: "Communications",
+                              label: {
+                                 en: "Communications",
+                                 zh: "电话和通信"
+                              },
+                              account: "8200",
                               sums: calculateGroupSums(82)
                            },
                            {
-                              label: "Professional services",
+                              label: {
+                                 en: "Professional services",
+                                 zh: "专业费用"
+                              },
+                              account: "8400",
                               sums: calculateGroupSums(84)
                            },
                            {
-                              label: "Capital expenses",
+                              label: {
+                                 en: "Capital expenses",
+                                 zh: "固定资产支出"
+                              },
+                              account: "8600",
                               sums: calculateGroupSums(86)
                            },
                            {
-                              label: "Facilities",
+                              label: {
+                                 en: "Facilities",
+                                 zh: "设施费用"
+                              },
+                              account: "8700",
                               sums: calculateGroupSums(87)
                            },
                            {
-                              label: "Other expenses",
+                              label: {
+                                 en: "Other expenses",
+                                 zh: "其他费用"
+                              },
+                              account: "8900",
                               sums: calculateGroupSums(89)
                            }
                         ]
                      },
                      {
-                        label: "Internal Transfers",
+                        label: {
+                           en: "Internal Transfers",
+                           zh: "内部转账"
+                        },
+                        total: {
+                           en: "Total Internal Transfers",
+                           zh: "内部转账总费用"
+                        },
+                        account: "9000",
                         sums: calculateGroupSums(9),
                         subGroups: [
                            {
-                              label: "Internal income transfers",
+                              label: {
+                                 en: "Internal income transfers",
+                                 zh: "内部转账收入"
+                              },
+                              account: "9100",
                               sums: calculateGroupSums(91)
                            },
                            {
-                              label: "Internal expense transfers",
+                              label: {
+                                 en: "Internal expense transfers",
+                                 zh: "内部转账支出"
+                              },
+                              account: "9500",
                               sums: calculateGroupSums(95)
                            }
                         ]
@@ -369,6 +492,19 @@ module.exports = {
                      }
                   }
                   data.balSheetTotal = balSheetTotal;
+                  data.languageCode = languageCode;
+                  data.total = {
+                     en: "Total",
+                     zh: "总额"
+                  };
+                  data.netIncomeLoss = {
+                     en: "NET INCOME (LOSS)",
+                     zh: "净收入(损失)"
+                  };
+                  data.netIncomeLossBalance = {
+                     en: "Net Income (loss) from Balance Sheet",
+                     zh: "Balance Sheet 中的净收入(损失) "
+                  };
 
                   // console.log("data ------>", data);
 
