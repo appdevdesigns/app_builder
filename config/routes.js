@@ -251,7 +251,12 @@ module.exports = {
 
    "GET /template/incomeVsExpense": "app_builder/incomeVsExpense.getData",
 
-   "GET /template/balanceSheet": "app_builder/ABReportBalanceController.getData"
+   "GET /template/balanceSheet":
+      "app_builder/ABReportBalanceController.getData",
+   "GET /template/balanceSheet":
+      "app_builder/ABReportBalanceController.balanceSheet",
+   "GET /template/balanceReport":
+      "app_builder/ABReportBalanceController.balanceReport"
 
    /*
   '/': {
