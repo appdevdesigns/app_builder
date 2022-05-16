@@ -84,7 +84,7 @@
             <tr>
                <td><%= subGroup.label[languageCode] %></td>
                <% subGroup.sums.forEach((sum)=>{ %>
-                  <td class="decimal"><%= sum.toFixed(2) %></td>
+                  <td class="decimal"><%= fnValueFormat(sum) %></td>
                <% }) %>
             </tr>
          <% }) %>
@@ -92,7 +92,7 @@
       <tr class="sub-total">
          <td><%= group.total[languageCode] %></td>
          <% group.sums.forEach((sum)=>{ %>
-            <td class="decimal"><%= sum.toFixed(2) %></td>
+            <td class="decimal"><%= fnValueFormat(sum) %></td>
          <% }) %>
       </tr>
    <% }) %>
@@ -100,7 +100,7 @@
    <tr class="total">
       <td><%= netIncomeLoss[languageCode] %></td>
       <% netTotals.forEach(amount=>{ %>
-         <td class="decimal"><%= amount.toFixed(2) %></td>
+         <td class="decimal"><%= fnValueFormat(amount) %></td>
       <% }) %>
    </tr>
    <tr>
@@ -108,6 +108,6 @@
       <% for(let i=2; i< numberOfColumns; i++) { %>
          <td/>
       <% } %>
-      <td class="decimal"><%= balSheetTotal.toFixed(2) %></td>
+      <td class="decimal"><%= fnValueFormat(balSheetTotal) %></td>
    </tr>
 </table>

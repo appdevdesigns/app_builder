@@ -13,6 +13,12 @@ const ABApplication = require(path.join(
    "ABApplication"
 ));
 
+function valueFormat(number) {
+   if (number == null) return;
+
+   return number.toLocaleString("en-US", { minimumFractionDigits: 2 });
+}
+
 module.exports = {
    // GET: /template/localIncomeExpense
    // get the local and expense income and calculate the sums
@@ -226,6 +232,7 @@ module.exports = {
                   balances = records;
 
                   data.mccs = mccs;
+                  data.fnValueFormat = valueFormat;
                   data.numberOfColumns = mccs.length + 2;
                   data.accountGroups = [
                      {
