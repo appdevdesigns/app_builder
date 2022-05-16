@@ -311,7 +311,7 @@ module.exports = {
                         },
                         total: {
                            en: "Total Income Received",
-                           zh: "来自3C的总收入"
+                           zh: "总收入"
                         },
                         account: "4000 & 5000",
                         sums: calculateGroupSums(4, 5)
