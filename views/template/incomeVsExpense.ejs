@@ -90,7 +90,7 @@
          <% }) %>
       <% } %>
       <tr class="sub-total">
-         <td><%= group.label[languageCode] %></td>
+         <td><%= group.total[languageCode] %></td>
          <% group.sums.forEach((sum)=>{ %>
             <td class="decimal"><%= sum.toFixed(2) %></td>
          <% }) %>
