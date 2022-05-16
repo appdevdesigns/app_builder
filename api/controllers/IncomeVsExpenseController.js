@@ -66,7 +66,7 @@ module.exports = {
       ];
 
       function calculateGroupSums(...groups) {
-         var t1 = new Date();
+         // var t1 = new Date();
 
          // console.log("groups ----->", groups);
          let sums = [];
@@ -117,10 +117,10 @@ module.exports = {
             totalSum = (100 * sums[s] + 100 * totalSum) / 100;
          }
          sums.push(totalSum);
-         var t2 = new Date();
-         var dif = (t2.getTime() - t1.getTime()) / 1000;
-         console.log("groups ----->", groups);
-         console.log("Time to run calculations: ", dif);
+         // var t2 = new Date();
+         // var dif = (t2.getTime() - t1.getTime()) / 1000;
+         // console.log("groups ----->", groups);
+         // console.log("Time to run calculations: ", dif);
          return sums;
       }
 
@@ -228,7 +228,7 @@ module.exports = {
                   populate: false
                })
                .then((records) => {
-                  console.log("records ----->", records);
+                  // console.log("records ----->", records);
                   balances = records;
 
                   data.mccs = mccs;
