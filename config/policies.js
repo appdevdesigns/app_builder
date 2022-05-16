@@ -42,6 +42,10 @@ module.exports = {
       getData: findStack
    },
 
+   "app_builder/incomeVsExpense": {
+      getData: findStack
+   },
+
    "app_builder/ABReportBalanceController": {
       getData: findStack
    }

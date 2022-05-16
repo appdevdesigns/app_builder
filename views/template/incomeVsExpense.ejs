@@ -1,0 +1,113 @@
+<style>
+   body {
+      -webkit-font-smoothing: antialiased;
+      background-color: #fff;
+      border: 0 solid #dadee0;
+      color: #475466;
+      cursor: default;
+      font-family: Roboto,sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: .2px;
+      white-space: normal;
+   }
+   table {
+      border-collapse: collapse;
+   }
+   tr:hover {
+      background: rgba(0,0,0,0.05);
+   }
+   th {
+      border-bottom: 2px solid gray;
+      font-size: 18px;
+   }
+   td {
+      border-bottom: 1px solid lightgray;
+   }
+   td.decimal {
+      text-align: right;
+   }
+   td, th {
+      padding: 5px 10px;
+   }
+   tr.total {
+      background: #333;
+      color: white;
+   }
+   tr.sub-total {
+      background: #4a4a4a;
+      color: white;
+   }
+   tr.sub {
+      background: lightgray;
+   }
+   h1 {
+      font-size: 32px;
+      margin: 10px;
+   }
+   h2 {
+      font-size: 24px;
+      margin: 10px;
+   }
+</style>
+
+<h1>Income and Expense Report</h1>
+<h2>
+   <span style="color: lightgray; font-weight: normal;">
+      <%= fyperstart %>-
+   </span>
+   <select style="font-size: 24px; color: lightgray; border: 1px solid #CCC;" onchange="location.href = '/template/incomeVsExpense?fyper='+this.value;">
+      <% for(var i=0; i < fyperOptions.length; i++) { %>
+         <option <% if (fyperOptions[i].selected) { %> selected <% } %> value="<%= fyperOptions[i].id %>"><%= fyperOptions[i].label %></option>
+      <% } %>
+   </select>
+</h2>
+
+
+<table>
+   <tr>
+      <th/>
+      <% mccs.forEach((department)=>{ %>
+         <th><%= department.label %></th>
+      <% }) %>
+      <th><%= total[languageCode] %></th>
+   </tr>
+   <% accountGroups.forEach((group)=>{ %>
+      <% if (group.subGroups){ %>
+         <tr class="sub">
+            <td><b><%= group.label[languageCode] %></b></td>
+            <% for(let i=1; i< numberOfColumns; i++) { %>
+               <td/>
+            <% } %>
+         </tr>
+         <% group.subGroups.forEach((subGroup)=>{ %>
+            <tr>
+               <td><%= subGroup.label[languageCode] %></td>
+               <% subGroup.sums.forEach((sum)=>{ %>
+                  <td class="decimal"><%= fnValueFormat(sum) %></td>
+               <% }) %>
+            </tr>
+         <% }) %>
+      <% } %>
+      <tr class="sub-total">
+         <td><%= group.total[languageCode] %></td>
+         <% group.sums.forEach((sum)=>{ %>
+            <td class="decimal"><%= fnValueFormat(sum) %></td>
+         <% }) %>
+      </tr>
+   <% }) %>
+   <tr><td/><tr>
+   <tr class="total">
+      <td><%= netIncomeLoss[languageCode] %></td>
+      <% netTotals.forEach(amount=>{ %>
+         <td class="decimal"><%= fnValueFormat(amount) %></td>
+      <% }) %>
+   </tr>
+   <tr>
+      <td><%= netIncomeLossBalance[languageCode] %></td>
+      <% for(let i=2; i< numberOfColumns; i++) { %>
+         <td/>
+      <% } %>
+      <td class="decimal"><%= fnValueFormat(balSheetTotal) %></td>
+   </tr>
+</table>
