@@ -520,13 +520,17 @@ module.exports = class ABModel extends ABModelCore {
             if (f.settings.isSource == true) {
                sourceTable = tableName;
                targetTable = linkObject.dbTableName(true);
-               targetPkName = linkObject.PK();
+               targetPkName = f.indexField
+                  ? f.indexField.columnName
+                  : linkObject.PK();
                relation = Model.BelongsToOneRelation;
                columnName = f.columnName;
             } else {
                sourceTable = linkObject.dbTableName(true);
                targetTable = tableName;
-               targetPkName = this.object.PK();
+               targetPkName = f.indexField
+                  ? f.indexField.columnName
+                  : f.object.PK();
                relation = Model.HasOneRelation;
                columnName = linkField.columnName;
             }
@@ -553,13 +557,30 @@ module.exports = class ABModel extends ABModelCore {
                joinColumnNames = f.joinColumnNames(),
                sourceTableName,
                sourcePkName,
-               targetTableName,
-               targetPkName;
+               targetTableName;
 
             sourceTableName = f.object.dbTableName(true);
             sourcePkName = f.object.PK();
             targetTableName = linkObject.dbTableName(true);
             targetPkName = linkObject.PK();
+
+            let indexField = f.indexField;
+            if (indexField) {
+               if (indexField.object.id == f.object.id) {
+                  sourcePkName = indexField.columnName;
+               } else if (indexField.object.id == linkObject.id) {
+                  targetPkName = indexField.columnName;
+               }
+            }
+
+            let indexField2 = f.indexField2;
+            if (indexField2) {
+               if (indexField2.object.id == f.object.id) {
+                  sourcePkName = indexField2.columnName;
+               } else if (indexField2.object.id == linkObject.id) {
+                  targetPkName = indexField2.columnName;
+               }
+            }
 
             // if (f.settings.isSource == true) {
             // 	sourceTableName = f.object.dbTableName(true);
@@ -607,7 +628,9 @@ module.exports = class ABModel extends ABModelCore {
                   from: `${tableName}.${f.columnName}`,
 
                   // "{targetTable}.{primaryField}"
-                  to: `${linkObject.dbTableName(true)}.${linkObject.PK()}`
+                  to: `${linkObject.dbTableName(true)}.${
+                     f.indexField ? f.indexField.columnName : linkObject.PK()
+                  }`
                }
             };
          }
@@ -621,7 +644,9 @@ module.exports = class ABModel extends ABModelCore {
                modelClass: linkModel,
                join: {
                   // "{sourceTable}.{primaryField}"
-                  from: `${tableName}.${this.object.PK()}`,
+                  from: `${tableName}.${
+                     f.indexField ? f.indexField.columnName : f.object.PK()
+                  }`,
 
                   // "{targetTable}.{field}"
                   to: `${linkObject.dbTableName(true)}.${linkField.columnName}`
