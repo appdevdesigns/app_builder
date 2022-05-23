@@ -543,8 +543,9 @@ class ABQL extends ABQLCore {
                      view: "label",
                      label: displayLabel,
                      on: {
-                        onItemClick: function() {
-                           Filter.popUp();
+                        onItemClick: () => {
+                           Filter.popUp($$(this.ids.shorthand).$view);
+                           Filter.setValue(this.params[pDef.name]);
                         }
                      }
                   },
