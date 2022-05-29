@@ -291,11 +291,17 @@ module.exports = class FilterComplex extends FilterComplexCore {
       let _logic = this._logic || {};
 
       _logic.onChange = () => {
-         if (!this.__blockOnChange) {
-            _logic.callbacks.onChange();
+         if (this.__blockOnChange) return false;
+
+         let val = this.getValue();
+
+         this.emit("changed", val);
+
+         if (_logic.callbacks && _logic.callbacks.onChange) {
+            _logic.callbacks.onChange(val);
          }
 
-         return false;
+         return true;
       };
 
       // webix UI definition:
@@ -343,12 +349,7 @@ module.exports = class FilterComplex extends FilterComplexCore {
       const el = $$(this.ids.querybuilder);
       if (el) {
          el.getState().$observe("value", (v) => {
-            let val = this.getValue();
-
-            this.emit("changed", val);
-
-            if (this._logic.callbacks && this._logic.callbacks.onChange)
-               this._logic.callbacks.onChange(val);
+            this._logic.onChange();
          });
       }
 
@@ -465,7 +466,9 @@ module.exports = class FilterComplex extends FilterComplexCore {
 
          _toInternal(qbSettings, this._Fields);
 
+         this.__blockOnChange = true;
          el.define("value", qbSettings);
+         this.__blockOnChange = false;
       }
    }
 
@@ -556,7 +559,8 @@ module.exports = class FilterComplex extends FilterComplexCore {
       if (fieldColumnName == "this_object") {
          return []
             .concat(this.uiQueryValue("this_object"))
-            .concat(this.uiDataCollectionValue("this_object"));
+            .concat(this.uiDataCollectionValue("this_object"))
+            .concat(this.uiCustomValue("this_object"));
       }
 
       let field = (this._Fields || []).filter(
@@ -615,6 +619,8 @@ module.exports = class FilterComplex extends FilterComplexCore {
       if (this._isRecordRule) {
          result = (result || []).concat(this.uiRecordRuleValue(field));
       }
+
+      result = (result || []).concat(this.uiCustomValue(field));
 
       return result;
    }
@@ -848,6 +854,12 @@ module.exports = class FilterComplex extends FilterComplexCore {
       ];
    }
 
+   uiCustomValue(field) {
+      let customOptions = this._customOptions || {};
+      let options = customOptions[field.id || field] || {};
+      return options.values || [];
+   }
+
    popUp(...options) {
       if (!this.myPopup) {
          let ui = {
@@ -875,5 +887,19 @@ module.exports = class FilterComplex extends FilterComplexCore {
       }
 
       this.myPopup.show(...options);
+   }
+
+   /**
+    * @method addCustomOption
+    *
+    * @param {string|uuid} fieldId
+    * @param {Object} options - {
+    *                               conditions: [],
+    *                               values: []
+    *                           }
+    */
+   addCustomOption(fieldId, options = {}) {
+      this._customOptions = this._customOptions || {};
+      this._customOptions[fieldId] = options;
    }
 };

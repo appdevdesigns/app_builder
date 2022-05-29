@@ -4,7 +4,8 @@ const ABViewPropertyEditPage = require("./viewProperties/ABViewPropertyEditPage"
 
 const ABViewFormConnectPropertyComponentDefaults = ABViewFormConnectCore.defaultValues();
 
-const RowFilter = require("../RowFilter");
+// const RowFilter = require("../RowFilter");
+const FilterComplex = require("../FilterComplex");
 const ABPopupSort = require("../../../components/ab_work_object_workspace_popupSortFields");
 
 let FilterComponent = null;
@@ -14,7 +15,7 @@ function L(key, altText) {
    return AD.lang.label.getLabel(key) || altText;
 }
 
-function _onShow(App, compId, instance, component) {
+let _onShow = (App, compId, instance, component) => {
    let elem = $$(compId);
    if (!elem) return;
 
@@ -24,43 +25,46 @@ function _onShow(App, compId, instance, component) {
    let rowData = {},
       node = elem.$view;
 
-   // we need to use the element id stored in the settings to find out what the
-   // ui component id is so later we can use it to look up its current value
-   let filterValue = null;
-   // we also need the id of the field that we are going to filter on
-   let filterKey = null;
-   // finally if this is a custom foreign key we need the stored columnName by
-   // default uuid is passed for all non CFK
-   let filterColumn = null;
-   // the value stored is hash1:hash2:columnName
-   // hash1 = component view id of the element we want to get the value from
-   // hash2 = the id of the field we are using to filter our options
-   // filterColumn = the name of the column to get the value from
-   if (
-      instance.settings.filterConnectedValue &&
-      instance.settings.filterConnectedValue.indexOf(":") > -1
-   ) {
-      Object.keys(instance.parent.viewComponents).forEach((key, index) => {
-         if (
-            instance.parent.viewComponents[key].ui.name ==
-            instance.settings.filterConnectedValue.split(":")[0]
-         ) {
-            filterValue = instance.parent.viewComponents[key];
-         }
-      });
-      // if not found stop
-      if (!filterValue) return;
-      filterKey = instance.settings.filterConnectedValue.split(":")[1];
-      filterColumn = instance.settings.filterConnectedValue.split(":")[2];
-   }
+   // // we need to use the element id stored in the settings to find out what the
+   // // ui component id is so later we can use it to look up its current value
+   // let filterValue = null;
+   // // we also need the id of the field that we are going to filter on
+   // let filterKey = null;
+   // // finally if this is a custom foreign key we need the stored columnName by
+   // // default uuid is passed for all non CFK
+   // let filterColumn = null;
+   // // the value stored is hash1:hash2:columnName
+   // // hash1 = component view id of the element we want to get the value from
+   // // hash2 = the id of the field we are using to filter our options
+   // // filterColumn = the name of the column to get the value from
+   // if (
+   //    instance.settings.filterConnectedValue &&
+   //    instance.settings.filterConnectedValue.indexOf(":") > -1
+   // ) {
+   //    Object.keys(instance.parent.viewComponents).forEach((key, index) => {
+   //       if (
+   //          instance.parent.viewComponents[key].ui.name ==
+   //          instance.settings.filterConnectedValue.split(":")[0]
+   //       ) {
+   //          filterValue = instance.parent.viewComponents[key];
+   //       }
+   //    });
+   //    // if not found stop
+   //    if (!filterValue) return;
+   //    filterKey = instance.settings.filterConnectedValue.split(":")[1];
+   //    filterColumn = instance.settings.filterConnectedValue.split(":")[2];
+   // }
 
    field.customDisplay(rowData, App, node, {
+      // placeholder: `Must select item from '${"PARENT ELEMENT"}' first.`, // TODO
       formView: instance.settings.formView,
-      filters: instance.settings.objectWorkspace.filterConditions,
+      filters:
+         instance.filterConditions.bind(instance) ||
+         instance.settings.objectWorkspace.filterConditions,
       sort: instance.settings.objectWorkspace.sortFields,
-      filterValue: filterValue,
-      filterKey: filterKey,
-      filterColumn: filterColumn,
+      // filterValue: filterValue,
+      // filterKey: filterKey,
+      // filterColumn: filterColumn,
       editable: instance.settings.disable == 1 ? false : true,
       editPage:
          !instance.settings.editForm || instance.settings.editForm == "none"
@@ -73,7 +77,7 @@ function _onShow(App, compId, instance, component) {
       instance._editPageEvent = true;
       field.on("editPage", component.logic.goToEditPage);
    }
-}
+};
 
 module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
    /**
@@ -85,7 +89,7 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
       super(values, application, parent, defaultValues);
 
       // Set filter value
-      this.__filterComponent = new RowFilter();
+      this.__filterComponent = new FilterComplex();
       this.__filterComponent.applicationLoad(application);
       this.__filterComponent.fieldsLoad(
          this.datasource ? this.datasource.fields() : [],
@@ -169,7 +173,10 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
       this.idBase = idBase;
 
       _logic.showFilterPopup = ($view) => {
-         this.filter_popup.show($view, null, { pos: "top" });
+         FilterComponent.popUp($view);
+
+         let view = _logic.currentEditObject();
+         this.populatePopupEditors(view);
       };
 
       _logic.showSortPopup = ($button) => {
@@ -180,18 +187,20 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
       _logic.onFilterChange = () => {
          let view = _logic.currentEditObject();
-         let filterValues = FilterComponent.getValue() || {};
+         // let filterValues = FilterComponent.getValue() || {};
 
-         let allComplete = true;
-         (filterValues.rules || []).forEach((f) => {
-            // if all 3 fields are present, we are good.
-            if (f.key && f.rule && f.value) {
-               allComplete = allComplete && true;
-            } else {
-               // else, we found an entry that wasn't complete:
-               allComplete = false;
-            }
-         });
+         // let allComplete = true;
+         // (filterValues.rules || []).forEach((f) => {
+         //    // if all 3 fields are present, we are good.
+         //    if (f.key && f.rule && f.value) {
+         //       allComplete = allComplete && true;
+         //    } else {
+         //       // else, we found an entry that wasn't complete:
+         //       allComplete = false;
+         //    }
+         // });
+
+         let allComplete = FilterComponent.isComplete();
 
          // only perform the update if a complete row is specified:
          if (allComplete) {
@@ -315,25 +324,25 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
                         }
                      ]
                   },
-                  {
-                     rows: [
-                        {
-                           view: "label",
-                           label: L(
-                              "ab.component.connect.filterConnectedValue",
-                              "*Filter by Connected Field Value:"
-                           )
-                        },
-                        {
-                           view: "combo",
-                           name: "filterConnectedValue",
-                           options: [] // we will add these in propertyEditorPopulate
-                        }
-                     ]
-                  },
-                  {
-                     height: 30
-                  },
+                  // {
+                  //    rows: [
+                  //       {
+                  //          view: "label",
+                  //          label: L(
+                  //             "ab.component.connect.filterConnectedValue",
+                  //             "*Filter by Connected Field Value:"
+                  //          )
+                  //       },
+                  //       {
+                  //          view: "combo",
+                  //          name: "filterConnectedValue",
+                  //          options: [] // we will add these in propertyEditorPopulate
+                  //       }
+                  //    ]
+                  // },
+                  // {
+                  //    height: 30
+                  // },
                   {
                      rows: [
                         {
@@ -374,85 +383,86 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
    static propertyEditorPopulate(App, ids, view) {
       super.propertyEditorPopulate(App, ids, view);
 
-      // Default set of options for filter connected combo
-      let filterConnectedOptions = [{ id: "", value: "" }];
-      // get the definitions for the connected field
-      let fieldDefs = view.application.definitionForID(view.settings.fieldId);
-      // get the definition for the object that the field is related to
-      let objectDefs = view.application.definitionForID(
-         fieldDefs.settings.linkObject
-      );
-      // we need these definitions later as we check to find out which field
-      // we are filtering by so push them into an array for later
-      let fieldsDefs = [];
-      objectDefs.fieldIDs.forEach((fld) => {
-         fieldsDefs.push(view.application.definitionForID(fld));
-      });
-      // find out what connected objects this field has
-      let connectedObjs = view.application.connectedObjects(
-         fieldDefs.settings.linkObject
-      );
-      // loop through the form's elements (need to ensure that just looking at parent is okay in all cases)
-      view.parent.views().forEach((element) => {
-         // identify if element is a connected field
-         if (element.key == "connect") {
-            // we need to get the fields defs to find out what it is connected to
-            let formElementsDefs = view.application.definitionForID(
-               element.settings.fieldId
-            );
-            // loop through the connected objects discovered above
-            connectedObjs.forEach((connObj) => {
-               // see if the connected object matches the connected object of the form element
-               if (connObj.id == formElementsDefs.settings.linkObject) {
-                  // get the ui id of this component that matches the link Object
-                  let fieldToCheck;
-                  fieldsDefs.forEach((fdefs) => {
-                     // if the field has a custom foreign key we need to store it
-                     // so selectivity later can know what value to get, otherwise
-                     // we just get the uuid of the record
-                     if (
-                        fdefs.settings.isCustomFK &&
-                        fdefs.settings.indexField != "" &&
-                        fdefs.settings.linkObject &&
-                        fdefs.settings.linkType == "one" &&
-                        fdefs.settings.linkObject ==
-                           formElementsDefs.settings.linkObject
-                     ) {
-                        let customFK = view.application.definitionForID(
-                           fdefs.settings.indexField
-                        );
-                        // if the index definitions were found
-                        if (customFK) {
-                           fieldToCheck = fdefs.id + ":" + customFK.columnName;
-                        }
-                     } else if (
-                        fdefs.settings.linkObject &&
-                        fdefs.settings.linkType == "one" &&
-                        fdefs.settings.linkObject ==
-                           formElementsDefs.settings.linkObject
-                     ) {
-                        fieldToCheck = fdefs.id + ":" + "uuid";
-                     }
-                  });
-                  // only add optinos that have a fieldToCheck
-                  if (fieldToCheck) {
-                     // get the component we are referencing so we can display its label
-                     let formComponent = view.parent.viewComponents[element.id]; // need to ensure that just looking at parent is okay in all cases
-                     filterConnectedOptions.push({
-                        id: formComponent.ui.name + ":" + fieldToCheck, // store the columnName name because the ui id changes on each load
-                        value: formComponent.ui.label // should be the translated field label
-                     });
-                  }
-               }
-            });
-         }
-      });
+      this.propertyFilterByConnectedFieldValue(App, ids, view);
+      // // Default set of options for filter connected combo
+      // let filterConnectedOptions = [{ id: "", value: "" }];
+      // // get the definitions for the connected field
+      // let fieldDefs = view.application.definitionForID(view.settings.fieldId);
+      // // get the definition for the object that the field is related to
+      // let objectDefs = view.application.definitionForID(
+      //    fieldDefs.settings.linkObject
+      // );
+      // // we need these definitions later as we check to find out which field
+      // // we are filtering by so push them into an array for later
+      // let fieldsDefs = [];
+      // objectDefs.fieldIDs.forEach((fld) => {
+      //    fieldsDefs.push(view.application.definitionForID(fld));
+      // });
+      // // find out what connected objects this field has
+      // let connectedObjs = view.application.connectedObjects(
+      //    fieldDefs.settings.linkObject
+      // );
+      // // loop through the form's elements (need to ensure that just looking at parent is okay in all cases)
+      // view.parent.views().forEach((element) => {
+      //    // identify if element is a connected field
+      //    if (element.key == "connect") {
+      //       // we need to get the fields defs to find out what it is connected to
+      //       let formElementsDefs = view.application.definitionForID(
+      //          element.settings.fieldId
+      //       );
+      //       // loop through the connected objects discovered above
+      //       connectedObjs.forEach((connObj) => {
+      //          // see if the connected object matches the connected object of the form element
+      //          if (connObj.id == formElementsDefs.settings.linkObject) {
+      //             // get the ui id of this component that matches the link Object
+      //             let fieldToCheck;
+      //             fieldsDefs.forEach((fdefs) => {
+      //                // if the field has a custom foreign key we need to store it
+      //                // so selectivity later can know what value to get, otherwise
+      //                // we just get the uuid of the record
+      //                if (
+      //                   fdefs.settings.isCustomFK &&
+      //                   fdefs.settings.indexField != "" &&
+      //                   fdefs.settings.linkObject &&
+      //                   fdefs.settings.linkType == "one" &&
+      //                   fdefs.settings.linkObject ==
+      //                      formElementsDefs.settings.linkObject
+      //                ) {
+      //                   let customFK = view.application.definitionForID(
+      //                      fdefs.settings.indexField
+      //                   );
+      //                   // if the index definitions were found
+      //                   if (customFK) {
+      //                      fieldToCheck = fdefs.id + ":" + customFK.columnName;
+      //                   }
+      //                } else if (
+      //                   fdefs.settings.linkObject &&
+      //                   fdefs.settings.linkType == "one" &&
+      //                   fdefs.settings.linkObject ==
+      //                      formElementsDefs.settings.linkObject
+      //                ) {
+      //                   fieldToCheck = fdefs.id + ":" + "uuid";
+      //                }
+      //             });
+      //             // only add optinos that have a fieldToCheck
+      //             if (fieldToCheck) {
+      //                // get the component we are referencing so we can display its label
+      //                let formComponent = view.parent.viewComponents[element.id]; // need to ensure that just looking at parent is okay in all cases
+      //                filterConnectedOptions.push({
+      //                   id: formComponent.ui.name + ":" + fieldToCheck, // store the columnName name because the ui id changes on each load
+      //                   value: formComponent.ui.label // should be the translated field label
+      //                });
+      //             }
+      //          }
+      //       });
+      //    }
+      // });
 
       // Set the options of the possible edit forms
       this.addPageProperty.setSettings(view, view.settings);
       this.editPageProperty.setSettings(view, view.settings);
-      $$(ids.filterConnectedValue).define("options", filterConnectedOptions);
-      $$(ids.filterConnectedValue).setValue(view.settings.filterConnectedValue);
+      // $$(ids.filterConnectedValue).define("options", filterConnectedOptions);
+      // $$(ids.filterConnectedValue).setValue(view.settings.filterConnectedValue);
 
       $$(ids.popupWidth).setValue(
          view.settings.popupWidth ||
@@ -486,9 +496,9 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
       view.settings.popupWidth = $$(ids.popupWidth).getValue();
       view.settings.popupHeight = $$(ids.popupHeight).getValue();
-      view.settings.filterConnectedValue = $$(
-         ids.filterConnectedValue
-      ).getValue();
+      // view.settings.filterConnectedValue = $$(
+      //    ids.filterConnectedValue
+      // ).getValue();
       view.settings.objectWorkspace = {
          filterConditions: FilterComponent.getValue(),
          sortFields: SortComponent.getValue()
@@ -537,7 +547,7 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
    static initPopupEditors(App, ids, _logic) {
       var idBase = "ABViewFormConnectPropertyEditor";
 
-      FilterComponent = new RowFilter(App, idBase + "_filter");
+      FilterComponent = new FilterComplex(App, idBase + "_filter");
       FilterComponent.init({
          // when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
          onChange: _logic.onFilterChange
@@ -548,12 +558,12 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
          onChange: _logic.onSortChange
       });
 
-      this.filter_popup = webix.ui({
-         view: "popup",
-         width: 800,
-         hidden: true,
-         body: FilterComponent.ui
-      });
+      // this.filter_popup = webix.ui({
+      //    view: "popup",
+      //    width: 800,
+      //    hidden: true,
+      //    body: FilterComponent.ui
+      // });
    }
 
    static populatePopupEditors(view) {
@@ -582,6 +592,64 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
       if (linkedObj) SortComponent.objectLoad(linkedObj);
       SortComponent.setValue(view.settings.objectWorkspace.sortFields);
+   }
+
+   static propertyFilterByConnectedFieldValue(App, ids, view) {
+      let fieldDef = view.application.definitionForID(view.settings.fieldId);
+      let linkObject = view.application.objects(
+         (obj) => obj.id == fieldDef.settings.linkObject
+      )[0];
+      if (!linkObject) return;
+
+      let connectFields = linkObject.fields((f) => f.key == "connectObject");
+      if (!connectFields || !connectFields.length) return;
+
+      connectFields.forEach((f) => {
+         let connectFieldOptions = view.parent
+            .views((element) => {
+               let linkFieldDef = view.application.definitionForID(
+                  element.settings.fieldId
+               );
+
+               // Pull other connected field input elements
+               return (
+                  element.key == "connect" &&
+                  element.id != view.id &&
+                  f.settings.linkObject == linkFieldDef.settings.linkObject
+               );
+            })
+            .map((element) => {
+               let formComponent = view.parent.viewComponents[element.id];
+
+               return {
+                  id: formComponent.ui.name,
+                  value: formComponent.ui.label
+               };
+            });
+
+         if (connectFieldOptions && connectFieldOptions.length) {
+            FilterComponent.addCustomOption(f.id, {
+               conditions: [
+                  {
+                     id: "filterByConnectValue",
+                     value: L(
+                        "ab.component.connect.filterConnectedValue",
+                        "*Filter by Connected Field Value:"
+                     ),
+                     batch: "FilterByConnectedFieldValue",
+                     handler: () => true
+                  }
+               ],
+               values: [
+                  {
+                     batch: "FilterByConnectedFieldValue",
+                     view: "combo",
+                     options: connectFieldOptions
+                  }
+               ]
+            });
+         }
+      });
    }
 
    static get addPageProperty() {
@@ -878,5 +946,68 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
          this.__editPageTool = new ABViewPropertyEditPage();
 
       return this.__editPageTool;
+   }
+
+   filterConditions() {
+      let filterConditions = _.cloneDeep(
+         this.settings.objectWorkspace.filterConditions
+      );
+
+      let setDependentValue = (rules) => {
+         rules.forEach((r) => {
+            if (!r) return;
+
+            if (r.rules && Array.isArray(r.rules)) {
+               setDependentValue(r.rules);
+            } else if (r.rule == "filterByConnectValue") {
+               // Update .rule
+               r.rule = "equals";
+
+               // Update parent .value
+               let viewName = r.value;
+
+               // Find viewComponents .key and .ui.id
+               let viewId;
+               let viewCompParent;
+               Object.keys(this.parent.viewComponents).forEach((key) => {
+                  let component = this.parent.viewComponents[key];
+                  if (
+                     component &&
+                     component.ui &&
+                     component.ui.name == viewName
+                  ) {
+                     viewId = key;
+                     viewCompParent = component;
+                  }
+               });
+
+               let viewParent = this.parent.views((v) => v.id == viewId)[0];
+               if (!viewParent || !viewCompParent) return;
+
+               let fieldParent = viewParent.field();
+               if (!fieldParent) return;
+
+               // get the current value of the parent select box
+               let parentVal = fieldParent.getValue($$(viewCompParent.ui.id));
+
+               // Find FK
+               let defField = this.application.definitionForID(r.key);
+               if (!defField || !defField.settings) return;
+
+               let FK =
+                  defField.settings.indexField ||
+                  defField.settings.indexField2 ||
+                  "uuid";
+
+               r.value = parentVal ? parentVal[FK] : null;
+            }
+         });
+      };
+
+      if (filterConditions.rules && filterConditions.rules.length) {
+         setDependentValue(filterConditions.rules);
+      }
+
+      return filterConditions;
    }
 };
