@@ -596,60 +596,73 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
 
    static propertyFilterByConnectedFieldValue(App, ids, view) {
       let fieldDef = view.application.definitionForID(view.settings.fieldId);
-      let linkObject = view.application.objects(
-         (obj) => obj.id == fieldDef.settings.linkObject
-      )[0];
-      if (!linkObject) return;
 
-      let connectFields = linkObject.fields((f) => f.key == "connectObject");
-      if (!connectFields || !connectFields.length) return;
+      // Support only 1:M and 1:1 relation type of the connect field
+      if (
+         // 1:M
+         (fieldDef.settings.linkType == "one" &&
+            fieldDef.settings.linkViaType == "many") ||
+         // 1:1 isSource = true
+         (fieldDef.settings.linkType == "one" &&
+            fieldDef.settings.linkViaType == "one" &&
+            fieldDef.settings.isSource)
+      ) {
+         // Pull link object
+         let linkObject = view.application.objects(
+            (obj) => obj.id == fieldDef.settings.linkObject
+         )[0];
+         if (!linkObject) return;
 
-      connectFields.forEach((f) => {
-         let connectFieldOptions = view.parent
-            .views((element) => {
-               let linkFieldDef = view.application.definitionForID(
-                  element.settings.fieldId
-               );
+         let connectFields = linkObject.fields((f) => f.key == "connectObject");
+         if (!connectFields || !connectFields.length) return;
 
-               // Pull other connected field input elements
-               return (
-                  element.key == "connect" &&
-                  element.id != view.id &&
-                  f.settings.linkObject == linkFieldDef.settings.linkObject
-               );
-            })
-            .map((element) => {
-               let formComponent = view.parent.viewComponents[element.id];
+         connectFields.forEach((f) => {
+            let connectFieldOptions = view.parent
+               .views((element) => {
+                  let linkFieldDef = view.application.definitionForID(
+                     element.settings.fieldId
+                  );
 
-               return {
-                  id: formComponent.ui.name,
-                  value: formComponent.ui.label
-               };
-            });
+                  // Pull other connected field input elements
+                  return (
+                     element.key == "connect" &&
+                     element.id != view.id &&
+                     f.settings.linkObject == linkFieldDef.settings.linkObject
+                  );
+               })
+               .map((element) => {
+                  let formComponent = view.parent.viewComponents[element.id];
 
-         if (connectFieldOptions && connectFieldOptions.length) {
-            FilterComponent.addCustomOption(f.id, {
-               conditions: [
-                  {
-                     id: "filterByConnectValue",
-                     value: L(
-                        "ab.component.connect.filterConnectedValue",
-                        "*Filter by Connected Field Value:"
-                     ),
-                     batch: "FilterByConnectedFieldValue",
-                     handler: () => true
-                  }
-               ],
-               values: [
-                  {
-                     batch: "FilterByConnectedFieldValue",
-                     view: "combo",
-                     options: connectFieldOptions
-                  }
-               ]
-            });
-         }
-      });
+                  return {
+                     id: formComponent.ui.name,
+                     value: formComponent.ui.label
+                  };
+               });
+
+            if (connectFieldOptions && connectFieldOptions.length) {
+               FilterComponent.addCustomOption(f.id, {
+                  conditions: [
+                     {
+                        id: "filterByConnectValue",
+                        value: L(
+                           "ab.component.connect.filterConnectedValue",
+                           "*Filter by Connected Field Value:"
+                        ),
+                        batch: "FilterByConnectedFieldValue",
+                        handler: () => true
+                     }
+                  ],
+                  values: [
+                     {
+                        batch: "FilterByConnectedFieldValue",
+                        view: "combo",
+                        options: connectFieldOptions
+                     }
+                  ]
+               });
+            }
+         });
+      }
    }
 
    static get addPageProperty() {
