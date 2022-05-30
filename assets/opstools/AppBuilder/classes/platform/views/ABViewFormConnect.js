@@ -994,10 +994,21 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
                let defField = this.application.definitionForID(r.key);
                if (!defField || !defField.settings) return;
 
-               let FK =
+               let FK = "uuid";
+
+               // Pull FK from custom index field
+               if (
                   defField.settings.indexField ||
-                  defField.settings.indexField2 ||
-                  "uuid";
+                  defField.settings.indexField2
+               ) {
+                  let defCustomField = this.application.definitionForID(
+                     defField.settings.indexField ||
+                        defField.settings.indexField2
+                  );
+                  if (defCustomField) {
+                     FK = defCustomField.columnName;
+                  }
+               }
 
                r.value = parentVal ? parentVal[FK] : null;
             }
