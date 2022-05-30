@@ -431,6 +431,49 @@ module.exports = {
          }
 
          ///
+         /// Refactoring objectUrls => objectIDs
+         ///
+
+         try {
+            // pull all the Form definitions.
+            let allForms = data.definitions
+               .filter((d) => d.type == "view" && d.json.key == "form")
+               .map((d) => d.json);
+
+            // search the settings.recordRules[].actionSettings  for an .objectUrl reference.
+            allForms.forEach((f) => {
+               if (
+                  f.settings.recordRules &&
+                  f.settings.recordRules.length > 0
+               ) {
+                  f.settings.recordRules.forEach((rule) => {
+                     if (
+                        rule.actionSettings &&
+                        rule.actionSettings.updateObjectURL
+                     ) {
+                        // replace with Object.id
+                        let objRef = Application.urlResolve(
+                           rule.actionSettings.updateObjectURL
+                        );
+                        if (!objRef) {
+                           console.error(
+                              `!!! Could not lookup object by url [${rule.actionSettings.updateObjectURL}]`,
+                              rule
+                           );
+                           return;
+                        }
+
+                        rule.actionSettings.updateObjectID = objRef.id;
+                        // delete rule.actionSettings.updateObjectURL;
+                     }
+                  });
+               }
+            });
+         } catch (e) {
+            console.error("Error scanning for .updateObjectURL", e);
+         }
+
+         ///
          /// Gather any related files and include in json definitions.
          ///
 
