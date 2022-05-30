@@ -55,8 +55,12 @@ let _onShow = (App, compId, instance, component) => {
    //    filterColumn = instance.settings.filterConnectedValue.split(":")[2];
    // }
 
+   let parentUiName = instance.getFilterByConnectedFieldUiLabel();
+
    field.customDisplay(rowData, App, node, {
-      // placeholder: `Must select item from '${"PARENT ELEMENT"}' first.`, // TODO
+      placeholder: parentUiName
+         ? `Must select item from '${parentUiName}' first.`
+         : null,
       formView: instance.settings.formView,
       filters:
          instance.filterConditions.bind(instance) ||
@@ -1033,5 +1037,34 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
       }
 
       return filterConditions;
+   }
+
+   getFilterByConnectedFieldUiLabel() {
+      let result;
+      let filterConditions = this.settings.objectWorkspace.filterConditions;
+
+      let findUiName = (rules) => {
+         rules.forEach((r) => {
+            if (!r) return;
+
+            if (r.rules && Array.isArray(r.rules)) {
+               findUiName(r.rules);
+            } else if (r.rule == "filterByConnectValue") {
+               let viewComp = Object.values(this.parent.viewComponents).filter(
+                  (component) =>
+                     component && component.ui && component.ui.name == r.value
+               )[0];
+               if (viewComp && viewComp.ui && viewComp.ui.label) {
+                  result = viewComp.ui.label;
+               }
+            }
+         });
+      };
+
+      if (filterConditions.rules && filterConditions.rules.length) {
+         findUiName(filterConditions.rules);
+      }
+
+      return result;
    }
 };
