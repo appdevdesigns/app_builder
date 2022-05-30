@@ -482,7 +482,8 @@ module.exports = {
                   let netTotals = [];
                   for (let i = 0; i < incomeTotals.length; i++) {
                      let val =
-                        (100 * incomeTotals[i] - 100 * expenseTotals[i]) / 100;
+                        // (100 * incomeTotals[i] - 100 * expenseTotals[i]) / 100;
+                        (100 * incomeTotals[i] + 100 * expenseTotals[i]) / 100;
                      netTotals.push(val);
                   }
                   data.netTotals = netTotals;
