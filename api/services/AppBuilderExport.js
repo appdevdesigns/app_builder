@@ -47,7 +47,7 @@ module.exports = {
     *         a data structure that contains all the necessary definitions
     *         to recreate an Application in an AB Runtime environment.
     */
-   appToJSON: function(appID) {
+   appToJSON: function (appID) {
       var data = {
          abVersion: "0.0.0",
          definitions: [],
@@ -71,7 +71,7 @@ module.exports = {
             */
          },
          errors: [],
-         siteObjectConnections: {}
+         siteObjectConnections: {},
          /* SiteObject.id : [ importField.id, importField.id, ... ] */
       };
       var Application = null;
@@ -92,7 +92,7 @@ module.exports = {
          // gathering all the Definition, IDs:
          var exportData = {
             settings: {
-               includeSystemObjects: Application.isAdminApp
+               includeSystemObjects: Application.isAdminApp,
                // {bool}
             },
             ids: [],
@@ -102,7 +102,7 @@ module.exports = {
             },
             roles: {
                /* Role.id : Role.id */
-            }
+            },
          };
          Application.exportData(exportData);
 
@@ -248,7 +248,7 @@ module.exports = {
                         width: 100,
                         required: 0,
                         unique: 0,
-                        linkColumn: field.id
+                        linkColumn: field.id,
                      },
                      translations: [
                         {
@@ -256,9 +256,9 @@ module.exports = {
                            label:
                               object.translations[0].label +
                               "." +
-                              field.translations[0].label
-                        }
-                     ]
+                              field.translations[0].label,
+                        },
+                     ],
                   };
 
                   SOC[SITE_USER_OBJECT_ID].push(linkF.id);
@@ -270,7 +270,7 @@ module.exports = {
                      name: "USER->" + linkF.translations[0].label,
                      json: linkF,
                      createdAt: fDef.createdAt,
-                     updatedAt: fDef.updatedAt
+                     updatedAt: fDef.updatedAt,
                   };
 
                   data.definitions.push(defLinkF);
@@ -325,7 +325,7 @@ module.exports = {
                      hashQueriesWithUserFields[q.id] = {
                         query: q,
                         fieldDef: f,
-                        field
+                        field,
                      };
                   }
                }
@@ -366,7 +366,7 @@ module.exports = {
             join.links.push({
                alias: uuidv4().split("-")[0],
                fieldId: entry.field.id,
-               type: "left"
+               type: "left",
             });
          });
 
@@ -390,8 +390,8 @@ module.exports = {
                   v.key = "connect";
                   v.settings.objectWorkspace = {
                      filterConditions: {
-                        glue: "and"
-                     }
+                        glue: "and",
+                     },
                   };
                }
 
@@ -497,11 +497,11 @@ module.exports = {
                               {
                                  key: PK,
                                  rule: "in",
-                                 value: roleIDs
-                              }
-                           ]
+                                 value: roleIDs,
+                              },
+                           ],
                         },
-                        populate: true
+                        populate: true,
                      })
                      .then((list) => {
                         // clean up our entries to not try to include
@@ -548,9 +548,9 @@ module.exports = {
                      });
 
                      OPImageUpload.find({
-                        uuid: imageID
+                        uuid: imageID,
                      })
-                        .then(function(opImage) {
+                        .then(function (opImage) {
                            console.log("opImage:", opImage);
                            if (opImage.length == 0) {
                               var errmsg = `Error: unable to find default image row for field[${fieldDef.id}] defaultImageUrl[${imageID}]`;
@@ -579,9 +579,9 @@ module.exports = {
                                  size: image.size,
                                  uploadedBy: null,
                                  type: image.type,
-                                 info: null
+                                 info: null,
                               },
-                              contents: "--data--"
+                              contents: "--data--",
                            };
 
                            var pathFile = path.join(
@@ -603,7 +603,7 @@ module.exports = {
                               }
                            );
                         })
-                        .catch(function(err) {
+                        .catch(function (err) {
                            var strErr = err.toString();
                            console.error(strErr);
                            data.errors.push(strErr);
@@ -657,9 +657,9 @@ module.exports = {
                                  size: file.size,
                                  uploadedBy: null,
                                  type: file.type,
-                                 info: null
+                                 info: null,
                               },
-                              contents: "--data--"
+                              contents: "--data--",
                            };
 
                            var pathFile = path.join(file.pathFile, file.file);
@@ -678,7 +678,7 @@ module.exports = {
                               }
                            );
                         })
-                        .catch(function(err) {
+                        .catch(function (err) {
                            var strErr = err.toString();
                            console.error(strErr);
                            data.errors.push(strErr);
@@ -689,7 +689,7 @@ module.exports = {
                   doOne((err) => {
                      done(err);
                   });
-               }
+               },
             ],
             (err) => {
                if (err) {
@@ -711,7 +711,7 @@ module.exports = {
     *                               username: STRING
     *                             }
     */
-   appFromJSON: function(data, userData) {
+   appFromJSON: function (data, userData) {
       var Application = ABSystemObject.getApplication();
       var hashSaved = {};
       var allObjects = [];
@@ -781,7 +781,7 @@ module.exports = {
                         ABDefinition.create(def, {
                            user: userData.username,
                            json: { filename: importFileName },
-                           type: "import"
+                           type: "import",
                         }).catch((err) => {
                            //                            console.log(`>>>>>>>>>>>>>>>>>>>>>>
                            // ${err.toString()}
@@ -792,7 +792,7 @@ module.exports = {
                               return ABDefinition.update(def.id, def, {
                                  user: userData.username,
                                  json: { filename: importFileName },
-                                 type: "import"
+                                 type: "import",
                               });
                            }
                         })
@@ -1000,14 +1000,14 @@ ${err.toString()}
                         ABDefinition.create(def, {
                            user: userData.username,
                            json: { filename: importFileName },
-                           type: "import"
+                           type: "import",
                         }).catch((err) => {
                            if (err.toString().indexOf("already exists") > -1) {
                               // console.log("===> trying an update instead.");
                               return ABDefinition.update(def.id, def, {
                                  user: userData.username,
                                  json: { filename: importFileName },
-                                 type: "import"
+                                 type: "import",
                               });
                            }
 
@@ -1028,5 +1028,5 @@ ${err.toString()}
                resolve(data);
             });
       });
-   }
+   },
 };
