@@ -472,8 +472,11 @@ module.exports = {
                   ];
 
                   // Calculate Net Income Values
-                  let incomeTotals = calculateGroupSums(4, 5);
-                  let expenseTotals = calculateGroupSums(6, 7, 8, 9);
+                  let incomeTotals = calculateGroupSums(4, 5, 6);
+                  // let expenseTotals = calculateGroupSums(6, 7, 8, 9);
+                  let expenseTotals = calculateGroupSums(7, 8);
+                  let internalTransferTotals = calculateGroupSums(9);
+
                   // console.log(
                   //    "expenseTotals ------------------>",
                   //    expenseTotals
@@ -481,8 +484,9 @@ module.exports = {
                   // console.log("incomeTotals ------------------>", incomeTotals);
                   let netTotals = [];
                   for (let i = 0; i < incomeTotals.length; i++) {
+                     // Total Income Received + Total Income transfer to CCC - Total Expenses + Total Internal Transfers
                      let val =
-                        (100 * incomeTotals[i] - 100 * expenseTotals[i]) / 100;
+                        ((100 * incomeTotals[i]) - (100 * expenseTotals[i]) + (100 * internalTransferTotals[i])) / 100;
                      netTotals.push(val);
                   }
                   data.netTotals = netTotals;
