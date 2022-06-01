@@ -560,7 +560,8 @@ module.exports = class FilterComplex extends FilterComplexCore {
          return []
             .concat(this.uiQueryValue("this_object"))
             .concat(this.uiDataCollectionValue("this_object"))
-            .concat(this.uiCustomValue("this_object"));
+            .concat(this.uiCustomValue("this_object"))
+            .concat(this.uiContextValue("this_object", "uuid"));
       }
 
       let field = (this._Fields || []).filter(
@@ -577,7 +578,8 @@ module.exports = class FilterComplex extends FilterComplexCore {
             result = []
                .concat(this.uiQueryValue(field))
                .concat(this.uiUserValue(field))
-               .concat(this.uiDataCollectionValue(field));
+               .concat(this.uiDataCollectionValue(field))
+               .concat(this.uiContextValue(field));
             break;
          case "date":
          case "datetime":
@@ -826,10 +828,22 @@ module.exports = class FilterComplex extends FilterComplexCore {
    }
 
    uiContextValue(field, processFieldKey = null) {
-      let processField = (this._ProcessFields || []).filter(
-         (pField) =>
-            pField.field.id == field.id || pField.key == processFieldKey
-      )[0];
+      let processField = (this._ProcessFields || []).filter((pField) => {
+         if (!pField) return false;
+
+         if (pField.field) {
+            return pField.field.id == field.id;
+         } else if (pField.key) {
+            // uuid
+            let processFieldId = pField.key.split(".").pop();
+            return (
+               processFieldId == field.id ||
+               processFieldId == field.key ||
+               processFieldId == processFieldKey ||
+               pField.key == processFieldKey
+            );
+         }
+      })[0];
 
       if (!processField) return [];
 
