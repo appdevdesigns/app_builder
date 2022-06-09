@@ -1696,7 +1696,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
             let dcLink = dv.datacollectionLink;
             let objectLink;
             let linkConnectFields = [];
-            let linkValueId;
+            let linkValues;
             if (dcLink && dcLink.getCursor()) {
                objectLink = dcLink.datasource;
 
@@ -1706,7 +1706,7 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                      f.settings.linkObject == objectLink.id
                );
 
-               linkValueId = dcLink.getCursor().id;
+               linkValues = dcLink.getCursor();
             }
 
             let allValid = true;
@@ -1718,13 +1718,14 @@ module.exports = class ABViewCSVImporter extends ABViewCSVImporterCore {
                let newRowData = {};
 
                // Set parent's data collection cursor
-               if (objectLink && linkConnectFields.length && linkValueId) {
+               if (objectLink && linkConnectFields.length && linkValues) {
                   linkConnectFields.forEach((f) => {
                      let linkColName = f.indexField
                         ? f.indexField.columnName
                         : objectLink.PK();
                      newRowData[f.columnName] = {};
-                     newRowData[f.columnName][linkColName] = linkValueId;
+                     newRowData[f.columnName][linkColName] =
+                        linkValues[linkColName] || linkValues.id;
                   });
                }
 
