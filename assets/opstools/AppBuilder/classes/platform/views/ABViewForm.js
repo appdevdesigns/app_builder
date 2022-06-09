@@ -1245,7 +1245,8 @@ module.exports = class ABViewForm extends ABViewFormCore {
       });
 
       // Add parent's data collection cursor when a connect field does not show
-      if (dcLink && dcLink.getCursor()) {
+      let linkValues = dcLink.getCursor();
+      if (dcLink && linkValues) {
          var objectLink = dcLink.datasource;
 
          var connectFields = obj.fields((f) => f.key == "connectObject");
@@ -1259,8 +1260,13 @@ module.exports = class ABViewForm extends ABViewFormCore {
                formFieldCom.length < 1 && // check field does not show
                formVals[f.columnName] === undefined
             ) {
+               let linkColName = f.indexField
+                  ? f.indexField.columnName
+                  : objectLink.PK();
+
                formVals[f.columnName] = {};
-               formVals[f.columnName][objectLink.PK()] = dcLink.getCursor().id;
+               formVals[f.columnName][linkColName] =
+                  linkValues[linkColName] || linkValues.id;
             }
          });
       }
