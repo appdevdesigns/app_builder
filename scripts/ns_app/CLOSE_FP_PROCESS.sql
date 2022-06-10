@@ -7,7 +7,7 @@ CREATE PROCEDURE `CLOSE_FP_PROCESS` (
    IN FISCAL_PERIOD_UUID varchar(255)
 ) 
 BEGIN
-   DECLARE FP_Closed varchar(255) DEFAULT "";
+   DECLARE FP_Closed varchar(255) DEFAULT "1592549786113";
    DECLARE FP_OPEN varchar(255) DEFAULT "1592549785939";
    -- DECLARE FP_Closing varchar(255) DEFAULT "1592549786026";
    -- DECLARE FP_Next_To_Use varchar(255) DEFAULT "1592549785894";
@@ -86,7 +86,7 @@ BEGIN
             IFNULL(GL.`Running Balance`, 0) `Starting Balance`,
             0 `Credit`,
             0 `Debit`,
-            IFNULL(GL.`Running Balance`, 0) `Running Balance`
+            0 `Running Balance`
          FROM
             `AB_AccountingApp_GLSegment` GL
          WHERE
