@@ -86,7 +86,7 @@ BEGIN
             IFNULL(GL.`Running Balance`, 0) `Starting Balance`,
             0 `Credit`,
             0 `Debit`,
-            0 `Running Balance`
+            IFNULL(GL.`Running Balance`, 0) `Running Balance`
          FROM
             `AB_AccountingApp_GLSegment` GL
          WHERE
