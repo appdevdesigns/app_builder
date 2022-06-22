@@ -24,7 +24,7 @@ BEGIN
    LIMIT 1;
 
    -- FY21 M03 -> trim out the month, add one, add leading zeros, and concat with the current year: to get 'FY21 M04'
-   SELECT CONCAT(CURRENT_YEAR, " M", LPAD((SUBSTRING_INDEX(FY_PERIOD, "M", -1)+ 1), 2, 0) ) INTO NEW_FP;
+   SELECT CONCAT((SUBSTRING_INDEX(FY_PERIOD, "M", 1)), " M", LPAD((SUBSTRING_INDEX(FY_PERIOD, "M", -1)+ 1), 2, 0) ) INTO NEW_FP;
 
    -- if `FY Per` that we made isn't in the talbe, insert the next month: 
    -- we are counting on FY Per being a unique field!
