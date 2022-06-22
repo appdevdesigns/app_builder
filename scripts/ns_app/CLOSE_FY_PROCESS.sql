@@ -41,8 +41,9 @@ BEGIN
    SET `Open` = 0, `Status` = FP_Closed, `Current Process`="Closed"
    WHERE `FYear` LIKE FY_PERIOD ;
 -- 2. create/ find the next fiscal year and months
-   -- FY21 -> trim out FY, add one, add leading zeros, and concat with "FY": to get 'FY22'
-   SELECT CONCAT("FY", LPAD((SUBSTRING_INDEX(FY_PERIOD, "Y", -1)+ 1), 2, 0) ) INTO NEW_FY;
+   -- FY21 -> trim out FY, add one, MAYBE add leading zeros, and concat with "FY": to get 'FY2022'
+   -- Production data is 4 chars long
+   SELECT CONCAT("FY", LPAD((SUBSTRING_INDEX(FY_PERIOD, "Y", -1)+ 1), 4, 0) ) INTO NEW_FY;
 
    INSERT IGNORE INTO `AB_AccountingApp_FiscalYear` 
       (
