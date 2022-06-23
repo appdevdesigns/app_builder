@@ -45,15 +45,6 @@ BEGIN
    WHERE `uuid` = FISCAL_PERIOD_UUID
    LIMIT 1;
 
-
-   -- find the next fiscal month(.startDate == my.endDate + 1)
-   -- SELECT DATEADD(day, 1, OLD_END_DATE) AS DateAdd INTO SEARCHDATE;
-   SELECT `FY Per` INTO NEW_FP
-   FROM `AB_AccountingApp_FiscalMonth`
-   WHERE `Start` = OLD_END_DATE + interval 1 day
-   LIMIT 1;
-
-
    -- set open
    UPDATE `AB_AccountingApp_FiscalMonth`
    SET `Open` = 1,
