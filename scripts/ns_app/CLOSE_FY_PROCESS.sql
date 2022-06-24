@@ -18,6 +18,7 @@ BEGIN
    DECLARE OLD_END_DATE date;
    DECLARE FY_PERIOD varchar(255);
    DECLARE NEW_FY varchar(255);
+   DECLARE NEW_FY_TWO_DIGITS varchar(255);
    DECLARE NEW_FP varchar(255);
    DECLARE FP_NEW_START_DATE date;
    DECLARE FP_Last varchar(255);
@@ -41,9 +42,10 @@ BEGIN
    SET `Open` = 0, `Status` = FP_Closed, `Current Process`="Closed"
    WHERE `FYear` LIKE FY_PERIOD ;
 -- 2. create/ find the next fiscal year and months
-   -- FY21 -> trim out FY, add one, MAYBE add leading zeros, and concat with "FY": to get 'FY2022'
+   -- FY21 -> trim out FY, add one, add leading zeros, and concat with "FY": to get 'FY22'
+   -- SELECT CONCAT("FY", LPAD((SUBSTRING_INDEX(FY_PERIOD, "Y", -1)+ 1), 2, 0) ) INTO NEW_FY;
    -- Production data is 4 chars long
-   SELECT CONCAT("FY", LPAD((SUBSTRING_INDEX(FY_PERIOD, "Y", -1)+ 1), 4, 0) ) INTO NEW_FY;
+   SELECT CONCAT("FY", LPAD((RIGHT(FY_PERIOD, 4)+ 1), 4, 0) ) INTO NEW_FY;
 
    INSERT IGNORE INTO `AB_AccountingApp_FiscalYear` 
       (
@@ -68,9 +70,13 @@ BEGIN
 
    SELECT OLD_END_DATE + interval 1 day INTO FP_NEW_START_DATE;
    
+-- NEW_FY_TWO_DIGITS
+-- LPAD((SUBSTRING_INDEX(FP_Last, "M", 1)+1),2,0)
 
+   -- SELECT CONCAT("FY20", LPAD((SUBSTRING_INDEX(FY_PERIOD, "Y", -1)+ 1), 2, 0) ) INTO NEW_FY_TWO_DIGITS;
+   SELECT CONCAT("FY", LPAD(RIGHT(NEW_FY, 2),2,0)) INTO NEW_FY_TWO_DIGITS;
    WHILE LOOP_Index <= 12 DO
-      SELECT CONCAT(NEW_FY, " M", LPAD(LOOP_Index, 2, 0) ) INTO NEW_FP;
+      SELECT CONCAT(NEW_FY_TWO_DIGITS, " M", LPAD(LOOP_Index, 2, 0) ) INTO NEW_FP;
       INSERT INTO `AB_AccountingApp_FiscalMonth` 
          (`FYear`, `FY Per`, `Start`, `End`, `Status`, `Current Process`, `Open`, `uuid`,`created_at`,`updated_at`) 
       SELECT *
@@ -99,7 +105,7 @@ BEGIN
    END WHILE;
    -- make ID for first fiscal period
 -- 2.1 Find first fiscal month in the next fiscal year (M1)
-   SELECT CONCAT(NEW_FY, " M01" ) INTO NEW_FP;
+   SELECT CONCAT(NEW_FY_TWO_DIGITS, " M01" ) INTO NEW_FP;
    -- update month to be open
    UPDATE `AB_AccountingApp_FiscalMonth`
    SET `Open` = 1, `Status` = "1592549785939"
