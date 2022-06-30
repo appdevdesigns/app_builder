@@ -23,9 +23,9 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
                "*Select field item to generate format."
             ),
             labelFields: L("ab.define_label.labelFields", "*Fields"),
-            displayNone: L(
-               "ab.define_label.displayNone",
-               "*Display [None] when label is empty"
+            displayNoLabel: L(
+               "ab.define_label.displayNoLabel",
+               "*Display [No Label] when label is empty"
             )
          }
       };
@@ -35,7 +35,7 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
          component: this.unique(idBase + "_popupLabel"),
          format: this.unique(idBase + "_popupLabel_format"),
          list: this.unique(idBase + "_popupLabel_list"),
-         isNoneDisplay: this.unique(idBase + "_popupLabel_isNoneDisplay"),
+         isNoLabelDisplay: this.unique(idBase + "_popupLabel_isNoLabelDisplay"),
          buttonSave: this.unique(idBase + "_popupLabel_buttonSave")
       };
 
@@ -90,13 +90,13 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
                   height: 10
                },
                {
-                  id: ids.isNoneDisplay,
+                  id: ids.isNoLabelDisplay,
                   view: "switch",
                   value: 0,
                   labelWidth: 0,
                   labelRight: "<b>{0}</b>".replace(
                      "{0}",
-                     labels.component.displayNone
+                     labels.component.displayNoLabel
                   )
                },
                {
@@ -179,8 +179,8 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
             // save the value
             _currentObject.labelFormat = labelFormat;
             _currentObject.labelSettings = _currentObject.labelSettings || {};
-            _currentObject.labelSettings.isNoneDisplay = $$(
-               ids.isNoneDisplay
+            _currentObject.labelSettings.isNoLabelDisplay = $$(
+               ids.isNoLabelDisplay
             ).getValue();
             _currentObject
                .save()
@@ -253,7 +253,7 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
 
             var Format = $$(ids.format);
             var List = $$(ids.list);
-            let DisplayNone = $$(ids.isNoneDisplay);
+            let DisplayNone = $$(ids.isNoLabelDisplay);
 
             Format.setValue("");
             Format.enable();
@@ -282,7 +282,7 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
             }
 
             Format.setValue(labelFormat || "");
-            DisplayNone.setValue(labelSettings.isNoneDisplay || false);
+            DisplayNone.setValue(labelSettings.isNoLabelDisplay || false);
          },
 
          /**

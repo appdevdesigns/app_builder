@@ -305,7 +305,7 @@ module.exports = class ABWorkObjectPopupImport extends ABComponent {
             // Add unselect item
             csvColumnList.unshift({
                id: "none",
-               value: "[None]"
+               value: "[No Label]"
             });
 
             // populate columns to UI

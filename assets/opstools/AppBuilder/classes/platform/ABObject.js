@@ -594,8 +594,8 @@ module.exports = class ABObject extends ABObjectCore {
       // if label is empty, then show .id
       if (!labelData.trim()) {
          let labelSettings = this.labelSettings || {};
-         if (labelSettings && labelSettings.isNoneDisplay) {
-            labelData = "[None]";
+         if (labelSettings && labelSettings.isNoLabelDisplay) {
+            labelData = "[No Label]";
          } else {
             // show id of row
             labelData = `${this.isUuid(rowData.id) ? "ID: " : ""}${rowData.id}`;
