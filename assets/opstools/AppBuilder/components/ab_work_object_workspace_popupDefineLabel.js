@@ -23,9 +23,10 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
                "*Select field item to generate format."
             ),
             labelFields: L("ab.define_label.labelFields", "*Fields"),
-            displayNoLabel: L(
+            displayNoLabel1: L("ab.define_label.display", "*Display"),
+            displayNoLabel2: L(
                "ab.define_label.displayNoLabel",
-               "*Display [No Label] when label is empty"
+               "*when the label is empty"
             )
          }
       };
@@ -36,6 +37,7 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
          format: this.unique(idBase + "_popupLabel_format"),
          list: this.unique(idBase + "_popupLabel_list"),
          isNoLabelDisplay: this.unique(idBase + "_popupLabel_isNoLabelDisplay"),
+         noLabelText: this.unique(idBase + "_popupLabel_noLabelText"),
          buttonSave: this.unique(idBase + "_popupLabel_buttonSave")
       };
 
@@ -90,14 +92,29 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
                   height: 10
                },
                {
-                  id: ids.isNoLabelDisplay,
-                  view: "switch",
-                  value: 0,
-                  labelWidth: 0,
-                  labelRight: "<b>{0}</b>".replace(
-                     "{0}",
-                     labels.component.displayNoLabel
-                  )
+                  cols: [
+                     {
+                        id: ids.isNoLabelDisplay,
+                        view: "switch",
+                        value: 0,
+                        labelWidth: 0,
+                        width: 70
+                     },
+                     {
+                        view: "label",
+                        label: labels.component.displayNoLabel1,
+                        width: 65
+                     },
+                     {
+                        id: ids.noLabelText,
+                        view: "text",
+                        width: 150
+                     },
+                     {
+                        view: "label",
+                        label: labels.component.displayNoLabel2
+                     }
+                  ]
                },
                {
                   cols: [
@@ -182,6 +199,9 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
             _currentObject.labelSettings.isNoLabelDisplay = $$(
                ids.isNoLabelDisplay
             ).getValue();
+            _currentObject.labelSettings.noLabelText = $$(
+               ids.noLabelText
+            ).getValue();
             _currentObject
                .save()
                .then(function() {
@@ -254,6 +274,7 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
             var Format = $$(ids.format);
             var List = $$(ids.list);
             let DisplayNone = $$(ids.isNoLabelDisplay);
+            let NoLabelText = $$(ids.noLabelText);
 
             Format.setValue("");
             Format.enable();
@@ -283,6 +304,7 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
 
             Format.setValue(labelFormat || "");
             DisplayNone.setValue(labelSettings.isNoLabelDisplay || false);
+            NoLabelText.setValue(labelSettings.noLabelText || "[No Label]");
          },
 
          /**
