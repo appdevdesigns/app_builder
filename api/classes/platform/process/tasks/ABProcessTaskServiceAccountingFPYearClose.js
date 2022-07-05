@@ -55,7 +55,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
          Promise.resolve()
             //
             .then(() => {
-               const knex = this.AB.Knex.connection();
+               const knex = ABMigration.connection();
                return this._req.retry(() =>
                   knex.raw(
                      `CALL \`CLOSE_FY_YEAR_PROCESS\`("${currentFPYearID}");`
