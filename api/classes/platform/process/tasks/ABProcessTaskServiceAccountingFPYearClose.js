@@ -36,9 +36,8 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
     *      resolve(true/false) : true if the task is completed.
     *                            false if task is still waiting
     */
-   do(instance, trx, req) {
+   do(instance, trx) {
 
-      this._req = req;
       this._dbTransaction = trx;
       this._instance = instance;
 
@@ -56,7 +55,7 @@ module.exports = class AccountingFPYearClose extends AccountingFPYearCloseCore {
             //
             .then(() => {
                const knex = ABMigration.connection();
-               return this._req.retry(() =>
+               return retry(() =>
                   knex.raw(
                      `CALL \`CLOSE_FY_YEAR_PROCESS\`("${currentFPYearID}");`
                   )
