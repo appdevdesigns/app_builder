@@ -111,8 +111,8 @@ BEGIN
    SET `Open` = 1, `Status` = "1592549785939"
    WHERE `FY Per` LIKE NEW_FP;
 
--- 3. Find M12 Balances with Account Number = 3500 or 3991
-   /* UPDATE GLSegment (Account 3991) */
+-- 3. Find M12 Balances with Account Number = 3500 an 3991
+   -- /* CREATE NEW GLSegment (Account 3500) */
    INSERT INTO `AB_AccountingApp_GLSegment`
       (`Balndx`,
       `FY Period`, `COA Num`, `RC Code`, 
@@ -161,7 +161,6 @@ BEGIN
    `Starting Balance` = r.`Starting Balance`,
    `Credit` = 0,
    `Debit` = 0,
-   `Running Balance` = r.`Running Balance`,
    `updated_at` = NOW();
 
    -- update running balance
@@ -181,7 +180,9 @@ BEGIN
       `Starting Balance`,
       `Credit`,
       `Debit`,
-      `Running Balance`
+      `Running Balance`,
+      `created_at`,
+      `updated_at`
    ) 
    SELECT *
       FROM
@@ -192,16 +193,29 @@ BEGIN
       NEW_FP `FY Period`, -- Next Fiscal Month
       GL.`COA Num`, -- Same as Original Balance Record
       GL.`RC Code`,
-      IFNULL(GL.`Running Balance`, 0) `Starting Balance`,
+      IFNULL(
+         IF( 
+         ((GL.`COA Num` > 7999 OR GL.`COA Num` < 4000) AND GL.`COA Num` != "3991"),
+            GL.`Running Balance`,
+            0  
+         )
+         , 0) `Starting Balance`,
       0 `Credit`,
       0 `Debit`,
-      IFNULL(GL.`Running Balance`, 0) `Running Balance`
+      IFNULL(
+         IF( 
+         ((GL.`COA Num` > 7999 OR GL.`COA Num` < 4000) AND GL.`COA Num` != "3991"),
+            GL.`Running Balance`,
+            0  
+         )
+         , 0)  `Running Balance`,
+      NOW() `created_at`,
+      NOW() `updated_at`
       FROM
       `AB_AccountingApp_GLSegment` GL
       WHERE
       GL.`FY Period` LIKE FP_Last AND
-      GL.`COA Num` != "3500" AND
-      GL.`COA Num` != "3991"
+      GL.`COA Num` != "3500" 
    ) r
    ON DUPLICATE KEY UPDATE
    `Starting Balance` = r.`Starting Balance`,
