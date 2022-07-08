@@ -194,25 +194,28 @@ BEGIN
       GL.`COA Num`, -- Same as Original Balance Record
       GL.`RC Code`,
       IFNULL(
-         IF( 
-         ((GL.`COA Num` > 7999 OR GL.`COA Num` < 4000) AND GL.`COA Num` != "3991"),
-            GL.`Running Balance`,
-            0  
+         IF( -- Income 1590392412833, Expense 1585806356789, or Equity 1585806356643
+         (AC.`Category` LIKE '1590392412833' OR AC.`Category` LIKE '1585806356789' OR AC.`Category` LIKE '1585806356643' or GL.`COA Num` LIKE "3991"),
+         -- (GL.`COA Num` > 9999 OR GL.`COA Num` < 4000) AND (GL.`COA Num` > 49999 OR GL.`COA Num` < 40000) AND GL.`COA Num` != "3991"),
+            0,  
+            GL.`Running Balance`
          )
          , 0) `Starting Balance`,
       0 `Credit`,
       0 `Debit`,
       IFNULL(
          IF( 
-         ((GL.`COA Num` > 7999 OR GL.`COA Num` < 4000) AND GL.`COA Num` != "3991"),
-            GL.`Running Balance`,
-            0  
+         (AC.`Category` LIKE '1590392412833' OR AC.`Category` LIKE '1585806356789' OR AC.`Category` LIKE '1585806356643' or GL.`COA Num` LIKE "3991"),
+            0,  
+            GL.`Running Balance`
          )
          , 0)  `Running Balance`,
       NOW() `created_at`,
       NOW() `updated_at`
       FROM
       `AB_AccountingApp_GLSegment` GL
+      LEFT JOIN `AB_AccountingApp_Account` AC
+      ON AC.`Acct Num` = GL.`COA Num`
       WHERE
       GL.`FY Period` LIKE FP_Last AND
       GL.`COA Num` != "3500" 
