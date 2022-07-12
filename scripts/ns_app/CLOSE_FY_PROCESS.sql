@@ -156,6 +156,11 @@ BEGIN
          UUID() `uuid`
       FROM
          `AB_MyTeamFinance_ResponsibilityCenter` RC
+      INNER JOIN `AB_AccountingApp_GLSegment` GL -- Do not add empty 3500 records
+         ON RC.`RC Name` = GL.`RC Code`
+         WHERE
+         GL.`COA Num` LIKE "3500"  OR
+         GL.`COA Num` LIKE "3991" 
    ) r
    ON DUPLICATE KEY UPDATE
    `Starting Balance` = r.`Starting Balance`,
@@ -163,11 +168,15 @@ BEGIN
    `Debit` = 0,
    `updated_at` = NOW();
 
+   -- Remove empty 3500 records
+   DELETE FROM `AB_AccountingApp_GLSegment`
+	WHERE `COA Num` LIKE CONCAT("%",NEW_FP,"-3500%" ) AND `Starting Balance`= '0' AND`Running Balance`='0' AND`Debit`='0' AND`Credit`='0';
+
    -- update running balance
    UPDATE `AB_AccountingApp_GLSegment`
    SET 
       `Running Balance` = `Starting Balance` 
-   WHERE `Balndx` LIKE ('%M01-3500-%') ;
+   WHERE `Balndx` LIKE CONCAT("%",NEW_FP,"-3500%" );
 
 -- 5. Find All M1 Balances With Account Type = Income, Expense, or Equity
 -- 6. Update M1 Balances
