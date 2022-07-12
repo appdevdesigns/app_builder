@@ -170,7 +170,7 @@ BEGIN
 
    -- Remove empty 3500 records
    DELETE FROM `AB_AccountingApp_GLSegment`
-	WHERE `COA Num` LIKE CONCAT("%",NEW_FP,"-3500%" ) AND `Starting Balance`= '0' AND`Running Balance`='0' AND`Debit`='0' AND`Credit`='0';
+	WHERE `Balndx` LIKE CONCAT("%",NEW_FP,"-3500%" ) AND `Starting Balance`= '0' AND`Running Balance`='0' AND`Debit`='0' AND`Credit`='0';
 
    -- update running balance
    UPDATE `AB_AccountingApp_GLSegment`
