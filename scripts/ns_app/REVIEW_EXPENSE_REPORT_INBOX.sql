@@ -6,7 +6,9 @@ CREATE PROCEDURE `REVIEW_EXPENSE_REPORT_INBOX` (
 )
 BEGIN
     DECLARE STATUS_QX_APPROVE_VALUE varchar(255) DEFAULT "1612340065524"; -- QX Approved
-    DECLARE USER_FORM_TASK_ID varchar(255) DEFAULT "Task_06ytbzw"; -- Task ID
+
+    -- Task ID - NOTE: Get from [process.gateway.exclusive] definition that name is 'Review Result'
+    DECLARE USER_FORM_TASK_ID varchar(255) DEFAULT "Task_14m1jfg";
 
     DECLARE PROCESS_ID varchar(255);
     DECLARE PROCESS_CONTEXT longtext;

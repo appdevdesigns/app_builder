@@ -22,7 +22,12 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
                "ab.define_label.selectFieldToGenerate",
                "*Select field item to generate format."
             ),
-            labelFields: L("ab.define_label.labelFields", "*Fields")
+            labelFields: L("ab.define_label.labelFields", "*Fields"),
+            displayNoLabel1: L("ab.define_label.display", "*Display"),
+            displayNoLabel2: L(
+               "ab.define_label.displayNoLabel",
+               "*when the label is empty"
+            )
          }
       };
 
@@ -31,6 +36,8 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
          component: this.unique(idBase + "_popupLabel"),
          format: this.unique(idBase + "_popupLabel_format"),
          list: this.unique(idBase + "_popupLabel_list"),
+         isNoLabelDisplay: this.unique(idBase + "_popupLabel_isNoLabelDisplay"),
+         noLabelText: this.unique(idBase + "_popupLabel_noLabelText"),
          buttonSave: this.unique(idBase + "_popupLabel_buttonSave")
       };
 
@@ -83,6 +90,31 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
                },
                {
                   height: 10
+               },
+               {
+                  cols: [
+                     {
+                        id: ids.isNoLabelDisplay,
+                        view: "switch",
+                        value: 0,
+                        labelWidth: 0,
+                        width: 70
+                     },
+                     {
+                        view: "label",
+                        label: labels.component.displayNoLabel1,
+                        width: 65
+                     },
+                     {
+                        id: ids.noLabelText,
+                        view: "text",
+                        width: 150
+                     },
+                     {
+                        view: "label",
+                        label: labels.component.displayNoLabel2
+                     }
+                  ]
                },
                {
                   cols: [
@@ -163,6 +195,13 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
 
             // save the value
             _currentObject.labelFormat = labelFormat;
+            _currentObject.labelSettings = _currentObject.labelSettings || {};
+            _currentObject.labelSettings.isNoLabelDisplay = $$(
+               ids.isNoLabelDisplay
+            ).getValue();
+            _currentObject.labelSettings.noLabelText = $$(
+               ids.noLabelText
+            ).getValue();
             _currentObject
                .save()
                .then(function() {
@@ -230,8 +269,12 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
 
          onShow: function() {
             var labelFormat = _currentObject.labelFormat;
+            let labelSettings = _currentObject.labelSettings || {};
+
             var Format = $$(ids.format);
             var List = $$(ids.list);
+            let DisplayNone = $$(ids.isNoLabelDisplay);
+            let NoLabelText = $$(ids.noLabelText);
 
             Format.setValue("");
             Format.enable();
@@ -260,6 +303,8 @@ module.exports = class ABWorkObjectPopupDefineLabel extends ABComponent {
             }
 
             Format.setValue(labelFormat || "");
+            DisplayNone.setValue(labelSettings.isNoLabelDisplay || false);
+            NoLabelText.setValue(labelSettings.noLabelText || "[No Label]");
          },
 
          /**
