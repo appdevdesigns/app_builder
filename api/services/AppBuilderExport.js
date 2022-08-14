@@ -330,6 +330,11 @@ module.exports = {
                   }
                }
             });
+
+            // FIX: "condition does not reference one of our fields" and "incomplete condition definition" errors
+            if (q.where == null) q.where = {};
+            if (q.where.glue == null) q.where.glue = "and";
+            if (q.where.rules == null) q.where.rules = [];
          });
 
          function parseJoinByAlias(curr, alias) {
@@ -363,11 +368,12 @@ module.exports = {
             }
 
             join.links = join.links || [];
-            join.links.push({
-               alias: uuidv4().split("-")[0],
-               fieldId: entry.field.id,
-               type: "left",
-            });
+            // FIX: "could not resolve our linkField" error when import
+            // join.links.push({
+            //    alias: uuidv4().split("-")[0],
+            //    fieldId: entry.field.id,
+            //    type: "left",
+            // });
          });
 
          ///
