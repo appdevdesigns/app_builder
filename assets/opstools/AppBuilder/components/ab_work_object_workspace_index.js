@@ -174,7 +174,7 @@ module.exports = class ABWorkObjectWorkspaceIndex extends ABComponent {
                f.key == "boolean" ||
                f.key == "list" ||
                f.key == "email" ||
-               f.key == "user" ||
+               (f.key == "user" && f.settings && !f.settings.isMultiple) || // Only single user selector
                f.key == "AutoIndex" ||
                f.key == "combined" ||
                ((f.key == "string" || f.key == "LongText") &&
