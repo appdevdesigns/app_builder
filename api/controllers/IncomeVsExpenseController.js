@@ -62,7 +62,8 @@ module.exports = {
          { code: "08", label: "Fund development" },
          { code: "09", label: "Operations" },
          { code: "10", label: "National Leadership" },
-         { code: "11", label: "Other/None" }
+         { code: "11", label: "Other" },
+         { code: "12", label: "None" }
       ];
 
       function calculateGroupSums(...groups) {
