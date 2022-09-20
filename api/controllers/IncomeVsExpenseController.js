@@ -97,8 +97,8 @@ module.exports = {
                if (
                   inGroup &&
                   balances[b]["Running Balance"] &&
-                  balances[b]["RC Code"] &&
-                  balances[b]["RC Code"].substring(0, 2) == mccs[m].code
+                  balances[b]["RCCode__relation"] &&
+                  balances[b]["RCCode__relation"]["MCCcode"] == mccs[m].code
                ) {
                   if (isExpense) {
                      sum =
@@ -226,7 +226,7 @@ module.exports = {
                         }
                      ]
                   },
-                  populate: false
+                  populate: ["RC Code"]
                })
                .then((records) => {
                   // console.log("records ----->", records);
