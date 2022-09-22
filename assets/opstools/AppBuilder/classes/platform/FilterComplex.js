@@ -606,7 +606,21 @@ module.exports = class FilterComplex extends FilterComplexCore {
          //    break;
       }
 
-      if (field.key != "connectObject") {
+      // Add filter options to Custom index
+      if (
+         field &&
+         field.settings &&
+         field.settings.isCustomFK &&
+         // 1:M
+         ((field.settings.linkType === "one" &&
+            field.settings.linkViaType === "many") ||
+            // 1:1 isSource = true
+            (field.settings.linkType === "one" &&
+               field.settings.linkViaType === "one" &&
+               field.settings.isSource))
+      ) {
+         result = (result || []).concat(this.uiTextValue(field));
+      } else if (field.key != "connectObject") {
          result = (result || [])
             .concat(this.uiTextValue(field))
             .concat(this.uiQueryFieldValue(field))

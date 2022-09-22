@@ -592,6 +592,7 @@ module.exports = class ABViewFormConnect extends ABViewFormConnectCore {
       }
 
       FilterComponent.applicationLoad(view.application);
+      FilterComponent.queriesLoad(view.application.queries());
       FilterComponent.setValue(filterConditions);
 
       if (linkedObj) SortComponent.objectLoad(linkedObj);
